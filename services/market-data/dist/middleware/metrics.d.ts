@@ -1,0 +1,13 @@
+import { Request, Response, NextFunction } from 'express';
+import client from 'prom-client';
+declare const register: client.Registry<"text/plain; version=0.0.4; charset=utf-8">;
+export { register };
+export declare const metricsMiddleware: (req: Request, res: Response, next: NextFunction) => void;
+export declare const trackMarketDataOperation: (operation: string, status?: "success" | "error") => void;
+export declare const trackDbQuery: (operation: string, table: string, duration: number) => void;
+export declare const trackCacheOperation: (operation: string, result: string) => void;
+export declare const trackVendorApiCall: (vendor: string, endpoint: string, status: string) => void;
+export declare const updateQuoteFreshness: (symbol: string, source: string, ageInSeconds: number) => void;
+export declare const updateSecuritiesCount: (assetClass: string, count: number) => void;
+export declare const collectMarketDataMetrics: () => Promise<void>;
+//# sourceMappingURL=metrics.d.ts.map

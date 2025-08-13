@@ -1,0 +1,123 @@
+{
+  "name": "investment-platform-load-testing",
+  "version": "1.0.0",
+  "description": "Comprehensive load testing suite for Investment Management Platform",
+  "main": "load-test-runner.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run load:standard",
+    "load:standard": "ts-node load-test-runner.ts --test standard",
+    "load:peak": "ts-node load-test-runner.ts --test peak --users 2500 --duration 7200",
+    "load:stress": "ts-node load-test-runner.ts --test stress --duration 7200",
+    "load:database": "ts-node load-test-runner.ts --test database --users 1000 --duration 3600",
+    "load:endurance": "ts-node load-test-runner.ts --test endurance --users 1000 --duration 86400",
+    "load:spike": "ts-node load-test-runner.ts --test spike --duration 3600",
+    "load:mobile": "ts-node load-test-runner.ts --config ./configs/mobile-config.json",
+    "load:api": "ts-node load-test-runner.ts --config ./configs/api-only-config.json",
+    "load:staging": "ts-node load-test-runner.ts --env staging --users 500 --duration 1800",
+    "load:production": "ts-node load-test-runner.ts --env prod --users 200 --duration 900",
+    "load:quick": "ts-node load-test-runner.ts --users 100 --duration 300",
+    "load:verbose": "ts-node load-test-runner.ts --verbose",
+    "artillery:peak": "artillery run ./artillery-configs/peak-trading.yml",
+    "artillery:stress": "artillery run ./artillery-configs/stress-test.yml",
+    "jmeter:load": "jmeter -n -t ./jmeter-plans/load-test-plan.jmx -l ./results/jmeter-results.jtl",
+    "k6:performance": "k6 run ./k6-scripts/performance-test.js",
+    "reports:generate": "node generate-consolidated-report.js",
+    "reports:serve": "http-server ./load-test-results -p 8080 -o",
+    "clean": "rm -rf ./load-test-results/* ./dist/*",
+    "setup": "mkdir -p load-test-results configs artillery-configs jmeter-plans k6-scripts",
+    "install-tools": "npm install -g artillery jmeter k6 http-server",
+    "validate-config": "ts-node validate-config.ts",
+    "benchmark": "ts-node benchmark-suite.ts"
+  },
+  "keywords": [
+    "load-testing",
+    "performance-testing",
+    "investment-platform",
+    "artillery",
+    "jmeter",
+    "k6",
+    "stress-testing",
+    "capacity-planning"
+  ],
+  "author": "Investment Platform Performance Team",
+  "license": "MIT",
+  "dependencies": {
+    "artillery": "^2.0.0",
+    "k6": "^0.47.0",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.10.0",
+    "node-fetch": "^3.3.0",
+    "uuid": "^9.0.0",
+    "moment": "^2.29.0",
+    "lodash": "^4.17.21",
+    "csv-writer": "^1.6.0",
+    "json2csv": "^6.1.0",
+    "html-report-generator": "^1.0.0",
+    "prometheus-api-metrics": "^3.2.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.0",
+    "@types/lodash": "^4.14.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "eslint": "^8.55.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/company/investment-platform.git",
+    "directory": "testing/load-testing"
+  },
+  "bugs": {
+    "url": "https://github.com/company/investment-platform/issues"
+  },
+  "homepage": "https://github.com/company/investment-platform#readme",
+  "config": {
+    "defaultConcurrentUsers": 1000,
+    "defaultDuration": 1800,
+    "defaultRampUp": 50,
+    "maxConcurrentUsers": 15000,
+    "maxDuration": 86400,
+    "reportRetentionDays": 30
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ]
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "@typescript-eslint/recommended"
+    ],
+    "env": {
+      "node": true,
+      "es2020": true
+    },
+    "rules": {
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/explicit-function-return-type": "warn"
+    }
+  }
+}

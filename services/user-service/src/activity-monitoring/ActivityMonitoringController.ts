@@ -1,0 +1,1440 @@
+import { Router, Request, Response } from 'express';
+import { body, query, param, validationResult } from 'express-validator';
+import { 
+  ActivityTrackingService, 
+  ActivityData, 
+  ActivityFilter, 
+  ActivityType, 
+  ActivityCategory, 
+  ActivitySeverity 
+} from './ActivityTrackingService';
+import { 
+  ActivityStreamingService, 
+  StreamMessageType 
+} from './ActivityStreamingService';
+import { 
+  ActivityAnalyticsService, 
+  ReportType 
+} from './ActivityAnalyticsService';
+import { 
+  SuspiciousActivityDetectionService, 
+  AlertType, 
+  AlertStatus 
+} from './SuspiciousActivityDetectionService';
+import { 
+  ActivityRetentionService, 
+  RetentionAction, 
+  RequestType, 
+  RequestStatus 
+} from './ActivityRetentionService';
+import { 
+  ActivityPrivacyService, 
+  DataCategory, 
+  AnonymizationMethod, 
+  DataSubjectRight, 
+  LegalBasis 
+} from './ActivityPrivacyService';
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    tenantId: string;
+    roles: string[];
+    permissions: string[];
+  };
+}
+
+export class ActivityMonitoringController {
+  private router: Router;
+  private activityService: ActivityTrackingService;
+  private streamingService: ActivityStreamingService;
+  private analyticsService: ActivityAnalyticsService;
+  private detectionService: SuspiciousActivityDetectionService;
+  private retentionService: ActivityRetentionService;
+  private privacyService: ActivityPrivacyService;
+
+  constructor(
+    activityService: ActivityTrackingService,
+    streamingService: ActivityStreamingService,
+    analyticsService: ActivityAnalyticsService,
+    detectionService: SuspiciousActivityDetectionService,
+    retentionService: ActivityRetentionService,
+    privacyService: ActivityPrivacyService
+  ) {
+    this.router = Router();
+    this.activityService = activityService;
+    this.streamingService = streamingService;
+    this.analyticsService = analyticsService;
+    this.detectionService = detectionService;
+    this.retentionService = retentionService;
+    this.privacyService = privacyService;
+
+    this.setupRoutes();
+  }
+
+  public getRouter(): Router {
+    return this.router;
+  }
+
+  private setupRoutes(): void {
+    // Activity Management Routes
+    this.router.get('/activities', this.validateGetActivities(), this.getActivities.bind(this));
+    this.router.get('/activities/:id', this.validateActivityId(), this.getActivity.bind(this));
+    this.router.post('/activities', this.validateCreateActivity(), this.createActivity.bind(this));
+    this.router.get('/activities/user/:userId/sessions', this.validateUserId(), this.getUserSessions.bind(this));
+    this.router.get('/activities/metrics', this.validateGetMetrics(), this.getActivityMetrics.bind(this));
+
+    // Real-time Streaming Routes
+    this.router.post('/streaming/subscribe', this.validateSubscribe(), this.subscribeToStream.bind(this));
+    this.router.delete('/streaming/subscribe/:subscriptionId', this.validateSubscriptionId(), this.unsubscribeFromStream.bind(this));
+    this.router.get('/streaming/subscriptions', this.getStreamingSubscriptions.bind(this));
+    this.router.get('/streaming/stats', this.getStreamingStats.bind(this));
+    this.router.get('/streaming/history/:subscriptionId', this.validateSubscriptionId(), this.getStreamingHistory.bind(this));
+
+    // Analytics and Reporting Routes
+    this.router.get('/analytics/user-summary/:userId', this.validateUserSummary(), this.getUserActivitySummary.bind(this));
+    this.router.get('/analytics/security-analysis', this.validateSecurityAnalysis(), this.getSecurityAnalysis.bind(this));
+    this.router.get('/analytics/behavior-analysis/:userId', this.validateBehaviorAnalysis(), this.getBehaviorAnalysis.bind(this));
+    this.router.get('/analytics/trend-analysis', this.validateTrendAnalysis(), this.getTrendAnalysis.bind(this));
+    this.router.get('/analytics/anomaly-detection', this.validateAnomalyDetection(), this.getAnomalyDetection.bind(this));
+    this.router.post('/analytics/reports', this.validateCreateReport(), this.createReport.bind(this));
+    this.router.get('/analytics/reports', this.getReports.bind(this));
+    this.router.put('/analytics/reports/:reportId', this.validateUpdateReport(), this.updateReport.bind(this));
+    this.router.delete('/analytics/reports/:reportId', this.validateReportId(), this.deleteReport.bind(this));
+
+    // Suspicious Activity Detection Routes
+    this.router.get('/alerts', this.validateGetAlerts(), this.getSuspiciousActivityAlerts.bind(this));
+    this.router.get('/alerts/:alertId', this.validateAlertId(), this.getSuspiciousActivityAlert.bind(this));
+    this.router.put('/alerts/:alertId/status', this.validateUpdateAlertStatus(), this.updateAlertStatus.bind(this));
+    this.router.post('/detection/rules', this.validateCreateDetectionRule(), this.createDetectionRule.bind(this));
+    this.router.get('/detection/rules', this.getDetectionRules.bind(this));
+    this.router.put('/detection/rules/:ruleId', this.validateUpdateDetectionRule(), this.updateDetectionRule.bind(this));
+    this.router.delete('/detection/rules/:ruleId', this.validateRuleId(), this.deleteDetectionRule.bind(this));
+    this.router.get('/detection/stats', this.getDetectionStatistics.bind(this));
+    this.router.post('/detection/threat-intelligence', this.validateAddThreatIntelligence(), this.addThreatIntelligence.bind(this));
+
+    // Retention and Archival Routes
+    this.router.post('/retention/policies', this.validateCreateRetentionPolicy(), this.createRetentionPolicy.bind(this));
+    this.router.get('/retention/policies', this.getRetentionPolicies.bind(this));
+    this.router.put('/retention/policies/:policyId', this.validateUpdateRetentionPolicy(), this.updateRetentionPolicy.bind(this));
+    this.router.delete('/retention/policies/:policyId', this.validatePolicyId(), this.deleteRetentionPolicy.bind(this));
+    this.router.post('/retention/apply/:policyId', this.validateApplyRetention(), this.applyRetentionPolicy.bind(this));
+    this.router.get('/retention/archived', this.validateGetArchived(), this.getArchivedActivities.bind(this));
+    this.router.get('/retention/archived/:archiveId', this.validateArchiveId(), this.getArchivedActivity.bind(this));
+    this.router.get('/retention/stats', this.getRetentionStatistics.bind(this));
+    this.router.post('/retention/jobs', this.validateCreateRetentionJob(), this.createRetentionJob.bind(this));
+    this.router.post('/retention/data-subject-requests', this.validateDataSubjectRequest(), this.processDataSubjectRequest.bind(this));
+
+    // Privacy and Compliance Routes
+    this.router.post('/privacy/policies', this.validateCreatePrivacyPolicy(), this.createPrivacyPolicy.bind(this));
+    this.router.get('/privacy/policies', this.getPrivacyPolicies.bind(this));
+    this.router.post('/privacy/anonymize', this.validateAnonymizeActivity(), this.anonymizeActivity.bind(this));
+    this.router.post('/privacy/consent', this.validateRecordConsent(), this.recordConsent.bind(this));
+    this.router.delete('/privacy/consent', this.validateWithdrawConsent(), this.withdrawConsent.bind(this));
+    this.router.post('/privacy/data-subject-rights', this.validateDataSubjectRight(), this.processDataSubjectRight.bind(this));
+    this.router.get('/privacy/export/:userId', this.validateUserId(), this.exportUserData.bind(this));
+    this.router.get('/privacy/audit-logs', this.validateGetAuditLogs(), this.getPrivacyAuditLogs.bind(this));
+    this.router.get('/privacy/compliance-report', this.getComplianceReport.bind(this));
+    this.router.post('/privacy/data-flows', this.validateCreateDataFlow(), this.createDataFlowMapping.bind(this));
+
+    // Dashboard and Visualization Routes
+    this.router.get('/dashboard/overview', this.getDashboardOverview.bind(this));
+    this.router.get('/dashboard/real-time-metrics', this.getRealTimeMetrics.bind(this));
+    this.router.get('/dashboard/security-dashboard', this.getSecurityDashboard.bind(this));
+    this.router.get('/dashboard/compliance-dashboard', this.getComplianceDashboard.bind(this));
+    this.router.get('/dashboard/user-activity/:userId', this.validateUserId(), this.getUserActivityDashboard.bind(this));
+
+    // Health and Status Routes
+    this.router.get('/health', this.getHealthStatus.bind(this));
+    this.router.get('/status', this.getSystemStatus.bind(this));
+  }
+
+  // Activity Management Endpoints
+  private async getActivities(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const filter: ActivityFilter = {
+        userId: req.query.userId as string,
+        tenantId: req.user?.tenantId,
+        activityType: req.query.activityType as ActivityType[],
+        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
+        severity: req.query.severity as ActivitySeverity[]
+      };
+
+      const limit = parseInt(req.query.limit as string) || 100;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const activities = await this.activityService.getActivities(filter, limit, offset);
+      
+      res.json({
+        activities,
+        pagination: {
+          limit,
+          offset,
+          total: activities.length
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getActivity(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      // Activity retrieval would be implemented here
+      res.status(404).json({ error: 'Activity not found' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async createActivity(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const activityData: Partial<ActivityData> = {
+        ...req.body,
+        userId: req.user?.id,
+        tenantId: req.user?.tenantId,
+        timestamp: new Date()
+      };
+
+      const activity = await this.activityService.trackActivity(activityData);
+      res.status(201).json({ activity });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getUserSessions(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const userId = req.params.userId;
+      const active = req.query.active === 'true';
+
+      const sessions = await this.activityService.getUserSessions(userId, active);
+      res.json({ sessions });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getActivityMetrics(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const filter: ActivityFilter = {
+        tenantId: req.user?.tenantId,
+        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
+      };
+
+      const metrics = await this.activityService.getActivityMetrics(filter);
+      res.json({ metrics });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Streaming Endpoints
+  private async subscribeToStream(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const subscription = await this.streamingService.subscribe(
+        req.user!.id,
+        req.user!.tenantId,
+        req.body.socketId,
+        req.body.filter || {}
+      );
+
+      res.status(201).json({ subscription });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async unsubscribeFromStream(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const success = await this.streamingService.unsubscribe(req.params.subscriptionId);
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getStreamingSubscriptions(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const subscriptions = await this.streamingService.getUserSubscriptions(req.user!.id);
+      res.json({ subscriptions });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getStreamingStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const stats = await this.streamingService.getSubscriptionStats();
+      res.json({ stats });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getStreamingHistory(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const limit = parseInt(req.query.limit as string) || 100;
+      const history = await this.streamingService.getMessageHistory(req.params.subscriptionId, limit);
+      
+      res.json({ history });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Analytics Endpoints
+  private async getUserActivitySummary(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const userId = req.params.userId;
+      const startDate = new Date(req.query.startDate as string);
+      const endDate = new Date(req.query.endDate as string);
+
+      // Would get activities from activity service
+      const activities: ActivityData[] = [];
+
+      const summary = await this.analyticsService.generateUserActivitySummary(
+        userId,
+        req.user!.tenantId,
+        startDate,
+        endDate,
+        activities
+      );
+
+      res.json({ summary });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getSecurityAnalysis(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const startDate = new Date(req.query.startDate as string);
+      const endDate = new Date(req.query.endDate as string);
+
+      // Would get activities from activity service
+      const activities: ActivityData[] = [];
+
+      const analysis = await this.analyticsService.generateSecurityAnalysis(
+        req.user!.tenantId,
+        startDate,
+        endDate,
+        activities
+      );
+
+      res.json({ analysis });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getBehaviorAnalysis(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const userId = req.params.userId;
+      const startDate = new Date(req.query.startDate as string);
+      const endDate = new Date(req.query.endDate as string);
+
+      const activities: ActivityData[] = [];
+
+      const analysis = await this.analyticsService.generateBehaviorAnalysis(
+        userId,
+        startDate,
+        endDate,
+        activities
+      );
+
+      res.json({ analysis });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getTrendAnalysis(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const startDate = new Date(req.query.startDate as string);
+      const endDate = new Date(req.query.endDate as string);
+
+      const activities: ActivityData[] = [];
+
+      const analysis = await this.analyticsService.generateTrendAnalysis(
+        req.user!.tenantId,
+        startDate,
+        endDate,
+        activities
+      );
+
+      res.json({ analysis });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getAnomalyDetection(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const startDate = new Date(req.query.startDate as string);
+      const endDate = new Date(req.query.endDate as string);
+
+      const activities: ActivityData[] = [];
+
+      const result = await this.analyticsService.detectAnomalies(
+        req.user!.tenantId,
+        startDate,
+        endDate,
+        activities
+      );
+
+      res.json({ result });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async createReport(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const report = await this.analyticsService.createReport(req.body);
+      res.status(201).json({ report });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getReports(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const reports = await this.analyticsService.getReports(req.user?.tenantId);
+      res.json({ reports });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async updateReport(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const report = await this.analyticsService.updateReport(req.params.reportId, req.body);
+      
+      if (!report) {
+        res.status(404).json({ error: 'Report not found' });
+        return;
+      }
+
+      res.json({ report });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async deleteReport(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const success = await this.analyticsService.deleteReport(req.params.reportId);
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Suspicious Activity Detection Endpoints
+  private async getSuspiciousActivityAlerts(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const filter = {
+        tenantId: req.user?.tenantId,
+        userId: req.query.userId as string,
+        severity: req.query.severity as ActivitySeverity[],
+        status: req.query.status as AlertStatus[],
+        alertType: req.query.alertType as AlertType[],
+        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
+      };
+
+      const limit = parseInt(req.query.limit as string) || 100;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const alerts = await this.detectionService.getAlerts(filter, limit, offset);
+      res.json({ alerts });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getSuspiciousActivityAlert(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      // Would implement alert retrieval by ID
+      res.status(404).json({ error: 'Alert not found' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async updateAlertStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const alert = await this.detectionService.updateAlertStatus(
+        req.params.alertId,
+        req.body.status,
+        req.body.assignedTo,
+        req.body.resolution
+      );
+
+      if (!alert) {
+        res.status(404).json({ error: 'Alert not found' });
+        return;
+      }
+
+      res.json({ alert });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async createDetectionRule(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const rule = await this.detectionService.createDetectionRule(req.body);
+      res.status(201).json({ rule });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getDetectionRules(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const rules = await this.detectionService.getDetectionRules();
+      res.json({ rules });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async updateDetectionRule(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const rule = await this.detectionService.updateDetectionRule(req.params.ruleId, req.body);
+      
+      if (!rule) {
+        res.status(404).json({ error: 'Rule not found' });
+        return;
+      }
+
+      res.json({ rule });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async deleteDetectionRule(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const success = await this.detectionService.deleteDetectionRule(req.params.ruleId);
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getDetectionStatistics(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const stats = await this.detectionService.getAlertStatistics();
+      res.json({ stats });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async addThreatIntelligence(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const threat = await this.detectionService.addThreatIntelligence(req.body);
+      res.status(201).json({ threat });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Retention and Archival Endpoints
+  private async createRetentionPolicy(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const policy = await this.retentionService.createRetentionPolicy({
+        ...req.body,
+        tenantId: req.user!.tenantId
+      });
+
+      res.status(201).json({ policy });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getRetentionPolicies(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const policies = await this.retentionService.getRetentionPolicies(req.user?.tenantId);
+      res.json({ policies });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async updateRetentionPolicy(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const policy = await this.retentionService.updateRetentionPolicy(req.params.policyId, req.body);
+      
+      if (!policy) {
+        res.status(404).json({ error: 'Policy not found' });
+        return;
+      }
+
+      res.json({ policy });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async deleteRetentionPolicy(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const success = await this.retentionService.deleteRetentionPolicy(req.params.policyId);
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async applyRetentionPolicy(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      // Would get activities from activity service
+      const activities: ActivityData[] = [];
+
+      const results = await this.retentionService.applyRetentionPolicies(
+        req.user!.tenantId,
+        activities
+      );
+
+      res.json({ results });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getArchivedActivities(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const filter = {
+        tenantId: req.user?.tenantId,
+        userId: req.query.userId as string,
+        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
+        policyId: req.query.policyId as string
+      };
+
+      const archived = await this.retentionService.getArchivedActivities(filter);
+      res.json({ archived });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getArchivedActivity(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const activity = await this.retentionService.retrieveArchivedActivity(req.params.archiveId);
+      
+      if (!activity) {
+        res.status(404).json({ error: 'Archived activity not found' });
+        return;
+      }
+
+      res.json({ activity });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getRetentionStatistics(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const stats = await this.retentionService.getRetentionStatistics(req.user!.tenantId);
+      res.json({ stats });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async createRetentionJob(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const job = await this.retentionService.createRetentionJob(
+        req.body.policyId,
+        req.user!.tenantId
+      );
+
+      res.status(201).json({ job });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async processDataSubjectRequest(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const request = await this.retentionService.processDataSubjectRequest({
+        ...req.body,
+        tenantId: req.user!.tenantId
+      });
+
+      res.status(201).json({ request });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Privacy and Compliance Endpoints
+  private async createPrivacyPolicy(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const policy = await this.privacyService.createPrivacyPolicy({
+        ...req.body,
+        tenantId: req.user!.tenantId
+      });
+
+      res.status(201).json({ policy });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getPrivacyPolicies(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      // Would implement privacy policy retrieval
+      res.json({ policies: [] });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async anonymizeActivity(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const anonymized = await this.privacyService.anonymizeActivity(
+        req.body.activity,
+        req.body.method
+      );
+
+      res.json({ anonymized });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async recordConsent(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const consent = await this.privacyService.recordConsent({
+        ...req.body,
+        userId: req.user!.id,
+        tenantId: req.user!.tenantId
+      });
+
+      res.status(201).json({ consent });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async withdrawConsent(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const success = await this.privacyService.withdrawConsent(
+        req.user!.id,
+        req.body.policyId,
+        req.body.reason
+      );
+
+      res.json({ success });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async processDataSubjectRight(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const request = await this.privacyService.processDataSubjectRight({
+        ...req.body,
+        userId: req.user!.id,
+        tenantId: req.user!.tenantId
+      });
+
+      res.status(201).json({ request });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async exportUserData(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const userId = req.params.userId;
+      const exportData = await this.privacyService.exportUserData(userId, req.user!.tenantId);
+      
+      res.json({ exportData });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getPrivacyAuditLogs(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const filter = {
+        tenantId: req.user?.tenantId,
+        userId: req.query.userId as string,
+        startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
+        endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined
+      };
+
+      const logs = await this.privacyService.getPrivacyAuditLogs(filter);
+      res.json({ logs });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getComplianceReport(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const report = await this.privacyService.getComplianceReport(req.user!.tenantId);
+      res.json({ report });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async createDataFlowMapping(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const mapping = await this.privacyService.createDataFlowMapping({
+        ...req.body,
+        tenantId: req.user!.tenantId
+      });
+
+      res.status(201).json({ mapping });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Dashboard Endpoints
+  private async getDashboardOverview(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const overview = {
+        totalActivities: 0,
+        activeUsers: 0,
+        suspiciousActivities: 0,
+        complianceViolations: 0,
+        systemHealth: 'healthy'
+      };
+
+      res.json({ overview });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getRealTimeMetrics(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const metrics = {
+        timestamp: new Date(),
+        activeUsers: 0,
+        activitiesPerMinute: 0,
+        alertsPerHour: 0,
+        systemLoad: 0.5
+      };
+
+      res.json({ metrics });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getSecurityDashboard(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const dashboard = {
+        totalAlerts: 0,
+        criticalAlerts: 0,
+        topThreats: [],
+        recentIncidents: []
+      };
+
+      res.json({ dashboard });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getComplianceDashboard(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const dashboard = {
+        complianceScore: 95,
+        activePolicies: 0,
+        dataSubjectRequests: 0,
+        retentionCompliance: 100
+      };
+
+      res.json({ dashboard });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getUserActivityDashboard(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        res.status(400).json({ errors: errors.array() });
+        return;
+      }
+
+      const userId = req.params.userId;
+      const dashboard = {
+        userId,
+        totalActivities: 0,
+        lastActivity: null,
+        riskScore: 0,
+        complianceStatus: 'compliant'
+      };
+
+      res.json({ dashboard });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Health and Status Endpoints
+  private async getHealthStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const health = {
+        status: 'healthy',
+        timestamp: new Date(),
+        services: {
+          activityTracking: 'up',
+          streaming: 'up',
+          analytics: 'up',
+          detection: 'up',
+          retention: 'up',
+          privacy: 'up'
+        }
+      };
+
+      res.json(health);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getSystemStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const status = {
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        version: '1.0.0',
+        environment: process.env.NODE_ENV || 'development'
+      };
+
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Validation middleware
+  private validateGetActivities() {
+    return [
+      query('userId').optional().isUUID(),
+      query('activityType').optional().isIn(Object.values(ActivityType)),
+      query('startDate').optional().isISO8601(),
+      query('endDate').optional().isISO8601(),
+      query('severity').optional().isIn(Object.values(ActivitySeverity)),
+      query('limit').optional().isInt({ min: 1, max: 1000 }),
+      query('offset').optional().isInt({ min: 0 })
+    ];
+  }
+
+  private validateActivityId() {
+    return [param('id').isUUID()];
+  }
+
+  private validateCreateActivity() {
+    return [
+      body('activityType').isIn(Object.values(ActivityType)),
+      body('activityCategory').isIn(Object.values(ActivityCategory)),
+      body('action').isString().isLength({ min: 1, max: 100 }),
+      body('resource').isString().isLength({ min: 1, max: 200 }),
+      body('ipAddress').isIP(),
+      body('userAgent').optional().isString()
+    ];
+  }
+
+  private validateUserId() {
+    return [param('userId').isUUID()];
+  }
+
+  private validateGetMetrics() {
+    return [
+      query('startDate').optional().isISO8601(),
+      query('endDate').optional().isISO8601()
+    ];
+  }
+
+  private validateSubscribe() {
+    return [
+      body('socketId').isString(),
+      body('filter').optional().isObject()
+    ];
+  }
+
+  private validateSubscriptionId() {
+    return [param('subscriptionId').isUUID()];
+  }
+
+  private validateUserSummary() {
+    return [
+      param('userId').isUUID(),
+      query('startDate').isISO8601(),
+      query('endDate').isISO8601()
+    ];
+  }
+
+  private validateSecurityAnalysis() {
+    return [
+      query('startDate').isISO8601(),
+      query('endDate').isISO8601()
+    ];
+  }
+
+  private validateBehaviorAnalysis() {
+    return [
+      param('userId').isUUID(),
+      query('startDate').isISO8601(),
+      query('endDate').isISO8601()
+    ];
+  }
+
+  private validateTrendAnalysis() {
+    return [
+      query('startDate').isISO8601(),
+      query('endDate').isISO8601()
+    ];
+  }
+
+  private validateAnomalyDetection() {
+    return [
+      query('startDate').isISO8601(),
+      query('endDate').isISO8601()
+    ];
+  }
+
+  private validateCreateReport() {
+    return [
+      body('name').isString().isLength({ min: 1, max: 100 }),
+      body('type').isIn(Object.values(ReportType)),
+      body('parameters').isObject(),
+      body('recipients').isArray()
+    ];
+  }
+
+  private validateUpdateReport() {
+    return [
+      param('reportId').isUUID(),
+      body('name').optional().isString().isLength({ min: 1, max: 100 }),
+      body('isActive').optional().isBoolean()
+    ];
+  }
+
+  private validateReportId() {
+    return [param('reportId').isUUID()];
+  }
+
+  private validateGetAlerts() {
+    return [
+      query('userId').optional().isUUID(),
+      query('severity').optional().isIn(Object.values(ActivitySeverity)),
+      query('status').optional().isIn(Object.values(AlertStatus)),
+      query('alertType').optional().isIn(Object.values(AlertType)),
+      query('startDate').optional().isISO8601(),
+      query('endDate').optional().isISO8601(),
+      query('limit').optional().isInt({ min: 1, max: 1000 }),
+      query('offset').optional().isInt({ min: 0 })
+    ];
+  }
+
+  private validateAlertId() {
+    return [param('alertId').isUUID()];
+  }
+
+  private validateUpdateAlertStatus() {
+    return [
+      param('alertId').isUUID(),
+      body('status').isIn(Object.values(AlertStatus)),
+      body('assignedTo').optional().isString(),
+      body('resolution').optional().isString()
+    ];
+  }
+
+  private validateCreateDetectionRule() {
+    return [
+      body('name').isString().isLength({ min: 1, max: 100 }),
+      body('alertType').isIn(Object.values(AlertType)),
+      body('severity').isIn(Object.values(ActivitySeverity)),
+      body('enabled').isBoolean(),
+      body('conditions').isArray(),
+      body('threshold').isFloat({ min: 0, max: 1 })
+    ];
+  }
+
+  private validateUpdateDetectionRule() {
+    return [
+      param('ruleId').isUUID(),
+      body('name').optional().isString().isLength({ min: 1, max: 100 }),
+      body('enabled').optional().isBoolean()
+    ];
+  }
+
+  private validateRuleId() {
+    return [param('ruleId').isUUID()];
+  }
+
+  private validateAddThreatIntelligence() {
+    return [
+      body('type').isIn(['ip_reputation', 'known_attacker', 'malicious_pattern', 'compromised_credential']),
+      body('value').isString(),
+      body('severity').isIn(Object.values(ActivitySeverity)),
+      body('source').isString(),
+      body('description').isString()
+    ];
+  }
+
+  private validateCreateRetentionPolicy() {
+    return [
+      body('name').isString().isLength({ min: 1, max: 100 }),
+      body('description').isString(),
+      body('rules').isArray(),
+      body('isActive').isBoolean(),
+      body('priority').isInt({ min: 0, max: 100 })
+    ];
+  }
+
+  private validateUpdateRetentionPolicy() {
+    return [
+      param('policyId').isUUID(),
+      body('name').optional().isString().isLength({ min: 1, max: 100 }),
+      body('isActive').optional().isBoolean()
+    ];
+  }
+
+  private validatePolicyId() {
+    return [param('policyId').isUUID()];
+  }
+
+  private validateApplyRetention() {
+    return [param('policyId').isUUID()];
+  }
+
+  private validateGetArchived() {
+    return [
+      query('userId').optional().isUUID(),
+      query('startDate').optional().isISO8601(),
+      query('endDate').optional().isISO8601(),
+      query('policyId').optional().isUUID()
+    ];
+  }
+
+  private validateArchiveId() {
+    return [param('archiveId').isUUID()];
+  }
+
+  private validateCreateRetentionJob() {
+    return [body('policyId').isUUID()];
+  }
+
+  private validateDataSubjectRequest() {
+    return [
+      body('type').isIn(Object.values(RequestType)),
+      body('userId').isUUID(),
+      body('requestDetails').isObject(),
+      body('verificationRequired').isBoolean()
+    ];
+  }
+
+  private validateCreatePrivacyPolicy() {
+    return [
+      body('name').isString().isLength({ min: 1, max: 100 }),
+      body('description').isString(),
+      body('version').isString(),
+      body('effectiveDate').isISO8601(),
+      body('isActive').isBoolean(),
+      body('rules').isArray()
+    ];
+  }
+
+  private validateAnonymizeActivity() {
+    return [
+      body('activity').isObject(),
+      body('method').isIn(Object.values(AnonymizationMethod))
+    ];
+  }
+
+  private validateRecordConsent() {
+    return [
+      body('policyId').isUUID(),
+      body('consentGiven').isBoolean(),
+      body('consentMethod').isString(),
+      body('purposes').isArray()
+    ];
+  }
+
+  private validateWithdrawConsent() {
+    return [
+      body('policyId').isUUID(),
+      body('reason').isString()
+    ];
+  }
+
+  private validateDataSubjectRight() {
+    return [
+      body('right').isIn(Object.values(DataSubjectRight)),
+      body('requestDetails').isObject(),
+      body('verificationMethod').isString()
+    ];
+  }
+
+  private validateGetAuditLogs() {
+    return [
+      query('userId').optional().isUUID(),
+      query('startDate').optional().isISO8601(),
+      query('endDate').optional().isISO8601()
+    ];
+  }
+
+  private validateCreateDataFlow() {
+    return [
+      body('name').isString().isLength({ min: 1, max: 100 }),
+      body('sourceSystem').isString(),
+      body('targetSystem').isString(),
+      body('dataCategories').isArray(),
+      body('processingOperations').isArray()
+    ];
+  }
+}

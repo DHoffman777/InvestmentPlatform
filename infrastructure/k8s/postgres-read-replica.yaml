@@ -1,0 +1,203 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-read-replica
+  namespace: investment-platform-dev
+  labels:
+    app: postgres-read-replica
+    tier: database
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: postgres-read-replica
+  template:
+    metadata:
+      labels:
+        app: postgres-read-replica
+        tier: database
+    spec:
+      containers:
+      - name: postgres-read-replica
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "investment_platform"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: POSTGRES_PRIMARY_HOST
+          value: "postgres-service"
+        - name: POSTGRES_PRIMARY_PORT
+          value: "5432"
+        - name: POSTGRES_REPLICA_MODE
+          value: "slave"
+        - name: POSTGRES_MASTER_SERVICE
+          value: "postgres-service"
+        volumeMounts:
+        - name: postgres-read-replica-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-read-replica-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        - name: init-read-replica
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: postgres-read-replica-storage
+        persistentVolumeClaim:
+          claimName: postgres-read-replica-pvc
+      - name: postgres-read-replica-config
+        configMap:
+          name: postgres-read-replica-config
+      - name: init-read-replica
+        configMap:
+          name: init-read-replica-script
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-read-replica-pvc
+  namespace: investment-platform-dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-read-replica-service
+  namespace: investment-platform-dev
+  labels:
+    app: postgres-read-replica
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: postgres-read-replica
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-read-replica-config
+  namespace: investment-platform-dev
+data:
+  postgresql.conf: |
+    # Read Replica Configuration
+    listen_addresses = '*'
+    port = 5432
+    max_connections = 100
+    shared_buffers = 128MB
+    effective_cache_size = 512MB
+    maintenance_work_mem = 64MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 4
+    effective_io_concurrency = 2
+    
+    # Replication settings
+    hot_standby = on
+    max_standby_archive_delay = 30s
+    max_standby_streaming_delay = 30s
+    wal_receiver_status_interval = 10s
+    hot_standby_feedback = on
+    
+    # Logging
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = '/var/log/postgresql'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_statement = 'all'
+    log_min_duration_statement = 1000
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init-read-replica-script
+  namespace: investment-platform-dev
+data:
+  01-setup-replication.sh: |
+    #!/bin/bash
+    set -e
+    
+    echo "Setting up PostgreSQL read replica..."
+    
+    # Wait for primary to be ready
+    until pg_isready -h $POSTGRES_PRIMARY_HOST -p $POSTGRES_PRIMARY_PORT -U $POSTGRES_USER
+    do
+      echo "Waiting for primary database to be ready..."
+      sleep 5
+    done
+    
+    # Create replication slot if it doesn't exist
+    PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_PRIMARY_HOST -p $POSTGRES_PRIMARY_PORT -U $POSTGRES_USER -d $POSTGRES_DB -c "
+    SELECT pg_create_physical_replication_slot('replica_slot', true);
+    " || echo "Replication slot may already exist"
+    
+    # Create recovery.conf for streaming replication
+    cat > /var/lib/postgresql/data/recovery.conf << EOF
+    standby_mode = 'on'
+    primary_conninfo = 'host=$POSTGRES_PRIMARY_HOST port=$POSTGRES_PRIMARY_PORT user=$POSTGRES_USER password=$POSTGRES_PASSWORD'
+    primary_slot_name = 'replica_slot'
+    trigger_file = '/var/lib/postgresql/data/promote_trigger'
+    EOF
+    
+    echo "Read replica setup completed"
+---
+# Service for read-only queries (load balancer across read replicas)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-read-service
+  namespace: investment-platform-dev
+  labels:
+    app: postgres-read-replica
+    service: read-only
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres
+  selector:
+    app: postgres-read-replica
+  sessionAffinity: None

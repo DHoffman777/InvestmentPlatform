@@ -1,0 +1,544 @@
+{
+  "recoveryId": "investment-platform-recovery-001",
+  "organizationId": "investment-platform-prod",
+  "recoveryObjectives": {
+    "rtoMinutes": 240,
+    "rpoMinutes": 15
+  },
+  "dataTypes": {
+    "transactionData": {
+      "name": "Transaction Data",
+      "priority": "critical",
+      "retentionPeriod": "7 years",
+      "archivalPolicy": "Move to cold storage after 3 years, archive after 5 years",
+      "deletionPolicy": "Secure deletion after 7 years with audit trail",
+      "pointInTimeRecovery": true,
+      "backupFrequency": "15 minutes",
+      "encryptionRequired": true,
+      "complianceRequirements": ["SEC Rule 17a-4", "FINRA Rule 4511", "SOX Section 802"]
+    },
+    "positionData": {
+      "name": "Portfolio Position Data",
+      "priority": "critical",
+      "retentionPeriod": "7 years",
+      "archivalPolicy": "Move to cold storage after 2 years, archive after 5 years",
+      "deletionPolicy": "Secure deletion after 7 years with audit trail",
+      "pointInTimeRecovery": true,
+      "backupFrequency": "30 minutes",
+      "encryptionRequired": true,
+      "complianceRequirements": ["SEC Rule 17a-4", "Investment Advisers Act"]
+    },
+    "clientData": {
+      "name": "Client Information",
+      "priority": "high",
+      "retentionPeriod": "7 years",
+      "archivalPolicy": "Move to cold storage after 1 year, archive after 3 years",
+      "deletionPolicy": "Secure deletion after 7 years with right to erasure support",
+      "pointInTimeRecovery": true,
+      "backupFrequency": "1 hour",
+      "encryptionRequired": true,
+      "complianceRequirements": ["GDPR", "CCPA", "Reg S-P", "GLBA"]
+    },
+    "marketData": {
+      "name": "Market Data",  
+      "priority": "medium",
+      "retentionPeriod": "5 years",
+      "archivalPolicy": "Move to cold storage after 6 months, archive after 2 years",
+      "deletionPolicy": "Automatic deletion after 5 years",
+      "pointInTimeRecovery": false,
+      "backupFrequency": "daily",
+      "encryptionRequired": false,
+      "complianceRequirements": ["Market data vendor agreements"]
+    },
+    "documentData": {
+      "name": "Financial Documents",
+      "priority": "high",
+      "retentionPeriod": "7 years",
+      "archivalPolicy": "Move to cold storage after 1 year, archive after 3 years",
+      "deletionPolicy": "Secure deletion after 7 years with audit trail",
+      "pointInTimeRecovery": false,
+      "backupFrequency": "4 hours",
+      "encryptionRequired": true,
+      "complianceRequirements": ["SEC Rule 17a-4", "FINRA Rule 4511"]
+    },
+    "auditLogs": {
+      "name": "Audit Logs",
+      "priority": "critical",
+      "retentionPeriod": "10 years",
+      "archivalPolicy": "Move to cold storage after 1 year, archive after 3 years", 
+      "deletionPolicy": "Secure deletion after 10 years, no early deletion allowed",
+      "pointInTimeRecovery": true,
+      "backupFrequency": "5 minutes",
+      "encryptionRequired": true,
+      "complianceRequirements": ["SOX Section 404", "SEC Rule 17a-4", "FINRA Rule 4511", "PCI DSS"]
+    }
+  },
+  "backupSources": [
+    {
+      "sourceId": "primary-postgres",
+      "name": "Primary PostgreSQL Database",
+      "type": "database",
+      "connectionString": "${DATABASE_CONNECTION_STRING}",
+      "backupPath": "/backups/postgres",
+      "compressionType": "gzip",
+      "encryptionKey": "${BACKUP_ENCRYPTION_KEY}",
+      "verificationMethod": "integrity-check"
+    },
+    {
+      "sourceId": "analytics-postgres",
+      "name": "Analytics PostgreSQL Database",
+      "type": "database", 
+      "connectionString": "${ANALYTICS_DATABASE_CONNECTION_STRING}",
+      "backupPath": "/backups/analytics-postgres",
+      "compressionType": "gzip",
+      "encryptionKey": "${BACKUP_ENCRYPTION_KEY}",
+      "verificationMethod": "integrity-check"
+    },
+    {
+      "sourceId": "redis-cache",
+      "name": "Redis Cache Cluster",
+      "type": "cache",
+      "connectionString": "${REDIS_CONNECTION_STRING}",
+      "backupPath": "/backups/redis",
+      "compressionType": "lz4",
+      "verificationMethod": "checksum"
+    },
+    {
+      "sourceId": "document-storage",
+      "name": "Document Object Storage",
+      "type": "object-storage",
+      "connectionString": "${S3_CONNECTION_STRING}",
+      "backupPath": "/backups/documents",
+      "compressionType": "none",
+      "encryptionKey": "${DOCUMENT_ENCRYPTION_KEY}",
+      "verificationMethod": "checksum"
+    },
+    {
+      "sourceId": "application-files",
+      "name": "Application File System",
+      "type": "filesystem",
+      "connectionString": "/opt/investment-platform",
+      "backupPath": "/backups/application",
+      "compressionType": "bzip2",
+      "verificationMethod": "checksum"
+    }
+  ],
+  "recoveryProcedures": [
+    {
+      "procedureId": "system-failure-recovery",
+      "name": "Complete System Failure Recovery",
+      "scenario": "system-failure",
+      "estimatedDuration": 180,
+      "prerequisites": [
+        "Replacement hardware available",
+        "Network connectivity restored",
+        "Backup integrity verified"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Initialize recovery environment",
+          "action": "setup-recovery-environment",
+          "timeout": 30,
+          "dependencies": [],
+          "rollbackAction": "cleanup-recovery-environment",
+          "verification": "verify-environment-ready"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Restore database systems",
+          "action": "restore-databases",
+          "timeout": 90,
+          "dependencies": [1],
+          "rollbackAction": "cleanup-database-restore",
+          "verification": "verify-database-integrity"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Restore application files",
+          "action": "restore-application-files",
+          "timeout": 30,
+          "dependencies": [1],
+          "rollbackAction": "cleanup-application-files",
+          "verification": "verify-application-files"
+        },
+        {
+          "stepNumber": 4,
+          "description": "Restore document storage",
+          "action": "restore-document-storage",
+          "timeout": 60,
+          "dependencies": [1],
+          "rollbackAction": "cleanup-document-storage",
+          "verification": "verify-document-storage"
+        },
+        {
+          "stepNumber": 5,
+          "description": "Start application services",
+          "action": "start-application-services",
+          "timeout": 15,
+          "dependencies": [2, 3, 4],
+          "rollbackAction": "stop-application-services",
+          "verification": "verify-services-healthy"
+        },
+        {
+          "stepNumber": 6,
+          "description": "Validate data consistency",
+          "action": "validate-data-consistency",
+          "timeout": 30,
+          "dependencies": [5],
+          "rollbackAction": "report-consistency-issues", 
+          "verification": "verify-data-consistent"
+        }
+      ],
+      "rollbackPlan": [
+        {
+          "stepNumber": 1,
+          "description": "Stop all services",
+          "action": "stop-all-services",
+          "timeout": 10,
+          "dependencies": [],
+          "rollbackAction": "",
+          "verification": "verify-services-stopped"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Clean up recovery environment",
+          "action": "cleanup-recovery-environment",
+          "timeout": 15,
+          "dependencies": [1],
+          "rollbackAction": "",
+          "verification": "verify-cleanup-complete"
+        }
+      ],
+      "validationSteps": [
+        {
+          "stepNumber": 1,
+          "description": "Validate transaction data integrity",
+          "validationType": "data-integrity",
+          "expectedResult": "All transaction records present and valid",
+          "tolerance": "0% data loss",
+          "automatedCheck": true
+        },
+        {
+          "stepNumber": 2, 
+          "description": "Validate position calculations",
+          "validationType": "business-logic",
+          "expectedResult": "Position calculations match pre-failure state",
+          "tolerance": "0.01% variance",
+          "automatedCheck": true
+        },
+        {
+          "stepNumber": 3,
+          "description": "Validate compliance reporting capability",
+          "validationType": "compliance",
+          "expectedResult": "All regulatory reports can be generated",
+          "tolerance": "100% functionality",
+          "automatedCheck": false
+        },
+        {
+          "stepNumber": 4,
+          "description": "Validate system performance",
+          "validationType": "performance",
+          "expectedResult": "Response times within SLA",
+          "tolerance": "Within 20% of baseline",
+          "automatedCheck": true
+        }
+      ]
+    },
+    {
+      "procedureId": "data-corruption-recovery",
+      "name": "Data Corruption Recovery",
+      "scenario": "data-corruption",
+      "estimatedDuration": 120,
+      "prerequisites": [
+        "Corruption scope identified",
+        "Clean backup available",
+        "Corruption cause addressed"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Isolate corrupted data",
+          "action": "isolate-corrupted-data",
+          "timeout": 15,
+          "dependencies": [],
+          "rollbackAction": "restore-corrupted-data-access",
+          "verification": "verify-data-isolated"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Identify clean recovery point",
+          "action": "identify-recovery-point",
+          "timeout": 30,
+          "dependencies": [1],
+          "rollbackAction": "",
+          "verification": "verify-recovery-point-valid"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Restore from clean backup",
+          "action": "restore-from-backup",
+          "timeout": 60,
+          "dependencies": [2],
+          "rollbackAction": "restore-corrupted-data",
+          "verification": "verify-restore-complete"
+        },
+        {
+          "stepNumber": 4,
+          "description": "Reconcile data differences",
+          "action": "reconcile-data-differences",
+          "timeout": 30,
+          "dependencies": [3],
+          "rollbackAction": "report-reconciliation-issues",
+          "verification": "verify-reconciliation-complete"
+        }
+      ],
+      "rollbackPlan": [],
+      "validationSteps": [
+        {
+          "stepNumber": 1,
+          "description": "Validate data integrity post-recovery",
+          "validationType": "data-integrity",
+          "expectedResult": "No corruption detected",
+          "tolerance": "0% corruption",
+          "automatedCheck": true
+        }
+      ]
+    },
+    {
+      "procedureId": "human-error-recovery",
+      "name": "Human Error Recovery",
+      "scenario": "human-error",
+      "estimatedDuration": 60,
+      "prerequisites": [
+        "Error scope identified",
+        "Recovery point determined",
+        "Approval obtained"
+      ],
+      "steps": [
+        {
+          "stepNumber": 1,
+          "description": "Create recovery workspace",
+          "action": "create-recovery-workspace",
+          "timeout": 10,
+          "dependencies": [],
+          "rollbackAction": "cleanup-recovery-workspace",
+          "verification": "verify-workspace-ready"
+        },
+        {
+          "stepNumber": 2,
+          "description": "Restore affected data",
+          "action": "restore-affected-data",
+          "timeout": 30,
+          "dependencies": [1],
+          "rollbackAction": "restore-original-state",
+          "verification": "verify-data-restored"
+        },
+        {
+          "stepNumber": 3,
+          "description": "Validate restored data",
+          "action": "validate-restored-data",
+          "timeout": 15,
+          "dependencies": [2],
+          "rollbackAction": "report-validation-issues",
+          "verification": "verify-validation-passed"
+        }
+      ],
+      "rollbackPlan": [],
+      "validationSteps": [
+        {
+          "stepNumber": 1,
+          "description": "Validate business continuity",
+          "validationType": "business-logic",
+          "expectedResult": "Business operations unaffected",
+          "tolerance": "100% functionality",
+          "automatedCheck": false
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "dataIntegrityChecks": [
+      {
+        "checkId": "transaction-count-check",
+        "name": "Transaction Record Count Validation",
+        "dataType": "transactionData",
+        "checkType": "row-count",
+        "query": "SELECT COUNT(*) FROM transactions WHERE created_at >= $1 AND created_at <= $2",
+        "expectedResult": "variable",
+        "tolerance": 0
+      },
+      {
+        "checkId": "position-balance-check",
+        "name": "Position Balance Validation",
+        "dataType": "positionData",
+        "checkType": "checksum",
+        "query": "SELECT SUM(quantity * market_value) as total_value FROM positions WHERE portfolio_id = $1",
+        "expectedResult": "variable",
+        "tolerance": 0.01
+      },
+      {
+        "checkId": "client-reference-check",
+        "name": "Client Reference Integrity",
+        "dataType": "clientData",
+        "checkType": "foreign-key",
+        "query": "SELECT COUNT(*) FROM portfolios p LEFT JOIN clients c ON p.client_id = c.id WHERE c.id IS NULL",
+        "expectedResult": 0,
+        "tolerance": 0
+      },
+      {
+        "checkId": "audit-log-sequence-check",
+        "name": "Audit Log Sequence Validation",
+        "dataType": "auditLogs",
+        "checkType": "business-rule",
+        "query": "SELECT COUNT(*) FROM audit_logs WHERE sequence_number NOT IN (SELECT sequence_number - 1 FROM audit_logs) AND sequence_number > 1",
+        "expectedResult": 0,
+        "tolerance": 0
+      }
+    ],
+    "businessLogicValidation": [
+      {
+        "validationId": "portfolio-balance-validation",
+        "name": "Portfolio Balance Consistency",
+        "description": "Ensure portfolio cash + position values equal total portfolio value",
+        "businessRule": "cash_balance + SUM(position_values) = total_portfolio_value",
+        "validationQuery": "SELECT portfolio_id FROM portfolios WHERE ABS(cash_balance + position_total - total_value) > 0.01",
+        "criticalityLevel": "critical"
+      },
+      {
+        "validationId": "transaction-settlement-validation", 
+        "name": "Transaction Settlement Consistency",
+        "description": "Ensure all transactions have corresponding settlement records",
+        "businessRule": "Every executed transaction must have a settlement record",
+        "validationQuery": "SELECT t.id FROM transactions t LEFT JOIN settlements s ON t.id = s.transaction_id WHERE t.status = 'executed' AND s.id IS NULL",
+        "criticalityLevel": "high"
+      },
+      {
+        "validationId": "fee-calculation-validation",
+        "name": "Fee Calculation Accuracy",
+        "description": "Validate that calculated fees match fee schedules",
+        "businessRule": "Calculated fees must match applicable fee schedule",
+        "validationQuery": "SELECT transaction_id FROM transaction_fees WHERE ABS(calculated_fee - expected_fee) > 0.01",
+        "criticalityLevel": "medium"
+      }
+    ],
+    "complianceVerification": [
+      {
+        "checkId": "sec-17a4-compliance",
+        "regulation": "SEC Rule 17a-4",
+        "requirement": "Electronic records preservation",
+        "validationMethod": "Verify WORM storage and audit trail",
+        "frequency": "monthly",
+        "evidenceRequired": ["Storage configuration", "Audit logs", "Access controls"]
+      },
+      {
+        "checkId": "finra-4511-compliance",
+        "regulation": "FINRA Rule 4511",
+        "requirement": "General recordkeeping requirements",
+        "validationMethod": "Verify record retention and accessibility",
+        "frequency": "quarterly",
+        "evidenceRequired": ["Retention policies", "Access procedures", "Backup verification"]
+      },
+      {
+        "checkId": "gdpr-compliance",
+        "regulation": "GDPR",
+        "requirement": "Data protection and privacy",
+        "validationMethod": "Verify encryption, access controls, and data subject rights",
+        "frequency": "quarterly",
+        "evidenceRequired": ["Encryption verification", "Access logs", "Data processing records"]
+      }
+    ],
+    "performanceBaseline": {
+      "queryResponseTime": 500,
+      "transactionThroughput": 1000,
+      "systemAvailability": 99.9,
+      "dataConsistency": 100.0
+    }
+  },
+  "compliance": {
+    "regulations": [
+      "SEC Rule 17a-4 (Electronic Records)",
+      "FINRA Rule 4511 (General Recordkeeping)",
+      "SOX Section 404 (Internal Controls)",
+      "SOX Section 802 (Criminal Penalties)",
+      "Investment Advisers Act Section 204",
+      "GDPR (General Data Protection Regulation)",
+      "CCPA (California Consumer Privacy Act)",
+      "Regulation S-P (Privacy of Consumer Financial Information)",
+      "GLBA (Gramm-Leach-Bliley Act)"
+    ],
+    "auditRequirements": [
+      "Annual SOC 2 Type II audit",
+      "Quarterly backup verification",
+      "Monthly access control review",
+      "Weekly data integrity validation",
+      "Daily backup monitoring"
+    ],
+    "retentionPolicies": [
+      {
+        "policyId": "sec-17a4-policy",
+        "dataType": "transactionData",
+        "retentionPeriod": "7 years",
+        "archivalTrigger": "3 years after creation",
+        "deletionTrigger": "7 years after creation",
+        "legalHoldOverride": true,
+        "auditTrail": true
+      },
+      {
+        "policyId": "client-records-policy",
+        "dataType": "clientData",
+        "retentionPeriod": "7 years after relationship end",
+        "archivalTrigger": "1 year after relationship end",
+        "deletionTrigger": "7 years after relationship end",
+        "legalHoldOverride": true,
+        "auditTrail": true
+      },
+      {
+        "policyId": "audit-log-policy",
+        "dataType": "auditLogs",
+        "retentionPeriod": "10 years",
+        "archivalTrigger": "1 year after creation",
+        "deletionTrigger": "10 years after creation",
+        "legalHoldOverride": false,
+        "auditTrail": true
+      }
+    ],
+    "legalHolds": [],
+    "dataClassification": [
+      {
+        "classificationId": "pii-classification",
+        "dataType": "clientData",
+        "sensitivityLevel": "restricted",
+        "handlingRequirements": [
+          "Encryption at rest and in transit",
+          "Access logging required",
+          "Multi-factor authentication required",
+          "Data masking in non-prod environments"
+        ],
+        "encryptionRequired": true
+      },
+      {
+        "classificationId": "financial-classification",
+        "dataType": "transactionData",
+        "sensitivityLevel": "confidential",
+        "handlingRequirements": [
+          "Encryption at rest",
+          "Access logging required",
+          "Audit trail required",
+          "Backup verification required"
+        ],
+        "encryptionRequired": true
+      },
+      {
+        "classificationId": "market-data-classification",
+        "dataType": "marketData",
+        "sensitivityLevel": "internal",
+        "handlingRequirements": [
+          "Vendor license compliance",
+          "Usage tracking required"
+        ],
+        "encryptionRequired": false
+      }
+    ]
+  }
+}

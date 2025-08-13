@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: investment-platform
+  labels:
+    name: investment-platform
+    environment: development
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: investment-platform-staging
+  labels:
+    name: investment-platform-staging
+    environment: staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: investment-platform-prod
+  labels:
+    name: investment-platform-prod
+    environment: production

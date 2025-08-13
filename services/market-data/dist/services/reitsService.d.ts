@@ -1,0 +1,98 @@
+import { PrismaClient, Security } from '@prisma/client';
+import { Decimal } from 'decimal.js';
+export interface REITData {
+    symbol: string;
+    name: string;
+    cusip?: string;
+    isin?: string;
+    securityType: 'REIT';
+    exchange: string;
+    currency?: string;
+    country?: string;
+    reitType: 'EQUITY_REIT' | 'MORTGAGE_REIT' | 'HYBRID_REIT';
+    propertyTypes: string[];
+    marketCap: Decimal;
+    dividendYield?: Decimal;
+    distributionFrequency?: 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
+    fundsFromOperations?: Decimal;
+    adjustedFFO?: Decimal;
+    netAssetValue?: Decimal;
+    priceToFFO?: Decimal;
+    debtToEquityRatio?: Decimal;
+    occupancyRate?: Decimal;
+    geographicFocus?: 'DOMESTIC' | 'INTERNATIONAL' | 'GLOBAL';
+    primaryMarkets?: string[];
+    managementCompany?: string;
+    portfolioManager?: string;
+    totalProperties?: number;
+    totalSquareFootage?: Decimal;
+    totalReturn1Y?: Decimal;
+    totalReturn3Y?: Decimal;
+    totalReturn5Y?: Decimal;
+    beta?: Decimal;
+    standardDeviation?: Decimal;
+    isActive?: boolean;
+}
+export interface MLPData {
+    symbol: string;
+    name: string;
+    cusip?: string;
+    isin?: string;
+    securityType: 'MLP';
+    exchange: string;
+    currency?: string;
+    country?: string;
+    mlpType: 'ENERGY' | 'NATURAL_RESOURCES' | 'INFRASTRUCTURE' | 'REAL_ESTATE' | 'OTHER';
+    businessDescription: string;
+    sector: string;
+    subSector?: string;
+    marketCap: Decimal;
+    distributionYield?: Decimal;
+    distributionFrequency?: 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
+    distributionCoverage?: Decimal;
+    distributionGrowthRate?: Decimal;
+    distributableCashFlow?: Decimal;
+    ebitda?: Decimal;
+    debtToEbitda?: Decimal;
+    returnOnInvestedCapital?: Decimal;
+    pipelineMiles?: Decimal;
+    storageCapacity?: Decimal;
+    processingCapacity?: Decimal;
+    operatingRegions?: string[];
+    assetLocations?: string[];
+    generalPartner: string;
+    incentiveDistributionRights?: boolean;
+    managementFee?: Decimal;
+    k1Eligible: boolean;
+    qualifiedIncome?: Decimal;
+    totalReturn1Y?: Decimal;
+    totalReturn3Y?: Decimal;
+    totalReturn5Y?: Decimal;
+    beta?: Decimal;
+    standardDeviation?: Decimal;
+    isActive?: boolean;
+}
+export declare class REITsService {
+    private prisma;
+    constructor(prisma: PrismaClient);
+    upsertREIT(reitData: REITData): Promise<Security>;
+    upsertMLP(mlpData: MLPData): Promise<Security>;
+    searchREITsAndMLPs(filters: {
+        query?: string;
+        securityType?: 'REIT' | 'MLP';
+        reitType?: 'EQUITY_REIT' | 'MORTGAGE_REIT' | 'HYBRID_REIT';
+        mlpType?: 'ENERGY' | 'NATURAL_RESOURCES' | 'INFRASTRUCTURE' | 'REAL_ESTATE' | 'OTHER';
+        propertyTypes?: string[];
+        minMarketCap?: number;
+        maxMarketCap?: number;
+        minDividendYield?: number;
+        maxPriceToFFO?: number;
+        geographicFocus?: string;
+        sector?: string;
+        limit?: number;
+    }): Promise<any[]>;
+    getREITOrMLPDetails(symbol: string): Promise<any>;
+    private storeREITMetadata;
+    private getREITMetadata;
+}
+//# sourceMappingURL=reitsService.d.ts.map

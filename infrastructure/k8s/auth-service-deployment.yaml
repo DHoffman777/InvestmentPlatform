@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: investment-platform
+  labels:
+    app: auth-service
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+        tier: backend
+    spec:
+      containers:
+      - name: auth-service
+        image: investment-platform/auth-service:latest
+        ports:
+        - containerPort: 3001
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3001"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: redis-url
+        - name: JWT_ACCESS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: jwt-access-secret
+        - name: JWT_REFRESH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: jwt-refresh-secret
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: auth-secret
+              key: session-secret
+        - name: BCRYPT_ROUNDS
+          value: "12"
+        - name: MAX_LOGIN_ATTEMPTS
+          value: "5"
+        - name: LOCKOUT_DURATION
+          value: "900"
+        - name: CORS_ORIGINS
+          value: "https://app.investment-platform.com,https://admin.investment-platform.com"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: RATE_LIMIT_WINDOW_MS
+          value: "900000"
+        - name: RATE_LIMIT_MAX_REQUESTS
+          value: "100"
+        - name: SESSION_TIMEOUT
+          value: "86400"
+        - name: ENABLE_METRICS
+          value: "true"
+        - name: METRICS_PATH
+          value: "/metrics"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 3001
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 6
+      imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: investment-platform
+  labels:
+    app: auth-service
+    tier: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3001
+    targetPort: 3001
+    protocol: TCP
+    name: http
+  selector:
+    app: auth-service
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: auth-secret
+  namespace: investment-platform
+type: Opaque
+data:
+  database-url: cG9zdGdyZXNxbDovL2ludmVzdG1lbnRfdXNlcjppbnZlc3RtZW50X3Bhc3NAcG9zdGdyZXM6NTQzMi9pbnZlc3RtZW50X3BsYXRmb3Jt # base64: postgresql://investment_user:investment_pass@postgres:5432/investment_platform
+  redis-url: cmVkaXM6Ly86cmVkaXNfcGFzc0ByZWRpczozNjM3MA== # base64: redis://:redis_pass@redis:6379
+  jwt-access-secret: eW91ci1zdXBlci1zZWNyZXQtYWNjZXNzLWtleS1jaGFuZ2UtaW4tcHJvZHVjdGlvbg== # base64: your-super-secret-access-key-change-in-production
+  jwt-refresh-secret: eW91ci1zdXBlci1zZWNyZXQtcmVmcmVzaC1rZXktY2hhbmdlLWluLXByb2R1Y3Rpb24= # base64: your-super-secret-refresh-key-change-in-production
+  session-secret: eW91ci1zZXNzaW9uLXNlY3JldC1jaGFuZ2UtaW4tcHJvZHVjdGlvbg== # base64: your-session-secret-change-in-production

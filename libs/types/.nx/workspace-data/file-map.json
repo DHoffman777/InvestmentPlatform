@@ -1,0 +1,159 @@
+{
+  "version": "6.0",
+  "nxVersion": "20.8.2",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {},
+    "nonProjectFiles": [
+      {
+        "file": "dist/auth.d.ts",
+        "hash": "8163844420450797614"
+      },
+      {
+        "file": "dist/auth.d.ts.map",
+        "hash": "10596204086581765184"
+      },
+      {
+        "file": "dist/auth.js",
+        "hash": "12966026818189381976"
+      },
+      {
+        "file": "dist/auth.js.map",
+        "hash": "2521116562147979354"
+      },
+      {
+        "file": "dist/common.d.ts",
+        "hash": "4810668112483828233"
+      },
+      {
+        "file": "dist/common.d.ts.map",
+        "hash": "16864607249982295982"
+      },
+      {
+        "file": "dist/common.js",
+        "hash": "6695914677942690318"
+      },
+      {
+        "file": "dist/common.js.map",
+        "hash": "16660395539351877736"
+      },
+      {
+        "file": "dist/index.d.ts",
+        "hash": "10516090826702355941"
+      },
+      {
+        "file": "dist/index.d.ts.map",
+        "hash": "14811270513302737548"
+      },
+      {
+        "file": "dist/index.js",
+        "hash": "13707012588577023340"
+      },
+      {
+        "file": "dist/index.js.map",
+        "hash": "16361395516298354769"
+      },
+      {
+        "file": "dist/tenant.d.ts",
+        "hash": "6406788908631853701"
+      },
+      {
+        "file": "dist/tenant.d.ts.map",
+        "hash": "15654385951558394027"
+      },
+      {
+        "file": "dist/tenant.js",
+        "hash": "10693434247963448557"
+      },
+      {
+        "file": "dist/tenant.js.map",
+        "hash": "7104127261593467167"
+      },
+      {
+        "file": "dist/user.d.ts",
+        "hash": "5974330338489983869"
+      },
+      {
+        "file": "dist/user.d.ts.map",
+        "hash": "16279141497429391082"
+      },
+      {
+        "file": "dist/user.js",
+        "hash": "7444086688368094190"
+      },
+      {
+        "file": "dist/user.js.map",
+        "hash": "8584738091296977768"
+      },
+      {
+        "file": "package.json",
+        "hash": "17443674218492831565"
+      },
+      {
+        "file": "src/auth.d.ts",
+        "hash": "3454884506885856717"
+      },
+      {
+        "file": "src/auth.js",
+        "hash": "3929627258916163809"
+      },
+      {
+        "file": "src/auth.ts",
+        "hash": "6957752539356200337"
+      },
+      {
+        "file": "src/common.d.ts",
+        "hash": "7590110677692905885"
+      },
+      {
+        "file": "src/common.js",
+        "hash": "16261250413481632558"
+      },
+      {
+        "file": "src/common.ts",
+        "hash": "17972893949669878421"
+      },
+      {
+        "file": "src/index.d.ts",
+        "hash": "11248612078240260822"
+      },
+      {
+        "file": "src/index.js",
+        "hash": "12730339632525327323"
+      },
+      {
+        "file": "src/index.ts",
+        "hash": "6834631137009948839"
+      },
+      {
+        "file": "src/tenant.d.ts",
+        "hash": "6391093586106210246"
+      },
+      {
+        "file": "src/tenant.js",
+        "hash": "1291711826991799221"
+      },
+      {
+        "file": "src/tenant.ts",
+        "hash": "3654595858850715994"
+      },
+      {
+        "file": "src/user.d.ts",
+        "hash": "1383264014986108134"
+      },
+      {
+        "file": "src/user.js",
+        "hash": "8205001025537215209"
+      },
+      {
+        "file": "src/user.ts",
+        "hash": "17929474318788222408"
+      },
+      {
+        "file": "tsconfig.json",
+        "hash": "8740607957582352392"
+      }
+    ]
+  }
+}

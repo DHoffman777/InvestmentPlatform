@@ -1,0 +1,53 @@
+{
+  "name": "investment-platform-uat",
+  "version": "1.0.0",
+  "description": "User Acceptance Testing suite for Investment Management Platform",
+  "main": "uat-runner.ts",
+  "scripts": {
+    "build": "tsc",
+    "uat": "ts-node uat-runner.ts",
+    "uat:headful": "ts-node uat-runner.ts -- --headless=false --slow-mo=1000",
+    "uat:chrome": "ts-node uat-runner.ts -- --browsers=chrome",
+    "uat:firefox": "ts-node uat-runner.ts -- --browsers=firefox",
+    "uat:safari": "ts-node uat-runner.ts -- --browsers=safari",
+    "uat:staging": "UAT_BASE_URL=https://staging.investmentplatform.com ts-node uat-runner.ts",
+    "uat:production": "UAT_BASE_URL=https://app.investmentplatform.com ts-node uat-runner.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "clean": "rm -rf dist test-results",
+    "setup": "mkdir -p test-results/screenshots test-results/videos test-results/reports"
+  },
+  "keywords": [
+    "uat",
+    "testing",
+    "investment",
+    "portfolio",
+    "automation",
+    "playwright"
+  ],
+  "author": "Investment Platform Team",
+  "license": "MIT",
+  "dependencies": {
+    "@playwright/test": "^1.40.0",
+    "playwright": "^1.40.0",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.10.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/company/investment-platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/company/investment-platform/issues"
+  },
+  "homepage": "https://github.com/company/investment-platform#readme"
+}

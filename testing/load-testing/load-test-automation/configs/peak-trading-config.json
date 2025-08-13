@@ -1,0 +1,318 @@
+{
+  "testName": "Peak Trading Hours Load Test",
+  "description": "Simulates high-volume trading during market open and close periods",
+  "duration": 7200,
+  "users": {
+    "concurrent": 2500,
+    "rampUp": 100,
+    "total": 5000
+  },
+  "scenarios": [
+    {
+      "name": "High-Frequency Portfolio Monitoring",
+      "weight": 45,
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/portfolios/dashboard",
+          "weight": 35,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 800,
+            "bodyContains": ["portfolios", "totalValue"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/portfolios/{portfolioId}/positions/real-time",
+          "weight": 30,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 500,
+            "bodyContains": ["positions", "marketValue"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/portfolios/{portfolioId}/performance/intraday",
+          "weight": 25,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 1200,
+            "bodyContains": ["performance", "returns"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/portfolios/{portfolioId}/risk-metrics",
+          "weight": 10,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 2000,
+            "bodyContains": ["var", "beta"]
+          }
+        }
+      ],
+      "userProfile": {
+        "role": "portfolio_manager",
+        "credentials": {
+          "username": "pm@testfirm.com",
+          "password": "TestPM123!"
+        },
+        "permissions": ["portfolio.read", "risk.read"]
+      },
+      "dataSet": "peak-portfolios"
+    },
+    {
+      "name": "Intensive Order Management",
+      "weight": 30,
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/orders",
+          "weight": 50,
+          "body": {
+            "symbol": "{{randomSymbol}}",
+            "quantity": "{{randomQuantity}}",
+            "side": "{{randomSide}}",
+            "type": "market",
+            "portfolioId": "{{portfolioId}}"
+          },
+          "validation": {
+            "statusCode": 201,
+            "responseTime": 250,
+            "bodyContains": ["orderId", "status"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/orders/active",
+          "weight": 25,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 150,
+            "bodyContains": ["orders"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/orders/{orderId}/status",
+          "weight": 15,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 100,
+            "bodyContains": ["status", "fillStatus"]
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/api/orders/{orderId}/cancel",
+          "weight": 10,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 200,
+            "bodyContains": ["cancelled"]
+          }
+        }
+      ],
+      "userProfile": {
+        "role": "portfolio_manager",
+        "credentials": {
+          "username": "trader@testfirm.com",
+          "password": "TestTrader123!"
+        },
+        "permissions": ["trading.write", "orders.create", "orders.cancel"]
+      },
+      "dataSet": "trading-symbols"
+    },
+    {
+      "name": "Real-time Market Data Consumption",
+      "weight": 15,
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/market-data/quotes/bulk",
+          "weight": 40,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 80,
+            "bodyContains": ["quotes", "lastPrice"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/market-data/level2/{symbol}",
+          "weight": 25,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 120,
+            "bodyContains": ["bids", "asks"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/market-data/charts/intraday/{symbol}",
+          "weight": 20,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 300,
+            "bodyContains": ["ohlcv", "volume"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/market-data/news/breaking",
+          "weight": 15,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 200,
+            "bodyContains": ["news", "timestamp"]
+          }
+        }
+      ],
+      "userProfile": {
+        "role": "portfolio_manager",
+        "credentials": {
+          "username": "analyst@testfirm.com",
+          "password": "TestAnalyst123!"
+        },
+        "permissions": ["market_data.read", "news.read"]
+      },
+      "dataSet": "market-symbols"
+    },
+    {
+      "name": "Client Portal High Usage",
+      "weight": 10,
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/api/client/portfolio-summary",
+          "weight": 50,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 600,
+            "bodyContains": ["totalValue", "dayChange"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/client/recent-transactions",
+          "weight": 30,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 400,
+            "bodyContains": ["transactions", "amount"]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/api/client/alerts",
+          "weight": 20,
+          "validation": {
+            "statusCode": 200,
+            "responseTime": 300,
+            "bodyContains": ["alerts"]
+          }
+        }
+      ],
+      "userProfile": {
+        "role": "client",
+        "credentials": {
+          "username": "client@testfirm.com",
+          "password": "TestClient123!"
+        },
+        "permissions": ["client.read", "transactions.read"]
+      },
+      "dataSet": "client-accounts"
+    }
+  ],
+  "environment": {
+    "baseUrl": "https://staging.investmentplatform.com",
+    "timeout": 15000
+  },
+  "thresholds": {
+    "responseTime": {
+      "p50": 200,
+      "p95": 500,
+      "p99": 1000,
+      "max": 3000
+    },
+    "throughput": {
+      "rps": 500,
+      "tps": 250
+    },
+    "errorRate": {
+      "max": 0.5,
+      "critical": 0.1
+    },
+    "resources": {
+      "cpu": 85,
+      "memory": 80,
+      "diskIO": 150
+    }
+  },
+  "reporting": {
+    "formats": ["html", "json", "csv", "junit"],
+    "outputDir": "./load-test-results/peak-trading",
+    "realTimeUpdates": true,
+    "dashboardUrl": "http://monitoring.investmentplatform.com/grafana"
+  },
+  "loadPattern": {
+    "type": "peak_trading",
+    "phases": [
+      {
+        "name": "Pre-market warmup",
+        "duration": 900,
+        "users": 500,
+        "rampUp": 25
+      },
+      {
+        "name": "Market open surge",
+        "duration": 1800,
+        "users": 2500,
+        "rampUp": 150
+      },
+      {
+        "name": "Mid-day steady",
+        "duration": 2700,
+        "users": 1500,
+        "rampUp": 50
+      },
+      {
+        "name": "Market close surge",
+        "duration": 1800,
+        "users": 2500,
+        "rampUp": 150
+      }
+    ]
+  },
+  "dataGeneration": {
+    "portfolios": {
+      "count": 10000,
+      "valueRange": [10000, 10000000],
+      "positionCount": [5, 50]
+    },
+    "symbols": {
+      "equity": ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA", "NFLX"],
+      "etf": ["SPY", "QQQ", "VTI", "IWM", "EFA"],
+      "fixed_income": ["TLT", "SHY", "LQD", "HYG"]
+    },
+    "users": {
+      "portfolio_managers": 50,
+      "traders": 25,
+      "analysts": 30,
+      "clients": 1000
+    }
+  },
+  "monitoring": {
+    "systemMetrics": true,
+    "applicationMetrics": true,
+    "businessMetrics": true,
+    "alertThresholds": {
+      "responseTimeP95": 800,
+      "errorRate": 1.0,
+      "cpuUtilization": 90,
+      "memoryUtilization": 85
+    }
+  }
+}

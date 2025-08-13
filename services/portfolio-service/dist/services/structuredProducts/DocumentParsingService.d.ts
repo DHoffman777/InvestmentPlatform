@@ -1,0 +1,46 @@
+import { PrismaClient } from '@prisma/client';
+import { getKafkaService } from '../../utils/kafka-mock';
+import { DocumentParsingResult } from '../../models/structuredProducts/StructuredProducts';
+export declare class DocumentParsingService {
+    private prisma;
+    private kafkaService;
+    private parsingConfig;
+    private documentTemplates;
+    constructor(prisma: PrismaClient, kafkaService: ReturnType<typeof getKafkaService>);
+    parseDocument(documentId: string, documentPath: string, documentType: 'TERM_SHEET' | 'PROSPECTUS' | 'MARKETING' | 'LEGAL', tenantId: string): Promise<DocumentParsingResult>;
+    private performOCR;
+    private performAzureOCR;
+    private performAWSTextract;
+    private performGoogleVisionOCR;
+    private performTesseractOCR;
+    private preprocessText;
+    private extractTerms;
+    private extractField;
+    private convertDataType;
+    private setNestedValue;
+    private extractSections;
+    private enhanceWithML;
+    private extractRiskFactors;
+    private classifyProductType;
+    private validateExtractedData;
+    private getNestedValue;
+    private convertToStructuredProduct;
+    private mapPayoffType;
+    private generatePayoffFormula;
+    private extractPayoffParameters;
+    private determineUnderlyingType;
+    private mapUnderlyingAssets;
+    private mapBarriers;
+    private mapBarrierType;
+    private mapObservationFrequency;
+    private initializeTemplates;
+    private storeParsingResult;
+    private publishParsingEvent;
+    batchParseDocuments(documents: {
+        documentId: string;
+        documentPath: string;
+        documentType: 'TERM_SHEET' | 'PROSPECTUS' | 'MARKETING' | 'LEGAL';
+    }[], tenantId: string): Promise<DocumentParsingResult[]>;
+    getParsingResult(documentId: string): Promise<DocumentParsingResult | null>;
+    reviewAndCorrect(parsingResultId: string, corrections: Record<string, any>, reviewerId: string): Promise<DocumentParsingResult>;
+}

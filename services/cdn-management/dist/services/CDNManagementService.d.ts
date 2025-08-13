@@ -1,0 +1,42 @@
+import express from 'express';
+import { EventEmitter } from 'events';
+import { CDNConfig, AssetUploadRequest, AssetUploadResult, PurgeJob, CDNAnalytics, PerformanceMetrics, CachePolicy } from '../types';
+export declare class CDNManagementService extends EventEmitter {
+    private config;
+    private app;
+    private providers;
+    private primaryProvider;
+    private redis;
+    private optimizationService;
+    private purgeJobs;
+    private performanceMetrics;
+    private assetCategories;
+    constructor(config: CDNConfig);
+    private initializeServices;
+    private initializeProviders;
+    private setupAssetCategories;
+    private setupEventHandlers;
+    private setupMiddleware;
+    private setupRoutes;
+    private setupCronJobs;
+    uploadAsset(request: AssetUploadRequest): Promise<AssetUploadResult>;
+    deleteAsset(key: string): Promise<boolean>;
+    invalidateCache(paths: string[], type?: string): Promise<PurgeJob>;
+    private generateAssetKey;
+    private getCachePolicyForAsset;
+    private storeAssetMetadata;
+    private getAssetMetadata;
+    private recordPerformanceMetric;
+    private aggregatePerformanceMetrics;
+    private updateAssetUsageAnalytics;
+    private runScheduledPurge;
+    private findOldUnusedAssets;
+    setCachePolicy(pattern: string, policy: CachePolicy): Promise<boolean>;
+    getAnalytics(startDate: Date, endDate: Date): Promise<CDNAnalytics>;
+    getPerformanceMetrics(): Promise<PerformanceMetrics[]>;
+    getHealthStatus(): Promise<any>;
+    start(port?: number): void;
+    shutdown(): Promise<void>;
+    getApp(): express.Application;
+}
+//# sourceMappingURL=CDNManagementService.d.ts.map

@@ -1,0 +1,22 @@
+import { Request, Response, NextFunction } from 'express';
+interface JWTPayload {
+    sub: string;
+    email: string;
+    tenantId: string;
+    roles: string[];
+    permissions: string[];
+    iat: number;
+    exp: number;
+}
+declare global {
+    namespace Express {
+        interface Request {
+            user?: JWTPayload;
+        }
+    }
+}
+export declare const authenticateJWT: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export declare const requirePermission: (requiredPermissions: string[]) => (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export declare const requireTenantAccess: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export {};
+//# sourceMappingURL=auth.d.ts.map

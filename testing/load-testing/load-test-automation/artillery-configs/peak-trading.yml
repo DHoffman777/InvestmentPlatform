@@ -1,0 +1,302 @@
+config:
+  target: 'https://staging.investmentplatform.com'
+  phases:
+    # Pre-market warmup phase
+    - duration: 900  # 15 minutes
+      arrivalRate: 25
+      name: "Pre-market warmup"
+    
+    # Market open surge
+    - duration: 1800  # 30 minutes  
+      arrivalRate: 150
+      name: "Market open surge"
+    
+    # Mid-day steady load
+    - duration: 2700  # 45 minutes
+      arrivalRate: 50
+      name: "Mid-day steady"
+    
+    # Market close surge
+    - duration: 1800  # 30 minutes
+      arrivalRate: 150
+      name: "Market close surge"
+
+  # Load testing plugins
+  plugins:
+    statsd:
+      host: 'localhost'
+      port: 8125
+      prefix: 'artillery.peak_trading'
+    
+    cloudwatch:
+      namespace: 'Investment/LoadTesting'
+      dimensions:
+        testType: 'peak-trading'
+        environment: 'staging'
+
+  # Global variables for test data
+  variables:
+    symbols:
+      - 'AAPL'
+      - 'MSFT' 
+      - 'GOOGL'
+      - 'AMZN'
+      - 'TSLA'
+      - 'META'
+      - 'NVDA'
+      - 'NFLX'
+      - 'SPY'
+      - 'QQQ'
+    
+    portfolioIds:
+      - 'portfolio-1'
+      - 'portfolio-2'
+      - 'portfolio-3'
+      - 'portfolio-4'
+      - 'portfolio-5'
+    
+    orderSides:
+      - 'buy'
+      - 'sell'
+    
+    quantities:
+      - 100
+      - 200
+      - 500
+      - 1000
+
+  # Request defaults
+  defaults:
+    headers:
+      'Content-Type': 'application/json'
+      'Accept': 'application/json'
+
+# Test scenarios with weighted distribution
+scenarios:
+  # Portfolio monitoring - 45% of load
+  - name: "Portfolio Monitoring"
+    weight: 45
+    flow:
+      - post:
+          url: '/api/auth/login'
+          json:
+            username: 'pm@testfirm.com'
+            password: 'TestPM123!'
+          capture:
+            - header: 'Authorization'
+              as: 'authToken'
+          expect:
+            - statusCode: 200
+      
+      - loop:
+          - get:
+              url: '/api/portfolios/dashboard'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+                - hasProperty: 'portfolios'
+              capture:
+                - json: '$.portfolios[0].id'
+                  as: 'portfolioId'
+          
+          - get:
+              url: '/api/portfolios/{{ portfolioId }}/positions/real-time'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+                - contentType: 'application/json'
+          
+          - get:
+              url: '/api/portfolios/{{ portfolioId }}/performance/intraday'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+                - hasProperty: 'performance'
+          
+          - think: 2  # 2 second pause between requests
+        
+        count: 10  # Repeat 10 times per user
+
+  # Order management - 30% of load  
+  - name: "Order Management"
+    weight: 30
+    flow:
+      - post:
+          url: '/api/auth/login'
+          json:
+            username: 'trader@testfirm.com'
+            password: 'TestTrader123!'
+          capture:
+            - header: 'Authorization'
+              as: 'authToken'
+          expect:
+            - statusCode: 200
+      
+      - loop:
+          - post:
+              url: '/api/orders'
+              headers:
+                Authorization: '{{ authToken }}'
+              json:
+                symbol: '{{ $randomPick(symbols) }}'
+                quantity: '{{ $randomPick(quantities) }}'
+                side: '{{ $randomPick(orderSides) }}'
+                type: 'market'
+                portfolioId: '{{ $randomPick(portfolioIds) }}'
+              expect:
+                - statusCode: 201
+                - hasProperty: 'orderId'
+              capture:
+                - json: '$.orderId'
+                  as: 'orderId'
+          
+          - get:
+              url: '/api/orders/{{ orderId }}/status'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+                - hasProperty: 'status'
+          
+          - get:
+              url: '/api/orders/active'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+          
+          - think: 1  # 1 second pause
+        
+        count: 8  # Repeat 8 times per user
+
+  # Market data consumption - 15% of load
+  - name: "Market Data"
+    weight: 15
+    flow:
+      - post:
+          url: '/api/auth/login'
+          json:
+            username: 'analyst@testfirm.com'
+            password: 'TestAnalyst123!'
+          capture:
+            - header: 'Authorization'
+              as: 'authToken'
+          expect:
+            - statusCode: 200
+      
+      - loop:
+          - get:
+              url: '/api/market-data/quotes/bulk'
+              headers:
+                Authorization: '{{ authToken }}'
+              qs:
+                symbols: '{{ symbols.join(",") }}'
+              expect:
+                - statusCode: 200
+                - hasProperty: 'quotes'
+          
+          - get:
+              url: '/api/market-data/level2/{{ $randomPick(symbols) }}'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+                - hasProperty: 'bids'
+                - hasProperty: 'asks'
+          
+          - get:
+              url: '/api/market-data/charts/intraday/{{ $randomPick(symbols) }}'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+          
+          - get:
+              url: '/api/market-data/news/breaking'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+          
+          - think: 0.5  # 500ms pause
+        
+        count: 20  # High frequency market data requests
+
+  # Client portal usage - 10% of load
+  - name: "Client Portal"
+    weight: 10
+    flow:
+      - post:
+          url: '/api/auth/login'
+          json:
+            username: 'client@testfirm.com'
+            password: 'TestClient123!'
+          capture:
+            - header: 'Authorization'
+              as: 'authToken'
+          expect:
+            - statusCode: 200
+      
+      - loop:
+          - get:
+              url: '/api/client/portfolio-summary'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+                - hasProperty: 'totalValue'
+          
+          - get:
+              url: '/api/client/recent-transactions'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+                - hasProperty: 'transactions'
+          
+          - get:
+              url: '/api/client/alerts'
+              headers:
+                Authorization: '{{ authToken }}'
+              expect:
+                - statusCode: 200
+          
+          - think: 5  # 5 second pause - clients browse more slowly
+        
+        count: 5  # Fewer requests per client user
+
+# Custom functions for advanced scenarios
+before:
+  flow:
+    - log: "Starting peak trading hours load test"
+    - log: "Target: {{ $target }}"
+
+after:
+  flow:
+    - log: "Peak trading load test completed"
+
+# Performance expectations and thresholds
+expect:
+  # Response time thresholds
+  p95: 500     # 95th percentile should be under 500ms
+  p99: 1000    # 99th percentile should be under 1000ms
+  
+  # Error rate threshold
+  maxErrorRate: 0.5  # Less than 0.5% error rate
+  
+  # Throughput expectations
+  minThroughput: 400  # Minimum 400 requests per second
+
+# Reporting configuration
+output:
+  - type: 'json'
+    path: './load-test-results/artillery-peak-trading.json'
+  
+  - type: 'html'
+    path: './load-test-results/artillery-peak-trading.html'
+    
+  - type: 'csv'
+    path: './load-test-results/artillery-peak-trading.csv'

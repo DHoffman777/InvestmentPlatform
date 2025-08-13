@@ -1,0 +1,18 @@
+{
+  "version": "independent",
+  "packages": [
+    "services/*",
+    "libs/*",
+    "apps/*"
+  ],
+  "npmClient": "npm",
+  "command": {
+    "publish": {
+      "conventionalCommits": true
+    },
+    "bootstrap": {
+      "ignore": "component-*",
+      "npmClientArgs": ["--no-package-lock"]
+    }
+  }
+}

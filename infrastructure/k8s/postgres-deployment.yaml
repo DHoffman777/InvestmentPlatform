@@ -1,0 +1,227 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: investment-platform
+  labels:
+    app: postgres
+    tier: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+        tier: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "investment_platform"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-init
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - $(POSTGRES_USER)
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: postgres-init
+        configMap:
+          name: postgres-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: investment-platform
+  labels:
+    app: postgres
+    tier: database
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: investment-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: investment-platform
+type: Opaque
+data:
+  username: aW52ZXN0bWVudF91c2Vy # base64: investment_user
+  password: aW52ZXN0bWVudF9wYXNz # base64: investment_pass
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: investment-platform
+data:
+  001-init-db.sql: |
+    -- Create tenant schemas and basic structure
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+    
+    -- Create default tenant schema
+    CREATE SCHEMA IF NOT EXISTS tenant_default;
+    
+    -- Users table with multi-tenant support
+    CREATE TABLE IF NOT EXISTS public.users (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        first_name VARCHAR(255),
+        last_name VARCHAR(255),
+        is_active BOOLEAN DEFAULT true,
+        email_verified BOOLEAN DEFAULT false,
+        last_login TIMESTAMP,
+        failed_login_attempts INTEGER DEFAULT 0,
+        locked_until TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(tenant_id, email)
+    );
+    
+    -- Roles table
+    CREATE TABLE IF NOT EXISTS public.roles (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        tenant_id VARCHAR(255) NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(tenant_id, name)
+    );
+    
+    -- Permissions table
+    CREATE TABLE IF NOT EXISTS public.permissions (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        name VARCHAR(100) NOT NULL UNIQUE,
+        resource VARCHAR(100) NOT NULL,
+        action VARCHAR(50) NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    -- User roles junction table
+    CREATE TABLE IF NOT EXISTS public.user_roles (
+        user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+        role_id UUID REFERENCES public.roles(id) ON DELETE CASCADE,
+        assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        assigned_by UUID REFERENCES public.users(id),
+        PRIMARY KEY (user_id, role_id)
+    );
+    
+    -- Role permissions junction table
+    CREATE TABLE IF NOT EXISTS public.role_permissions (
+        role_id UUID REFERENCES public.roles(id) ON DELETE CASCADE,
+        permission_id UUID REFERENCES public.permissions(id) ON DELETE CASCADE,
+        granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        granted_by UUID REFERENCES public.users(id),
+        PRIMARY KEY (role_id, permission_id)
+    );
+    
+    -- Tenants table
+    CREATE TABLE IF NOT EXISTS public.tenants (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        name VARCHAR(255) NOT NULL UNIQUE,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        domain VARCHAR(255),
+        is_active BOOLEAN DEFAULT true,
+        settings JSONB DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    -- Create indexes for performance
+    CREATE INDEX IF NOT EXISTS idx_users_tenant_email ON public.users(tenant_id, email);
+    CREATE INDEX IF NOT EXISTS idx_users_tenant_active ON public.users(tenant_id, is_active);
+    CREATE INDEX IF NOT EXISTS idx_roles_tenant ON public.roles(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_user_roles_user ON public.user_roles(user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles(role_id);
+    
+    -- Insert default tenant
+    INSERT INTO public.tenants (name, slug, domain) VALUES 
+    ('Default Tenant', 'default', 'localhost') 
+    ON CONFLICT (slug) DO NOTHING;
+    
+    -- Insert basic permissions
+    INSERT INTO public.permissions (name, resource, action, description) VALUES 
+    ('users:read', 'users', 'read', 'Read user information'),
+    ('users:create', 'users', 'create', 'Create new users'),
+    ('users:update', 'users', 'update', 'Update user information'),
+    ('users:delete', 'users', 'delete', 'Delete users'),
+    ('roles:read', 'roles', 'read', 'Read role information'),
+    ('roles:assign', 'roles', 'assign', 'Assign roles to users'),
+    ('roles:revoke', 'roles', 'revoke', 'Revoke roles from users'),
+    ('portfolios:read', 'portfolios', 'read', 'Read portfolio data'),
+    ('portfolios:create', 'portfolios', 'create', 'Create new portfolios'),
+    ('portfolios:update', 'portfolios', 'update', 'Update portfolio data'),
+    ('portfolios:delete', 'portfolios', 'delete', 'Delete portfolios'),
+    ('trades:read', 'trades', 'read', 'Read trade data'),
+    ('trades:create', 'trades', 'create', 'Create new trades'),
+    ('reports:read', 'reports', 'read', 'Read reports'),
+    ('reports:create', 'reports', 'create', 'Generate reports')
+    ON CONFLICT (name) DO NOTHING;

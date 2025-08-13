@@ -1,0 +1,38 @@
+import { PrismaClient } from '@prisma/client';
+import { TradeConfirmation, TradeBreak, SettlementInstruction, CustodianMessage, RegulatoryReport, TransactionCostAnalysis, TradeMatch, CreateTradeConfirmationRequest, UpdateTradeConfirmationRequest, CreateSettlementInstructionRequest, CreateTradeBreakRequest, SendCustodianMessageRequest, CreateRegulatoryReportRequest, RunTransactionCostAnalysisRequest, TradeMatchingRequest, TradeConfirmationSearchRequest, TradeConfirmationSearchResult, PostTradeProcessingSummary } from '../models/trading/PostTradeProcessing';
+export declare class PostTradeProcessingService {
+    private prisma;
+    private kafkaService;
+    constructor(prisma: PrismaClient, kafkaService: any);
+    createTradeConfirmation(request: CreateTradeConfirmationRequest, tenantId: string, userId: string): Promise<TradeConfirmation>;
+    updateTradeConfirmation(request: UpdateTradeConfirmationRequest, tenantId: string, userId: string): Promise<TradeConfirmation>;
+    searchTradeConfirmations(request: TradeConfirmationSearchRequest, tenantId: string): Promise<TradeConfirmationSearchResult>;
+    createSettlementInstruction(request: CreateSettlementInstructionRequest, tenantId: string, userId: string): Promise<SettlementInstruction>;
+    generateSettlementInstruction(confirmationId: string, tenantId: string, userId: string): Promise<SettlementInstruction>;
+    createTradeBreak(request: CreateTradeBreakRequest, tenantId: string, userId: string): Promise<TradeBreak>;
+    resolveTradeBreak(breakId: string, resolutionNotes: string, tenantId: string, userId: string): Promise<TradeBreak>;
+    runTransactionCostAnalysis(request: RunTransactionCostAnalysisRequest, tenantId: string, userId: string): Promise<TransactionCostAnalysis>;
+    sendCustodianMessage(request: SendCustodianMessageRequest, tenantId: string, userId: string): Promise<CustodianMessage>;
+    createRegulatoryReport(request: CreateRegulatoryReportRequest, tenantId: string, userId: string): Promise<RegulatoryReport>;
+    matchTrade(request: TradeMatchingRequest, tenantId: string, userId: string): Promise<TradeMatch>;
+    getPostTradeProcessingSummary(tenantId: string): Promise<PostTradeProcessingSummary>;
+    private generateConfirmationReference;
+    private getCounterpartyName;
+    private sendTradeConfirmation;
+    private sendSettlementInstructionToCustodian;
+    private calculateBreakPriority;
+    private calculateSlaDeadline;
+    private autoAssignTradeBreak;
+    private sendCriticalBreakNotification;
+    private getMarketDataForTCA;
+    private calculateTCABenchmarks;
+    private calculateTCACosts;
+    private calculateTCAPerformance;
+    private calculateDataQualityScore;
+    private transmitMessageToCustodian;
+    private generateRegulatoryReportContent;
+    private getExternalTradeData;
+    private performTradeMatching;
+    private createTradeBreakFromMatch;
+    private calculateAverageResolutionTime;
+}

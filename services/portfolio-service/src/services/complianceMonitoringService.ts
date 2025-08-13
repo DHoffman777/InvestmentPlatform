@@ -1,0 +1,743 @@
+// Compliance Monitoring Service
+// Phase 3.6 - Comprehensive compliance monitoring with investment guidelines, breach detection, and regulatory oversight
+
+import { PrismaClient } from '@prisma/client';
+import { getKafkaService } from '../utils/kafka-mock';
+import { logger } from '../utils/logger';
+import {
+  ComplianceRule,
+  ComplianceRuleType,
+  ComplianceStatus,
+  ComplianceBreach,
+  BreachSeverity,
+  InvestmentGuideline,
+  RestrictedList,
+  SuitabilityProfile,
+  SuitabilityCheck,
+  ComplianceCheckRequest,
+  ComplianceCheckResult,
+  RuleCheckResult,
+  ComplianceDashboard,
+  ComplianceWorkflow,
+  WorkflowStatus,
+  ActionType,
+  MonitoringFrequency,
+  BreachSearchRequest,
+  BreachSearchResult,
+  RegulatoryRule
+} from '../models/compliance/ComplianceMonitoring';
+
+export class ComplianceMonitoringService {
+  constructor(
+    private prisma: PrismaClient,
+    private kafkaService: ReturnType<typeof getKafkaService>
+  ) {}
+
+  // Investment Guideline Checking
+  async checkInvestmentGuidelines(
+    request: ComplianceCheckRequest,
+    tenantId: string,
+    userId: string
+  ): Promise<ComplianceCheckResult> {
+    const startTime = Date.now();
+    
+    try {
+      logger.info('Starting investment guideline check', {
+        portfolioId: request.portfolioId,
+        checkType: request.checkType,
+        tenantId
+      });
+
+      // Get portfolio data
+      const portfolio = await this.getPortfolioData(request.portfolioId, tenantId);
+      if (!portfolio) {
+        throw new Error('Portfolio not found');
+      }
+
+      // Get applicable investment guidelines
+      const guidelines = await this.getApplicableGuidelines(request.portfolioId, tenantId);
+      
+      // Get compliance rules
+      const rules = await this.getApplicableRules(
+        request.portfolioId, 
+        tenantId,
+        request.ruleTypes || [ComplianceRuleType.INVESTMENT_GUIDELINE]
+      );
+
+      const checkResults: RuleCheckResult[] = [];
+      const blockedTransactions: string[] = [];
+      const warnings: string[] = [];
+      let overallStatus = ComplianceStatus.COMPLIANT;
+
+      // Check allocation guidelines
+      for (const guideline of guidelines) {
+        const allocationResults = await this.checkAllocationGuidelines(
+          portfolio,
+          guideline,
+          request.transactionId
+        );
+        checkResults.push(...allocationResults);
+      }
+
+      // Check rule-based compliance
+      for (const rule of rules) {
+        const ruleResult = await this.checkComplianceRule(
+          portfolio,
+          rule,
+          request.transactionId
+        );
+        checkResults.push(ruleResult);
+      }
+
+      // Determine overall status and actions
+      for (const result of checkResults) {
+        if (result.status === ComplianceStatus.BREACH) {
+          overallStatus = ComplianceStatus.BREACH;
+          
+          // Check if transaction should be blocked
+          const rule = rules.find(r => r.id === result.ruleId);
+          if (rule?.breachAction === ActionType.AUTOMATIC_BLOCK && request.transactionId) {
+            blockedTransactions.push(request.transactionId);
+          }
+        } else if (result.status === ComplianceStatus.WARNING && overallStatus === ComplianceStatus.COMPLIANT) {
+          overallStatus = ComplianceStatus.WARNING;
+        }
+
+        if (result.severity === BreachSeverity.HIGH || result.severity === BreachSeverity.CRITICAL) {
+          warnings.push(`${result.ruleName}: ${result.message}`);
+        }
+      }
+
+      // Create breaches for violations
+      await this.createBreachesFromResults(checkResults, request.portfolioId, tenantId, userId);
+
+      // Log compliance check
+      await this.logComplianceCheck(request, checkResults, overallStatus, tenantId, userId);
+
+      // Publish compliance event
+      await this.publishComplianceEvent(request.portfolioId, overallStatus, checkResults, userId);
+
+      const result: ComplianceCheckResult = {
+        portfolioId: request.portfolioId,
+        overallStatus,
+        checkResults,
+        blockedTransactions: blockedTransactions.length > 0 ? blockedTransactions : undefined,
+        warnings,
+        timestamp: new Date()
+      };
+
+      logger.info('Investment guideline check completed', {
+        portfolioId: request.portfolioId,
+        overallStatus,
+        checkCount: checkResults.length,
+        breachCount: checkResults.filter(r => r.status === ComplianceStatus.BREACH).length,
+        processingTime: Date.now() - startTime
+      });
+
+      return result;
+
+    } catch (error) {
+      logger.error('Error checking investment guidelines:', error);
+      throw error;
+    }
+  }
+
+  // Check allocation guidelines for a portfolio
+  private async checkAllocationGuidelines(
+    portfolio: any,
+    guideline: InvestmentGuideline,
+    transactionId?: string
+  ): Promise<RuleCheckResult[]> {
+    const results: RuleCheckResult[] = [];
+    
+    // Calculate current allocations
+    const allocations = await this.calculatePortfolioAllocations(portfolio);
+    
+    // Check equity allocation
+    if (guideline.minEquityAllocation !== undefined || guideline.maxEquityAllocation !== undefined) {
+      const equityResult = this.checkAllocationLimit(
+        'Equity Allocation',
+        allocations.equity,
+        guideline.minEquityAllocation,
+        guideline.maxEquityAllocation,
+        'PERCENTAGE'
+      );
+      if (equityResult) {
+        results.push({
+          ruleId: `${guideline.id}_equity`,
+          ruleName: `${guideline.guidelineName} - Equity Allocation`,
+          ruleType: ComplianceRuleType.INVESTMENT_GUIDELINE,
+          ...equityResult
+        });
+      }
+    }
+
+    // Check fixed income allocation
+    if (guideline.minFixedIncomeAllocation !== undefined || guideline.maxFixedIncomeAllocation !== undefined) {
+      const fixedIncomeResult = this.checkAllocationLimit(
+        'Fixed Income Allocation',
+        allocations.fixedIncome,
+        guideline.minFixedIncomeAllocation,
+        guideline.maxFixedIncomeAllocation,
+        'PERCENTAGE'
+      );
+      if (fixedIncomeResult) {
+        results.push({
+          ruleId: `${guideline.id}_fixed_income`,
+          ruleName: `${guideline.guidelineName} - Fixed Income Allocation`,
+          ruleType: ComplianceRuleType.INVESTMENT_GUIDELINE,
+          ...fixedIncomeResult
+        });
+      }
+    }
+
+    // Check cash allocation
+    if (guideline.minCashAllocation !== undefined || guideline.maxCashAllocation !== undefined) {
+      const cashResult = this.checkAllocationLimit(
+        'Cash Allocation',
+        allocations.cash,
+        guideline.minCashAllocation,
+        guideline.maxCashAllocation,
+        'PERCENTAGE'
+      );
+      if (cashResult) {
+        results.push({
+          ruleId: `${guideline.id}_cash`,
+          ruleName: `${guideline.guidelineName} - Cash Allocation`,
+          ruleType: ComplianceRuleType.INVESTMENT_GUIDELINE,
+          ...cashResult
+        });
+      }
+    }
+
+    // Check alternative allocation
+    if (guideline.minAlternativeAllocation !== undefined || guideline.maxAlternativeAllocation !== undefined) {
+      const altResult = this.checkAllocationLimit(
+        'Alternative Allocation',
+        allocations.alternatives,
+        guideline.minAlternativeAllocation,
+        guideline.maxAlternativeAllocation,
+        'PERCENTAGE'
+      );
+      if (altResult) {
+        results.push({
+          ruleId: `${guideline.id}_alternatives`,
+          ruleName: `${guideline.guidelineName} - Alternative Allocation`,
+          ruleType: ComplianceRuleType.INVESTMENT_GUIDELINE,
+          ...altResult
+        });
+      }
+    }
+
+    // Check sector limits
+    if (guideline.sectorLimits && guideline.sectorLimits.length > 0) {
+      const sectorAllocations = await this.calculateSectorAllocations(portfolio);
+      
+      for (const sectorLimit of guideline.sectorLimits) {
+        const sectorAllocation = sectorAllocations[sectorLimit.sectorCode] || 0;
+        const sectorResult = this.checkAllocationLimit(
+          `${sectorLimit.sectorName} Allocation`,
+          sectorAllocation,
+          sectorLimit.minAllocation,
+          sectorLimit.maxAllocation,
+          'PERCENTAGE'
+        );
+        
+        if (sectorResult) {
+          results.push({
+            ruleId: `${guideline.id}_sector_${sectorLimit.sectorCode}`,
+            ruleName: `${guideline.guidelineName} - ${sectorLimit.sectorName} Limit`,
+            ruleType: ComplianceRuleType.SECTOR_LIMIT,
+            ...sectorResult
+          });
+        }
+      }
+    }
+
+    // Check concentration limits
+    const concentrations = await this.calculateConcentrations(portfolio);
+    
+    // Check security concentration
+    const maxSecurityConcentration = Math.max(...Object.values(concentrations.securities));
+    if (maxSecurityConcentration > guideline.maxSecurityConcentration) {
+      results.push({
+        ruleId: `${guideline.id}_security_concentration`,
+        ruleName: `${guideline.guidelineName} - Security Concentration`,
+        ruleType: ComplianceRuleType.CONCENTRATION_LIMIT,
+        status: ComplianceStatus.BREACH,
+        actualValue: maxSecurityConcentration,
+        limitValue: guideline.maxSecurityConcentration,
+        message: `Security concentration of ${maxSecurityConcentration.toFixed(2)}% exceeds limit of ${guideline.maxSecurityConcentration}%`,
+        severity: this.determineSeverity(maxSecurityConcentration, guideline.maxSecurityConcentration)
+      });
+    }
+
+    // Check issuer concentration
+    const maxIssuerConcentration = Math.max(...Object.values(concentrations.issuers));
+    if (maxIssuerConcentration > guideline.maxIssuerConcentration) {
+      results.push({
+        ruleId: `${guideline.id}_issuer_concentration`,
+        ruleName: `${guideline.guidelineName} - Issuer Concentration`,
+        ruleType: ComplianceRuleType.CONCENTRATION_LIMIT,
+        status: ComplianceStatus.BREACH,
+        actualValue: maxIssuerConcentration,
+        limitValue: guideline.maxIssuerConcentration,
+        message: `Issuer concentration of ${maxIssuerConcentration.toFixed(2)}% exceeds limit of ${guideline.maxIssuerConcentration}%`,
+        severity: this.determineSeverity(maxIssuerConcentration, guideline.maxIssuerConcentration)
+      });
+    }
+
+    return results;
+  }
+
+  // Check compliance rule
+  private async checkComplianceRule(
+    portfolio: any,
+    rule: ComplianceRule,
+    transactionId?: string
+  ): Promise<RuleCheckResult> {
+    try {
+      // Evaluate rule conditions
+      const ruleContext = await this.buildRuleContext(portfolio, rule, transactionId);
+      const evaluationResult = await this.evaluateRule(rule, ruleContext);
+
+      return {
+        ruleId: rule.id,
+        ruleName: rule.ruleName,
+        ruleType: rule.ruleType,
+        status: evaluationResult.status,
+        actualValue: evaluationResult.actualValue,
+        limitValue: evaluationResult.limitValue,
+        message: evaluationResult.message,
+        severity: evaluationResult.severity
+      };
+
+    } catch (error) {
+      logger.error('Error checking compliance rule:', { ruleId: rule.id, error });
+      return {
+        ruleId: rule.id,
+        ruleName: rule.ruleName,
+        ruleType: rule.ruleType,
+        status: ComplianceStatus.PENDING_REVIEW,
+        message: `Error evaluating rule: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  // Concentration Limit Monitoring
+  async monitorConcentrationLimits(
+    portfolioId: string,
+    tenantId: string,
+    userId: string
+  ): Promise<RuleCheckResult[]> {
+    try {
+      const portfolio = await this.getPortfolioData(portfolioId, tenantId);
+      if (!portfolio) {
+        throw new Error('Portfolio not found');
+      }
+
+      const concentrationRules = await this.getConcentrationRules(portfolioId, tenantId);
+      const concentrations = await this.calculateDetailedConcentrations(portfolio);
+      
+      const results: RuleCheckResult[] = [];
+
+      for (const rule of concentrationRules) {
+        // Check security concentration
+        if (rule.ruleType === ComplianceRuleType.CONCENTRATION_LIMIT) {
+          const threshold = rule.thresholds.find(t => t.name === 'max_concentration');
+          if (threshold) {
+            const maxConcentration = Math.max(...Object.values(concentrations.securities));
+            
+            if (maxConcentration > threshold.breachLevel) {
+              results.push({
+                ruleId: rule.id,
+                ruleName: rule.ruleName,
+                ruleType: rule.ruleType,
+                status: ComplianceStatus.BREACH,
+                actualValue: maxConcentration,
+                limitValue: threshold.breachLevel,
+                message: `Maximum security concentration of ${maxConcentration.toFixed(2)}% exceeds limit of ${threshold.breachLevel}%`,
+                severity: this.determineSeverity(maxConcentration, threshold.breachLevel)
+              });
+            } else if (threshold.warningLevel && maxConcentration > threshold.warningLevel) {
+              results.push({
+                ruleId: rule.id,
+                ruleName: rule.ruleName,
+                ruleType: rule.ruleType,
+                status: ComplianceStatus.WARNING,
+                actualValue: maxConcentration,
+                limitValue: threshold.warningLevel,
+                message: `Maximum security concentration of ${maxConcentration.toFixed(2)}% exceeds warning threshold of ${threshold.warningLevel}%`,
+                severity: BreachSeverity.LOW
+              });
+            }
+          }
+        }
+      }
+
+      // Create breaches for violations
+      await this.createBreachesFromResults(results, portfolioId, tenantId, userId);
+
+      return results;
+
+    } catch (error) {
+      logger.error('Error monitoring concentration limits:', error);
+      throw error;
+    }
+  }
+
+  // Restricted List Screening
+  async screenRestrictedList(
+    portfolioId: string,
+    instrumentIds: string[],
+    tenantId: string,
+    userId: string
+  ): Promise<RuleCheckResult[]> {
+    try {
+      const restrictedLists = await this.getApplicableRestrictedLists(portfolioId, tenantId);
+      const results: RuleCheckResult[] = [];
+
+      for (const instrumentId of instrumentIds) {
+        const instrument = await this.getInstrumentData(instrumentId, tenantId);
+        
+        for (const restrictedList of restrictedLists) {
+          const restriction = restrictedList.securities.find(
+            s => s.instrumentId === instrumentId && s.isActive
+          );
+          
+          if (restriction) {
+            const severity = this.getRestrictionSeverity(restriction.restrictionLevel);
+            
+            results.push({
+              ruleId: restrictedList.id,
+              ruleName: `Restricted List: ${restrictedList.listName}`,
+              ruleType: ComplianceRuleType.RESTRICTED_LIST,
+              status: restriction.restrictionLevel === 'PROHIBITED' ? ComplianceStatus.BREACH : ComplianceStatus.WARNING,
+              message: `Security ${instrument?.symbol || instrumentId} is on restricted list: ${restriction.restrictionReason}`,
+              severity
+            });
+          }
+        }
+      }
+
+      return results;
+
+    } catch (error) {
+      logger.error('Error screening restricted list:', error);
+      throw error;
+    }
+  }
+
+  // Suitability Verification
+  async verifySuitability(
+    clientId: string,
+    portfolioId: string,
+    tenantId: string,
+    userId: string
+  ): Promise<SuitabilityCheck> {
+    try {
+      const suitabilityProfile = await this.getSuitabilityProfile(clientId, tenantId);
+      const portfolio = await this.getPortfolioData(portfolioId, tenantId);
+      
+      if (!suitabilityProfile) {
+        throw new Error('Suitability profile not found for client');
+      }
+
+      // Calculate portfolio metrics for suitability assessment
+      const allocations = await this.calculatePortfolioAllocations(portfolio);
+      const riskMetrics = await this.calculatePortfolioRiskMetrics(portfolio);
+      const concentrations = await this.calculateConcentrations(portfolio);
+
+      // Perform suitability checks
+      const riskAlignmentScore = this.assessRiskAlignment(suitabilityProfile, allocations, riskMetrics);
+      const objectiveAlignmentScore = this.assessObjectiveAlignment(suitabilityProfile, portfolio);
+      const concentrationScore = this.assessConcentrationSuitability(suitabilityProfile, concentrations);
+      const liquidityScore = this.assessLiquiditySuitability(suitabilityProfile, portfolio);
+
+      // Calculate overall suitability
+      const overallScore = (riskAlignmentScore + objectiveAlignmentScore + concentrationScore + liquidityScore) / 4;
+      const overallSuitability = overallScore >= 80 ? 'SUITABLE' : overallScore >= 60 ? 'REQUIRES_REVIEW' : 'UNSUITABLE';
+
+      // Identify issues
+      const issues = this.identifySuitabilityIssues(
+        suitabilityProfile,
+        allocations,
+        riskMetrics,
+        concentrations
+      );
+
+      // Generate recommendations
+      const recommendations = this.generateSuitabilityRecommendations(suitabilityProfile, allocations, issues);
+      const requiredActions = this.generateRequiredActions(issues);
+
+      const suitabilityCheck: SuitabilityCheck = {
+        id: this.generateId(),
+        tenantId,
+        clientId,
+        portfolioId,
+        checkType: 'ONGOING',
+        checkDate: new Date(),
+        overallSuitability,
+        suitabilityScore: overallScore,
+        riskAlignmentScore,
+        objectiveAlignmentScore,
+        concentrationScore,
+        liquidityScore,
+        suitabilityIssues: issues,
+        recommendations,
+        requiredActions,
+        performedBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      // Store suitability check
+      await this.storeSuitabilityCheck(suitabilityCheck);
+
+      // Publish suitability event
+      await this.publishSuitabilityEvent(suitabilityCheck, userId);
+
+      return suitabilityCheck;
+
+    } catch (error) {
+      logger.error('Error verifying suitability:', error);
+      throw error;
+    }
+  }
+
+  // Breach Detection and Alerts
+  async detectBreaches(
+    tenantId: string,
+    portfolioIds?: string[]
+  ): Promise<ComplianceBreach[]> {
+    try {
+      const breaches: ComplianceBreach[] = [];
+      
+      // Get portfolios to monitor
+      const portfolios = portfolioIds 
+        ? await this.getPortfoliosByIds(portfolioIds, tenantId)
+        : await this.getAllPortfolios(tenantId);
+
+      for (const portfolio of portfolios) {
+        // Check investment guidelines
+        const guidelineResult = await this.checkInvestmentGuidelines({
+          portfolioId: portfolio.id,
+          checkType: 'ONGOING'
+        }, tenantId, 'SYSTEM');
+
+        // Create breaches from violations
+        const portfolioBreaches = await this.createBreachesFromCheckResult(
+          guidelineResult,
+          portfolio.id,
+          tenantId
+        );
+        breaches.push(...portfolioBreaches);
+
+        // Check concentration limits
+        const concentrationResults = await this.monitorConcentrationLimits(
+          portfolio.id,
+          tenantId,
+          'SYSTEM'
+        );
+
+        for (const result of concentrationResults) {
+          if (result.status === ComplianceStatus.BREACH) {
+            const breach = await this.createBreach(result, portfolio.id, tenantId);
+            breaches.push(breach);
+          }
+        }
+      }
+
+      // Send alerts for new breaches
+      await this.sendBreachAlerts(breaches, tenantId);
+
+      return breaches;
+
+    } catch (error) {
+      logger.error('Error detecting breaches:', error);
+      throw error;
+    }
+  }
+
+  // Search Breaches
+  async searchBreaches(
+    request: BreachSearchRequest,
+    tenantId: string
+  ): Promise<BreachSearchResult> {
+    try {
+      // Build search query
+      const searchQuery = this.buildBreachSearchQuery(request, tenantId);
+      
+      // Execute search
+      const breaches = await this.prisma.complianceBreach.findMany(searchQuery);
+      
+      // Get total count
+      const total = await this.prisma.complianceBreach.count({
+        where: searchQuery.where
+      });
+
+      // Calculate aggregate metrics
+      const aggregateMetrics = {
+        totalBreaches: total,
+        criticalBreaches: breaches.filter(b => b.severity === BreachSeverity.CRITICAL).length,
+        unresolvedBreaches: breaches.filter(b => !b.resolvedAt).length,
+        averageResolutionTime: await this.calculateAverageResolutionTime(tenantId)
+      };
+
+      return {
+        breaches,
+        total,
+        aggregateMetrics,
+        pagination: {
+          limit: request.limit || 50,
+          offset: request.offset || 0,
+          hasMore: (request.offset || 0) + breaches.length < total
+        }
+      };
+
+    } catch (error) {
+      logger.error('Error searching breaches:', error);
+      throw error;
+    }
+  }
+
+  // Helper methods
+  private checkAllocationLimit(
+    name: string,
+    actualValue: number,
+    minValue?: number,
+    maxValue?: number,
+    unit: string = 'PERCENTAGE'
+  ): Partial<RuleCheckResult> | null {
+    if (minValue !== undefined && actualValue < minValue) {
+      return {
+        status: ComplianceStatus.BREACH,
+        actualValue,
+        limitValue: minValue,
+        message: `${name} of ${actualValue.toFixed(2)}% is below minimum of ${minValue}%`,
+        severity: this.determineSeverity(actualValue, minValue, true)
+      };
+    }
+
+    if (maxValue !== undefined && actualValue > maxValue) {
+      return {
+        status: ComplianceStatus.BREACH,
+        actualValue,
+        limitValue: maxValue,
+        message: `${name} of ${actualValue.toFixed(2)}% exceeds maximum of ${maxValue}%`,
+        severity: this.determineSeverity(actualValue, maxValue)
+      };
+    }
+
+    return null;
+  }
+
+  private determineSeverity(actualValue: number, limitValue: number, isMinimum: boolean = false): BreachSeverity {
+    const deviation = isMinimum 
+      ? ((limitValue - actualValue) / limitValue) * 100
+      : ((actualValue - limitValue) / limitValue) * 100;
+
+    if (deviation >= 50) return BreachSeverity.CRITICAL;
+    if (deviation >= 25) return BreachSeverity.HIGH;
+    if (deviation >= 10) return BreachSeverity.MEDIUM;
+    return BreachSeverity.LOW;
+  }
+
+  private generateId(): string {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  }
+
+  // Database and external service methods (placeholder implementations)
+  private async getPortfolioData(portfolioId: string, tenantId: string): Promise<any> {
+    // Implementation would fetch portfolio data including positions, allocations, etc.
+    return null;
+  }
+
+  private async getApplicableGuidelines(portfolioId: string, tenantId: string): Promise<InvestmentGuideline[]> {
+    // Implementation would fetch applicable investment guidelines
+    return [];
+  }
+
+  private async getApplicableRules(
+    portfolioId: string, 
+    tenantId: string, 
+    ruleTypes: ComplianceRuleType[]
+  ): Promise<ComplianceRule[]> {
+    // Implementation would fetch applicable compliance rules
+    return [];
+  }
+
+  private async calculatePortfolioAllocations(portfolio: any): Promise<any> {
+    // Implementation would calculate asset class allocations
+    return {
+      equity: 0,
+      fixedIncome: 0,
+      cash: 0,
+      alternatives: 0
+    };
+  }
+
+  private async calculateSectorAllocations(portfolio: any): Promise<Record<string, number>> {
+    // Implementation would calculate sector allocations
+    return {};
+  }
+
+  private async calculateConcentrations(portfolio: any): Promise<any> {
+    // Implementation would calculate position concentrations
+    return {
+      securities: {},
+      issuers: {}
+    };
+  }
+
+  private async createBreachesFromResults(
+    results: RuleCheckResult[],
+    portfolioId: string,
+    tenantId: string,
+    userId: string
+  ): Promise<void> {
+    // Implementation would create breach records for violations
+  }
+
+  private async logComplianceCheck(
+    request: ComplianceCheckRequest,
+    results: RuleCheckResult[],
+    status: ComplianceStatus,
+    tenantId: string,
+    userId: string
+  ): Promise<void> {
+    // Implementation would log compliance check activity
+  }
+
+  private async publishComplianceEvent(
+    portfolioId: string,
+    status: ComplianceStatus,
+    results: RuleCheckResult[],
+    userId: string
+  ): Promise<void> {
+    await this.kafkaService.publishEvent('compliance.guidelines.checked', {
+      portfolioId,
+      status,
+      resultCount: results.length,
+      breachCount: results.filter(r => r.status === ComplianceStatus.BREACH).length,
+      userId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  private async publishSuitabilityEvent(check: SuitabilityCheck, userId: string): Promise<void> {
+    await this.kafkaService.publishEvent('compliance.suitability.checked', {
+      ...check,
+      userId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Additional helper methods would be implemented here for:
+  // - Rule evaluation engine
+  // - Suitability assessment algorithms
+  // - Breach creation and management
+  // - Alert system integration
+  // - Workflow management
+  // etc.
+}

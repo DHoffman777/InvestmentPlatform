@@ -1,0 +1,48 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - postgres-deployment.yaml
+  - postgres-read-replica.yaml
+  - postgres-backup.yaml
+  - redis-deployment.yaml
+  - auth-service-deployment.yaml
+  - kong-deployment.yaml
+  - kong-services.yaml
+  - kafka-deployment.yaml
+  - monitoring.yaml
+  - rbac.yaml
+  - hpa.yaml
+  - ingress.yaml
+
+commonLabels:
+  project: investment-platform
+
+images:
+  - name: investment-platform/auth-service
+    newTag: latest
+
+replicas:
+  - name: auth-service
+    count: 2
+  - name: postgres
+    count: 1
+  - name: redis
+    count: 1
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+
+secretGenerator:
+  - name: app-secrets
+    literals:
+      - jwt-access-secret=your-production-access-secret-here
+      - jwt-refresh-secret=your-production-refresh-secret-here
+      - session-secret=your-production-session-secret-here
+    type: Opaque

@@ -1,0 +1,19 @@
+{
+  "name": "@investment-platform/types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript type definitions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "express-validator": "^7.2.1"
+  }
+}

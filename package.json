@@ -1,0 +1,32 @@
+{
+  "name": "investment-management-platform",
+  "version": "1.0.0",
+  "description": "Comprehensive Investment Management Platform",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "libs/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "docker-compose up -d",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "clean": "lerna clean",
+    "bootstrap": "lerna bootstrap"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.42",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "lerna": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

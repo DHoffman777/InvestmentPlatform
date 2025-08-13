@@ -1,0 +1,1198 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const DataVisualizationService_1 = require("../services/analytics/DataVisualizationService");
+const DrillDownService_1 = require("../services/analytics/DrillDownService");
+const DashboardBuilderService_1 = require("../services/analytics/DashboardBuilderService");
+const RealTimeAnalyticsService_1 = require("../services/analytics/RealTimeAnalyticsService");
+const PredictiveModelingService_1 = require("../services/analytics/PredictiveModelingService");
+const MachineLearningInsightsService_1 = require("../services/analytics/MachineLearningInsightsService");
+const AnomalyDetectionService_1 = require("../services/analytics/AnomalyDetectionService");
+const BusinessIntelligenceService_1 = require("../services/analytics/BusinessIntelligenceService");
+const auth_1 = require("../middleware/auth");
+const validation_1 = require("../middleware/validation");
+const express_validator_1 = require("express-validator");
+const Analytics_1 = require("../models/analytics/Analytics");
+const router = (0, express_1.Router)();
+// Initialize services
+const dataVizService = new DataVisualizationService_1.DataVisualizationService();
+const drillDownService = new DrillDownService_1.DrillDownService();
+const dashboardService = new DashboardBuilderService_1.DashboardBuilderService();
+const realTimeService = new RealTimeAnalyticsService_1.RealTimeAnalyticsService();
+const predictiveService = new PredictiveModelingService_1.PredictiveModelingService();
+const mlInsightsService = new MachineLearningInsightsService_1.MachineLearningInsightsService();
+const anomalyService = new AnomalyDetectionService_1.AnomalyDetectionService();
+const biService = new BusinessIntelligenceService_1.BusinessIntelligenceService();
+// Apply authentication to all routes
+router.use(auth_1.authenticateToken);
+// ===== DATA VISUALIZATION ROUTES =====
+/**
+ * @route POST /api/analytics/visualizations
+ * @desc Create a new data visualization
+ */
+router.post('/visualizations', [
+    (0, express_validator_1.body)('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
+    (0, express_validator_1.body)('visualizationType').isIn(Object.values(Analytics_1.VisualizationType)).withMessage('Invalid visualization type'),
+    (0, express_validator_1.body)('dateRange.startDate').isISO8601().withMessage('Invalid start date'),
+    (0, express_validator_1.body)('dateRange.endDate').isISO8601().withMessage('Invalid end date'),
+    (0, express_validator_1.body)('portfolioIds').optional().isArray().withMessage('Portfolio IDs must be an array'),
+    (0, express_validator_1.body)('clientIds').optional().isArray().withMessage('Client IDs must be an array'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const request = {
+            tenantId: req.user.tenantId,
+            metricType: req.body.metricType,
+            visualizationType: req.body.visualizationType,
+            dateRange: {
+                startDate: new Date(req.body.dateRange.startDate),
+                endDate: new Date(req.body.dateRange.endDate)
+            },
+            portfolioIds: req.body.portfolioIds,
+            clientIds: req.body.clientIds,
+            filters: req.body.filters,
+            aggregationPeriod: req.body.aggregationPeriod,
+            drillDownLevel: req.body.drillDownLevel
+        };
+        const visualization = await dataVizService.createVisualization(request);
+        res.status(201).json({
+            success: true,
+            data: visualization
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route PUT /api/analytics/visualizations/:id
+ * @desc Update an existing visualization
+ */
+router.put('/visualizations/:id', [
+    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid visualization ID'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const visualization = await dataVizService.updateVisualization(req.params.id, req.body);
+        res.json({
+            success: true,
+            data: visualization
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/visualizations/:id/refresh
+ * @desc Refresh visualization data
+ */
+router.post('/visualizations/:id/refresh', [
+    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid visualization ID'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const visualization = await dataVizService.refreshVisualizationData(req.params.id, req.user.tenantId);
+        res.json({
+            success: true,
+            data: visualization
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+// ===== DRILL-DOWN ROUTES =====
+/**
+ * @route POST /api/analytics/drill-down
+ * @desc Perform drill-down analysis on a data point
+ */
+router.post('/drill-down', [
+    (0, express_validator_1.body)('visualizationId').isUUID().withMessage('Invalid visualization ID'),
+    (0, express_validator_1.body)('level').isIn(Object.values(Analytics_1.DrillDownLevel)).withMessage('Invalid drill-down level'),
+    (0, express_validator_1.body)('dataPointId').notEmpty().withMessage('Data point ID is required'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const context = {
+            tenantId: req.user.tenantId,
+            userId: req.user.userId
+        };
+        const drillDownResponse = await drillDownService.performDrillDown(req.body, context);
+        res.json({
+            success: true,
+            data: drillDownResponse
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/drill-down/breadcrumb/:visualizationId
+ * @desc Get breadcrumb navigation for drill-down
+ */
+router.get('/drill-down/breadcrumb/:visualizationId', [
+    (0, express_validator_1.param)('visualizationId').isUUID().withMessage('Invalid visualization ID'),
+    (0, express_validator_1.query)('level').isIn(Object.values(Analytics_1.DrillDownLevel)).withMessage('Invalid drill-down level'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const breadcrumb = await drillDownService.getBreadcrumbNavigation(req.params.visualizationId, req.query.level, req.user.tenantId);
+        res.json({
+            success: true,
+            data: breadcrumb
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+// ===== DASHBOARD ROUTES =====
+/**
+ * @route POST /api/analytics/dashboards
+ * @desc Create a new custom dashboard
+ */
+router.post('/dashboards', [
+    (0, express_validator_1.body)('name').notEmpty().withMessage('Dashboard name is required'),
+    (0, express_validator_1.body)('description').optional().isString(),
+    (0, express_validator_1.body)('templateId').optional().isUUID().withMessage('Invalid template ID'),
+    (0, express_validator_1.body)('layout').optional().isObject(),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const request = {
+            tenantId: req.user.tenantId,
+            createdBy: req.user.userId,
+            name: req.body.name,
+            description: req.body.description,
+            templateId: req.body.templateId,
+            layout: req.body.layout,
+            filters: req.body.filters,
+            permissions: req.body.permissions,
+            isDefault: req.body.isDefault || false
+        };
+        const dashboard = await dashboardService.createDashboard(request);
+        res.status(201).json({
+            success: true,
+            data: dashboard
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/dashboards
+ * @desc Get user's dashboards
+ */
+router.get('/dashboards', async (req, res) => {
+    try {
+        const dashboards = await dashboardService.getUserDashboards(req.user.tenantId, req.user.userId, req.query.includeShared === 'true');
+        res.json({
+            success: true,
+            data: dashboards
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/dashboards/templates
+ * @desc Get available dashboard templates
+ */
+router.get('/dashboards/templates', async (req, res) => {
+    try {
+        const templates = await dashboardService.getAvailableTemplates(req.user.tenantId);
+        res.json({
+            success: true,
+            data: templates
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route PUT /api/analytics/dashboards/:id
+ * @desc Update dashboard configuration
+ */
+router.put('/dashboards/:id', [
+    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid dashboard ID'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const dashboard = await dashboardService.updateDashboard(req.params.id, req.body, req.user.userId);
+        res.json({
+            success: true,
+            data: dashboard
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/dashboards/:id/share
+ * @desc Share dashboard with other users
+ */
+router.post('/dashboards/:id/share', [
+    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid dashboard ID'),
+    (0, express_validator_1.body)('userIds').isArray().withMessage('User IDs must be an array'),
+    (0, express_validator_1.body)('permissions').isObject().withMessage('Permissions must be an object'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const result = await dashboardService.shareDashboard(req.params.id, req.body.userIds, req.body.permissions, req.user.userId);
+        res.json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+// ===== REAL-TIME ANALYTICS ROUTES =====
+/**
+ * @route POST /api/analytics/real-time/stream
+ * @desc Start real-time analytics stream
+ */
+router.post('/real-time/stream', [
+    (0, express_validator_1.body)('connectionType').isIn(['websocket', 'sse', 'webhook']).withMessage('Invalid connection type'),
+    (0, express_validator_1.body)('dashboardId').optional().isUUID().withMessage('Invalid dashboard ID'),
+    (0, express_validator_1.body)('visualizationIds').optional().isArray().withMessage('Visualization IDs must be an array'),
+    (0, express_validator_1.body)('metricTypes').optional().isArray().withMessage('Metric types must be an array'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const connection = await realTimeService.startRealTimeStream(req.user.tenantId, req.user.userId, req.body);
+        res.status(201).json({
+            success: true,
+            data: connection
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route DELETE /api/analytics/real-time/stream/:connectionId
+ * @desc Stop real-time analytics stream
+ */
+router.delete('/real-time/stream/:connectionId', [
+    (0, express_validator_1.param)('connectionId').isUUID().withMessage('Invalid connection ID'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        await realTimeService.stopRealTimeStream(req.params.connectionId, req.user.userId);
+        res.json({
+            success: true,
+            message: 'Real-time stream stopped successfully'
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/real-time/events
+ * @desc Get recent real-time events
+ */
+router.get('/real-time/events', [
+    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+    (0, express_validator_1.query)('since').optional().isISO8601().withMessage('Invalid since date'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const events = await realTimeService.getRecentEvents(req.user.tenantId, parseInt(req.query.limit) || 50, req.query.since ? new Date(req.query.since) : undefined);
+        res.json({
+            success: true,
+            data: events
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route PUT /api/analytics/real-time/thresholds
+ * @desc Configure alert thresholds
+ */
+router.put('/real-time/thresholds', [
+    (0, express_validator_1.body)('thresholds').isArray().withMessage('Thresholds must be an array'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const result = await realTimeService.configureAlertThresholds(req.user.tenantId, req.body.thresholds);
+        res.json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+// ===== PREDICTIVE MODELING ROUTES =====
+/**
+ * @route POST /api/analytics/models/train
+ * @desc Train a new predictive model
+ */
+router.post('/models/train', [
+    (0, express_validator_1.body)('modelType').isIn(['regression', 'time_series', 'classification', 'clustering', 'deep_learning'])
+        .withMessage('Invalid model type'),
+    (0, express_validator_1.body)('targetVariable').notEmpty().withMessage('Target variable is required'),
+    (0, express_validator_1.body)('features').isArray().withMessage('Features must be an array'),
+    (0, express_validator_1.body)('trainingPeriod.startDate').isISO8601().withMessage('Invalid training start date'),
+    (0, express_validator_1.body)('trainingPeriod.endDate').isISO8601().withMessage('Invalid training end date'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const request = {
+            tenantId: req.user.tenantId,
+            modelType: req.body.modelType,
+            targetVariable: req.body.targetVariable,
+            features: req.body.features,
+            trainingPeriod: {
+                startDate: new Date(req.body.trainingPeriod.startDate),
+                endDate: new Date(req.body.trainingPeriod.endDate)
+            },
+            hyperparameters: req.body.hyperparameters,
+            validationSplit: req.body.validationSplit
+        };
+        const model = await predictiveService.trainModel(request);
+        res.status(201).json({
+            success: true,
+            data: model
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/models/:modelId/predict
+ * @desc Generate prediction using trained model
+ */
+router.post('/models/:modelId/predict', [
+    (0, express_validator_1.param)('modelId').isUUID().withMessage('Invalid model ID'),
+    (0, express_validator_1.body)('entityId').notEmpty().withMessage('Entity ID is required'),
+    (0, express_validator_1.body)('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
+    (0, express_validator_1.body)('predictionType').notEmpty().withMessage('Prediction type is required'),
+    (0, express_validator_1.body)('horizon').isInt({ min: 1 }).withMessage('Horizon must be a positive integer'),
+    (0, express_validator_1.body)('unit').isIn(['days', 'weeks', 'months', 'years']).withMessage('Invalid time unit'),
+    (0, express_validator_1.body)('features').isObject().withMessage('Features must be an object'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const prediction = await predictiveService.generatePrediction(req.body);
+        res.json({
+            success: true,
+            data: prediction
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/models
+ * @desc Get available predictive models
+ */
+router.get('/models', [
+    (0, express_validator_1.query)('modelType').optional().isIn(['regression', 'time_series', 'classification', 'clustering', 'deep_learning'])
+        .withMessage('Invalid model type'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const models = await predictiveService.getAvailableModels(req.user.tenantId, req.query.modelType);
+        res.json({
+            success: true,
+            data: models
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/models/:modelId/retrain
+ * @desc Retrain an existing model
+ */
+router.post('/models/:modelId/retrain', [
+    (0, express_validator_1.param)('modelId').isUUID().withMessage('Invalid model ID'),
+    (0, express_validator_1.body)('trainingPeriod').optional().isObject(),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const model = await predictiveService.retrainModel(req.params.modelId, req.body.trainingPeriod);
+        res.json({
+            success: true,
+            data: model
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/models/:modelId/performance
+ * @desc Get model performance metrics
+ */
+router.get('/models/:modelId/performance', [
+    (0, express_validator_1.param)('modelId').isUUID().withMessage('Invalid model ID'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const performance = await predictiveService.getModelPerformance(req.params.modelId);
+        res.json({
+            success: true,
+            data: performance
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/models/:modelId/backtest
+ * @desc Run model backtest
+ */
+router.post('/models/:modelId/backtest', [
+    (0, express_validator_1.param)('modelId').isUUID().withMessage('Invalid model ID'),
+    (0, express_validator_1.body)('backtestPeriod.startDate').isISO8601().withMessage('Invalid backtest start date'),
+    (0, express_validator_1.body)('backtestPeriod.endDate').isISO8601().withMessage('Invalid backtest end date'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const backtestPeriod = {
+            startDate: new Date(req.body.backtestPeriod.startDate),
+            endDate: new Date(req.body.backtestPeriod.endDate)
+        };
+        const results = await predictiveService.backtestModel(req.params.modelId, backtestPeriod);
+        res.json({
+            success: true,
+            data: results
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/predictions/:entityId
+ * @desc Get predictions for specific entity
+ */
+router.get('/predictions/:entityId', [
+    (0, express_validator_1.param)('entityId').notEmpty().withMessage('Entity ID is required'),
+    (0, express_validator_1.query)('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
+    (0, express_validator_1.query)('validOnly').optional().isBoolean().withMessage('Valid only must be boolean'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const predictions = await predictiveService.getPredictionsForEntity(req.params.entityId, req.query.entityType, req.query.validOnly === 'true');
+        res.json({
+            success: true,
+            data: predictions
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+// ===== MACHINE LEARNING INSIGHTS ROUTES =====
+/**
+ * @route POST /api/analytics/insights/generate
+ * @desc Generate ML insights for entities
+ */
+router.post('/insights/generate', [
+    (0, express_validator_1.body)('analysisType').isIn(['cluster_analysis', 'pattern_recognition', 'optimization_suggestion', 'risk_attribution', 'performance_driver'])
+        .withMessage('Invalid analysis type'),
+    (0, express_validator_1.body)('entities').isObject().withMessage('Entities must be an object'),
+    (0, express_validator_1.body)('timeRange.startDate').isISO8601().withMessage('Invalid start date'),
+    (0, express_validator_1.body)('timeRange.endDate').isISO8601().withMessage('Invalid end date'),
+    (0, express_validator_1.body)('minConfidence').optional().isFloat({ min: 0, max: 1 }).withMessage('Min confidence must be between 0 and 1'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const request = {
+            tenantId: req.user.tenantId,
+            analysisType: req.body.analysisType,
+            entities: req.body.entities,
+            timeRange: {
+                startDate: new Date(req.body.timeRange.startDate),
+                endDate: new Date(req.body.timeRange.endDate)
+            },
+            minConfidence: req.body.minConfidence,
+            categories: req.body.categories
+        };
+        const insights = await mlInsightsService.generateInsights(request);
+        res.status(201).json({
+            success: true,
+            data: insights
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/insights/cluster-analysis
+ * @desc Perform cluster analysis on data
+ */
+router.post('/insights/cluster-analysis', [
+    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
+    (0, express_validator_1.body)('features').isArray().withMessage('Features must be an array'),
+    (0, express_validator_1.body)('numClusters').optional().isInt({ min: 2 }).withMessage('Number of clusters must be at least 2'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const result = await mlInsightsService.performClusterAnalysis(req.body.data, req.body.features, req.body.numClusters);
+        res.json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/insights/pattern-recognition
+ * @desc Recognize patterns in data
+ */
+router.post('/insights/pattern-recognition', [
+    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
+    (0, express_validator_1.body)('patternTypes').optional().isArray().withMessage('Pattern types must be an array'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const result = await mlInsightsService.recognizePatterns(req.body.data, req.body.patternTypes);
+        res.json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/insights/optimization
+ * @desc Generate optimization suggestions
+ */
+router.post('/insights/optimization', [
+    (0, express_validator_1.body)('portfolioData').isObject().withMessage('Portfolio data must be an object'),
+    (0, express_validator_1.body)('constraints').optional().isArray().withMessage('Constraints must be an array'),
+    (0, express_validator_1.body)('objective').optional().isIn(['return', 'risk', 'sharpe']).withMessage('Invalid objective'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const suggestions = await mlInsightsService.generateOptimizationSuggestions(req.body.portfolioData, req.body.constraints, req.body.objective);
+        res.json({
+            success: true,
+            data: suggestions
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/insights/performance-drivers
+ * @desc Analyze performance drivers
+ */
+router.post('/insights/performance-drivers', [
+    (0, express_validator_1.body)('portfolioData').isObject().withMessage('Portfolio data must be an object'),
+    (0, express_validator_1.body)('benchmarkData').isObject().withMessage('Benchmark data must be an object'),
+    (0, express_validator_1.body)('timeRange.startDate').isISO8601().withMessage('Invalid start date'),
+    (0, express_validator_1.body)('timeRange.endDate').isISO8601().withMessage('Invalid end date'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const timeRange = {
+            startDate: new Date(req.body.timeRange.startDate),
+            endDate: new Date(req.body.timeRange.endDate)
+        };
+        const analysis = await mlInsightsService.analyzePerformanceDrivers(req.body.portfolioData, req.body.benchmarkData, timeRange);
+        res.json({
+            success: true,
+            data: analysis
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/insights/:entityId
+ * @desc Get insights for specific entity
+ */
+router.get('/insights/:entityId', [
+    (0, express_validator_1.param)('entityId').notEmpty().withMessage('Entity ID is required'),
+    (0, express_validator_1.query)('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
+    (0, express_validator_1.query)('categories').optional().isString().withMessage('Categories must be a string'),
+    (0, express_validator_1.query)('minConfidence').optional().isFloat({ min: 0, max: 1 }).withMessage('Min confidence must be between 0 and 1'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const categories = req.query.categories ? req.query.categories.split(',') : undefined;
+        const insights = await mlInsightsService.getInsightsByEntity(req.params.entityId, req.query.entityType, categories, parseFloat(req.query.minConfidence));
+        res.json({
+            success: true,
+            data: insights
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route PUT /api/analytics/insights/:insightId/action
+ * @desc Mark insight action as taken
+ */
+router.put('/insights/:insightId/action', [
+    (0, express_validator_1.param)('insightId').isUUID().withMessage('Invalid insight ID'),
+    (0, express_validator_1.body)('action').notEmpty().withMessage('Action is required'),
+    (0, express_validator_1.body)('outcome').optional().isString(),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const insight = await mlInsightsService.markInsightActionTaken(req.params.insightId, req.body.action, req.user.userId, req.body.outcome);
+        res.json({
+            success: true,
+            data: insight
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+// ===== ANOMALY DETECTION ROUTES =====
+/**
+ * @route POST /api/analytics/anomalies/detect
+ * @desc Detect anomalies in data
+ */
+router.post('/anomalies/detect', [
+    (0, express_validator_1.body)('entityId').notEmpty().withMessage('Entity ID is required'),
+    (0, express_validator_1.body)('entityType').isIn(['portfolio', 'position', 'market']).withMessage('Invalid entity type'),
+    (0, express_validator_1.body)('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
+    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
+    (0, express_validator_1.body)('detectionMethods').optional().isArray().withMessage('Detection methods must be an array'),
+    (0, express_validator_1.body)('sensitivity').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid sensitivity level'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const request = {
+            tenantId: req.user.tenantId,
+            entityId: req.body.entityId,
+            entityType: req.body.entityType,
+            metricType: req.body.metricType,
+            data: req.body.data,
+            detectionMethods: req.body.detectionMethods,
+            sensitivity: req.body.sensitivity,
+            historicalWindow: req.body.historicalWindow
+        };
+        const anomalies = await anomalyService.detectAnomalies(request);
+        res.json({
+            success: true,
+            data: anomalies
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/anomalies/statistical
+ * @desc Run statistical anomaly detection
+ */
+router.post('/anomalies/statistical', [
+    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
+    (0, express_validator_1.body)('sensitivity').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid sensitivity level'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const result = await anomalyService.runStatisticalAnomalyDetection(req.body.data, req.body.sensitivity);
+        res.json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/anomalies/isolation-forest
+ * @desc Run isolation forest anomaly detection
+ */
+router.post('/anomalies/isolation-forest', [
+    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
+    (0, express_validator_1.body)('features').optional().isArray().withMessage('Features must be an array'),
+    (0, express_validator_1.body)('contamination').optional().isFloat({ min: 0, max: 1 }).withMessage('Contamination must be between 0 and 1'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const result = await anomalyService.runIsolationForestDetection(req.body.data, req.body.features, req.body.contamination);
+        res.json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/anomalies/lstm-autoencoder
+ * @desc Run LSTM autoencoder anomaly detection
+ */
+router.post('/anomalies/lstm-autoencoder', [
+    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
+    (0, express_validator_1.body)('sequenceLength').optional().isInt({ min: 2 }).withMessage('Sequence length must be at least 2'),
+    (0, express_validator_1.body)('threshold').optional().isFloat({ min: 0 }).withMessage('Threshold must be positive'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const result = await anomalyService.runLSTMAutoencoderDetection(req.body.data, req.body.sequenceLength, req.body.threshold);
+        res.json({
+            success: true,
+            data: result
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/anomalies/real-time-monitor
+ * @desc Monitor real-time anomalies
+ */
+router.post('/anomalies/real-time-monitor', [
+    (0, express_validator_1.body)('entityId').notEmpty().withMessage('Entity ID is required'),
+    (0, express_validator_1.body)('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
+    (0, express_validator_1.body)('newDataPoint').isObject().withMessage('New data point must be an object'),
+    (0, express_validator_1.body)('historicalData').isArray().withMessage('Historical data must be an array'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const anomaly = await anomalyService.monitorRealTimeAnomalies(req.user.tenantId, req.body.entityId, req.body.metricType, req.body.newDataPoint, req.body.historicalData);
+        res.json({
+            success: true,
+            data: anomaly
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/anomalies/:entityId
+ * @desc Get anomalies for specific entity
+ */
+router.get('/anomalies/:entityId', [
+    (0, express_validator_1.param)('entityId').notEmpty().withMessage('Entity ID is required'),
+    (0, express_validator_1.query)('entityType').isIn(['portfolio', 'position', 'market']).withMessage('Invalid entity type'),
+    (0, express_validator_1.query)('metricType').optional().isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
+    (0, express_validator_1.query)('severity').optional().isIn(['low', 'medium', 'high', 'critical']).withMessage('Invalid severity'),
+    (0, express_validator_1.query)('resolved').optional().isBoolean().withMessage('Resolved must be boolean'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const anomalies = await anomalyService.getAnomaliesByEntity(req.params.entityId, req.query.entityType, req.query.metricType, req.query.severity, req.query.resolved === 'true');
+        res.json({
+            success: true,
+            data: anomalies
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route PUT /api/analytics/anomalies/:anomalyId/resolve
+ * @desc Resolve an anomaly
+ */
+router.put('/anomalies/:anomalyId/resolve', [
+    (0, express_validator_1.param)('anomalyId').isUUID().withMessage('Invalid anomaly ID'),
+    (0, express_validator_1.body)('resolution').notEmpty().withMessage('Resolution is required'),
+    (0, express_validator_1.body)('falsePositive').optional().isBoolean().withMessage('False positive must be boolean'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const anomaly = await anomalyService.resolveAnomaly(req.params.anomalyId, req.user.userId, req.body.resolution, req.body.falsePositive);
+        res.json({
+            success: true,
+            data: anomaly
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route PUT /api/analytics/anomalies/config
+ * @desc Update anomaly detection configuration
+ */
+router.put('/anomalies/config', [
+    (0, express_validator_1.body)('enabled').optional().isBoolean(),
+    (0, express_validator_1.body)('sensitivity').optional().isIn(['low', 'medium', 'high']),
+    (0, express_validator_1.body)('methods').optional().isArray(),
+    (0, express_validator_1.body)('thresholds').optional().isObject(),
+    (0, express_validator_1.body)('alertThreshold').optional().isFloat({ min: 0, max: 1 }),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const config = await anomalyService.updateDetectionConfig(req.user.tenantId, req.body);
+        res.json({
+            success: true,
+            data: config
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+// ===== BUSINESS INTELLIGENCE ROUTES =====
+/**
+ * @route POST /api/analytics/reports/generate
+ * @desc Generate BI report
+ */
+router.post('/reports/generate', [
+    (0, express_validator_1.body)('reportType').isIn(['on_demand', 'scheduled', 'recurring']).withMessage('Invalid report type'),
+    (0, express_validator_1.body)('category').isIn(['executive_summary', 'performance_analysis', 'risk_assessment', 'client_analysis', 'market_intelligence'])
+        .withMessage('Invalid report category'),
+    (0, express_validator_1.body)('name').notEmpty().withMessage('Report name is required'),
+    (0, express_validator_1.body)('periodCovered.startDate').isISO8601().withMessage('Invalid start date'),
+    (0, express_validator_1.body)('periodCovered.endDate').isISO8601().withMessage('Invalid end date'),
+    (0, express_validator_1.body)('includeInsights').optional().isBoolean(),
+    (0, express_validator_1.body)('format').optional().isIn(['html', 'pdf', 'excel', 'json']).withMessage('Invalid format'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const request = {
+            tenantId: req.user.tenantId,
+            reportType: req.body.reportType,
+            category: req.body.category,
+            name: req.body.name,
+            description: req.body.description,
+            periodCovered: {
+                startDate: new Date(req.body.periodCovered.startDate),
+                endDate: new Date(req.body.periodCovered.endDate)
+            },
+            entities: req.body.entities,
+            includeInsights: req.body.includeInsights,
+            format: req.body.format,
+            recipients: req.body.recipients
+        };
+        const report = await biService.generateReport(request);
+        res.status(201).json({
+            success: true,
+            data: report
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/reports/executive-summary
+ * @desc Generate executive summary
+ */
+router.get('/reports/executive-summary', [
+    (0, express_validator_1.query)('startDate').isISO8601().withMessage('Invalid start date'),
+    (0, express_validator_1.query)('endDate').isISO8601().withMessage('Invalid end date'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const period = {
+            startDate: new Date(req.query.startDate),
+            endDate: new Date(req.query.endDate)
+        };
+        const summary = await biService.generateExecutiveSummary(req.user.tenantId, period);
+        res.json({
+            success: true,
+            data: summary
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/reports/market-intelligence
+ * @desc Generate market intelligence report
+ */
+router.get('/reports/market-intelligence', async (req, res) => {
+    try {
+        const intelligence = await biService.generateMarketIntelligence();
+        res.json({
+            success: true,
+            data: intelligence
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/reports/client-analysis
+ * @desc Generate client analysis report
+ */
+router.get('/reports/client-analysis', [
+    (0, express_validator_1.query)('startDate').isISO8601().withMessage('Invalid start date'),
+    (0, express_validator_1.query)('endDate').isISO8601().withMessage('Invalid end date'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const period = {
+            startDate: new Date(req.query.startDate),
+            endDate: new Date(req.query.endDate)
+        };
+        const analysis = await biService.generateClientAnalysis(req.user.tenantId, period);
+        res.json({
+            success: true,
+            data: analysis
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/bi/configure
+ * @desc Configure BI integration
+ */
+router.post('/bi/configure', [
+    (0, express_validator_1.body)('provider').isIn(['power_bi', 'tableau', 'qlik', 'looker', 'custom']).withMessage('Invalid BI provider'),
+    (0, express_validator_1.body)('connectionString').notEmpty().withMessage('Connection string is required'),
+    (0, express_validator_1.body)('refreshSchedule').notEmpty().withMessage('Refresh schedule is required'),
+    (0, express_validator_1.body)('dataSetIds').isArray().withMessage('Data set IDs must be an array'),
+    (0, express_validator_1.body)('enabled').isBoolean().withMessage('Enabled must be boolean'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const config = await biService.configureBIIntegration(req.user.tenantId, req.body);
+        res.json({
+            success: true,
+            data: config
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/bi/sync
+ * @desc Sync data with BI tool
+ */
+router.post('/bi/sync', async (req, res) => {
+    try {
+        await biService.syncWithBITool(req.user.tenantId);
+        res.json({
+            success: true,
+            message: 'BI sync completed successfully'
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route POST /api/analytics/reports/schedule
+ * @desc Schedule automated reports
+ */
+router.post('/reports/schedule', [
+    (0, express_validator_1.body)('reportConfigs').isArray().withMessage('Report configs must be an array'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        await biService.scheduleAutomatedReports(req.user.tenantId, req.body.reportConfigs);
+        res.json({
+            success: true,
+            message: 'Automated reports scheduled successfully'
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/reports/history
+ * @desc Get report history
+ */
+router.get('/reports/history', [
+    (0, express_validator_1.query)('category').optional().isIn(['executive_summary', 'performance_analysis', 'risk_assessment', 'client_analysis', 'market_intelligence'])
+        .withMessage('Invalid report category'),
+    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const reports = await biService.getReportHistory(req.user.tenantId, req.query.category, parseInt(req.query.limit) || 50);
+        res.json({
+            success: true,
+            data: reports
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+/**
+ * @route GET /api/analytics/reports/:reportId/export
+ * @desc Export report in specified format
+ */
+router.get('/reports/:reportId/export', [
+    (0, express_validator_1.param)('reportId').isUUID().withMessage('Invalid report ID'),
+    (0, express_validator_1.query)('format').isIn(['pdf', 'excel', 'json', 'html']).withMessage('Invalid export format'),
+    validation_1.validateRequest
+], async (req, res) => {
+    try {
+        const exportData = await biService.exportReport(req.params.reportId, req.query.format);
+        res.setHeader('Content-Type', exportData.mimeType);
+        res.setHeader('Content-Disposition', `attachment; filename="${exportData.filename}"`);
+        res.send(exportData.content);
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+exports.default = router;

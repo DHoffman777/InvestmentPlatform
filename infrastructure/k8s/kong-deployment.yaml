@@ -1,0 +1,267 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-config
+  namespace: investment-platform
+  labels:
+    app: kong
+data:
+  kong.conf: |
+    # Kong configuration
+    database = postgres
+    pg_host = postgres
+    pg_port = 5432
+    pg_database = kong
+    pg_user = kong
+    pg_password = kong_pass
+    pg_ssl = off
+    
+    # Admin API
+    admin_listen = 0.0.0.0:8001
+    admin_gui_listen = 0.0.0.0:8002
+    
+    # Proxy
+    proxy_listen = 0.0.0.0:8000, 0.0.0.0:8443 ssl
+    
+    # Logging
+    log_level = info
+    
+    # Plugins
+    plugins = bundled,oidc,prometheus,rate-limiting,cors,key-auth,jwt,request-transformer,response-transformer
+    
+    # Security
+    nginx_worker_processes = auto
+    mem_cache_size = 128m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong-migrations
+  namespace: investment-platform
+  labels:
+    app: kong-migrations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kong-migrations
+  template:
+    metadata:
+      labels:
+        app: kong-migrations
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: kong-migrations
+        image: kong:3.4-alpine
+        env:
+        - name: KONG_DATABASE
+          value: "postgres"
+        - name: KONG_PG_HOST
+          value: "postgres"
+        - name: KONG_PG_PORT
+          value: "5432"
+        - name: KONG_PG_DATABASE
+          value: "kong"
+        - name: KONG_PG_USER
+          valueFrom:
+            secretKeyRef:
+              name: kong-secret
+              key: pg-user
+        - name: KONG_PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kong-secret
+              key: pg-password
+        command: ["kong", "migrations", "bootstrap"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong
+  namespace: investment-platform
+  labels:
+    app: kong
+    tier: gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kong
+  template:
+    metadata:
+      labels:
+        app: kong
+        tier: gateway
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8100"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: kong
+        image: kong:3.4-alpine
+        ports:
+        - containerPort: 8000
+          name: proxy
+        - containerPort: 8443
+          name: proxy-ssl
+        - containerPort: 8001
+          name: admin
+        - containerPort: 8002
+          name: admin-gui
+        - containerPort: 8100
+          name: metrics
+        env:
+        - name: KONG_DATABASE
+          value: "postgres"
+        - name: KONG_PG_HOST
+          value: "postgres"
+        - name: KONG_PG_PORT
+          value: "5432"
+        - name: KONG_PG_DATABASE
+          value: "kong"
+        - name: KONG_PG_USER
+          valueFrom:
+            secretKeyRef:
+              name: kong-secret
+              key: pg-user
+        - name: KONG_PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kong-secret
+              key: pg-password
+        - name: KONG_PROXY_LISTEN
+          value: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
+        - name: KONG_ADMIN_LISTEN
+          value: "0.0.0.0:8001"
+        - name: KONG_ADMIN_GUI_LISTEN
+          value: "0.0.0.0:8002"
+        - name: KONG_LOG_LEVEL
+          value: "info"
+        - name: KONG_PLUGINS
+          value: "bundled,prometheus,rate-limiting,cors,key-auth,jwt,request-transformer,response-transformer"
+        - name: KONG_NGINX_WORKER_PROCESSES
+          value: "2"
+        - name: KONG_MEM_CACHE_SIZE
+          value: "128m"
+        - name: KONG_STATUS_LISTEN
+          value: "0.0.0.0:8100"
+        volumeMounts:
+        - name: kong-config
+          mountPath: /etc/kong
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /status
+            port: 8100
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /status
+            port: 8100
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: kong-config
+        configMap:
+          name: kong-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-proxy
+  namespace: investment-platform
+  labels:
+    app: kong
+    tier: gateway
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: proxy
+  - port: 443
+    targetPort: 8443
+    protocol: TCP
+    name: proxy-ssl
+  selector:
+    app: kong
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-admin
+  namespace: investment-platform
+  labels:
+    app: kong
+    tier: gateway
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: admin
+  - port: 8002
+    targetPort: 8002
+    protocol: TCP
+    name: admin-gui
+  selector:
+    app: kong
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kong-secret
+  namespace: investment-platform
+type: Opaque
+data:
+  pg-user: a29uZw== # base64: kong
+  pg-password: a29uZ19wYXNz # base64: kong_pass
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kong-migrations
+  namespace: investment-platform
+  labels:
+    app: kong-migrations
+spec:
+  template:
+    metadata:
+      labels:
+        app: kong-migrations
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: kong-migrations
+        image: kong:3.4-alpine
+        env:
+        - name: KONG_DATABASE
+          value: "postgres"
+        - name: KONG_PG_HOST
+          value: "postgres"
+        - name: KONG_PG_PORT
+          value: "5432"
+        - name: KONG_PG_DATABASE
+          value: "kong"
+        - name: KONG_PG_USER
+          valueFrom:
+            secretKeyRef:
+              name: kong-secret
+              key: pg-user
+        - name: KONG_PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: kong-secret
+              key: pg-password
+        command: ["kong", "migrations", "bootstrap"]

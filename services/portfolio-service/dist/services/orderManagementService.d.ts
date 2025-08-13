@@ -1,0 +1,38 @@
+import { PrismaClient } from '@prisma/client';
+import { Order, OrderExecution, CreateOrderRequest, ModifyOrderRequest, CancelOrderRequest, OrderSearchRequest, OrderSearchResult, OrderValidationResult, BestExecutionReport, ExecutionVenueType } from '../models/trading/OrderManagement';
+export declare class OrderManagementService {
+    private prisma;
+    private kafkaService;
+    constructor(prisma: PrismaClient, kafkaService: any);
+    createOrder(request: CreateOrderRequest, tenantId: string, userId: string): Promise<Order>;
+    modifyOrder(request: ModifyOrderRequest, tenantId: string, userId: string): Promise<Order>;
+    cancelOrder(request: CancelOrderRequest, tenantId: string, userId: string): Promise<Order>;
+    recordExecution(orderId: string, executionPrice: number, executionQuantity: number, executionVenue: string, executionVenueType: ExecutionVenueType, tenantId: string, reportedBy: string): Promise<OrderExecution>;
+    searchOrders(request: OrderSearchRequest, tenantId: string): Promise<OrderSearchResult>;
+    getOrderById(orderId: string, tenantId: string): Promise<Order | null>;
+    validateOrder(request: CreateOrderRequest, tenantId: string): Promise<OrderValidationResult>;
+    performPreTradeChecks(orderId: string, tenantId: string): Promise<void>;
+    generateBestExecutionReport(orderId: string, tenantId: string): Promise<BestExecutionReport>;
+    private generateClientOrderId;
+    private generateExecutionId;
+    private generateTradeId;
+    private getCurrentTradingSession;
+    private getInstrumentCurrency;
+    private canModifyOrder;
+    private canCancelOrder;
+    private calculateSettlementDate;
+    private calculateOrderRiskScore;
+    private estimateOrderCosts;
+    private getCurrentPosition;
+    private getPortfolioValue;
+    private getRestrictedInstruments;
+    private checkConcentrationLimits;
+    private createOrderAllocations;
+    private createSmartOrderRouting;
+    private processExecutionAllocations;
+    private getHistoricalMarketData;
+    private calculateExecutionQuality;
+    private calculateBenchmarkComparison;
+    private analyzeVenuePerformance;
+    private generateExecutionRecommendations;
+}

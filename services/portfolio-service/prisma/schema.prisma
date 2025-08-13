@@ -1,0 +1,1333 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Portfolio {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  name              String            @db.VarChar(255)
+  description       String?           @db.Text
+  portfolioType     PortfolioType     @map("portfolio_type") @default(MANAGED)
+  status            PortfolioStatus   @default(ACTIVE)
+  baseCurrency      String            @map("base_currency") @default("USD") @db.VarChar(3)
+  
+  // Ownership and management
+  ownerId           String            @map("owner_id") @db.Uuid
+  managerId         String?           @map("manager_id") @db.Uuid
+  
+  // Portfolio configuration
+  riskProfile       RiskProfile       @map("risk_profile") @default(MODERATE)
+  investmentObjective String?         @map("investment_objective") @db.Text
+  
+  // Financial data
+  totalValue        Decimal           @map("total_value") @default(0) @db.Decimal(15, 2)
+  cashBalance       Decimal           @map("cash_balance") @default(0) @db.Decimal(15, 2)
+  availableCash     Decimal           @map("available_cash") @default(0) @db.Decimal(15, 2)
+  
+  // Performance tracking
+  inceptionDate     DateTime          @map("inception_date") @default(now()) @db.Timestamptz
+  lastRebalance     DateTime?         @map("last_rebalance") @db.Timestamptz
+  
+  // Allocation constraints
+  minCashPercentage Decimal?          @map("min_cash_percentage") @db.Decimal(5, 2)
+  maxCashPercentage Decimal?          @map("max_cash_percentage") @db.Decimal(5, 2)
+  
+  // Audit fields
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  createdBy         String            @map("created_by") @db.Uuid
+  updatedBy         String            @map("updated_by") @db.Uuid
+  
+  // Relations
+  positions         Position[]
+  transactions      Transaction[]
+  allocations       AllocationRule[]
+  performanceRecords PerformanceRecord[]
+  portfolioAccess   PortfolioAccess[]
+  modelPortfolios   ModelPortfolioAssignment[]
+  reconciliations   TransactionReconciliation[]
+  riskAlerts        RiskMonitoringAlert[]        @relation("PortfolioRiskAlerts")
+  
+  // Indexes and constraints
+  @@unique([tenantId, name])
+  @@index([tenantId, ownerId])
+  @@index([tenantId, status])
+  @@index([createdAt])
+  @@map("portfolios")
+}
+
+model Position {
+  id              String          @id @default(uuid()) @db.Uuid
+  portfolioId     String          @map("portfolio_id") @db.Uuid
+  tenantId        String          @map("tenant_id") @db.VarChar(255)
+  
+  // Security information
+  symbol          String          @db.VarChar(20)
+  securityId      String?         @map("security_id") @db.VarChar(50)
+  securityType    SecurityType    @map("security_type")
+  currency        String          @default("USD") @db.VarChar(3)
+  
+  // Position data
+  quantity        Decimal         @default(0) @db.Decimal(15, 6)
+  marketValue     Decimal         @map("market_value") @default(0) @db.Decimal(15, 2)
+  costBasis       Decimal         @map("cost_basis") @default(0) @db.Decimal(15, 2)
+  averageCost     Decimal         @map("average_cost") @default(0) @db.Decimal(15, 6)
+  
+  // P&L tracking
+  unrealizedGainLoss Decimal      @map("unrealized_gain_loss") @default(0) @db.Decimal(15, 2)
+  realizedGainLoss   Decimal      @map("realized_gain_loss") @default(0) @db.Decimal(15, 2)
+  
+  // Price information
+  lastPrice       Decimal?        @map("last_price") @db.Decimal(15, 6)
+  lastPriceDate   DateTime?       @map("last_price_date") @db.Timestamptz
+  
+  // Position flags
+  isActive        Boolean         @map("is_active") @default(true)
+  isLong          Boolean         @map("is_long") @default(true)
+  
+  // Audit fields
+  createdAt       DateTime        @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt       DateTime        @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  portfolio       Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+  taxLots         TaxLot[]
+  
+  // Indexes
+  @@unique([portfolioId, symbol])
+  @@index([tenantId, symbol])
+  @@index([portfolioId, isActive])
+  @@index([securityType])
+  @@map("positions")
+}
+
+model Transaction {
+  id                String            @id @default(uuid()) @db.Uuid
+  portfolioId       String            @map("portfolio_id") @db.Uuid
+  positionId        String?           @map("position_id") @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  
+  // Transaction details
+  transactionType   TransactionType   @map("transaction_type")
+  symbol            String            @db.VarChar(20)
+  quantity          Decimal           @default(0) @db.Decimal(15, 6)
+  price             Decimal           @default(0) @db.Decimal(15, 6)
+  grossAmount       Decimal           @map("gross_amount") @default(0) @db.Decimal(15, 2)
+  netAmount         Decimal           @map("net_amount") @default(0) @db.Decimal(15, 2)
+  
+  // Fees and charges
+  commission        Decimal           @default(0) @db.Decimal(15, 2)
+  fees              Decimal           @default(0) @db.Decimal(15, 2)
+  taxes             Decimal           @default(0) @db.Decimal(15, 2)
+  
+  // Transaction metadata
+  tradeDate         DateTime          @map("trade_date") @db.Timestamptz
+  settlementDate    DateTime          @map("settlement_date") @db.Timestamptz
+  currency          String            @default("USD") @db.VarChar(3)
+  exchangeRate      Decimal?          @map("exchange_rate") @db.Decimal(15, 6)
+  
+  // External references
+  externalId        String?           @map("external_id") @db.VarChar(100)
+  brokerageAccount  String?           @map("brokerage_account") @db.VarChar(50)
+  confirmationNumber String?          @map("confirmation_number") @db.VarChar(50)
+  
+  // Status and processing
+  status            TransactionStatus @default(PENDING)
+  isReconciled      Boolean           @map("is_reconciled") @default(false)
+  reconciledAt      DateTime?         @map("reconciled_at") @db.Timestamptz
+  
+  // Audit fields
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  createdBy         String            @map("created_by") @db.Uuid
+  
+  // Relations
+  portfolio         Portfolio         @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  position          Position?         @relation(fields: [positionId], references: [id])
+  taxLots           TaxLot[]
+  settlementInstructions SettlementInstruction[]
+  failedTrades      FailedTrade[]
+  
+  // Indexes
+  @@index([tenantId, portfolioId])
+  @@index([tradeDate])
+  @@index([symbol, tradeDate])
+  @@index([status])
+  @@index([externalId])
+  @@map("transactions")
+}
+
+model TaxLot {
+  id              String          @id @default(uuid()) @db.Uuid
+  positionId      String          @map("position_id") @db.Uuid
+  transactionId   String          @map("transaction_id") @db.Uuid
+  tenantId        String          @map("tenant_id") @db.VarChar(255)
+  
+  // Tax lot details
+  quantity        Decimal         @default(0) @db.Decimal(15, 6)
+  costBasis       Decimal         @map("cost_basis") @default(0) @db.Decimal(15, 2)
+  acquiredDate    DateTime        @map("acquired_date") @db.Timestamptz
+  
+  // Status
+  isActive        Boolean         @map("is_active") @default(true)
+  isWashed        Boolean         @map("is_washed") @default(false)
+  
+  // Audit fields
+  createdAt       DateTime        @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt       DateTime        @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  position        Position        @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  transaction     Transaction     @relation(fields: [transactionId], references: [id])
+  
+  // Indexes
+  @@index([positionId, isActive])
+  @@index([acquiredDate])
+  @@map("tax_lots")
+}
+
+model AllocationRule {
+  id              String            @id @default(uuid()) @db.Uuid
+  portfolioId     String            @map("portfolio_id") @db.Uuid
+  tenantId        String            @map("tenant_id") @db.VarChar(255)
+  
+  // Rule definition
+  assetClass      String            @map("asset_class") @db.VarChar(50)
+  subAssetClass   String?           @map("sub_asset_class") @db.VarChar(50)
+  targetPercentage Decimal          @map("target_percentage") @db.Decimal(5, 2)
+  minPercentage   Decimal?          @map("min_percentage") @db.Decimal(5, 2)
+  maxPercentage   Decimal?          @map("max_percentage") @db.Decimal(5, 2)
+  
+  // Rule status
+  isActive        Boolean           @map("is_active") @default(true)
+  priority        Int               @default(1)
+  
+  // Audit fields
+  createdAt       DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt       DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  portfolio       Portfolio         @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@unique([portfolioId, assetClass, subAssetClass])
+  @@index([tenantId, isActive])
+  @@map("allocation_rules")
+}
+
+model PerformanceRecord {
+  id              String          @id @default(uuid()) @db.Uuid
+  portfolioId     String          @map("portfolio_id") @db.Uuid
+  tenantId        String          @map("tenant_id") @db.VarChar(255)
+  
+  // Performance period
+  periodStart     DateTime        @map("period_start") @db.Timestamptz
+  periodEnd       DateTime        @map("period_end") @db.Timestamptz
+  periodType      PeriodType      @map("period_type")
+  
+  // Performance metrics
+  beginningValue  Decimal         @map("beginning_value") @db.Decimal(15, 2)
+  endingValue     Decimal         @map("ending_value") @db.Decimal(15, 2)
+  netCashFlow     Decimal         @map("net_cash_flow") @default(0) @db.Decimal(15, 2)
+  
+  // Returns
+  totalReturn     Decimal         @map("total_return") @default(0) @db.Decimal(15, 2)
+  twReturn        Decimal         @map("tw_return") @default(0) @db.Decimal(10, 6)
+  mwReturn        Decimal         @map("mw_return") @default(0) @db.Decimal(10, 6)
+  
+  // Risk metrics
+  volatility      Decimal?        @default(0) @db.Decimal(10, 6)
+  sharpeRatio     Decimal?        @map("sharpe_ratio") @db.Decimal(10, 6)
+  maxDrawdown     Decimal?        @map("max_drawdown") @db.Decimal(10, 6)
+  
+  // Benchmark comparison
+  benchmarkReturn Decimal?        @map("benchmark_return") @db.Decimal(10, 6)
+  alpha           Decimal?        @db.Decimal(10, 6)
+  beta            Decimal?        @db.Decimal(10, 6)
+  
+  // Audit fields
+  createdAt       DateTime        @map("created_at") @default(now()) @db.Timestamptz
+  calculatedBy    String          @map("calculated_by") @db.Uuid
+  
+  // Relations
+  portfolio       Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@unique([portfolioId, periodStart, periodEnd, periodType])
+  @@index([tenantId, periodStart])
+  @@index([periodType])
+  @@map("performance_records")
+}
+
+model PortfolioAccess {
+  id              String          @id @default(uuid()) @db.Uuid
+  portfolioId     String          @map("portfolio_id") @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  tenantId        String          @map("tenant_id") @db.VarChar(255)
+  
+  // Access control
+  accessLevel     AccessLevel     @map("access_level")
+  permissions     String[]        @default([])
+  
+  // Status
+  isActive        Boolean         @map("is_active") @default(true)
+  expiresAt       DateTime?       @map("expires_at") @db.Timestamptz
+  
+  // Audit fields
+  createdAt       DateTime        @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt       DateTime        @map("updated_at") @updatedAt @db.Timestamptz
+  grantedBy       String          @map("granted_by") @db.Uuid
+  
+  // Relations
+  portfolio       Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@unique([portfolioId, userId])
+  @@index([tenantId, userId])
+  @@index([isActive])
+  @@map("portfolio_access")
+}
+
+model ModelPortfolioAssignment {
+  id                String          @id @default(uuid()) @db.Uuid
+  portfolioId       String          @map("portfolio_id") @db.Uuid
+  modelPortfolioId  String          @map("model_portfolio_id") @db.Uuid
+  tenantId          String          @map("tenant_id") @db.VarChar(255)
+  
+  // Assignment details
+  assignmentDate    DateTime        @map("assignment_date") @default(now()) @db.Timestamptz
+  isActive          Boolean         @map("is_active") @default(true)
+  tolerance         Decimal         @default(5) @db.Decimal(5, 2)
+  
+  // Audit fields
+  createdAt         DateTime        @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime        @map("updated_at") @updatedAt @db.Timestamptz
+  assignedBy        String          @map("assigned_by") @db.Uuid
+  
+  // Relations
+  portfolio         Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@unique([portfolioId, modelPortfolioId])
+  @@index([tenantId, isActive])
+  @@map("model_portfolio_assignments")
+}
+
+// Enums
+enum PortfolioType {
+  MANAGED
+  ADVISORY
+  DISCRETIONARY
+  MODEL_BASED
+  CUSTOM
+}
+
+enum RelationshipType {
+  SPOUSE
+  CHILD
+  PARENT
+  SIBLING
+  PARTNER
+  TRUSTEE
+  BENEFICIARY
+  JOINT_OWNER
+  CUSTODIAN
+  OTHER
+}
+
+enum PortfolioStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  CLOSED
+  PENDING_APPROVAL
+}
+
+enum RiskProfile {
+  CONSERVATIVE
+  MODERATE_CONSERVATIVE
+  MODERATE
+  MODERATE_AGGRESSIVE
+  AGGRESSIVE
+}
+
+enum SecurityType {
+  EQUITY
+  FIXED_INCOME
+  ETF
+  MUTUAL_FUND
+  OPTION
+  FUTURE
+  CURRENCY
+  COMMODITY
+  REIT
+  ALTERNATIVE
+  CASH
+}
+
+enum TransactionType {
+  BUY
+  SELL
+  DIVIDEND
+  INTEREST
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER_IN
+  TRANSFER_OUT
+  STOCK_SPLIT
+  STOCK_DIVIDEND
+  MERGER
+  SPINOFF
+  FEE
+  TAX
+}
+
+enum TransactionStatus {
+  PENDING
+  SETTLED
+  CANCELLED
+  FAILED
+  PENDING_SETTLEMENT
+}
+
+enum PeriodType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  CUSTOM
+}
+
+enum AccessLevel {
+  VIEW_ONLY
+  TRADE
+  MANAGE
+  ADMIN
+}
+
+model SettlementInstruction {
+  id                  String              @id @default(uuid()) @db.Uuid
+  transactionId       String              @map("transaction_id") @db.Uuid
+  
+  // Instruction details
+  instructionType     SettlementType      @map("instruction_type")
+  deliveryDate        DateTime            @map("delivery_date") @db.Timestamptz
+  settlementAmount    Decimal             @map("settlement_amount") @db.Decimal(15, 2)
+  
+  // Settlement participants
+  custodian           String              @db.VarChar(100)
+  account             String              @db.VarChar(50)
+  dtcNumber           String?             @map("dtc_number") @db.VarChar(20)
+  contraParty         String?             @map("contra_party") @db.VarChar(100)
+  
+  // Status and tracking
+  status              SettlementStatus    @default(PENDING)
+  specialInstructions String?             @map("special_instructions") @db.Text
+  notes               String?             @db.Text
+  
+  // Audit fields
+  createdAt           DateTime            @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt           DateTime            @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  transaction         Transaction         @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([status, deliveryDate])
+  @@index([custodian])
+  @@map("settlement_instructions")
+}
+
+model FailedTrade {
+  id                  String              @id @default(uuid()) @db.Uuid
+  transactionId       String              @map("transaction_id") @db.Uuid
+  
+  // Failure details
+  failureReason       FailureReason       @map("failure_reason")
+  failureDate         DateTime            @map("failure_date") @db.Timestamptz
+  resolutionActions   String[]            @map("resolution_actions")
+  
+  // Assignment and tracking
+  assignedTo          String?             @map("assigned_to") @db.Uuid
+  priority            Priority            @default(MEDIUM)
+  resolved            Boolean             @default(false)
+  resolutionDate      DateTime?           @map("resolution_date") @db.Timestamptz
+  notes               String?             @db.Text
+  
+  // Audit fields
+  createdAt           DateTime            @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt           DateTime            @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  transaction         Transaction         @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([resolved, priority])
+  @@index([assignedTo])
+  @@index([failureDate])
+  @@map("failed_trades")
+}
+
+model TransactionReconciliation {
+  id                  String              @id @default(uuid()) @db.Uuid
+  portfolioId         String              @map("portfolio_id") @db.Uuid
+  
+  // Reconciliation period
+  reconciliationDate  DateTime            @map("reconciliation_date") @db.Timestamptz
+  startDate           DateTime            @map("start_date") @db.Timestamptz
+  endDate             DateTime            @map("end_date") @db.Timestamptz
+  
+  // Results summary
+  totalMatches        Int                 @map("total_matches") @default(0)
+  totalDiscrepancies  Int                 @map("total_discrepancies") @default(0)
+  totalUnmatched      Int                 @map("total_unmatched") @default(0)
+  
+  // Results data
+  results             Json                @default("{}")
+  
+  // Status
+  status              ReconciliationStatus @default(COMPLETED)
+  
+  // Audit fields
+  createdAt           DateTime            @map("created_at") @default(now()) @db.Timestamptz
+  performedBy         String              @map("performed_by") @db.Uuid
+  
+  // Relations
+  portfolio           Portfolio           @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([portfolioId, reconciliationDate])
+  @@index([status])
+  @@map("transaction_reconciliations")
+}
+
+enum SettlementType {
+  DVP               // Delivery vs Payment
+  FREE_DELIVERY     // Free of Payment
+  CASH_SETTLEMENT   // Cash Only
+}
+
+enum SettlementStatus {
+  PENDING
+  SENT
+  CONFIRMED
+  SETTLED
+  FAILED
+}
+
+enum FailureReason {
+  INSUFFICIENT_CASH
+  INSUFFICIENT_SECURITIES
+  SYSTEM_ERROR
+  COMPLIANCE_VIOLATION
+  SETTLEMENT_FAIL
+  PRICING_ERROR
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ReconciliationStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+// Client Relationship Management Models
+
+model ClientProfile {
+  id                      String                    @id @default(uuid()) @db.Uuid
+  tenantId                String                    @map("tenant_id") @db.VarChar(255)
+  clientNumber            String                    @map("client_number") @db.VarChar(50)
+  clientType              ClientType                @map("client_type")
+  status                  ClientStatus              @default(PROSPECT)
+  
+  // Basic Information
+  firstName               String?                   @map("first_name") @db.VarChar(100)
+  lastName                String?                   @map("last_name") @db.VarChar(100)
+  middleName              String?                   @map("middle_name") @db.VarChar(100)
+  entityName              String?                   @map("entity_name") @db.VarChar(255)
+  dateOfBirth             DateTime?                 @map("date_of_birth") @db.Date
+  socialSecurityNumber    String?                   @map("social_security_number") @db.VarChar(20)
+  taxId                   String?                   @map("tax_id") @db.VarChar(50)
+  
+  // Contact Information
+  email                   String                    @db.VarChar(255)
+  phoneNumber             String?                   @map("phone_number") @db.VarChar(20)
+  mobileNumber            String?                   @map("mobile_number") @db.VarChar(20)
+  
+  // Investment Profile
+  riskTolerance           RiskTolerance            @map("risk_tolerance")
+  investmentExperience    InvestmentExperience     @map("investment_experience")
+  liquidityNeeds          LiquidityNeeds           @map("liquidity_needs")
+  timeHorizon             Int                      @map("time_horizon") // years
+  
+  // Financial Information
+  netWorth                Decimal?                 @map("net_worth") @db.Decimal(15, 2)
+  annualIncome            Decimal?                 @map("annual_income") @db.Decimal(15, 2)
+  liquidNetWorth          Decimal?                 @map("liquid_net_worth") @db.Decimal(15, 2)
+  investmentExperienceYears Int?                  @map("investment_experience_years")
+  
+  // Preferences
+  documentDeliveryPreference DocumentDeliveryPreference @map("document_delivery_preference")
+  
+  // Regulatory Information
+  politicallyExposedPerson Boolean                 @map("politically_exposed_person") @default(false)
+  employeeOfBrokerDealer  Boolean                 @map("employee_of_broker_dealer") @default(false)
+  directorOfPublicCompany Boolean                 @map("director_of_public_company") @default(false)
+  
+  // Relationship Management
+  primaryAdvisor          String?                  @map("primary_advisor") @db.Uuid
+  assignedTeam            String[]                 @map("assigned_team")
+  relationshipStartDate   DateTime                 @map("relationship_start_date") @default(now()) @db.Timestamptz
+  lastContactDate         DateTime?                @map("last_contact_date") @db.Timestamptz
+  
+  // Audit fields
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  createdBy               String                   @map("created_by") @db.Uuid
+  updatedBy               String                   @map("updated_by") @db.Uuid
+  
+  // Relations
+  addresses               ClientAddress[]
+  investmentObjectives    ClientInvestmentObjective[]
+  investmentRestrictions  ClientInvestmentRestriction[]
+  communicationPreferences ClientCommunicationPreference[]
+  onboardingWorkflows     OnboardingWorkflow[]
+  riskQuestionnaires      RiskProfileQuestionnaire[]   @relation("ClientRiskQuestionnaires")
+  riskAlerts              RiskMonitoringAlert[]        @relation("ClientRiskAlerts")
+  meetings                ClientMeeting[]
+  communications          CommunicationHistory[]
+  documents               ClientDocument[]
+  primaryHouseholds       HouseholdGroup[]
+  primaryRelationships    HouseholdRelationship[]      @relation("PrimaryClientRelationships")
+  relatedRelationships    HouseholdRelationship[]      @relation("RelatedClientRelationships")
+  suitabilityAssessments  SuitabilityAssessment[]      @relation("ClientSuitabilityAssessments")
+  
+  // Indexes
+  @@unique([tenantId, clientNumber])
+  @@unique([tenantId, email])
+  @@index([tenantId, status])
+  @@index([tenantId, clientType])
+  @@index([tenantId, primaryAdvisor])
+  @@index([lastContactDate])
+  @@map("client_profiles")
+}
+
+model ClientAddress {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  street1                 String                   @db.VarChar(255)
+  street2                 String?                  @db.VarChar(255)
+  city                    String                   @db.VarChar(100)
+  state                   String                   @db.VarChar(50)
+  postalCode              String                   @map("postal_code") @db.VarChar(20)
+  country                 String                   @db.VarChar(3)
+  isPrimary               Boolean                  @map("is_primary") @default(false)
+  
+  // Relations
+  client                  ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([clientId])
+  @@map("client_addresses")
+}
+
+model ClientInvestmentObjective {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  objective               String                   @db.VarChar(500)
+  priority                Int                      @default(1)
+  targetAllocation        Decimal?                 @map("target_allocation") @db.Decimal(5, 2)
+  description             String?                  @db.Text
+  timeHorizon             Int?                     @map("time_horizon")
+  expectedReturn          Decimal?                 @map("expected_return") @db.Decimal(5, 2)
+  riskLevel               String?                  @map("risk_level") @db.VarChar(50)
+  isActive                Boolean                  @map("is_active") @default(true)
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  client                  ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([clientId, isActive])
+  @@index([clientId, priority])
+  @@map("client_investment_objectives")
+}
+
+model ClientInvestmentRestriction {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  restrictionType         String                   @map("restriction_type") @db.VarChar(100)
+  description             String                   @db.Text
+  appliesTo               String                   @map("applies_to") @db.VarChar(255)
+  isActive                Boolean                  @map("is_active") @default(true)
+  effectiveDate           DateTime                 @map("effective_date") @default(now()) @db.Timestamptz
+  expirationDate          DateTime?                @map("expiration_date") @db.Timestamptz
+  threshold               Decimal?                 @map("threshold") @db.Decimal(5, 2)
+  violationAction         String?                  @map("violation_action") @db.VarChar(50)
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  client                  ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([clientId, isActive])
+  @@index([clientId, restrictionType])
+  @@index([expirationDate])
+  @@map("client_investment_restrictions")
+}
+
+model ClientCommunicationPreference {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  method                  CommunicationMethod
+  frequency               String                   @db.VarChar(50)
+  timePreference          String?                  @map("time_preference") @db.VarChar(50)
+  isPreferred             Boolean                  @map("is_preferred") @default(false)
+  
+  // Relations
+  client                  ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([clientId])
+  @@map("client_communication_preferences")
+}
+
+model OnboardingWorkflow {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  tenantId                String                   @map("tenant_id") @db.VarChar(255)
+  workflowTemplate        String                   @map("workflow_template") @db.VarChar(100)
+  status                  OnboardingStatus         @default(NOT_STARTED)
+  currentStep             Int                      @map("current_step") @default(1)
+  totalSteps              Int                      @map("total_steps")
+  
+  // Progress Tracking
+  startedDate             DateTime                 @map("started_date") @db.Timestamptz
+  estimatedCompletionDate DateTime?                @map("estimated_completion_date") @db.Timestamptz
+  actualCompletionDate    DateTime?                @map("actual_completion_date") @db.Timestamptz
+  
+  // Assignment
+  assignedAdvisor         String                   @map("assigned_advisor") @db.Uuid
+  assignedTeam            String[]                 @map("assigned_team")
+  
+  // Audit fields
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  createdBy               String                   @map("created_by") @db.Uuid
+  updatedBy               String                   @map("updated_by") @db.Uuid
+  
+  // Relations
+  client                  ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  steps                   OnboardingStep[]
+  
+  // Indexes
+  @@index([tenantId, status])
+  @@index([clientId])
+  @@index([assignedAdvisor])
+  @@map("onboarding_workflows")
+}
+
+model OnboardingStep {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  workflowId              String                   @map("workflow_id") @db.Uuid
+  stepNumber              Int                      @map("step_number")
+  stepName                String                   @map("step_name") @db.VarChar(255)
+  description             String                   @db.Text
+  isRequired              Boolean                  @map("is_required") @default(true)
+  isCompleted             Boolean                  @map("is_completed") @default(false)
+  completedDate           DateTime?                @map("completed_date") @db.Timestamptz
+  completedBy             String?                  @map("completed_by") @db.Uuid
+  
+  // Requirements
+  requiredDocuments       String[]                 @map("required_documents")
+  requiredActions         String[]                 @map("required_actions")
+  
+  // Dependencies
+  dependsOnSteps          Int[]                    @map("depends_on_steps")
+  
+  // Timeline
+  estimatedDuration       Int                      @map("estimated_duration") // days
+  dueDate                 DateTime?                @map("due_date") @db.Timestamptz
+  
+  notes                   String?                  @db.Text
+  
+  // Relations
+  workflow                OnboardingWorkflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@unique([workflowId, stepNumber])
+  @@index([workflowId, isCompleted])
+  @@map("onboarding_steps")
+}
+
+model SuitabilityAssessment {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  tenantId                String                   @map("tenant_id") @db.VarChar(255)
+  assessmentDate          DateTime                 @map("assessment_date") @db.Timestamptz
+  assessmentType          AssessmentType           @map("assessment_type")
+  
+  // Risk Assessment
+  riskTolerance           RiskTolerance           @map("risk_tolerance")
+  riskCapacity            RiskCapacity            @map("risk_capacity")
+  
+  // Investment Profile
+  investmentObjectives    String[]                @map("investment_objectives")
+  timeHorizon             Int                     @map("time_horizon")
+  liquidityNeeds          LiquidityNeeds          @map("liquidity_needs")
+  
+  // Financial Situation
+  netWorth                Decimal                 @map("net_worth") @db.Decimal(15, 2)
+  annualIncome            Decimal                 @map("annual_income") @db.Decimal(15, 2)
+  investmentExperience    InvestmentExperience    @map("investment_experience")
+  
+  // Suitability Score
+  overallScore            Int                     @map("overall_score")
+  riskScore               Int                     @map("risk_score")
+  objectiveAlignment      Int                     @map("objective_alignment")
+  
+  // Recommendations
+  recommendedAllocation   Json                    @map("recommended_allocation") @default("{}")
+  unsuitableInvestments   String[]                @map("unsuitable_investments")
+  
+  // Review and Approval
+  reviewedBy              String                  @map("reviewed_by") @db.Uuid
+  approvedBy              String?                 @map("approved_by") @db.Uuid
+  reviewDate              DateTime                @map("review_date") @db.Timestamptz
+  approvalDate            DateTime?               @map("approval_date") @db.Timestamptz
+  
+  // Next Review
+  nextReviewDate          DateTime                @map("next_review_date") @db.Timestamptz
+  
+  // Audit fields
+  createdAt               DateTime                @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                @map("updated_at") @updatedAt @db.Timestamptz
+  createdBy               String                  @map("created_by") @db.Uuid
+  
+  // Relations
+  client                  ClientProfile           @relation("ClientSuitabilityAssessments", fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([tenantId, clientId])
+  @@index([assessmentType, assessmentDate])
+  @@index([nextReviewDate])
+  @@map("suitability_assessments")
+}
+
+model ClientMeeting {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  tenantId                String                   @map("tenant_id") @db.VarChar(255)
+  meetingType             MeetingType              @map("meeting_type")
+  title                   String                   @db.VarChar(255)
+  scheduledDate           DateTime                 @map("scheduled_date") @db.Timestamptz
+  duration                Int                      // minutes
+  location                String?                  @db.VarChar(255)
+  isVirtual               Boolean                  @map("is_virtual") @default(false)
+  virtualMeetingLink      String?                  @map("virtual_meeting_link") @db.VarChar(500)
+  
+  // Agenda and Notes
+  agenda                  String[]
+  meetingNotes            String?                  @map("meeting_notes") @db.Text
+  
+  // Follow-up
+  followUpRequired        Boolean                  @map("follow_up_required") @default(false)
+  nextMeetingDate         DateTime?                @map("next_meeting_date") @db.Timestamptz
+  
+  // Status
+  status                  MeetingStatus            @default(SCHEDULED)
+  
+  // Audit fields
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  createdBy               String                   @map("created_by") @db.Uuid
+  updatedBy               String                   @map("updated_by") @db.Uuid
+  
+  // Relations
+  client                  ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  participants            MeetingParticipant[]
+  actionItems             MeetingActionItem[]
+  
+  // Indexes
+  @@index([tenantId, clientId])
+  @@index([scheduledDate])
+  @@index([status])
+  @@map("client_meetings")
+}
+
+model MeetingParticipant {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  meetingId               String                   @map("meeting_id") @db.Uuid
+  userId                  String                   @map("user_id") @db.Uuid
+  name                    String                   @db.VarChar(255)
+  role                    String                   @db.VarChar(100)
+  isRequired              Boolean                  @map("is_required") @default(true)
+  attendanceStatus        AttendanceStatus         @map("attendance_status") @default(NOT_RESPONDED)
+  
+  // Relations
+  meeting                 ClientMeeting            @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([meetingId])
+  @@index([userId])
+  @@map("meeting_participants")
+}
+
+model MeetingActionItem {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  meetingId               String                   @map("meeting_id") @db.Uuid
+  description             String                   @db.Text
+  assignedTo              String                   @map("assigned_to") @db.Uuid
+  dueDate                 DateTime?                @map("due_date") @db.Timestamptz
+  priority                ActionItemPriority       @default(MEDIUM)
+  status                  ActionItemStatus         @default(OPEN)
+  completedDate           DateTime?                @map("completed_date") @db.Timestamptz
+  notes                   String?                  @db.Text
+  
+  // Relations
+  meeting                 ClientMeeting            @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([meetingId])
+  @@index([assignedTo, status])
+  @@index([dueDate])
+  @@map("meeting_action_items")
+}
+
+model CommunicationHistory {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  tenantId                String                   @map("tenant_id") @db.VarChar(255)
+  communicationType       CommunicationMethod      @map("communication_type")
+  subject                 String                   @db.VarChar(500)
+  content                 String                   @db.Text
+  direction               CommunicationDirection
+  contactedBy             String                   @map("contacted_by") @db.Uuid
+  contactedAt             DateTime                 @map("contacted_at") @db.Timestamptz
+  followUpRequired        Boolean                  @map("follow_up_required") @default(false)
+  followUpDate            DateTime?                @map("follow_up_date") @db.Timestamptz
+  category                String                   @db.VarChar(100)
+  priority                CommunicationPriority    @default(MEDIUM)
+  relatedMeetingId        String?                  @map("related_meeting_id") @db.Uuid
+  
+  // Audit fields
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  createdBy               String                   @map("created_by") @db.Uuid
+  
+  // Relations
+  client                  ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  attachments             CommunicationAttachment[]
+  
+  // Indexes
+  @@index([tenantId, clientId])
+  @@index([communicationType, contactedAt])
+  @@index([followUpRequired, followUpDate])
+  @@index([category])
+  @@map("communication_history")
+}
+
+model CommunicationAttachment {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  communicationId         String                   @map("communication_id") @db.Uuid
+  fileName                String                   @map("file_name") @db.VarChar(255)
+  fileSize                Int                      @map("file_size")
+  mimeType                String                   @map("mime_type") @db.VarChar(100)
+  storageLocation         String                   @map("storage_location") @db.VarChar(500)
+  uploadedBy              String                   @map("uploaded_by") @db.Uuid
+  uploadedAt              DateTime                 @map("uploaded_at") @db.Timestamptz
+  
+  // Relations
+  communication           CommunicationHistory     @relation(fields: [communicationId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([communicationId])
+  @@map("communication_attachments")
+}
+
+model ClientDocument {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  tenantId                String                   @map("tenant_id") @db.VarChar(255)
+  documentType            String                   @map("document_type") @db.VarChar(100)
+  fileName                String                   @map("file_name") @db.VarChar(255)
+  originalFileName        String                   @map("original_file_name") @db.VarChar(255)
+  fileSize                Int                      @map("file_size")
+  mimeType                String                   @map("mime_type") @db.VarChar(100)
+  
+  // Classification
+  category                String                   @db.VarChar(100)
+  subcategory             String?                  @db.VarChar(100)
+  tags                    String[]
+  confidentialityLevel    ConfidentialityLevel     @map("confidentiality_level") @default(INTERNAL)
+  
+  // Storage
+  storageLocation         String                   @map("storage_location") @db.VarChar(500)
+  checksum                String                   @db.VarChar(128)
+  
+  // Metadata
+  description             String?                  @db.Text
+  documentDate            DateTime?                @map("document_date") @db.Date
+  expirationDate          DateTime?                @map("expiration_date") @db.Date
+  isArchived              Boolean                  @map("is_archived") @default(false)
+  retentionPeriod         Int?                     @map("retention_period") // years
+  
+  // Versioning
+  version                 String                   @db.VarChar(20)
+  previousVersionId       String?                  @map("previous_version_id") @db.Uuid
+  isLatestVersion         Boolean                  @map("is_latest_version") @default(true)
+  
+  // Audit Trail
+  uploadedBy              String                   @map("uploaded_by") @db.Uuid
+  uploadedAt              DateTime                 @map("uploaded_at") @db.Timestamptz
+  lastAccessedAt          DateTime?                @map("last_accessed_at") @db.Timestamptz
+  lastAccessedBy          String?                  @map("last_accessed_by") @db.Uuid
+  
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  client                  ClientProfile            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  permissions             ClientDocumentPermission[]
+  
+  // Indexes
+  @@index([tenantId, clientId])
+  @@index([documentType, category])
+  @@index([isArchived, expirationDate])
+  @@index([checksum])
+  @@map("client_documents")
+}
+
+model ClientDocumentPermission {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  documentId              String                   @map("document_id") @db.Uuid
+  userId                  String                   @map("user_id") @db.Uuid
+  permission              DocumentPermissionType
+  grantedBy               String                   @map("granted_by") @db.Uuid
+  grantedAt               DateTime                 @map("granted_at") @db.Timestamptz
+  expiresAt               DateTime?                @map("expires_at") @db.Timestamptz
+  
+  // Relations
+  document                ClientDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@unique([documentId, userId])
+  @@index([userId])
+  @@map("client_document_permissions")
+}
+
+model HouseholdGroup {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  tenantId                String                   @map("tenant_id") @db.VarChar(255)
+  householdName           String                   @map("household_name") @db.VarChar(255)
+  primaryClientId         String                   @map("primary_client_id") @db.Uuid
+  totalAssets             Decimal                  @map("total_assets") @default(0) @db.Decimal(15, 2)
+  combinedRiskTolerance   RiskTolerance?           @map("combined_risk_tolerance")
+  description             String?                  @db.Text
+  
+  // Metadata
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  primaryClient           ClientProfile            @relation(fields: [primaryClientId], references: [id], onDelete: Cascade)
+  relationships           HouseholdRelationship[]
+  sharedObjectives        HouseholdObjective[]
+  
+  // Indexes
+  @@unique([tenantId, householdName])
+  @@index([tenantId, primaryClientId])
+  @@index([totalAssets])
+  @@map("household_groups")
+}
+
+model HouseholdRelationship {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  householdId             String                   @map("household_id") @db.Uuid
+  primaryClientId         String                   @map("primary_client_id") @db.Uuid
+  relatedClientId         String                   @map("related_client_id") @db.Uuid
+  relationshipType        RelationshipType         @map("relationship_type")
+  percentage              Decimal?                 @db.Decimal(5, 2)
+  isActive                Boolean                  @map("is_active") @default(true)
+  effectiveDate           DateTime                 @map("effective_date") @db.Timestamptz
+  expirationDate          DateTime?                @map("expiration_date") @db.Timestamptz
+  notes                   String?                  @db.Text
+  documentationRequired   Boolean                  @map("documentation_required") @default(false)
+  documentationComplete   Boolean                  @map("documentation_complete") @default(false)
+  
+  // Relations
+  household               HouseholdGroup           @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  primaryClient           ClientProfile            @relation("PrimaryClientRelationships", fields: [primaryClientId], references: [id], onDelete: Cascade)
+  relatedClient           ClientProfile            @relation("RelatedClientRelationships", fields: [relatedClientId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@unique([householdId, primaryClientId, relatedClientId])
+  @@index([householdId, isActive])
+  @@index([primaryClientId])
+  @@index([relatedClientId])
+  @@map("household_relationships")
+}
+
+model HouseholdObjective {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  householdId             String                   @map("household_id") @db.Uuid
+  objective               String                   @db.VarChar(255)
+  priority                Int                      @default(1)
+  targetAllocation        Decimal?                 @map("target_allocation") @db.Decimal(5, 2)
+  description             String?                  @db.Text
+  
+  // Relations
+  household               HouseholdGroup           @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([householdId])
+  @@map("household_objectives")
+}
+
+// Risk Profiling and Suitability Assessment Tables
+
+model RiskProfileQuestionnaire {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  questionnaireVersion    String                   @map("questionnaire_version") @db.VarChar(50)
+  completedDate           DateTime                 @map("completed_date") @db.Timestamptz
+  responses               String                   @db.Text // JSON string of responses
+  calculatedRiskScore     Decimal                  @map("calculated_risk_score") @db.Decimal(4, 2)
+  recommendedRiskTolerance RiskTolerance           @map("recommended_risk_tolerance")
+  isValid                 Boolean                  @map("is_valid") @default(true)
+  expirationDate          DateTime                 @map("expiration_date") @db.Timestamptz
+  completedBy             String                   @map("completed_by") @db.Uuid
+  
+  // Metadata
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  client                  ClientProfile            @relation("ClientRiskQuestionnaires", fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([clientId, completedDate])
+  @@index([clientId, isValid])
+  @@index([expirationDate])
+  @@map("risk_profile_questionnaires")
+}
+
+
+model RiskMonitoringAlert {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  clientId                String                   @map("client_id") @db.Uuid
+  alertType               RiskAlertType            @map("alert_type")
+  severity                AlertSeverity            @map("severity")
+  title                   String                   @db.VarChar(255)
+  description             String                   @db.Text
+  triggeredDate           DateTime                 @map("triggered_date") @db.Timestamptz
+  
+  // Optional context
+  portfolioId             String?                  @map("portfolio_id") @db.Uuid
+  holdingSymbol           String?                  @map("holding_symbol") @db.VarChar(50)
+  currentValue            Decimal?                 @map("current_value") @db.Decimal(15, 4)
+  thresholdValue          Decimal?                 @map("threshold_value") @db.Decimal(15, 4)
+  
+  // Recommended Action
+  recommendedAction       String                   @map("recommended_action") @db.Text
+  
+  // Status and Resolution
+  isAcknowledged          Boolean                  @map("is_acknowledged") @default(false)
+  acknowledgedBy          String?                  @map("acknowledged_by") @db.Uuid
+  acknowledgedDate        DateTime?                @map("acknowledged_date") @db.Timestamptz
+  isResolved              Boolean                  @map("is_resolved") @default(false)
+  resolvedDate            DateTime?                @map("resolved_date") @db.Timestamptz
+  resolution              String?                  @db.Text
+  notes                   String?                  @db.Text
+  
+  // Metadata
+  createdAt               DateTime                 @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime                 @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  client                  ClientProfile            @relation("ClientRiskAlerts", fields: [clientId], references: [id], onDelete: Cascade)
+  portfolio               Portfolio?               @relation("PortfolioRiskAlerts", fields: [portfolioId], references: [id], onDelete: SetNull)
+  
+  // Indexes
+  @@index([clientId, isResolved])
+  @@index([alertType, severity])
+  @@index([triggeredDate])
+  @@index([isAcknowledged, isResolved])
+  @@map("risk_monitoring_alerts")
+}
+
+// Client Relationship Management Enums
+
+enum ClientType {
+  INDIVIDUAL
+  JOINT
+  ENTITY
+  TRUST
+  RETIREMENT
+  CORPORATE
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+  SUSPENDED
+  CLOSED
+}
+
+enum RiskTolerance {
+  CONSERVATIVE
+  MODERATE_CONSERVATIVE
+  MODERATE
+  MODERATE_AGGRESSIVE
+  AGGRESSIVE
+}
+
+enum InvestmentExperience {
+  NOVICE
+  LIMITED
+  MODERATE
+  EXTENSIVE
+  PROFESSIONAL
+}
+
+enum LiquidityNeeds {
+  LOW
+  MODERATE
+  HIGH
+  IMMEDIATE
+}
+
+enum DocumentDeliveryPreference {
+  ELECTRONIC
+  PAPER
+  BOTH
+}
+
+enum CommunicationMethod {
+  EMAIL
+  PHONE
+  SMS
+  MAIL
+  SECURE_MESSAGE
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DOCUMENTATION_PENDING
+  COMPLIANCE_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum AssessmentType {
+  INITIAL
+  PERIODIC
+  TRIGGER_EVENT
+  REGULATORY
+}
+
+enum RiskCapacity {
+  LOW
+  MODERATE
+  HIGH
+}
+
+enum MeetingType {
+  INITIAL_CONSULTATION
+  PORTFOLIO_REVIEW
+  FINANCIAL_PLANNING
+  INVESTMENT_DISCUSSION
+  ADMINISTRATIVE
+  COMPLAINT_RESOLUTION
+  FOLLOW_UP
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum AttendanceStatus {
+  NOT_RESPONDED
+  ACCEPTED
+  DECLINED
+  TENTATIVE
+  ATTENDED
+  NO_SHOW
+}
+
+enum ActionItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ActionItemStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum CommunicationDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CommunicationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ConfidentialityLevel {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+}
+
+enum DocumentPermissionType {
+  READ
+  WRITE
+  DELETE
+  ADMIN
+}
+
+enum RiskAlertType {
+  PORTFOLIO_DRIFT
+  RISK_CAPACITY_CHANGE
+  UNSUITABLE_INVESTMENT
+  CONCENTRATION_RISK
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}

@@ -1,0 +1,292 @@
+// Market Data Service Database Schema
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Securities master data
+model Security {
+  id          String   @id @default(cuid())
+  symbol      String   @unique
+  name        String
+  cusip       String?  @unique
+  isin        String?  @unique
+  sedol       String?
+  assetClass  String   // EQUITY, BOND, ETF, MUTUAL_FUND, OPTION, FUTURE, etc.
+  securityType String  // COMMON_STOCK, PREFERRED_STOCK, CORPORATE_BOND, etc.
+  exchange    String
+  currency    String   @default("USD")
+  country     String?
+  sector      String?
+  industry    String?
+  marketCap   Decimal? @db.Decimal(20, 2)
+  
+  // Status and metadata
+  isActive    Boolean  @default(true)
+  listingDate DateTime?
+  delistingDate DateTime?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  quotes      Quote[]
+  historicalData HistoricalData[]
+  corporateActions CorporateAction[]
+  fundamentals Fundamental[]
+  
+  @@map("securities")
+}
+
+// Real-time and intraday quotes
+model Quote {
+  id          String   @id @default(cuid())
+  securityId  String
+  security    Security @relation(fields: [securityId], references: [id], onDelete: Cascade)
+  
+  // Price data
+  bid         Decimal? @db.Decimal(12, 4)
+  ask         Decimal? @db.Decimal(12, 4)
+  bidSize     Int?
+  askSize     Int?
+  last        Decimal? @db.Decimal(12, 4)
+  lastSize    Int?
+  open        Decimal? @db.Decimal(12, 4)
+  high        Decimal? @db.Decimal(12, 4)
+  low         Decimal? @db.Decimal(12, 4)
+  close       Decimal? @db.Decimal(12, 4)
+  previousClose Decimal? @db.Decimal(12, 4)
+  
+  // Volume and trading data
+  volume      BigInt?
+  avgVolume   BigInt?
+  
+  // Market data
+  marketValue Decimal? @db.Decimal(20, 2)
+  change      Decimal? @db.Decimal(12, 4)
+  changePercent Decimal? @db.Decimal(8, 4)
+  
+  // Timestamps
+  quoteTime   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Data source info
+  source      String   // REUTERS, BLOOMBERG, IEX, etc.
+  sourceId    String?  // External ID from source
+  
+  @@index([securityId, quoteTime])
+  @@index([quoteTime])
+  @@map("quotes")
+}
+
+// Historical price data (end of day)
+model HistoricalData {
+  id          String   @id @default(cuid())
+  securityId  String
+  security    Security @relation(fields: [securityId], references: [id], onDelete: Cascade)
+  
+  date        DateTime @db.Date
+  open        Decimal  @db.Decimal(12, 4)
+  high        Decimal  @db.Decimal(12, 4)
+  low         Decimal  @db.Decimal(12, 4)
+  close       Decimal  @db.Decimal(12, 4)
+  adjustedClose Decimal @db.Decimal(12, 4)
+  volume      BigInt
+  
+  // Additional data
+  dividend    Decimal? @db.Decimal(8, 4)
+  splitRatio  Decimal? @db.Decimal(8, 6)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Data source
+  source      String
+  
+  @@unique([securityId, date, source])
+  @@index([securityId, date])
+  @@index([date])
+  @@map("historical_data")
+}
+
+// Corporate actions
+model CorporateAction {
+  id          String   @id @default(cuid())
+  securityId  String
+  security    Security @relation(fields: [securityId], references: [id], onDelete: Cascade)
+  
+  actionType  String   // DIVIDEND, SPLIT, MERGER, SPINOFF, etc.
+  
+  // Dates
+  announcementDate DateTime?
+  exDate      DateTime
+  recordDate  DateTime?
+  payDate     DateTime?
+  effectiveDate DateTime?
+  
+  // Action details
+  description String
+  value       Decimal? @db.Decimal(12, 4)
+  ratio       String?  // For splits, mergers (e.g., "2:1", "1:3")
+  
+  // Currency for cash actions
+  currency    String   @default("USD")
+  
+  // Status
+  status      String   @default("PENDING") // PENDING, PROCESSED, CANCELLED
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([securityId, exDate])
+  @@index([exDate])
+  @@map("corporate_actions")
+}
+
+// Fundamental data
+model Fundamental {
+  id          String   @id @default(cuid())
+  securityId  String
+  security    Security @relation(fields: [securityId], references: [id], onDelete: Cascade)
+  
+  // Period information
+  periodType  String   // QUARTERLY, ANNUAL
+  periodEnd   DateTime @db.Date
+  reportDate  DateTime @db.Date
+  
+  // Financial metrics (storing as JSON for flexibility)
+  revenue     Decimal? @db.Decimal(20, 2)
+  netIncome   Decimal? @db.Decimal(20, 2)
+  eps         Decimal? @db.Decimal(8, 4)
+  bookValue   Decimal? @db.Decimal(12, 4)
+  
+  // Ratios
+  peRatio     Decimal? @db.Decimal(8, 4)
+  pbRatio     Decimal? @db.Decimal(8, 4)
+  roe         Decimal? @db.Decimal(8, 4)
+  roa         Decimal? @db.Decimal(8, 4)
+  
+  // Additional data as JSON
+  additionalData Json?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([securityId, periodType, periodEnd])
+  @@index([securityId, periodEnd])
+  @@map("fundamentals")
+}
+
+// Market holidays calendar
+model Holiday {
+  id          String   @id @default(cuid())
+  date        DateTime @unique @db.Date
+  name        String
+  market      String   // NYSE, NASDAQ, etc.
+  country     String   @default("US")
+  
+  // Holiday type
+  holidayType String   @default("FULL") // FULL, EARLY_CLOSE
+  earlyCloseTime String? // For early close days
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([date, market])
+  @@map("holidays")
+}
+
+// Market data vendor configurations
+model DataVendor {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  
+  // Configuration
+  baseUrl     String?
+  apiKey      String?
+  isActive    Boolean  @default(true)
+  
+  // Rate limiting
+  rateLimit   Int?     // Requests per minute
+  quotaLimit  Int?     // Daily quota
+  
+  // Data types supported
+  supportsRealTime Boolean @default(false)
+  supportsHistorical Boolean @default(false)
+  supportsFundamentals Boolean @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  usageStats  VendorUsage[]
+  
+  @@map("data_vendors")
+}
+
+// Track API usage by vendor
+model VendorUsage {
+  id          String     @id @default(cuid())
+  vendorId    String
+  vendor      DataVendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  date        DateTime   @db.Date
+  requestCount Int       @default(0)
+  successCount Int       @default(0)
+  errorCount  Int        @default(0)
+  
+  // Cost tracking
+  cost        Decimal?   @db.Decimal(10, 4)
+  currency    String     @default("USD")
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  @@unique([vendorId, date])
+  @@index([date])
+  @@map("vendor_usage")
+}
+
+// Data quality monitoring
+model DataQualityCheck {
+  id          String   @id @default(cuid())
+  checkType   String   // PRICE_SPIKE, VOLUME_ANOMALY, MISSING_DATA, etc.
+  securityId  String?
+  
+  // Check details
+  description String
+  severity    String   // LOW, MEDIUM, HIGH, CRITICAL
+  status      String   @default("OPEN") // OPEN, ACKNOWLEDGED, RESOLVED
+  
+  // Data context
+  dataDate    DateTime?
+  dataSource  String?
+  
+  // Issue details
+  expectedValue Decimal? @db.Decimal(12, 4)
+  actualValue   Decimal? @db.Decimal(12, 4)
+  threshold     Decimal? @db.Decimal(12, 4)
+  
+  // Resolution
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  resolution  String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([status, severity])
+  @@index([dataDate])
+  @@map("data_quality_checks")
+}

@@ -1,0 +1,326 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: investment-platform-dev
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 7
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: postgres-backup
+            image: postgres:15-alpine
+            env:
+            - name: POSTGRES_DB
+              value: "investment_platform"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_HOST
+              value: "postgres-service"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: BACKUP_RETENTION_DAYS
+              value: "30"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backup-secrets
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-secrets
+                  key: aws-secret-access-key
+            - name: S3_BUCKET
+              value: "investment-platform-backups"
+            - name: S3_REGION
+              value: "us-east-1"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install AWS CLI
+              apk add --no-cache aws-cli gzip
+              
+              # Create backup filename with timestamp
+              TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+              BACKUP_FILE="postgres_backup_${TIMESTAMP}.sql.gz"
+              
+              echo "Starting database backup: ${BACKUP_FILE}"
+              
+              # Create compressed backup
+              PGPASSWORD=$POSTGRES_PASSWORD pg_dump \
+                -h $POSTGRES_HOST \
+                -p $POSTGRES_PORT \
+                -U $POSTGRES_USER \
+                -d $POSTGRES_DB \
+                --verbose \
+                --clean \
+                --no-acl \
+                --no-owner \
+                --format=custom \
+                | gzip > /tmp/${BACKUP_FILE}
+              
+              # Upload to S3
+              aws s3 cp /tmp/${BACKUP_FILE} s3://${S3_BUCKET}/daily/${BACKUP_FILE} --region ${S3_REGION}
+              
+              # Also create a "latest" backup
+              aws s3 cp /tmp/${BACKUP_FILE} s3://${S3_BUCKET}/latest/postgres_backup_latest.sql.gz --region ${S3_REGION}
+              
+              # Clean up old backups (older than retention period)
+              CUTOFF_DATE=$(date -d "${BACKUP_RETENTION_DAYS} days ago" +"%Y%m%d")
+              aws s3 ls s3://${S3_BUCKET}/daily/ --region ${S3_REGION} | \
+                awk '{print $4}' | \
+                grep "postgres_backup_" | \
+                while read backup; do
+                  backup_date=$(echo $backup | sed 's/postgres_backup_\([0-9]*\)_.*/\1/')
+                  if [ "$backup_date" -lt "$CUTOFF_DATE" ]; then
+                    echo "Deleting old backup: $backup"
+                    aws s3 rm s3://${S3_BUCKET}/daily/${backup} --region ${S3_REGION}
+                  fi
+                done
+              
+              # Clean up local file
+              rm -f /tmp/${BACKUP_FILE}
+              
+              echo "Backup completed successfully: ${BACKUP_FILE}"
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /tmp
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "200m"
+          volumes:
+          - name: backup-storage
+            emptyDir:
+              sizeLimit: 2Gi
+---
+# Weekly full backup with WAL archiving
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-weekly-backup
+  namespace: investment-platform-dev
+spec:
+  schedule: "0 1 * * 0"  # Weekly on Sunday at 1 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 4
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: postgres-weekly-backup
+            image: postgres:15-alpine
+            env:
+            - name: POSTGRES_DB
+              value: "investment_platform"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: POSTGRES_HOST
+              value: "postgres-service"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backup-secrets
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-secrets
+                  key: aws-secret-access-key
+            - name: S3_BUCKET
+              value: "investment-platform-backups"
+            - name: S3_REGION
+              value: "us-east-1"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install AWS CLI
+              apk add --no-cache aws-cli gzip
+              
+              # Create backup filename with timestamp
+              TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+              BACKUP_FILE="postgres_weekly_backup_${TIMESTAMP}.sql.gz"
+              
+              echo "Starting weekly full database backup: ${BACKUP_FILE}"
+              
+              # Create full backup with all schemas
+              PGPASSWORD=$POSTGRES_PASSWORD pg_dump \
+                -h $POSTGRES_HOST \
+                -p $POSTGRES_PORT \
+                -U $POSTGRES_USER \
+                -d $POSTGRES_DB \
+                --verbose \
+                --clean \
+                --create \
+                --no-acl \
+                --no-owner \
+                --format=custom \
+                --compress=9 \
+                | gzip > /tmp/${BACKUP_FILE}
+              
+              # Upload to S3
+              aws s3 cp /tmp/${BACKUP_FILE} s3://${S3_BUCKET}/weekly/${BACKUP_FILE} --region ${S3_REGION}
+              
+              # Clean up local file
+              rm -f /tmp/${BACKUP_FILE}
+              
+              echo "Weekly backup completed successfully: ${BACKUP_FILE}"
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /tmp
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "200m"
+              limits:
+                memory: "1Gi"
+                cpu: "400m"
+          volumes:
+          - name: backup-storage
+            emptyDir:
+              sizeLimit: 5Gi
+---
+# Backup restore job template (for disaster recovery)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-restore
+  namespace: investment-platform-dev
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: postgres-restore
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_DB
+          value: "investment_platform"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+        - name: POSTGRES_HOST
+          value: "postgres-service"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: backup-secrets
+              key: aws-access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backup-secrets
+              key: aws-secret-access-key
+        - name: S3_BUCKET
+          value: "investment-platform-backups"
+        - name: S3_REGION
+          value: "us-east-1"
+        - name: RESTORE_FILE
+          value: "postgres_backup_latest.sql.gz"  # Set this to specific backup file if needed
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          
+          # Install AWS CLI
+          apk add --no-cache aws-cli gzip
+          
+          echo "Starting database restore from: ${RESTORE_FILE}"
+          
+          # Download backup from S3
+          aws s3 cp s3://${S3_BUCKET}/latest/${RESTORE_FILE} /tmp/${RESTORE_FILE} --region ${S3_REGION}
+          
+          # Decompress and restore
+          gunzip -c /tmp/${RESTORE_FILE} | \
+          PGPASSWORD=$POSTGRES_PASSWORD pg_restore \
+            -h $POSTGRES_HOST \
+            -p $POSTGRES_PORT \
+            -U $POSTGRES_USER \
+            -d $POSTGRES_DB \
+            --verbose \
+            --clean \
+            --no-acl \
+            --no-owner \
+            --format=custom
+          
+          # Clean up local file
+          rm -f /tmp/${RESTORE_FILE}
+          
+          echo "Database restore completed successfully"
+        volumeMounts:
+        - name: restore-storage
+          mountPath: /tmp
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "400m"
+      volumes:
+      - name: restore-storage
+        emptyDir:
+          sizeLimit: 5Gi
+---
+# Secret for backup credentials (to be created manually or via CI/CD)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backup-secrets
+  namespace: investment-platform-dev
+type: Opaque
+data:
+  # Base64 encoded AWS credentials
+  # kubectl create secret generic backup-secrets \
+  #   --from-literal=aws-access-key-id=YOUR_ACCESS_KEY \
+  #   --from-literal=aws-secret-access-key=YOUR_SECRET_KEY \
+  #   --namespace investment-platform-dev
+  aws-access-key-id: ""  # Replace with actual base64 encoded access key
+  aws-secret-access-key: ""  # Replace with actual base64 encoded secret key

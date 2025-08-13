@@ -1,0 +1,731 @@
+import express, { Request, Response } from 'express';
+import { body, param, query, validationResult } from 'express-validator';
+import { PerformanceProfilingService } from '../PerformanceProfilingService';
+import { BottleneckDetectionService } from '../BottleneckDetectionService';
+import { RootCauseAnalysisService } from '../RootCauseAnalysisService';
+import { PerformanceCorrelationService } from '../PerformanceCorrelationService';
+import { PerformanceOptimizationService } from '../PerformanceOptimizationService';
+import { PerformanceTestingService } from '../PerformanceTestingService';
+import { BottleneckReportingService } from '../BottleneckReportingService';
+import {
+  PerformanceProfile,
+  PerformanceBottleneck,
+  RootCause,
+  PerformanceRecommendation,
+  CorrelationAnalysis,
+  PerformanceTest,
+  TestExecution,
+  ProfileTargetType,
+  ProfilingConfiguration,
+  TestConfiguration,
+  TestType,
+  DashboardData,
+  ReportTemplate,
+  ReportData
+} from '../PerformanceDataModel';
+
+const router = express.Router();
+
+// Service instances (would be injected in real application)
+let profilingService: PerformanceProfilingService;
+let detectionService: BottleneckDetectionService;
+let rootCauseService: RootCauseAnalysisService;
+let correlationService: PerformanceCorrelationService;
+let optimizationService: PerformanceOptimizationService;
+let testingService: PerformanceTestingService;
+let reportingService: BottleneckReportingService;
+
+// Initialize services
+export const initializeServices = (services: {
+  profiling: PerformanceProfilingService;
+  detection: BottleneckDetectionService;
+  rootCause: RootCauseAnalysisService;
+  correlation: PerformanceCorrelationService;
+  optimization: PerformanceOptimizationService;
+  testing: PerformanceTestingService;
+  reporting: BottleneckReportingService;
+}) => {
+  profilingService = services.profiling;
+  detectionService = services.detection;
+  rootCauseService = services.rootCause;
+  correlationService = services.correlation;
+  optimizationService = services.optimization;
+  testingService = services.testing;
+  reportingService = services.reporting;
+};
+
+// Middleware for handling validation errors
+const handleValidationErrors = (req: Request, res: Response, next: any) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: 'Validation error',
+      details: errors.array()
+    });
+  }
+  next();
+};
+
+// Performance Profiling Routes
+
+// Start performance profiling
+router.post('/profiling/start',
+  [
+    body('target_id').notEmpty().withMessage('Target ID is required'),
+    body('target_type').isIn(['application', 'system', 'database', 'network', 'custom']).withMessage('Invalid target type'),
+    body('configuration').optional().isObject()
+  ],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { target_id, target_type, configuration } = req.body;
+      
+      const profileId = await profilingService.startProfiling(
+        target_id,
+        target_type as ProfileTargetType,
+        configuration as ProfilingConfiguration
+      );
+      
+      res.json({
+        success: true,
+        data: { profile_id: profileId }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Stop performance profiling
+router.post('/profiling/:profileId/stop',
+  [param('profileId').notEmpty().withMessage('Profile ID is required')],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { profileId } = req.params;
+      
+      const profile = await profilingService.stopProfiling(profileId);
+      
+      res.json({
+        success: true,
+        data: profile
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Get profiling status
+router.get('/profiling/:profileId/status',
+  [param('profileId').notEmpty().withMessage('Profile ID is required')],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { profileId } = req.params;
+      
+      const status = await profilingService.getProfilingStatus(profileId);
+      
+      res.json({
+        success: true,
+        data: status
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Get profile data
+router.get('/profiling/:profileId',
+  [param('profileId').notEmpty().withMessage('Profile ID is required')],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { profileId } = req.params;
+      
+      const profile = await profilingService.getProfile(profileId);
+      
+      res.json({
+        success: true,
+        data: profile
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// List active profiles
+router.get('/profiling/active',
+  async (req: Request, res: Response) => {
+    try {
+      const profiles = await profilingService.getActiveProfiles();
+      
+      res.json({
+        success: true,
+        data: profiles
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Bottleneck Detection Routes
+
+// Analyze profile for bottlenecks
+router.post('/bottlenecks/analyze',
+  [body('profile_id').notEmpty().withMessage('Profile ID is required')],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { profile_id } = req.body;
+      
+      const profile = await profilingService.getProfile(profile_id);
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          error: 'Profile not found'
+        });
+      }
+      
+      const bottlenecks = await detectionService.analyzeProfile(profile);
+      
+      res.json({
+        success: true,
+        data: bottlenecks
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Get bottleneck by ID
+router.get('/bottlenecks/:bottleneckId',
+  [param('bottleneckId').notEmpty().withMessage('Bottleneck ID is required')],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { bottleneckId } = req.params;
+      
+      const bottleneck = await detectionService.getBottleneck(bottleneckId);
+      
+      res.json({
+        success: true,
+        data: bottleneck
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Root Cause Analysis Routes
+
+// Analyze bottleneck root causes
+router.post('/root-cause/analyze',
+  [
+    body('bottleneck_id').notEmpty().withMessage('Bottleneck ID is required'),
+    body('profile_id').notEmpty().withMessage('Profile ID is required')
+  ],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { bottleneck_id, profile_id } = req.body;
+      
+      const bottleneck = await detectionService.getBottleneck(bottleneck_id);
+      const profile = await profilingService.getProfile(profile_id);
+      
+      if (!bottleneck || !profile) {
+        return res.status(404).json({
+          success: false,
+          error: 'Bottleneck or profile not found'
+        });
+      }
+      
+      const rootCauses = await rootCauseService.analyzeBottleneck(bottleneck, profile);
+      
+      res.json({
+        success: true,
+        data: rootCauses
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Performance Correlation Routes
+
+// Analyze performance correlations
+router.post('/correlations/analyze',
+  [
+    body('profile_ids').isArray().withMessage('Profile IDs must be an array'),
+    body('analysis_type').optional().isIn(['pairwise', 'pattern', 'lagged', 'anomaly']).withMessage('Invalid analysis type')
+  ],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { profile_ids, analysis_type = 'pairwise' } = req.body;
+      
+      const profiles: PerformanceProfile[] = [];
+      for (const profileId of profile_ids) {
+        const profile = await profilingService.getProfile(profileId);
+        if (profile) {
+          profiles.push(profile);
+        }
+      }
+      
+      if (profiles.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'No valid profiles found'
+        });
+      }
+      
+      const correlations = await correlationService.analyzeCorrelations(profiles, { analysis_type });
+      
+      res.json({
+        success: true,
+        data: correlations
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Optimization Routes
+
+// Generate optimization recommendations
+router.post('/optimization/recommendations',
+  [
+    body('profile_id').notEmpty().withMessage('Profile ID is required'),
+    body('bottleneck_ids').optional().isArray(),
+    body('root_cause_ids').optional().isArray(),
+    body('correlation_ids').optional().isArray()
+  ],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { profile_id, bottleneck_ids = [], root_cause_ids = [], correlation_ids = [] } = req.body;
+      
+      const profile = await profilingService.getProfile(profile_id);
+      if (!profile) {
+        return res.status(404).json({
+          success: false,
+          error: 'Profile not found'
+        });
+      }
+      
+      const bottlenecks: PerformanceBottleneck[] = [];
+      for (const bottleneckId of bottleneck_ids) {
+        const bottleneck = await detectionService.getBottleneck(bottleneckId);
+        if (bottleneck) {
+          bottlenecks.push(bottleneck);
+        }
+      }
+      
+      const rootCauses: RootCause[] = [];
+      for (const rootCauseId of root_cause_ids) {
+        const rootCause = await rootCauseService.getRootCause(rootCauseId);
+        if (rootCause) {
+          rootCauses.push(rootCause);
+        }
+      }
+      
+      const correlations: CorrelationAnalysis[] = [];
+      for (const correlationId of correlation_ids) {
+        const correlation = await correlationService.getCorrelation(correlationId);
+        if (correlation) {
+          correlations.push(correlation);
+        }
+      }
+      
+      const recommendations = await optimizationService.generateRecommendations(
+        profile,
+        bottlenecks,
+        rootCauses,
+        correlations
+      );
+      
+      res.json({
+        success: true,
+        data: recommendations
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Performance Testing Routes
+
+// Create performance test
+router.post('/testing/tests',
+  [
+    body('name').notEmpty().withMessage('Test name is required'),
+    body('description').optional().isString(),
+    body('type').isIn(['load', 'stress', 'endurance', 'spike']).withMessage('Invalid test type'),
+    body('configuration').isObject().withMessage('Test configuration is required')
+  ],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { name, description, type, configuration } = req.body;
+      
+      const testId = await testingService.createTest(
+        name,
+        description || '',
+        type as TestType,
+        configuration as TestConfiguration
+      );
+      
+      res.json({
+        success: true,
+        data: { test_id: testId }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Execute performance test
+router.post('/testing/tests/:testId/execute',
+  [
+    param('testId').notEmpty().withMessage('Test ID is required'),
+    body('triggered_by').optional().isString(),
+    body('trigger_reason').optional().isString()
+  ],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { testId } = req.params;
+      const { triggered_by = 'api', trigger_reason = 'Manual execution via API' } = req.body;
+      
+      const executionId = await testingService.executeTest(testId, triggered_by, trigger_reason);
+      
+      res.json({
+        success: true,
+        data: { execution_id: executionId }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Get test execution status
+router.get('/testing/executions/:executionId/status',
+  [param('executionId').notEmpty().withMessage('Execution ID is required')],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { executionId } = req.params;
+      
+      const status = await testingService.getExecutionStatus(executionId);
+      
+      res.json({
+        success: true,
+        data: status
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Get test execution results
+router.get('/testing/executions/:executionId/results',
+  [param('executionId').notEmpty().withMessage('Execution ID is required')],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { executionId } = req.params;
+      
+      const results = await testingService.getExecutionResults(executionId);
+      
+      res.json({
+        success: true,
+        data: results
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// List tests
+router.get('/testing/tests',
+  [
+    query('enabled').optional().isBoolean(),
+    query('type').optional().isIn(['load', 'stress', 'endurance', 'spike'])
+  ],
+  async (req: Request, res: Response) => {
+    try {
+      const { enabled, type } = req.query;
+      
+      const filters: any = {};
+      if (enabled !== undefined) filters.enabled = enabled === 'true';
+      if (type) filters.type = type;
+      
+      const tests = await testingService.getTests(filters);
+      
+      res.json({
+        success: true,
+        data: tests
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Reporting and Dashboard Routes
+
+// Generate dashboard
+router.get('/reporting/dashboards/:dashboardId',
+  [
+    param('dashboardId').notEmpty().withMessage('Dashboard ID is required'),
+    query('time_range').optional().isString(),
+    query('filters').optional().isJSON()
+  ],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { dashboardId } = req.params;
+      const { time_range, filters: filtersJson } = req.query;
+      
+      const filters: any = {};
+      if (time_range) filters.time_range = time_range;
+      if (filtersJson) {
+        try {
+          Object.assign(filters, JSON.parse(filtersJson as string));
+        } catch (e) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid filters JSON'
+          });
+        }
+      }
+      
+      const dashboard = await reportingService.generateDashboard(dashboardId, filters);
+      
+      res.json({
+        success: true,
+        data: dashboard
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Generate report
+router.post('/reporting/reports/generate',
+  [
+    body('template_id').notEmpty().withMessage('Template ID is required'),
+    body('parameters').optional().isObject(),
+    body('format').optional().isIn(['pdf', 'html', 'json', 'csv']).withMessage('Invalid format')
+  ],
+  handleValidationErrors,
+  async (req: Request, res: Response) => {
+    try {
+      const { template_id, parameters = {}, format = 'pdf' } = req.body;
+      
+      const reportData = await reportingService.generateReport(template_id, parameters);
+      
+      if (format === 'json') {
+        res.json({
+          success: true,
+          data: reportData
+        });
+      } else {
+        const exportedReport = await reportingService.exportReport(reportData, format);
+        
+        const contentType = {
+          pdf: 'application/pdf',
+          html: 'text/html',
+          csv: 'text/csv'
+        }[format] || 'application/octet-stream';
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="performance-report.${format}"`);
+        res.send(exportedReport);
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// List available dashboards
+router.get('/reporting/dashboards',
+  async (req: Request, res: Response) => {
+    try {
+      const dashboards = await reportingService.getAvailableDashboards();
+      
+      res.json({
+        success: true,
+        data: dashboards
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// List available report templates
+router.get('/reporting/templates',
+  async (req: Request, res: Response) => {
+    try {
+      const templates = await reportingService.getAvailableTemplates();
+      
+      res.json({
+        success: true,
+        data: templates
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Health and Status Routes
+
+// Get system health
+router.get('/health',
+  async (req: Request, res: Response) => {
+    try {
+      const health = {
+        status: 'healthy',
+        timestamp: new Date(),
+        services: {
+          profiling: await profilingService.getHealthStatus(),
+          detection: await detectionService.getHealthStatus(),
+          root_cause: await rootCauseService.getHealthStatus(),
+          correlation: await correlationService.getHealthStatus(),
+          optimization: await optimizationService.getHealthStatus(),
+          testing: await testingService.getHealthStatus(),
+          reporting: await reportingService.getHealthStatus()
+        }
+      };
+      
+      const allHealthy = Object.values(health.services).every(service => service.status === 'healthy');
+      health.status = allHealthy ? 'healthy' : 'degraded';
+      
+      res.json({
+        success: true,
+        data: health
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Get system metrics
+router.get('/metrics',
+  async (req: Request, res: Response) => {
+    try {
+      const metrics = {
+        profiling: {
+          active_profiles: await profilingService.getActiveProfileCount(),
+          total_profiles: await profilingService.getTotalProfileCount(),
+          avg_profile_duration: await profilingService.getAverageProfileDuration()
+        },
+        detection: {
+          total_bottlenecks: await detectionService.getTotalBottleneckCount(),
+          critical_bottlenecks: await detectionService.getCriticalBottleneckCount(),
+          detection_accuracy: await detectionService.getDetectionAccuracy()
+        },
+        testing: {
+          active_tests: await testingService.getActiveTestCount(),
+          total_executions: await testingService.getTotalExecutionCount(),
+          success_rate: await testingService.getExecutionSuccessRate()
+        },
+        reporting: {
+          total_reports: await reportingService.getTotalReportCount(),
+          dashboard_views: await reportingService.getDashboardViewCount(),
+          export_requests: await reportingService.getExportRequestCount()
+        }
+      };
+      
+      res.json({
+        success: true,
+        data: metrics
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+export default router;

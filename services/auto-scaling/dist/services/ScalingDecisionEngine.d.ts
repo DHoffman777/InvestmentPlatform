@@ -1,0 +1,34 @@
+import { EventEmitter } from 'events';
+import { AutoScalingDecision, ServiceMetrics, AutoScalingServiceConfig, FinancialServicesScalingProfile, ScalingPrediction } from '../types';
+export declare class ScalingDecisionEngine extends EventEmitter {
+    private config;
+    private financialProfile?;
+    private decisionHistory;
+    private cooldownTimers;
+    private conditionStates;
+    constructor(config: AutoScalingServiceConfig, financialProfile?: FinancialServicesScalingProfile | undefined);
+    makeScalingDecision(serviceName: string, metrics: ServiceMetrics, allMetrics: Map<string, ServiceMetrics>): Promise<AutoScalingDecision>;
+    private getApplicableRules;
+    private evaluateRule;
+    private evaluateCondition;
+    private extractMetricValue;
+    private evaluateThreshold;
+    private calculateRuleConfidence;
+    private createDecisionFromRule;
+    private createMaintainDecision;
+    private determineUrgency;
+    private applyFinancialConstraints;
+    private isMarketHours;
+    private getCurrentTradingPattern;
+    private validateDecisionLimits;
+    private isInCooldown;
+    private getConditionState;
+    private setConditionState;
+    private addDecisionToHistory;
+    setCooldown(serviceName: string, action: 'scale_up' | 'scale_down'): void;
+    getDecisionHistory(serviceName: string, limit?: number): AutoScalingDecision[];
+    generatePrediction(serviceName: string, timeHorizonMinutes: number): Promise<ScalingPrediction>;
+    private getSeasonalMultiplier;
+    private generateSeasonalPatterns;
+}
+//# sourceMappingURL=ScalingDecisionEngine.d.ts.map
