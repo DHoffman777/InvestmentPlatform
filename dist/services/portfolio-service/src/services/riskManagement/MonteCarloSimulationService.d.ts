@@ -1,0 +1,30 @@
+import { PrismaClient } from '@prisma/client';
+import { KafkaService } from '../../utils/kafka-mock';
+import { MonteCarloRequest, MonteCarloResult } from '../../models/riskManagement/RiskManagement';
+export declare class MonteCarloSimulationService {
+    private prisma;
+    private kafkaService;
+    constructor(prisma: PrismaClient, kafkaService: KafkaService);
+    runMonteCarloSimulation(request: MonteCarloRequest): Promise<MonteCarloResult>;
+    private executeSimulations;
+    private simulatePortfolioPath;
+    private generateCorrelatedShocks;
+    private choleskyDecomposition;
+    private generateJumpComponent;
+    private calculateDistributionStatistics;
+    private calculateRiskMetrics;
+    private calculatePercentiles;
+    private calculatePathStatistics;
+    private performConvergenceTest;
+    private getPortfolioData;
+    private getMarketParameters;
+    private getAssetVolatilities;
+    private getCorrelationMatrix;
+    private adjustForHistoricalCorrelations;
+    private calculatePortfolioWeights;
+    private getTimeSteps;
+    private normalRandom;
+    private seedRandom;
+    private storeMonteCarloResult;
+    private publishMonteCarloEvent;
+}

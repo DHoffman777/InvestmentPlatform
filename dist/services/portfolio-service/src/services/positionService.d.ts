@@ -1,0 +1,47 @@
+import { PrismaClient } from '@prisma/client';
+import { Decimal } from 'decimal.js';
+export interface PositionAggregation {
+    portfolioId: string;
+    securityId: string;
+    totalQuantity: Decimal;
+    averageCostBasis: Decimal;
+    totalCostBasis: Decimal;
+    currentMarketValue: Decimal;
+    unrealizedGainLoss: Decimal;
+    unrealizedGainLossPercentage: Decimal;
+    dayChange: Decimal;
+    dayChangePercentage: Decimal;
+    taxLots: any[];
+}
+export interface TaxLotMethod {
+    method: 'FIFO' | 'LIFO' | 'HIFO' | 'SPECIFIC_ID' | 'AVERAGE_COST';
+    quantity: Decimal;
+    costBasis: Decimal;
+    realizedGainLoss?: Decimal;
+}
+export declare class PositionService {
+    private prisma;
+    constructor(prisma: PrismaClient);
+    getAggregatedPositions(tenantId: string, portfolioIds?: string[], assetClasses?: string[]): Promise<PositionAggregation[]>;
+    calculateTaxLots(positionId: string, sellQuantity: Decimal, method?: TaxLotMethod['method']): Promise<TaxLotMethod[]>;
+    reconcilePositions(portfolioId: string, custodianPositions: Array<{
+        symbol: string;
+        quantity: number;
+        marketValue: number;
+        costBasis?: number;
+    }>): Promise<{
+        matches: any[];
+        discrepancies: any[];
+        missing: any[];
+        extra: any[];
+    }>;
+    calculatePositionPnL(positionId: string, startDate: Date, endDate: Date): Promise<{
+        realizedPnL: Decimal;
+        unrealizedPnL: Decimal;
+        totalPnL: Decimal;
+        dividends: Decimal;
+        fees: Decimal;
+        transactions: any[];
+    }>;
+    updatePositionMarketValue(positionId: string, marketPrice: Decimal): Promise<any>;
+}

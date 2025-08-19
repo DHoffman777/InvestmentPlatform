@@ -1,0 +1,50 @@
+import { EventEmitter } from 'events';
+import { PerformanceProfile, ProfilingConfiguration, ProfileTargetType } from './PerformanceDataModel';
+export interface PerformanceProfilingServiceConfig {
+    maxConcurrentProfiles: number;
+    defaultSamplingRate: number;
+    storageRetentionDays: number;
+    autoProfilingEnabled: boolean;
+    autoProfilingThreshold: number;
+    enableRealtimeStreaming: boolean;
+    maxProfileDuration: number;
+    enableAdvancedMetrics: boolean;
+}
+export declare class PerformanceProfilingService extends EventEmitter {
+    private config;
+    private activeProfiles;
+    private completedProfiles;
+    private profilingIntervals;
+    private metricsCollectors;
+    constructor(config: PerformanceProfilingServiceConfig);
+    private initializeMetricsCollectors;
+    startProfiling(targetId: string, targetType: ProfileTargetType, configuration?: ProfilingConfiguration): Promise<string>;
+    stopProfiling(profileId: string): Promise<PerformanceProfile>;
+    private startMetricsCollection;
+    private stopMetricsCollection;
+    private collectMetricsForProfile;
+    private collectApplicationMetrics;
+    private collectSystemMetrics;
+    private collectDatabaseMetrics;
+    private collectNetworkMetrics;
+    private collectCustomMetrics;
+    private measureEventLoopLag;
+    private determineLoadLevel;
+    private createEmptyProfileSummary;
+    private generateProfileSummary;
+    private calculatePerformanceScore;
+    private calculateEfficiencyRating;
+    private startBackgroundTasks;
+    private checkAutoProfilingTriggers;
+    private collectCurrentSystemMetrics;
+    private shouldTriggerAutoProfiling;
+    private cleanupOldProfiles;
+    getActiveProfiles(): PerformanceProfile[];
+    getCompletedProfiles(): PerformanceProfile[];
+    getProfile(profileId: string): PerformanceProfile | undefined;
+    getProfilesByTarget(targetId: string): Promise<PerformanceProfile[]>;
+    getProfilingStatistics(): any;
+    private generateProfileId;
+    private generateMetricId;
+    shutdown(): Promise<void>;
+}

@@ -1,0 +1,38 @@
+import { CustodianConnection, CustodianConnectionConfig, DataFeedRequest, OrderSubmissionRequest, OrderSubmissionResponse, DocumentRetrievalRequest, ConnectionTestResult } from '../../../models/custodianIntegration/CustodianIntegration';
+export declare class PershingIntegrationService {
+    private client;
+    private sftpClient;
+    private baseUrl;
+    private apiVersion;
+    constructor();
+    private setupInterceptors;
+    validateConfig(config: CustodianConnectionConfig): Promise<void>;
+    testConnection(config: CustodianConnectionConfig): Promise<ConnectionTestResult[]>;
+    private testApiAuthentication;
+    private testApiConnectivity;
+    private testApiDataRetrieval;
+    private testOrderSubmission;
+    private testSftpConnection;
+    private testFtpConnection;
+    retrieveData(connection: CustodianConnection, request: DataFeedRequest): Promise<any>;
+    private retrieveDataViaApi;
+    private retrieveDataViaSftp;
+    private retrieveDataViaFtp;
+    submitOrders(connection: CustodianConnection, request: OrderSubmissionRequest): Promise<OrderSubmissionResponse>;
+    retrieveDocuments(connection: CustodianConnection, request: DocumentRetrievalRequest): Promise<any[]>;
+    private retrieveDocumentsViaFileTransfer;
+    healthCheck(connection: CustodianConnection): Promise<boolean>;
+    private authenticate;
+    private refreshAuthToken;
+    private getAuthToken;
+    private getCertificateConfig;
+    private storeAuthToken;
+    private transformPershingApiData;
+    private transformOrderToPershingFormat;
+    private getPershingFilePattern;
+    private matchesPattern;
+    private parsePershingFile;
+    private parsePershingRecord;
+    private parsePershingDate;
+    private delay;
+}

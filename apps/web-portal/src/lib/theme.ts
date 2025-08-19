@@ -169,23 +169,6 @@ export const theme = createTheme({
         },
       },
     },
-    MuiDataGrid: {
-      styleOverrides: {
-        root: {
-          border: 'none',
-          '& .MuiDataGrid-cell:focus': {
-            outline: 'none',
-          },
-          '& .MuiDataGrid-row:hover': {
-            backgroundColor: '#f5f5f5',
-          },
-        },
-        columnHeaders: {
-          backgroundColor: '#fafafa',
-          borderBottom: '2px solid #e0e0e0',
-        },
-      },
-    },
   },
 });
 

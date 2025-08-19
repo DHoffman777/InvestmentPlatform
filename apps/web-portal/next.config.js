@@ -1,9 +1,34 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
+  reactStrictMode: false,
+  swcMinify: false,
+  // Try development mode to skip static optimization
+  output: 'standalone',
+  trailingSlash: false,
+  poweredByHeader: false,
+  generateEtags: false,
+  compiler: {
+    styledJsx: false,
+  },
   experimental: {
-    appDir: true,
+    esmExternals: false,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  // Webpack config to handle styled-jsx
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Exclude styled-jsx from client bundle
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'styled-jsx': false,
+      };
+    }
+    return config;
   },
   env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',

@@ -1,0 +1,31 @@
+import { ClientDocument, DocumentUploadRequest, DocumentUploadResponse, DocumentSearchRequest, DocumentSearchResponse, BulkDocumentOperation, BulkOperationResult, DocumentClassification, ExtractionResult, DocumentValidation } from '../../models/clientDocuments/ClientDocuments';
+export declare class DocumentProcessingService {
+    private eventPublisher;
+    constructor();
+    uploadDocument(request: DocumentUploadRequest): Promise<DocumentUploadResponse>;
+    searchDocuments(request: DocumentSearchRequest): Promise<DocumentSearchResponse>;
+    getDocument(tenantId: string, documentId: string, userId: string): Promise<ClientDocument | null>;
+    deleteDocument(tenantId: string, documentId: string, userId: string): Promise<void>;
+    performBulkOperation(operation: BulkDocumentOperation): Promise<BulkOperationResult>;
+    classifyDocument(documentId: string): Promise<DocumentClassification>;
+    extractDocumentData(documentId: string): Promise<ExtractionResult[]>;
+    validateDocument(documentId: string): Promise<DocumentValidation>;
+    private extractFileMetadata;
+    private getDocumentFormat;
+    private calculateChecksum;
+    private performInitialClassification;
+    private generateDocumentNumber;
+    private storeFile;
+    private saveDocument;
+    private createClassificationJob;
+    private createExtractionJob;
+    private createValidationJob;
+    private createAuditLog;
+    private checkDocumentAccess;
+    private checkDocumentPermission;
+    private updateDocumentStatus;
+    private updateDocumentAccess;
+    private updateDocumentClassification;
+    private updateDocumentExtractedData;
+    private updateDocumentValidation;
+}

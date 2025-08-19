@@ -1,0 +1,31 @@
+import { ClientProfileRequest, ClientProfileResponse, OnboardingWorkflow, SuitabilityAssessment, SuitabilityAssessmentRequest, ClientMeeting, MeetingRequest, CommunicationHistory, CommunicationRequest, ClientAnalytics, ClientSegmentation } from '../../models/clientRelationship/ClientRelationship';
+export declare class ClientRelationshipService {
+    private prisma;
+    private kafkaService;
+    constructor(kafkaService: any);
+    createClientProfile(tenantId: string, request: ClientProfileRequest, userId: string): Promise<ClientProfileResponse>;
+    getClientProfile(clientId: string, tenantId: string): Promise<ClientProfileResponse>;
+    updateClientProfile(clientId: string, tenantId: string, updates: Partial<ClientProfileRequest>, userId: string): Promise<ClientProfileResponse>;
+    createOnboardingWorkflow(clientId: string, tenantId: string, userId: string): Promise<OnboardingWorkflow>;
+    updateOnboardingStep(workflowId: string, stepNumber: number, tenantId: string, userId: string, notes?: string): Promise<OnboardingWorkflow>;
+    createSuitabilityAssessment(request: SuitabilityAssessmentRequest, tenantId: string, userId: string): Promise<SuitabilityAssessment>;
+    scheduleMeeting(request: MeetingRequest, tenantId: string, userId: string): Promise<ClientMeeting>;
+    recordCommunication(request: CommunicationRequest, tenantId: string, userId: string): Promise<CommunicationHistory>;
+    getClientAnalytics(clientId: string, tenantId: string): Promise<ClientAnalytics>;
+    getClientSegmentation(tenantId: string): Promise<ClientSegmentation[]>;
+    private generateClientNumber;
+    private getStandardOnboardingSteps;
+    private createInitialSuitabilityAssessment;
+    private calculateRiskCapacity;
+    private calculateSuitabilityScore;
+    private calculateRiskScore;
+    private calculateObjectiveAlignment;
+    private generateRecommendedAllocation;
+    private identifyUnsuitableInvestments;
+    private completeOnboarding;
+    private sendMeetingInvites;
+    private updateLastContactDate;
+    private getClientPortfolios;
+    private calculateTotalAssets;
+    private getHouseholdInfo;
+}

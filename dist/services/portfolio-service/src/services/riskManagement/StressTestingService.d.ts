@@ -1,0 +1,37 @@
+import { PrismaClient } from '@prisma/client';
+import { KafkaService } from '../../utils/kafka-mock';
+import { StressTestRequest, StressTestResult } from '../../models/riskManagement/RiskManagement';
+export declare class StressTestingService {
+    private prisma;
+    private kafkaService;
+    constructor(prisma: PrismaClient, kafkaService: KafkaService);
+    executeStressTest(request: StressTestRequest): Promise<StressTestResult>;
+    private executeScenario;
+    private calculatePositionImpact;
+    private getPositionSensitivity;
+    private calculateShockImpact;
+    private getEquityIndexSensitivity;
+    private getInterestRateSensitivity;
+    private getCreditSpreadSensitivity;
+    private getCurrencySensitivity;
+    private getCommoditySensitivity;
+    private getVolatilitySensitivity;
+    private getHistoricalScenarios;
+    private calculateStressedVaR;
+    private calculateStressedVolatility;
+    private analyzeFactorSensitivities;
+    private analyzeCorrelationChanges;
+    private calculateVaRUnderScenario;
+    private calculateVolatilityUnderScenario;
+    private getPortfolioData;
+    private getMarketData;
+    private getPositionBeta;
+    private getPositionDuration;
+    private getCreditDuration;
+    private getOptionVega;
+    private calculateLinearRegression;
+    private getBaseCorrelations;
+    private getStressedCorrelations;
+    private storeStressTestResult;
+    private publishStressTestEvent;
+}

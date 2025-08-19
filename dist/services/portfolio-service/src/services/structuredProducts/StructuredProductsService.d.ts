@@ -1,0 +1,64 @@
+import { PrismaClient } from '@prisma/client';
+import { getKafkaService } from '../../utils/kafka-mock';
+import { StructuredProduct, CreateStructuredProductRequest, StructuredProductSearchRequest, StructuredProductSearchResponse, StructuredProductValuationRequest, StructuredProductValuationResponse, BarrierMonitoringRequest, BarrierMonitoringResponse, StructuredProductPosition, IssuerCreditRisk, StructuredProductType } from '../../models/structuredProducts/StructuredProducts';
+export declare class StructuredProductsService {
+    private prisma;
+    private kafkaService;
+    private valuationService;
+    private barrierMonitoringService;
+    private documentParsingService;
+    constructor(prisma: PrismaClient, kafkaService: ReturnType<typeof getKafkaService>);
+    createProduct(request: CreateStructuredProductRequest, tenantId: string, userId: string): Promise<StructuredProduct>;
+    getProduct(productId: string, tenantId: string): Promise<StructuredProduct | null>;
+    updateProduct(productId: string, updates: Partial<StructuredProduct>, tenantId: string, userId: string): Promise<StructuredProduct>;
+    searchProducts(request: StructuredProductSearchRequest): Promise<StructuredProductSearchResponse>;
+    valuateProduct(request: StructuredProductValuationRequest): Promise<StructuredProductValuationResponse>;
+    monitorBarriers(request: BarrierMonitoringRequest): Promise<BarrierMonitoringResponse>;
+    parseDocument(documentId: string, documentPath: string, documentType: 'TERM_SHEET' | 'PROSPECTUS' | 'MARKETING' | 'LEGAL', tenantId: string): Promise<import("../../models/structuredProducts/StructuredProducts").DocumentParsingResult>;
+    createPosition(productId: string, portfolioId: string, quantity: number, acquisitionPrice: number, tenantId: string, userId: string): Promise<StructuredProductPosition>;
+    getPortfolioPositions(portfolioId: string, tenantId: string): Promise<StructuredProductPosition[]>;
+    updatePositionValuation(position: StructuredProductPosition): Promise<StructuredProductPosition>;
+    getIssuerCreditRisk(issuerId: string, tenantId: string): Promise<IssuerCreditRisk | null>;
+    getPortfolioAnalytics(portfolioId: string, tenantId: string): Promise<{
+        totalValue: number;
+        totalNotional: number;
+        unrealizedPnl: number;
+        productTypeBreakdown: Record<StructuredProductType, number>;
+        issuerExposure: Record<string, number>;
+        averageMaturity: number;
+        barrierRisk: {
+            productsWithBarriers: number;
+            approachingBarriers: number;
+            hitBarriers: number;
+        };
+        greeksPortfolio: {
+            totalDelta: number;
+            totalGamma: number;
+            totalTheta: number;
+            totalVega: number;
+        };
+    }>;
+    private validateProductData;
+    private storeProduct;
+    private loadProduct;
+    private loadMultipleProducts;
+    private storePosition;
+    private loadPortfolioPositions;
+    private getMockProducts;
+    private aggregateByField;
+    private calculateAverageMaturity;
+    private setupBarrierMonitoring;
+    private updateBarrierMonitoring;
+    private setupPositionBarrierMonitoring;
+    private checkPricingAlerts;
+    private assessIssuerCreditRisk;
+    private loadIssuerCreditRisk;
+    private validateUpdatePermissions;
+    private requiresRevaluation;
+    private triggerRevaluation;
+    private publishProductEvent;
+    private publishPositionEvent;
+    private getEmptyAnalytics;
+    batchValuateProducts(productIds: string[], valuationDate: Date, tenantId: string): Promise<StructuredProductValuationResponse[]>;
+    startRealTimeMonitoring(tenantId: string): Promise<void>;
+}

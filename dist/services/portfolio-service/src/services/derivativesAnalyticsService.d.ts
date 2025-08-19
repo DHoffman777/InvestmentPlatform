@@ -1,0 +1,31 @@
+import { PrismaClient } from '@prisma/client';
+import { getKafkaService } from '../utils/kafka-mock';
+import { GreeksCalculation, GreeksCalculationRequest, ImpliedVolatilityAnalysis, ImpliedVolatilityRequest, OptionStrategy, StrategyBuilderRequest, MarginCalculationRequest, MarginCalculationResult, MarkToMarketValuation, DerivativesPortfolioAnalytics, DerivativesSearchRequest, DerivativesSearchResult } from '../models/derivatives/DerivativesAnalytics';
+export declare class DerivativesAnalyticsService {
+    private prisma;
+    private kafkaService;
+    constructor(prisma: PrismaClient, kafkaService: ReturnType<typeof getKafkaService>);
+    calculateGreeks(request: GreeksCalculationRequest, tenantId: string, userId: string): Promise<GreeksCalculation>;
+    private calculateBlackScholesGreeks;
+    private calculateBinomialGreeks;
+    private calculateMonteCarloGreeks;
+    calculateImpliedVolatility(request: ImpliedVolatilityRequest, tenantId: string, userId: string): Promise<ImpliedVolatilityAnalysis>;
+    buildOptionStrategy(request: StrategyBuilderRequest, tenantId: string, userId: string): Promise<OptionStrategy>;
+    calculateMargin(request: MarginCalculationRequest, tenantId: string, userId: string): Promise<MarginCalculationResult>;
+    calculateMarkToMarket(instrumentId: string, tenantId: string, userId: string): Promise<MarkToMarketValuation>;
+    calculatePortfolioAnalytics(portfolioId: string, tenantId: string, userId: string): Promise<DerivativesPortfolioAnalytics>;
+    searchDerivatives(request: DerivativesSearchRequest, tenantId: string): Promise<DerivativesSearchResult>;
+    private normalCDF;
+    private normalPDF;
+    private erf;
+    private calculateTimeToExpiration;
+    private calculateOptionPrice;
+    private generateId;
+    private getDerivativeInstrument;
+    private getRiskFreeRate;
+    private storeGreeksCalculation;
+    private publishGreeksCalculatedEvent;
+    private publishImpliedVolatilityEvent;
+    private publishStrategyCreatedEvent;
+    private publishPortfolioAnalyticsEvent;
+}

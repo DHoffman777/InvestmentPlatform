@@ -1,0 +1,88 @@
+import { EventEmitter } from 'events';
+import { ResourceMetrics, PredictionModel, CapacityPrediction, ResourceType } from './CapacityPlanningDataModel';
+export interface PredictionServiceConfig {
+    dataRetentionDays: number;
+    defaultLookbackPeriod: number;
+    defaultPredictionHorizon: number;
+    modelRetrainingInterval: number;
+    minDataPointsForPrediction: number;
+    enableAutoModelSelection: boolean;
+    modelAccuracyThreshold: number;
+    parallelPredictions: number;
+}
+export declare class ResourceUsagePredictionService extends EventEmitter {
+    private models;
+    private predictions;
+    private trainingData;
+    private modelPerformance;
+    private retrainingTimer;
+    private config;
+    constructor(config: PredictionServiceConfig);
+    createPredictionModel(modelConfig: Partial<PredictionModel>): Promise<PredictionModel>;
+    trainModel(modelId: string, trainingData: ResourceMetrics[]): Promise<number>;
+    generatePrediction(modelId: string, resourceId: string, options?: {
+        horizon?: number;
+        confidence?: number;
+        includeUncertainty?: boolean;
+    }): Promise<CapacityPrediction>;
+    batchPredict(requests: Array<{
+        modelId: string;
+        resourceId: string;
+        options?: any;
+    }>): Promise<CapacityPrediction[]>;
+    evaluateModelPerformance(modelId: string): Promise<{
+        accuracy: number;
+        mae: number;
+        rmse: number;
+        mape: number;
+        r2: number;
+        trend: 'improving' | 'declining' | 'stable';
+        recommendations: string[];
+    }>;
+    optimizeModel(modelId: string): Promise<PredictionModel>;
+    getModelsByResourceType(resourceType: ResourceType): Promise<PredictionModel[]>;
+    getBestModelForResource(resourceId: string, metric: string): Promise<PredictionModel | null>;
+    private preprocessData;
+    private executeTraining;
+    private executePrediction;
+    private trainLinearRegression;
+    private predictLinearRegression;
+    private trainARIMA;
+    private predictARIMA;
+    private trainExponentialSmoothing;
+    private trainProphet;
+    private calculateAutocorrelation;
+    private calculateConfidenceIntervals;
+    private calculatePointConfidence;
+    private determineTrend;
+    private detectAnomaly;
+    private extractMetricValue;
+    private applyDifferencing;
+    private applyScaling;
+    private validatePredictionQuality;
+    private calculatePerformanceMetrics;
+    private analyzeTrend;
+    private calculateSlope;
+    private generateModelRecommendations;
+    private generateParameterCombinations;
+    private getHistoricalData;
+    private getTrainingData;
+    private getTestData;
+    private getResourceType;
+    private generateMockData;
+    private chunkArray;
+    private initializeDefaultModels;
+    private startModelRetraining;
+    private getDefaultParameters;
+    private validateModel;
+    private generateModelId;
+    private generatePredictionId;
+    private generateBatchId;
+    private incrementVersion;
+    getModel(modelId: string): PredictionModel | null;
+    getAllModels(): PredictionModel[];
+    getPrediction(predictionId: string): CapacityPrediction | null;
+    getModelPerformance(modelId: string): number[];
+    deactivateModel(modelId: string): Promise<void>;
+    shutdown(): Promise<void>;
+}

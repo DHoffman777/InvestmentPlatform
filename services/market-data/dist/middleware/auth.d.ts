@@ -15,8 +15,8 @@ declare global {
         }
     }
 }
-export declare const authenticateJWT: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
-export declare const requirePermission: (requiredPermissions: string[]) => (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
-export declare const requireTenantAccess: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
+export declare const authenticateJWT: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>>;
+export declare const requirePermission: (requiredPermissions: string[]) => (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>>;
+export declare const requireTenantAccess: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>>;
 export {};
 //# sourceMappingURL=auth.d.ts.map

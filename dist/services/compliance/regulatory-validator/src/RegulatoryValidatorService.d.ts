@@ -1,0 +1,30 @@
+import express from 'express';
+import { EventEmitter } from 'events';
+import { ComplianceValidationRequest, ComplianceValidationResult, RegulatoryValidatorConfig } from './types';
+export declare class RegulatoryValidatorService extends EventEmitter {
+    private config;
+    private app;
+    private ruleEngine;
+    private auditService;
+    private reportingService;
+    private scheduledTasks;
+    private isRunning;
+    private validationQueue;
+    private processingQueue;
+    constructor(config: RegulatoryValidatorConfig);
+    private initializeServices;
+    private setupMiddleware;
+    private setupRoutes;
+    private setupEventHandlers;
+    private scheduleReports;
+    validateCompliance(request: ComplianceValidationRequest): Promise<ComplianceValidationResult>;
+    private validateRequest;
+    private processValidationQueue;
+    private getHealthStatus;
+    private generateRequestId;
+    private generateBatchId;
+    private generateRuleId;
+    start(port?: number): Promise<void>;
+    stop(): Promise<void>;
+    getApp(): express.Application;
+}
