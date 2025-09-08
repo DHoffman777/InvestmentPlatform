@@ -388,11 +388,11 @@ async function seedREITsAndMLPs() {
             totalREITs,
             totalMLPs,
             total: totalREITs + totalMLPs,
-            reitBreakdown: reitTypes.map(type => ({
+            reitBreakdown: reitTypes.map((type) => ({
                 type: type.securityType,
                 count: type._count?.securityType || 0,
             })),
-            mlpBreakdown: mlpTypes.map(type => ({
+            mlpBreakdown: mlpTypes.map((type) => ({
                 type: type.securityType,
                 count: type._count?.securityType || 0,
             })),

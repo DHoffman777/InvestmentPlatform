@@ -2,12 +2,12 @@
 const nextConfig = {
   reactStrictMode: false,
   swcMinify: false,
-  output: 'standalone',
+  // Remove output mode to use default
   trailingSlash: false,
   poweredByHeader: false,
   generateEtags: false,
-  compiler: {
-    styledJsx: false,
+  images: {
+    unoptimized: true,
   },
   // Disable styled-jsx completely
   experimental: {
@@ -15,6 +15,14 @@ const nextConfig = {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
     forceSwcTransforms: true,
   },
+  // Disable styled-jsx through compiler options
+  compiler: {
+    styledComponents: false,
+    removeConsole: false,
+  },
+  // Skip middleware and use client-side routing only
+  skipTrailingSlashRedirect: true,
+  skipMiddlewareUrlNormalize: true,
   // Static export mode - removed invalid options
   // unstable_runtimeJS: false,
   // generateStaticParams: false,
@@ -24,34 +32,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Webpack config to handle styled-jsx
+  // Webpack config to properly handle styled-jsx during SSG
   webpack: (config, { isServer, dev }) => {
-    // Completely exclude styled-jsx from both client and server
+    // Completely replace styled-jsx with mock to prevent errors
     config.resolve.alias = {
       ...config.resolve.alias,
-      'styled-jsx': false,
-      'styled-jsx/style': false,
+      'styled-jsx': require.resolve('./src/utils/styled-jsx-mock.js'),
+      'styled-jsx/style': require.resolve('./src/utils/styled-jsx-mock.js'),
+      'styled-jsx/server': require.resolve('./src/utils/styled-jsx-mock.js'),
     };
-    
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      'styled-jsx': false,
-    };
-
-    // Override Next.js default styled-jsx handling
-    config.module.rules = config.module.rules.filter(rule => {
-      if (rule.test && rule.test.toString().includes('styled-jsx')) {
-        return false;
-      }
-      return true;
-    });
-
-    // Add externals to completely exclude styled-jsx
-    config.externals = config.externals || [];
-    if (Array.isArray(config.externals)) {
-      config.externals.push('styled-jsx');
-      config.externals.push('styled-jsx/style');
-    }
     
     return config;
   },
@@ -63,37 +52,37 @@ const nextConfig = {
     AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL || 'http://localhost:3002',
     MARKET_DATA_SERVICE_URL: process.env.MARKET_DATA_SERVICE_URL || 'http://localhost:3003',
   },
-  // Rewrites disabled for export mode
-  // async rewrites() {
-  //   return [
-  //     {
-  //       source: '/api/:path*',
-  //       destination: `${process.env.API_BASE_URL || 'http://localhost:3001'}/:path*`,
-  //     },
-  //   ];
-  // },
-  // Headers disabled for export mode
-  // async headers() {
-  //   return [
-  //     {
-  //       source: '/(.*)',
-  //       headers: [
-  //         {
-  //           key: 'X-Frame-Options',
-  //           value: 'DENY',
-  //         },
-  //         {
-  //           key: 'X-Content-Type-Options',
-  //           value: 'nosniff',
-  //         },
-  //         {
-  //           key: 'Referrer-Policy',
-  //           value: 'strict-origin-when-cross-origin',
-  //         },
-  //       ],
-  //     },
-  //   ];
-  // },
+  // API rewrites for development
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.API_BASE_URL || 'http://localhost:3001'}/:path*`,
+      },
+    ];
+  },
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

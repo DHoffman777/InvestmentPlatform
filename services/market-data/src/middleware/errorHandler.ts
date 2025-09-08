@@ -106,7 +106,7 @@ export const errorHandler = (
     query: req.query,
     body: req.method !== 'GET' ? req.body : undefined,
     userId: (req as any).user?.sub,
-    tenantId: req.user?.tenantId,
+    tenantId: (req as any).user?.tenantId,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
   });

@@ -267,7 +267,7 @@ async function seedEquities() {
         });
         logger_1.logger.info('Equity seeding summary:', {
             totalEquities,
-            breakdown: equityTypes.map(type => ({
+            breakdown: equityTypes.map((type) => ({
                 type: type.securityType,
                 count: type._count?.securityType || 0,
             })),

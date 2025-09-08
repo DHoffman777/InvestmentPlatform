@@ -6,9 +6,6 @@ import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 export const metadata: Metadata = {
   title: 'Investment Platform - Client Portal',
   description: 'White-labeled investment management platform for financial advisors and institutions',
