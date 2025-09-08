@@ -355,8 +355,8 @@ class ErrorTrackingService extends events_1.EventEmitter {
                         lastSeen: error.lastSeen,
                         resolved: error.resolved,
                         tags: error.tags,
-                        affectedUsers: error.affectedUsers,
-                        relatedErrors: error.relatedErrors
+                        affectedUsers: error.affectedUsers
+                        // Remove relatedErrors from here - it should be handled separately via relations
                     }
                 });
             }

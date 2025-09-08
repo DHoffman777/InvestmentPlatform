@@ -265,20 +265,20 @@ export async function seedEquities() {
     
     // Generate summary statistics
     const totalEquities = await prisma.security.count({
-      where: { assetClass: 'EQUITY', isActive: true }
+      where: { assetClass: 'EQUITY', isActive: true } as any
     });
     
     const equityTypes = await prisma.security.groupBy({
       by: ['securityType'],
-      where: { assetClass: 'EQUITY', isActive: true },
+      where: { assetClass: 'EQUITY', isActive: true } as any,
       _count: { securityType: true },
-    });
+    } as any);
 
     logger.info('Equity seeding summary:', {
       totalEquities,
       breakdown: equityTypes.map(type => ({
         type: type.securityType,
-        count: type._count.securityType,
+        count: (type._count as any)?.securityType || 0,
       })),
     });
 

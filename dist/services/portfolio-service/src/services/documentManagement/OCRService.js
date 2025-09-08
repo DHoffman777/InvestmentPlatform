@@ -119,7 +119,7 @@ class OCRService {
         try {
             const tesseract = require('tesseract.js');
             const worker = await tesseract.createWorker({
-                logger: m => this.logger.debug('Tesseract:', m)
+                logger: (m) => this.logger.debug('Tesseract:', m)
             });
             const language = this.mapToTesseractLanguage(request.language || DocumentManagement_1.Language.ENGLISH);
             await worker.loadLanguage(language);
@@ -228,7 +228,7 @@ class OCRService {
                 .grayscale()
                 .raw()
                 .toBuffer();
-            const tensor = tf.tensor4d(Array.from(imageBuffer).map(x => x / 255.0), [1, 224, 224, 1]);
+            const tensor = tf.tensor4d(Array.from(imageBuffer).map((x) => x / 255.0), [1, 224, 224, 1]);
             const predictions = await model.predict(tensor);
             const predictionData = await predictions.data();
             return this.convertMLPredictionToOCRResult(predictionData, request.documentId, pageNumber, modelConfig);

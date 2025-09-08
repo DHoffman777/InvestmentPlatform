@@ -14,7 +14,7 @@ export interface OnboardingNotificationService {
     sendCompletionNotification(clientId: string, workflowId: string): Promise<any>;
     sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<any>;
 }
-export interface AuthenticatedRequest extends Request {
+export type AuthenticatedRequest = Request & {
     user?: {
         id: string;
         tenantId: string;
@@ -23,7 +23,7 @@ export interface AuthenticatedRequest extends Request {
     };
     clientId?: string;
     tenantId?: string;
-}
+};
 export declare class OnboardingController extends EventEmitter {
     private router;
     private workflowStateMachine;

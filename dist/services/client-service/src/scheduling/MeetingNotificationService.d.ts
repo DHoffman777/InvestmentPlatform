@@ -44,9 +44,9 @@ export interface NotificationChannel {
         fromAddress?: string;
         fromName?: string;
         replyTo?: string;
-        provider?: 'twilio' | 'aws_sns' | 'nexmo';
+        smsProvider?: 'twilio' | 'aws_sns' | 'nexmo';
         fromNumber?: string;
-        provider?: 'firebase' | 'apns' | 'web_push';
+        pushProvider?: 'firebase' | 'apns' | 'web_push';
         appId?: string;
         webhookUrl?: string;
         channel?: string;

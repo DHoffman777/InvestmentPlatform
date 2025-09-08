@@ -1,4 +1,4 @@
-import { Router, Request } from 'express';
+import { Router } from 'express';
 import { EventEmitter } from 'events';
 import { DependencyInventoryService } from './DependencyInventoryService';
 import { VulnerabilityDatabaseService } from './VulnerabilityDatabaseService';
@@ -7,7 +7,7 @@ import { RiskAssessmentService } from './RiskAssessmentService';
 import { UpdateRecommendationEngine } from './UpdateRecommendationEngine';
 import { ComplianceReportingService } from './ComplianceReportingService';
 import { DependencyPolicyService } from './DependencyPolicyService';
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest {
     user?: {
         id: string;
         tenantId: string;
@@ -15,6 +15,9 @@ export interface AuthenticatedRequest extends Request {
         permissions: string[];
     };
     tenantId?: string;
+    params: any;
+    query: any;
+    body: any;
 }
 export declare class DependencyScannerController extends EventEmitter {
     private inventoryService;

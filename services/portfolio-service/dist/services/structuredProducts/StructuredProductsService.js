@@ -424,8 +424,8 @@ class StructuredProductsService {
                 if (product && product.hasBarrier) {
                     productsWithBarriers++;
                     // Check barrier alerts
-                    const approachingAlerts = position.barrierAlerts.filter(a => a.alertType === 'BARRIER_APPROACH' && a.isActive);
-                    const hitAlerts = position.barrierAlerts.filter(a => a.alertType === 'BARRIER_HIT');
+                    const approachingAlerts = position.barrierAlerts.filter((a) => a.alertType === 'BARRIER_APPROACH' && a.isActive);
+                    const hitAlerts = position.barrierAlerts.filter((a) => a.alertType === 'BARRIER_HIT');
                     if (approachingAlerts.length > 0)
                         approachingBarriers++;
                     if (hitAlerts.length > 0)

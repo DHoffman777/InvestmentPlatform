@@ -255,6 +255,7 @@ export declare class ResourceCostAnalysisService extends EventEmitter {
     private detectCostAnomalies;
     private findCostOptimizationOpportunities;
     private generateCostForecast;
+    private mapEffortLevel;
     private generateCostRecommendations;
     private checkCostAlerts;
     private initializeCostModels;

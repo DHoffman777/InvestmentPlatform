@@ -182,12 +182,15 @@ class CDNManagementService extends events_1.EventEmitter {
         });
         // Provider events
         for (const provider of this.providers.values()) {
-            provider.on('assetUploaded', (data) => {
-                this.emit('assetUploaded', { provider: provider.getName(), ...data });
-            });
-            provider.on('error', (error) => {
-                this.emit('providerError', { provider: provider.getName(), ...error });
-            });
+            // Check if provider extends EventEmitter (CloudFrontProvider does)
+            if (provider instanceof events_1.EventEmitter) {
+                provider.on('assetUploaded', (data) => {
+                    this.emit('assetUploaded', { provider: provider.getName(), ...data });
+                });
+                provider.on('error', (error) => {
+                    this.emit('providerError', { provider: provider.getName(), ...error });
+                });
+            }
         }
     }
     setupMiddleware() {
@@ -227,7 +230,7 @@ class CDNManagementService extends events_1.EventEmitter {
                     cb(null, true);
                 }
                 else {
-                    cb(new Error('Unsupported file type'), false);
+                    cb(new Error('Unsupported file type'));
                 }
             },
         });

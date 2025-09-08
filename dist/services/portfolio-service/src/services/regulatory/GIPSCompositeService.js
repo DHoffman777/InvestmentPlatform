@@ -199,7 +199,7 @@ class GIPSCompositeService {
                         });
                     }
                     // Check for missing standard deviation (required for periods after 2011)
-                    if (data.year >= 2011 && data.compositeStandardDeviation === undefined) {
+                    if (data.year >= 2011 && data.compositesStandardDeviation === undefined) {
                         warnings.push({
                             section: 'Performance',
                             field: `performanceData[${data.year}]`,
@@ -503,7 +503,7 @@ class GIPSCompositeService {
             },
             {
                 requirement: 'Standard deviation presented (if required)',
-                status: composite.performanceData.some(d => d.year >= 2011 && d.compositeStandardDeviation !== undefined) ? 'compliant' : 'not_applicable'
+                status: composite.performanceData.some(d => d.year >= 2011 && d.compositesStandardDeviation !== undefined) ? 'compliant' : 'not_applicable'
             },
             {
                 requirement: 'Composite dispersion presented (if applicable)',

@@ -157,7 +157,7 @@ router.post('/reit',
       res.status(201).json({
         reit: {
           ...reit,
-          marketCap: reit.marketCap?.toNumber(),
+          marketCap: (reit as any).marketCap?.toNumber(),
         },
         message: 'REIT created/updated successfully',
       });
@@ -228,7 +228,7 @@ router.post('/mlp',
       res.status(201).json({
         mlp: {
           ...mlp,
-          marketCap: mlp.marketCap?.toNumber(),
+          marketCap: (mlp as any).marketCap?.toNumber(),
         },
         message: 'MLP created/updated successfully',
       });

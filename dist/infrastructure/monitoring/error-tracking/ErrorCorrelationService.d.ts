@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 import { StructuredError, ErrorCategory } from './ErrorTrackingService';
 export interface CorrelationRule {
     id: string;

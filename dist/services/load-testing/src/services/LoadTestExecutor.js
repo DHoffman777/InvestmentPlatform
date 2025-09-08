@@ -122,14 +122,14 @@ class LoadTestExecutor extends events_1.EventEmitter {
                         ...(request.params && { qs: request.params }),
                         ...(request.validation && {
                             capture: [
-                                ...(request.validation.statusCode && [{
+                                ...(request.validation.statusCode ? [{
                                         json: '$.statusCode',
                                         as: 'statusCode',
-                                    }]),
-                                ...(request.validation.bodyContains && request.validation.bodyContains.map(content => ({
+                                    }] : []),
+                                ...(request.validation.bodyContains ? request.validation.bodyContains.map(content => ({
                                     regexp: content,
                                     as: `contains_${content.replace(/[^a-zA-Z0-9]/g, '_')}`,
-                                }))),
+                                })) : []),
                             ],
                         }),
                         ...(request.extractors && {

@@ -233,7 +233,7 @@ class ResourceOptimizationService extends events_1.EventEmitter {
         if (utilizationPattern.type === 'cyclical' && utilizationPattern.confidence > 0.8) {
             recommendations.push({
                 id: this.generateRecommendationId(),
-                type: 'automation',
+                type: 'configuration', // 'automation' is not a valid type, using 'configuration' instead
                 priority: 'medium',
                 title: 'Implement auto-scaling based on usage patterns',
                 description: `ML analysis detected cyclical usage pattern with ${(utilizationPattern.confidence * 100).toFixed(1)}% confidence. Auto-scaling can optimize costs.`,
@@ -391,7 +391,7 @@ class ResourceOptimizationService extends events_1.EventEmitter {
                 this.emit('recommendationAutoApplied', {
                     recommendationId: recommendation.id,
                     resourceId: context.snapshot.resourceId,
-                    success: result.success,
+                    success: result.result.success, // Access success from nested result property
                     timestamp: new Date()
                 });
             }

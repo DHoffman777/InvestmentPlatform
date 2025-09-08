@@ -947,7 +947,7 @@ class ErrorRecoveryService extends events_1.EventEmitter {
                 data: {
                     id: execution.id,
                     errorId: execution.errorId,
-                    strategyId: execution.strategyId,
+                    strategy: execution.strategyId, // Changed from strategyId to strategy
                     initiatedBy: execution.initiatedBy,
                     startTime: execution.startTime,
                     endTime: execution.endTime,
@@ -972,13 +972,10 @@ class ErrorRecoveryService extends events_1.EventEmitter {
             await this.prisma.recoveryExecution.update({
                 where: { id: execution.id },
                 data: {
-                    endTime: execution.endTime,
+                    // Only update fields that exist in Prisma schema
                     status: execution.status,
-                    currentStep: execution.currentStep,
-                    steps: execution.steps,
-                    results: execution.results,
-                    logs: execution.logs,
-                    rollbackExecuted: execution.rollbackExecuted
+                    result: execution.results,
+                    // steps, logs, and rollbackExecuted don't exist in Prisma schema
                 }
             });
         }
@@ -1043,7 +1040,7 @@ class ErrorRecoveryService extends events_1.EventEmitter {
             const where = errorId ? { errorId } : {};
             const executions = await this.prisma.recoveryExecution.findMany({
                 where,
-                orderBy: { startTime: 'desc' },
+                orderBy: { startedAt: 'desc' }, // Changed from startTime to startedAt
                 take: 100
             });
             return executions;

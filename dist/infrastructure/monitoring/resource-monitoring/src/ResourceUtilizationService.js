@@ -283,14 +283,14 @@ class ResourceUtilizationService extends events_1.EventEmitter {
                 unit: metricConfig.unit || 'count',
                 timestamp,
                 metadata: {
-                    collectionMethod: 'custom',
+                    collectionMethod: 'calculated', // 'custom' is not a valid value, using 'calculated' for custom metrics
                     accuracy: metricConfig.accuracy || 0.85,
                     confidence: metricConfig.confidence || 0.8,
                     dataSource: dataSource.id,
                     collector: 'custom',
                     version: '1.0.0'
                 },
-                tags: { ...dataSource.configuration.tags, ...metricConfig.tags } || {},
+                tags: { ...dataSource.configuration.tags, ...metricConfig.tags }, // Object spread always returns an object, no need for || {}
                 dimensions: this.extractDimensions(dataSource),
                 source: dataSource,
                 quality: { completeness: 0.8, accuracy: 0.85, timeliness: 0.9, consistency: 0.75, validity: 0.9, overall: 0.84, issues: [] }

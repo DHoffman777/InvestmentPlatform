@@ -172,13 +172,13 @@ router.get('/',
             }
           },
           orderBy: { exDate: 'asc' }
-        }),
+        } as any),
         prisma.corporateAction.count({ where: whereClause })
       ]);
 
       const formattedActions = corporateActions.map(action => ({
         ...action,
-        value: action.value?.toNumber(),
+        value: (action as any).value?.toNumber(),
       }));
 
       res.json({

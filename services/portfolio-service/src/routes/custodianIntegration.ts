@@ -129,7 +129,7 @@ const reconciliationRequestSchema = {
  * @access Private
  */
 router.post('/connections', 
-  authMiddleware, 
+  authMiddleware as any, 
   validateRequest(custodianConnectionSchema),
   async (req: any, res: any) => {
     try {
@@ -182,7 +182,7 @@ router.post('/connections',
  * @access Private
  */
 router.get('/connections/:connectionId', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
@@ -225,7 +225,7 @@ router.get('/connections/:connectionId',
  * @access Private
  */
 router.get('/connections', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
@@ -269,7 +269,7 @@ router.get('/connections',
  * @access Private
  */
 router.post('/connections/:connectionId/data-feed', 
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(dataFeedRequestSchema),
   async (req: any, res: any) => {
     try {
@@ -329,7 +329,7 @@ router.post('/connections/:connectionId/data-feed',
  * @access Private
  */
 router.get('/connections/:connectionId/data-feeds', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
@@ -374,7 +374,7 @@ router.get('/connections/:connectionId/data-feeds',
  * @access Private
  */
 router.post('/connections/:connectionId/reconciliation', 
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(reconciliationRequestSchema),
   async (req: any, res: any) => {
     try {
@@ -429,7 +429,7 @@ router.post('/connections/:connectionId/reconciliation',
  * @access Private
  */
 router.get('/connections/:connectionId/reconciliations', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
@@ -474,7 +474,7 @@ router.get('/connections/:connectionId/reconciliations',
  * @access Private
  */
 router.post('/connections/:connectionId/orders', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
@@ -526,7 +526,7 @@ router.post('/connections/:connectionId/orders',
  * @access Private
  */
 router.post('/connections/:connectionId/documents', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
@@ -585,7 +585,7 @@ router.post('/connections/:connectionId/documents',
  * @access Private
  */
 router.get('/connections/:connectionId/performance', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
@@ -637,7 +637,7 @@ router.get('/connections/:connectionId/performance',
  * @access Private
  */
 router.get('/connections/:connectionId/alerts', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
@@ -682,7 +682,7 @@ router.get('/connections/:connectionId/alerts',
  * @access Private
  */
 router.post('/connections/:connectionId/test', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;

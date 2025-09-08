@@ -51,6 +51,7 @@ export interface WorkflowExecution {
     status: 'INITIATED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
     currentStep: number;
     completedSteps: StepExecution[];
+    workflowSteps?: WorkflowStep[];
     startTime: Date;
     endTime?: Date;
     totalDuration?: number;

@@ -52,7 +52,7 @@ class RiskAssessmentService extends events_1.EventEmitter {
         const context = businessContext || this.businessContexts.get(tenantId) || this.getDefaultBusinessContext(tenantId);
         const riskFactors = await this.calculateRiskFactors(dependency, vulnerabilities, context);
         const businessImpactScore = this.calculateBusinessImpactScore(riskFactors, context);
-        const technicalRiskScore = this.calculateTechnicalRiskScore(riskFactors, vulnerability);
+        const technicalRiskScore = this.calculateTechnicalRiskScore(riskFactors, vulnerabilities);
         const exploitabilityScore = this.calculateExploitabilityScore(vulnerabilities);
         const environmentalScore = this.calculateEnvironmentalScore(context);
         const overallRiskScore = this.calculateOverallRiskScore(businessImpactScore, technicalRiskScore, exploitabilityScore, environmentalScore);
@@ -448,14 +448,15 @@ class RiskAssessmentService extends events_1.EventEmitter {
         // Mock implementation - would query package registries
         const baseScore = Math.random() * 40 + 40; // 40-80
         // Adjust based on last update
+        let adjustedScore = baseScore;
         if (dependency.lastUpdate) {
             const daysSinceUpdate = (Date.now() - dependency.lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
             if (daysSinceUpdate > 365)
-                baseScore -= 20; // Heavily penalize old packages
+                adjustedScore -= 20; // Heavily penalize old packages
             else if (daysSinceUpdate > 180)
-                baseScore -= 10;
+                adjustedScore -= 10;
         }
-        return Math.max(0, Math.min(100, baseScore));
+        return Math.max(0, Math.min(100, adjustedScore));
     }
     calculatePackageAgeScore(dependency) {
         // Mock implementation - would parse version numbers and release dates

@@ -36,6 +36,7 @@ export interface APIResponse<T = any> {
     message?: string;
     timestamp: Date;
     requestId: string;
+    details?: any;
     pagination?: {
         page: number;
         limit: number;
@@ -84,6 +85,6 @@ export declare class SLAManagementController extends EventEmitter {
     private getSLADefinition;
     private updateSLADefinition;
     private generateSLAId;
-    start(): Promise<any>;
-    shutdown(): Promise<any>;
+    start(): Promise<void>;
+    shutdown(): Promise<void>;
 }

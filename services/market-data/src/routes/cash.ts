@@ -179,7 +179,7 @@ router.post('/cash-equivalent',
       res.status(201).json({
         cashEquivalent: {
           ...cashEquivalent,
-          marketCap: cashEquivalent.marketCap?.toNumber(),
+          marketCap: (cashEquivalent as any).marketCap?.toNumber(),
         },
         message: 'Cash equivalent created/updated successfully',
       });
@@ -246,7 +246,7 @@ router.post('/treasury',
       res.status(201).json({
         treasury: {
           ...treasury,
-          marketCap: treasury.marketCap?.toNumber(),
+          marketCap: (treasury as any).marketCap?.toNumber(),
         },
         message: 'Treasury security created/updated successfully',
       });

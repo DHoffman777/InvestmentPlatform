@@ -591,8 +591,9 @@ class IdentityVerificationService extends events_1.EventEmitter {
         const methodSuccessRates = {};
         Object.values(VerificationMethodType).forEach(methodType => {
             const methodResults = sessions
-                .flatMap(s => s.results)
-                .filter(r => s.methods.find(m => m.id === r.methodId)?.type === methodType);
+                .flatMap(s => s.results.map(r => ({ result: r, session: s })))
+                .filter(({ result, session }) => session.methods.find((m) => m.id === result.methodId)?.type === methodType)
+                .map(({ result }) => result);
             const successfulMethods = methodResults.filter(r => r.verified).length;
             methodSuccessRates[methodType] = methodResults.length > 0
                 ? (successfulMethods / methodResults.length) * 100

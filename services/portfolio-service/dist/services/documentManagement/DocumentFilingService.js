@@ -1,17 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocumentFilingService = void 0;
+// Kafka service will be imported when available
+// import { KafkaService } from '../infrastructure/KafkaService';
 const DocumentManagement_1 = require("../../models/documentManagement/DocumentManagement");
 class DocumentFilingService {
     prisma;
     logger;
-    kafkaService;
+    kafkaService; // KafkaService - type will be restored when module is available
     filingRules;
     directoryTemplates;
     classificationEngine;
     taggingEngine;
     fileSystemManager;
-    constructor(prisma, logger, kafkaService) {
+    constructor(prisma, logger, kafkaService // KafkaService - type will be restored when module is available
+    ) {
         this.prisma = prisma;
         this.logger = logger;
         this.kafkaService = kafkaService;
@@ -93,7 +96,7 @@ class DocumentFilingService {
                 ...request.document.tags
             ];
             await this.updateDocumentRecord(request.documentId, {
-                filingPath,
+                filePath: filingPath,
                 classification: updatedClassification,
                 tags: generatedTags,
                 metadata: updatedMetadata,
@@ -564,15 +567,25 @@ class DocumentFilingService {
             [DocumentManagement_1.DocumentType.TRADE_CONFIRMATION]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.STATEMENT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.PROSPECTUS]: DocumentManagement_1.DocumentClassification.PUBLIC,
+            [DocumentManagement_1.DocumentType.OFFERING_MEMORANDUM]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.TERM_SHEET]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.ANNUAL_REPORT]: DocumentManagement_1.DocumentClassification.PUBLIC,
+            [DocumentManagement_1.DocumentType.QUARTERLY_REPORT]: DocumentManagement_1.DocumentClassification.PUBLIC,
             [DocumentManagement_1.DocumentType.TAX_DOCUMENT]: DocumentManagement_1.DocumentClassification.HIGHLY_CONFIDENTIAL,
-            [DocumentManagement_1.DocumentType.CONTRACT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
-            [DocumentManagement_1.DocumentType.LEGAL_OPINION]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.COMPLIANCE_CERTIFICATE]: DocumentManagement_1.DocumentClassification.INTERNAL,
+            [DocumentManagement_1.DocumentType.CONTRACT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.AMENDMENT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.LEGAL_OPINION]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.AUDIT_REPORT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.REGULATORY_FILING]: DocumentManagement_1.DocumentClassification.PUBLIC,
             [DocumentManagement_1.DocumentType.CLIENT_COMMUNICATION]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.INVESTMENT_COMMITTEE_MINUTES]: DocumentManagement_1.DocumentClassification.HIGHLY_CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.DUE_DILIGENCE_REPORT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.PERFORMANCE_REPORT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.RISK_REPORT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.SUBSCRIPTION_AGREEMENT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.REDEMPTION_NOTICE]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
+            [DocumentManagement_1.DocumentType.TRANSFER_AGREEMENT]: DocumentManagement_1.DocumentClassification.CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.KYC_DOCUMENT]: DocumentManagement_1.DocumentClassification.HIGHLY_CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.AML_DOCUMENT]: DocumentManagement_1.DocumentClassification.HIGHLY_CONFIDENTIAL,
             [DocumentManagement_1.DocumentType.OTHER]: DocumentManagement_1.DocumentClassification.INTERNAL

@@ -56,17 +56,17 @@ loadTestService.on('testCompleted', ({ testId, result }) => {
     console.log(`  Avg response time: ${result.summary.avgResponseTime.toFixed(2)}ms`);
     console.log(`  Throughput: ${result.summary.throughput.toFixed(2)} RPS`);
     // Log threshold results
-    const failedThresholds = result.thresholdResults.filter(t => !t.passed);
+    const failedThresholds = result.thresholdResults.filter((t) => !t.passed);
     if (failedThresholds.length > 0) {
         console.log('  Failed thresholds:');
-        failedThresholds.forEach(t => {
+        failedThresholds.forEach((t) => {
             console.log(`    ${t.name}: ${t.actual} (threshold: ${t.threshold})`);
         });
     }
     // Log recommendations
     if (result.recommendations.length > 0) {
         console.log('  Recommendations:');
-        result.recommendations.forEach(r => {
+        result.recommendations.forEach((r) => {
             console.log(`    [${r.priority}] ${r.title}: ${r.description}`);
         });
     }

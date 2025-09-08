@@ -44,8 +44,8 @@ router.post('/capture',
     body('venue').optional().isString().trim(),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:create']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:create']) as any,
   async (req: any, res: any) => {
     try {
       const {
@@ -146,8 +146,8 @@ router.post('/bulk-capture',
     body('trades.*.tradeDate').isISO8601().toDate(),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:create', 'transaction:bulk']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:create', 'transaction:bulk']) as any,
   async (req: any, res: any) => {
     try {
       const { trades } = req.body;
@@ -229,8 +229,8 @@ router.post('/portfolios/:id/match',
     body('externalTransactions.*.transactionType').isIn(['BUY', 'SELL']),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:reconcile']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:reconcile']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -294,8 +294,8 @@ router.post('/settlement-instructions',
     body('specialInstructions').optional().isString().trim().isLength({ max: 1000 }),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:settle']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:settle']) as any,
   async (req: any, res: any) => {
     try {
       const {
@@ -372,8 +372,8 @@ router.put('/settlement-instructions/:id/status',
     body('notes').optional().isString().trim().isLength({ max: 1000 }).withMessage('Notes too long'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:settle']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:settle']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -436,8 +436,8 @@ router.post('/failed-trades',
     body('notes').optional().isString().trim().isLength({ max: 2000 }),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:manage-failures']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:manage-failures']) as any,
   async (req: any, res: any) => {
     try {
       const {
@@ -510,8 +510,8 @@ router.get('/portfolios/:id/cash-impact',
     query('endDate').isISO8601().toDate().withMessage('Invalid end date'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:read']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -581,8 +581,8 @@ router.get('/settlement-instructions',
     query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:read']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:read']) as any,
   async (req: any, res: any) => {
     try {
       const { portfolioId, status, page = 1, limit = 20 } = req.query as any;

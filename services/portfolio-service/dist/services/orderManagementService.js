@@ -335,7 +335,7 @@ class OrderManagementService {
         }
         // Instrument validation
         const instrument = await this.prisma.instrumentMaster.findFirst({
-            where: { securityId: request.securityId, tenantId }
+            where: { instrumentId: request.securityId, tenantId }
         });
         if (!instrument) {
             errors.push('Instrument not found');
@@ -477,18 +477,18 @@ class OrderManagementService {
         const now = new Date();
         const hour = now.getHours();
         if (hour < 9 || (hour === 9 && now.getMinutes() < 30)) {
-            return 'PRE_MARKET';
+            return OrderManagement_1.TradingSession.PRE_MARKET;
         }
         else if (hour >= 16) {
-            return 'POST_MARKET';
+            return OrderManagement_1.TradingSession.POST_MARKET;
         }
         else {
-            return 'REGULAR';
+            return OrderManagement_1.TradingSession.REGULAR;
         }
     }
     async getInstrumentCurrency(securityId, tenantId) {
         const instrument = await this.prisma.instrumentMaster.findFirst({
-            where: { instrumentId, tenantId }
+            where: { instrumentId: securityId, tenantId }
         });
         return instrument?.tradingCurrency || 'USD';
     }
@@ -552,7 +552,7 @@ class OrderManagementService {
     }
     async getCurrentPosition(portfolioId, securityId, tenantId) {
         const position = await this.prisma.position.findFirst({
-            where: { portfolioId, securityId: instrumentId, tenantId } // using securityId instead of instrumentId
+            where: { portfolioId, securityId, tenantId }
         });
         return position?.quantity?.toNumber() || 0; // convert Decimal to number
     }

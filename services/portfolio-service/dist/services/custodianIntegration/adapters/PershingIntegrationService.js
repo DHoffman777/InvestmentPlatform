@@ -40,7 +40,9 @@ exports.PershingIntegrationService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-const ssh2_sftp_client_1 = require("ssh2-sftp-client");
+const crypto = __importStar(require("crypto"));
+// @ts-ignore - ssh2-sftp-client types not installed
+const SftpClient = __importStar(require("ssh2-sftp-client"));
 const logger_1 = require("../../../utils/logger");
 const CustodianIntegration_1 = require("../../../models/custodianIntegration/CustodianIntegration");
 class PershingIntegrationService {
@@ -60,7 +62,7 @@ class PershingIntegrationService {
                 'User-Agent': 'InvestmentPlatform/1.0'
             }
         });
-        this.sftpClient = new ssh2_sftp_client_1.Client();
+        this.sftpClient = new SftpClient();
         this.setupInterceptors();
     }
     setupInterceptors() {
@@ -130,9 +132,9 @@ class PershingIntegrationService {
             return Promise.reject(error);
         });
     }
-    async validateConfig(config) {
+    async validateConfig(config, connectionType) {
         // Validate Pershing-specific configuration requirements
-        if (config.connectionType === CustodianIntegration_1.APIConnectionType.REST_API) {
+        if (connectionType === CustodianIntegration_1.APIConnectionType.REST_API) {
             if (!config.authentication.credentials.clientId) {
                 throw new Error('Pershing Client ID is required for REST API connections');
             }
@@ -140,7 +142,7 @@ class PershingIntegrationService {
                 throw new Error('Pershing Client Secret is required for REST API connections');
             }
         }
-        else if (config.connectionType === CustodianIntegration_1.APIConnectionType.SFTP) {
+        else if (connectionType === CustodianIntegration_1.APIConnectionType.SFTP) {
             if (!config.fileTransfer) {
                 throw new Error('File transfer configuration is required for SFTP connections');
             }
@@ -151,7 +153,7 @@ class PershingIntegrationService {
                 throw new Error('SFTP username and password are required');
             }
         }
-        else if (config.connectionType === CustodianIntegration_1.APIConnectionType.FTP) {
+        else if (connectionType === CustodianIntegration_1.APIConnectionType.FTP) {
             // Pershing also supports FTP
             if (!config.fileTransfer) {
                 throw new Error('File transfer configuration is required for FTP connections');
@@ -165,7 +167,7 @@ class PershingIntegrationService {
             throw new Error('Pershing data mapping configuration is required');
         }
         // Validate required endpoints for API connections
-        if (config.connectionType === CustodianIntegration_1.APIConnectionType.REST_API) {
+        if (connectionType === CustodianIntegration_1.APIConnectionType.REST_API) {
             const requiredEndpoints = ['positions', 'transactions', 'cashBalances'];
             for (const endpoint of requiredEndpoints) {
                 if (!config.endpoints[endpoint]) {
@@ -174,10 +176,10 @@ class PershingIntegrationService {
             }
         }
     }
-    async testConnection(config) {
+    async testConnection(config, connectionType) {
         const results = [];
         try {
-            if (config.connectionType === CustodianIntegration_1.APIConnectionType.REST_API) {
+            if (connectionType === CustodianIntegration_1.APIConnectionType.REST_API) {
                 // Test REST API connection
                 const authResult = await this.testApiAuthentication(config);
                 results.push(authResult);
@@ -193,12 +195,12 @@ class PershingIntegrationService {
                     }
                 }
             }
-            else if (config.connectionType === CustodianIntegration_1.APIConnectionType.SFTP) {
+            else if (connectionType === CustodianIntegration_1.APIConnectionType.SFTP) {
                 // Test SFTP connection
                 const sftpResult = await this.testSftpConnection(config);
                 results.push(sftpResult);
             }
-            else if (config.connectionType === CustodianIntegration_1.APIConnectionType.FTP) {
+            else if (connectionType === CustodianIntegration_1.APIConnectionType.FTP) {
                 // Test FTP connection
                 const ftpResult = await this.testFtpConnection(config);
                 results.push(ftpResult);
@@ -489,7 +491,7 @@ class PershingIntegrationService {
             });
             const filePattern = this.getPershingFilePattern(request.feedType, request.dateFrom, request.dateTo);
             const files = await this.sftpClient.list(connection.connectionConfig.fileTransfer.directory);
-            const matchingFiles = files.filter(file => this.matchesPattern(file.name, filePattern))
+            const matchingFiles = files.filter((file) => this.matchesPattern(file.name, filePattern))
                 .sort((a, b) => b.modifyTime - a.modifyTime); // Most recent first
             if (matchingFiles.length === 0) {
                 throw new Error(`No files found matching pattern: ${filePattern}`);
@@ -509,7 +511,7 @@ class PershingIntegrationService {
                 metadata: {
                     recordCount: allRecords.length,
                     retrievedAt: new Date(),
-                    filesProcessed: matchingFiles.slice(0, 5).map(f => f.name),
+                    filesProcessed: matchingFiles.slice(0, 5).map((f) => f.name),
                     source: 'SFTP'
                 }
             };
@@ -580,10 +582,10 @@ class PershingIntegrationService {
                     });
                 }
             }
-            const overallStatus = successCount === request.orders.length ? 'SUCCESS' :
-                successCount > 0 ? 'PARTIAL_SUCCESS' : 'FAILED';
+            const overallStatus = (successCount === request.orders.length ? 'SUCCESS' :
+                successCount > 0 ? 'PARTIAL_SUCCESS' : 'FAILED');
             return {
-                submissionId: crypto.randomUUID(),
+                submissionId: crypto.randomBytes(16).toString('hex'),
                 orderStatuses,
                 overallStatus,
                 errors

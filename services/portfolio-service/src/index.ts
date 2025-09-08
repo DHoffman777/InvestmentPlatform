@@ -85,7 +85,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Metrics middleware
-app.use(metricsMiddleware);
+app.use(metricsMiddleware as any);
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -138,35 +138,35 @@ app.get('/metrics', async (req, res) => {
 });
 
 // API routes with authentication
-app.use('/api/portfolios', authMiddleware, portfolioRoutes);
-app.use('/api/positions', authMiddleware, positionRoutes);
-app.use('/api/position-management', authMiddleware, positionManagementRouter);
-app.use('/api/transactions', authMiddleware, transactionRoutes);
-app.use('/api/transaction-management', authMiddleware, transactionManagementRouter);
-app.use('/api/performance', authMiddleware, performanceRoutes);
-app.use('/api/cash-equivalents', authMiddleware, cashEquivalentsRouter);
-app.use('/api/fixed-income', authMiddleware, fixedIncomeRouter);
-app.use('/api/asset-classification', authMiddleware, assetClassificationRouter);
-app.use('/api/instrument-reference-data', authMiddleware, instrumentReferenceDataRouter);
-app.use('/api/order-management', authMiddleware, orderManagementRouter);
-app.use('/api/post-trade-processing', authMiddleware, postTradeProcessingRouter);
-app.use('/api/performance-measurement', authMiddleware, performanceMeasurementRouter);
-app.use('/api/fixed-income-analytics', authMiddleware, fixedIncomeAnalyticsRouter);
-app.use('/api/derivatives', authMiddleware, derivativesRouter);
-app.use('/api/compliance', authMiddleware, complianceRouter);
-app.use('/api/structured-products', authMiddleware, structuredProductsRouter);
-app.use('/api/alternative-investments', authMiddleware, alternativeInvestmentsRouter);
-app.use('/api/risk-management', authMiddleware, riskManagementRouter);
-app.use('/api/documents', authMiddleware, documentManagementRouter);
-app.use('/api/custodian-integration', authMiddleware, custodianIntegrationRouter);
-app.use('/api/client-relationship', authMiddleware, clientRelationshipRouter);
-app.use('/api/household-management', authMiddleware, householdManagementRouter);
-app.use('/api/investment-objectives', authMiddleware, investmentObjectivesRouter);
-app.use('/api/risk-profiling', authMiddleware, riskProfilingRouter);
-app.use('/api/client-documents', authMiddleware, clientDocumentsRouter);
-app.use('/api/reporting', authMiddleware, reportingRouter);
-app.use('/api/client-portal', authMiddleware, clientPortalRouter);
-app.use('/api/analytics', authMiddleware, analyticsRouter);
+app.use('/api/portfolios', authMiddleware as any, portfolioRoutes);
+app.use('/api/positions', authMiddleware as any, positionRoutes);
+app.use('/api/position-management', authMiddleware as any, positionManagementRouter);
+app.use('/api/transactions', authMiddleware as any, transactionRoutes);
+app.use('/api/transaction-management', authMiddleware as any, transactionManagementRouter);
+app.use('/api/performance', authMiddleware as any, performanceRoutes);
+app.use('/api/cash-equivalents', authMiddleware as any, cashEquivalentsRouter);
+app.use('/api/fixed-income', authMiddleware as any, fixedIncomeRouter);
+app.use('/api/asset-classification', authMiddleware as any, assetClassificationRouter);
+app.use('/api/instrument-reference-data', authMiddleware as any, instrumentReferenceDataRouter);
+app.use('/api/order-management', authMiddleware as any, orderManagementRouter);
+app.use('/api/post-trade-processing', authMiddleware as any, postTradeProcessingRouter);
+app.use('/api/performance-measurement', authMiddleware as any, performanceMeasurementRouter);
+app.use('/api/fixed-income-analytics', authMiddleware as any, fixedIncomeAnalyticsRouter);
+app.use('/api/derivatives', authMiddleware as any, derivativesRouter);
+app.use('/api/compliance', authMiddleware as any, complianceRouter);
+app.use('/api/structured-products', authMiddleware as any, structuredProductsRouter);
+app.use('/api/alternative-investments', authMiddleware as any, alternativeInvestmentsRouter);
+app.use('/api/risk-management', authMiddleware as any, riskManagementRouter);
+app.use('/api/documents', authMiddleware as any, documentManagementRouter);
+app.use('/api/custodian-integration', authMiddleware as any, custodianIntegrationRouter);
+app.use('/api/client-relationship', authMiddleware as any, clientRelationshipRouter);
+app.use('/api/household-management', authMiddleware as any, householdManagementRouter);
+app.use('/api/investment-objectives', authMiddleware as any, investmentObjectivesRouter);
+app.use('/api/risk-profiling', authMiddleware as any, riskProfilingRouter);
+app.use('/api/client-documents', authMiddleware as any, clientDocumentsRouter);
+app.use('/api/reporting', authMiddleware as any, reportingRouter);
+app.use('/api/client-portal', authMiddleware as any, clientPortalRouter);
+app.use('/api/analytics', authMiddleware as any, analyticsRouter);
 
 // Error handling middleware
 app.use(notFoundHandler);

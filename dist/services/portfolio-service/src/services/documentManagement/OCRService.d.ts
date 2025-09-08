@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
+import { KafkaService } from '../../utils/kafka-mock';
 import { OCRResult, Language } from '../../models/documentManagement/DocumentManagement';
 export interface OCRRequest {
     documentId: string;

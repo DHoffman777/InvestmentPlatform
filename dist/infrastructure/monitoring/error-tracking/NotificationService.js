@@ -6,7 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationService = exports.NotificationChannelType = void 0;
 const events_1 = require("events");
 const nodemailer_1 = __importDefault(require("nodemailer"));
+// @ts-ignore - @slack/web-api not installed
 const web_api_1 = require("@slack/web-api");
+// @ts-ignore - twilio not installed
 const twilio_1 = __importDefault(require("twilio"));
 const winston_1 = require("winston");
 const ErrorTrackingService_1 = require("./ErrorTrackingService");
@@ -202,7 +204,7 @@ class NotificationService extends events_1.EventEmitter {
             case NotificationChannelType.EMAIL:
                 if (!this.emailTransporter) {
                     const config = channel.config;
-                    this.emailTransporter = nodemailer_1.default.createTransporter({
+                    this.emailTransporter = nodemailer_1.default.createTransport({
                         host: config.host,
                         port: config.port,
                         secure: config.secure,

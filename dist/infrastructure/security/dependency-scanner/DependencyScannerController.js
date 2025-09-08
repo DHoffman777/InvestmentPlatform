@@ -614,7 +614,7 @@ class DependencyScannerController extends events_1.EventEmitter {
             }
             // Apply additional filters
             if (type) {
-                dependencies = dependencies.filter(d => d.type === type);
+                dependencies = dependencies.filter((d) => d.type === type);
             }
             if (scope) {
                 dependencies = dependencies.filter(d => d.scope === scope);

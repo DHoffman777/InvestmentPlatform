@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SelfServiceController = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, query, param, validationResult } = require('express-validator');
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const UserProfileService_1 = require("./UserProfileService");
 const PasswordSecurityService_1 = require("./PasswordSecurityService");
@@ -76,78 +76,78 @@ class SelfServiceController {
         this.router.get('/profile', this.authenticateUser, this.handleGetProfile.bind(this));
         // Update user profile
         this.router.put('/profile', this.authenticateUser, [
-            (0, express_validator_1.body)('personalInfo.firstName').optional().isLength({ min: 1, max: 50 }),
-            (0, express_validator_1.body)('personalInfo.lastName').optional().isLength({ min: 1, max: 50 }),
-            (0, express_validator_1.body)('contactInfo.primaryEmail').optional().isEmail(),
-            (0, express_validator_1.body)('personalInfo.dateOfBirth').optional().isISO8601(),
+            body('personalInfo.firstName').optional().isLength({ min: 1, max: 50 }),
+            body('personalInfo.lastName').optional().isLength({ min: 1, max: 50 }),
+            body('contactInfo.primaryEmail').optional().isEmail(),
+            body('personalInfo.dateOfBirth').optional().isISO8601(),
         ], this.validateRequest, this.handleUpdateProfile.bind(this));
         // Add document to profile
         this.router.post('/profile/documents', this.authenticateUser, [
-            (0, express_validator_1.body)('type').isIn(['government_id', 'passport', 'drivers_license', 'utility_bill', 'bank_statement', 'tax_document', 'employment_verification', 'proof_of_income', 'other']),
-            (0, express_validator_1.body)('name').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('fileSize').isInt({ min: 1, max: 10485760 }), // 10MB max
-            (0, express_validator_1.body)('mimeType').matches(/^(image|application|text)\/.+$/)
+            body('type').isIn(['government_id', 'passport', 'drivers_license', 'utility_bill', 'bank_statement', 'tax_document', 'employment_verification', 'proof_of_income', 'other']),
+            body('name').isLength({ min: 1, max: 100 }),
+            body('fileSize').isInt({ min: 1, max: 10485760 }), // 10MB max
+            body('mimeType').matches(/^(image|application|text)\/.+$/)
         ], this.validateRequest, this.handleAddDocument.bind(this));
         // Remove document from profile
         this.router.delete('/profile/documents/:documentId', this.authenticateUser, [
-            (0, express_validator_1.param)('documentId').isUUID(),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 200 })
+            param('documentId').isUUID(),
+            body('reason').isLength({ min: 1, max: 200 })
         ], this.validateRequest, this.handleRemoveDocument.bind(this));
         // Get profile audit trail
         this.router.get('/profile/audit', this.authenticateUser, [
-            (0, express_validator_1.query)('action').optional().isIn(['create', 'update', 'delete', 'view', 'verify', 'suspend', 'activate']),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 })
+            query('action').optional().isIn(['create', 'update', 'delete', 'view', 'verify', 'suspend', 'activate']),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('limit').optional().isInt({ min: 1, max: 100 })
         ], this.validateRequest, this.handleGetProfileAudit.bind(this));
     }
     setupPasswordSecurityRoutes() {
         // Request password reset
         this.router.post('/security/password-reset/request', passwordResetRateLimit, [
-            (0, express_validator_1.body)('email').isEmail(),
-            (0, express_validator_1.body)('verificationMethod').optional().isIn(['email', 'sms', 'security_questions', 'recovery_code'])
+            body('email').isEmail(),
+            body('verificationMethod').optional().isIn(['email', 'sms', 'security_questions', 'recovery_code'])
         ], this.validateRequest, this.handlePasswordResetRequest.bind(this));
         // Reset password with token
         this.router.post('/security/password-reset/confirm', strictRateLimit, [
-            (0, express_validator_1.body)('token').isLength({ min: 32, max: 128 }),
-            (0, express_validator_1.body)('newPassword').isLength({ min: 8, max: 128 }),
+            body('token').isLength({ min: 32, max: 128 }),
+            body('newPassword').isLength({ min: 8, max: 128 }),
         ], this.validateRequest, this.handlePasswordReset.bind(this));
         // Change password
         this.router.post('/security/password/change', this.authenticateUser, strictRateLimit, [
-            (0, express_validator_1.body)('currentPassword').isLength({ min: 1 }),
-            (0, express_validator_1.body)('newPassword').isLength({ min: 8, max: 128 }),
-            (0, express_validator_1.body)('reason').optional().isLength({ max: 200 })
+            body('currentPassword').isLength({ min: 1 }),
+            body('newPassword').isLength({ min: 8, max: 128 }),
+            body('reason').optional().isLength({ max: 200 })
         ], this.validateRequest, this.handlePasswordChange.bind(this));
         // Validate password strength
         this.router.post('/security/password/validate', this.authenticateUser, [
-            (0, express_validator_1.body)('password').isLength({ min: 1, max: 128 })
+            body('password').isLength({ min: 1, max: 128 })
         ], this.validateRequest, this.handlePasswordValidation.bind(this));
         // Get security settings
         this.router.get('/security/settings', this.authenticateUser, this.handleGetSecuritySettings.bind(this));
         // Update security settings
         this.router.put('/security/settings', this.authenticateUser, [
-            (0, express_validator_1.body)('sessionSettings.maxSessions').optional().isInt({ min: 1, max: 10 }),
-            (0, express_validator_1.body)('sessionSettings.sessionTimeout').optional().isInt({ min: 15, max: 480 }), // 15 mins to 8 hours
-            (0, express_validator_1.body)('loginSettings.allowedLoginMethods').optional().isArray(),
+            body('sessionSettings.maxSessions').optional().isInt({ min: 1, max: 10 }),
+            body('sessionSettings.sessionTimeout').optional().isInt({ min: 15, max: 480 }), // 15 mins to 8 hours
+            body('loginSettings.allowedLoginMethods').optional().isArray(),
         ], this.validateRequest, this.handleUpdateSecuritySettings.bind(this));
         // Add trusted device
         this.router.post('/security/devices/trust', this.authenticateUser, [
-            (0, express_validator_1.body)('deviceId').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('deviceName').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('deviceType').isIn(['desktop', 'mobile', 'tablet', 'server', 'iot', 'unknown'])
+            body('deviceId').isLength({ min: 1, max: 100 }),
+            body('deviceName').isLength({ min: 1, max: 100 }),
+            body('deviceType').isIn(['desktop', 'mobile', 'tablet', 'server', 'iot', 'unknown'])
         ], this.validateRequest, this.handleAddTrustedDevice.bind(this));
         // Revoke trusted device
         this.router.delete('/security/devices/:deviceId', this.authenticateUser, [
-            (0, express_validator_1.param)('deviceId').isUUID()
+            param('deviceId').isUUID()
         ], this.validateRequest, this.handleRevokeTrustedDevice.bind(this));
         // Get security audit log
         this.router.get('/security/audit', this.authenticateUser, [
-            (0, express_validator_1.query)('action').optional().isIn(['login', 'logout', 'password_change', 'password_reset', 'mfa_setup', 'mfa_disable', 'device_trust', 'api_key_create', 'api_key_revoke', 'security_setting_change']),
-            (0, express_validator_1.query)('category').optional().isIn(['authentication', 'authorization', 'data_access', 'configuration', 'device_management']),
-            (0, express_validator_1.query)('severity').optional().isIn(['low', 'medium', 'high', 'critical']),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 })
+            query('action').optional().isIn(['login', 'logout', 'password_change', 'password_reset', 'mfa_setup', 'mfa_disable', 'device_trust', 'api_key_create', 'api_key_revoke', 'security_setting_change']),
+            query('category').optional().isIn(['authentication', 'authorization', 'data_access', 'configuration', 'device_management']),
+            query('severity').optional().isIn(['low', 'medium', 'high', 'critical']),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('limit').optional().isInt({ min: 1, max: 100 })
         ], this.validateRequest, this.handleGetSecurityAudit.bind(this));
     }
     setupMFARoutes() {
@@ -155,43 +155,43 @@ class SelfServiceController {
         this.router.get('/mfa/config', this.authenticateUser, this.handleGetMFAConfig.bind(this));
         // Setup MFA method
         this.router.post('/mfa/methods', this.authenticateUser, [
-            (0, express_validator_1.body)('methodType').isIn(['totp', 'sms', 'email', 'hardware_token', 'biometric', 'push', 'backup_codes', 'phone_call', 'recovery_code', 'smart_card']),
-            (0, express_validator_1.body)('name').optional().isLength({ min: 1, max: 50 }),
-            (0, express_validator_1.body)('isPrimary').optional().isBoolean(),
-            (0, express_validator_1.body)('settings').optional().isObject()
+            body('methodType').isIn(['totp', 'sms', 'email', 'hardware_token', 'biometric', 'push', 'backup_codes', 'phone_call', 'recovery_code', 'smart_card']),
+            body('name').optional().isLength({ min: 1, max: 50 }),
+            body('isPrimary').optional().isBoolean(),
+            body('settings').optional().isObject()
         ], this.validateRequest, this.handleSetupMFAMethod.bind(this));
         // Verify MFA method setup
         this.router.post('/mfa/methods/:methodId/verify', this.authenticateUser, [
-            (0, express_validator_1.param)('methodId').isUUID(),
-            (0, express_validator_1.body)('verificationCode').isLength({ min: 4, max: 10 })
+            param('methodId').isUUID(),
+            body('verificationCode').isLength({ min: 4, max: 10 })
         ], this.validateRequest, this.handleVerifyMFASetup.bind(this));
         // Remove MFA method
         this.router.delete('/mfa/methods/:methodId', this.authenticateUser, [
-            (0, express_validator_1.param)('methodId').isUUID()
+            param('methodId').isUUID()
         ], this.validateRequest, this.handleRemoveMFAMethod.bind(this));
         // Create MFA challenge
         this.router.post('/mfa/challenge', this.authenticateUser, [
-            (0, express_validator_1.body)('methodId').optional().isUUID(),
-            (0, express_validator_1.body)('challengeType').optional().isIn(['totp_code', 'sms_code', 'email_code', 'push_notification', 'biometric_scan', 'hardware_token', 'backup_code', 'voice_challenge'])
+            body('methodId').optional().isUUID(),
+            body('challengeType').optional().isIn(['totp_code', 'sms_code', 'email_code', 'push_notification', 'biometric_scan', 'hardware_token', 'backup_code', 'voice_challenge'])
         ], this.validateRequest, this.handleCreateMFAChallenge.bind(this));
         // Verify MFA challenge
         this.router.post('/mfa/challenge/verify', this.authenticateUser, [
-            (0, express_validator_1.body)('challengeId').isUUID(),
-            (0, express_validator_1.body)('response').isLength({ min: 1, max: 20 }),
-            (0, express_validator_1.body)('trustDevice').optional().isBoolean(),
-            (0, express_validator_1.body)('deviceId').optional().isLength({ min: 1, max: 100 })
+            body('challengeId').isUUID(),
+            body('response').isLength({ min: 1, max: 20 }),
+            body('trustDevice').optional().isBoolean(),
+            body('deviceId').optional().isLength({ min: 1, max: 100 })
         ], this.validateRequest, this.handleVerifyMFAChallenge.bind(this));
         // Generate backup codes
         this.router.post('/mfa/backup-codes', this.authenticateUser, strictRateLimit, [
-            (0, express_validator_1.body)('count').optional().isInt({ min: 8, max: 20 }),
-            (0, express_validator_1.body)('length').optional().isInt({ min: 6, max: 12 })
+            body('count').optional().isInt({ min: 8, max: 20 }),
+            body('length').optional().isInt({ min: 6, max: 12 })
         ], this.validateRequest, this.handleGenerateBackupCodes.bind(this));
         // Update MFA settings
         this.router.put('/mfa/settings', this.authenticateUser, [
-            (0, express_validator_1.body)('requireForLogin').optional().isBoolean(),
-            (0, express_validator_1.body)('requireForSensitiveActions').optional().isBoolean(),
-            (0, express_validator_1.body)('allowTrustedDevices').optional().isBoolean(),
-            (0, express_validator_1.body)('trustedDeviceDuration').optional().isInt({ min: 1, max: 90 }) // days
+            body('requireForLogin').optional().isBoolean(),
+            body('requireForSensitiveActions').optional().isBoolean(),
+            body('allowTrustedDevices').optional().isBoolean(),
+            body('trustedDeviceDuration').optional().isInt({ min: 1, max: 90 }) // days
         ], this.validateRequest, this.handleUpdateMFASettings.bind(this));
     }
     setupNotificationRoutes() {
@@ -199,71 +199,71 @@ class SelfServiceController {
         this.router.get('/notifications/preferences', this.authenticateUser, this.handleGetNotificationPreferences.bind(this));
         // Update channel settings
         this.router.put('/notifications/channels/:channelId', this.authenticateUser, [
-            (0, express_validator_1.param)('channelId').isUUID(),
-            (0, express_validator_1.body)('settings').isObject()
+            param('channelId').isUUID(),
+            body('settings').isObject()
         ], this.validateRequest, this.handleUpdateChannelSettings.bind(this));
         // Add notification channel
         this.router.post('/notifications/channels', this.authenticateUser, [
-            (0, express_validator_1.body)('type').isIn(['email', 'sms', 'push', 'webhook', 'in_app', 'slack', 'teams', 'voice', 'whatsapp', 'telegram']),
-            (0, express_validator_1.body)('name').isLength({ min: 1, max: 50 }),
-            (0, express_validator_1.body)('settings').isObject()
+            body('type').isIn(['email', 'sms', 'push', 'webhook', 'in_app', 'slack', 'teams', 'voice', 'whatsapp', 'telegram']),
+            body('name').isLength({ min: 1, max: 50 }),
+            body('settings').isObject()
         ], this.validateRequest, this.handleAddNotificationChannel.bind(this));
         // Remove notification channel
         this.router.delete('/notifications/channels/:channelId', this.authenticateUser, [
-            (0, express_validator_1.param)('channelId').isUUID()
+            param('channelId').isUUID()
         ], this.validateRequest, this.handleRemoveNotificationChannel.bind(this));
         // Verify notification channel
         this.router.post('/notifications/channels/:channelId/verify', this.authenticateUser, [
-            (0, express_validator_1.param)('channelId').isUUID(),
-            (0, express_validator_1.body)('verificationToken').isLength({ min: 6, max: 20 })
+            param('channelId').isUUID(),
+            body('verificationToken').isLength({ min: 6, max: 20 })
         ], this.validateRequest, this.handleVerifyNotificationChannel.bind(this));
         // Update category preferences
         this.router.put('/notifications/categories/:categoryId', this.authenticateUser, [
-            (0, express_validator_1.param)('categoryId').isUUID(),
-            (0, express_validator_1.body)('isEnabled').optional().isBoolean(),
-            (0, express_validator_1.body)('channels').optional().isArray(),
-            (0, express_validator_1.body)('frequency').optional().isObject()
+            param('categoryId').isUUID(),
+            body('isEnabled').optional().isBoolean(),
+            body('channels').optional().isArray(),
+            body('frequency').optional().isObject()
         ], this.validateRequest, this.handleUpdateCategoryPreferences.bind(this));
         // Update global settings
         this.router.put('/notifications/global', this.authenticateUser, [
-            (0, express_validator_1.body)('globalMute').optional().isBoolean(),
-            (0, express_validator_1.body)('muteDuration').optional().isInt({ min: 1, max: 10080 }), // minutes, max 1 week
-            (0, express_validator_1.body)('quietHours').optional().isObject(),
-            (0, express_validator_1.body)('maxDailyNotifications').optional().isInt({ min: 1, max: 200 })
+            body('globalMute').optional().isBoolean(),
+            body('muteDuration').optional().isInt({ min: 1, max: 10080 }), // minutes, max 1 week
+            body('quietHours').optional().isObject(),
+            body('maxDailyNotifications').optional().isInt({ min: 1, max: 200 })
         ], this.validateRequest, this.handleUpdateGlobalSettings.bind(this));
         // Add suppression
         this.router.post('/notifications/suppressions', this.authenticateUser, [
-            (0, express_validator_1.body)('type').isIn(['email', 'phone', 'device', 'category', 'global']),
-            (0, express_validator_1.body)('value').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 200 }),
-            (0, express_validator_1.body)('isTemporary').optional().isBoolean(),
-            (0, express_validator_1.body)('endDate').optional().isISO8601()
+            body('type').isIn(['email', 'phone', 'device', 'category', 'global']),
+            body('value').isLength({ min: 1, max: 100 }),
+            body('reason').isLength({ min: 1, max: 200 }),
+            body('isTemporary').optional().isBoolean(),
+            body('endDate').optional().isISO8601()
         ], this.validateRequest, this.handleAddSuppression.bind(this));
         // Remove suppression
         this.router.delete('/notifications/suppressions/:suppressionId', this.authenticateUser, [
-            (0, express_validator_1.param)('suppressionId').isUUID()
+            param('suppressionId').isUUID()
         ], this.validateRequest, this.handleRemoveSuppression.bind(this));
         // Create notification schedule
         this.router.post('/notifications/schedules', this.authenticateUser, [
-            (0, express_validator_1.body)('name').isLength({ min: 1, max: 50 }),
-            (0, express_validator_1.body)('categoryIds').isArray(),
-            (0, express_validator_1.body)('scheduleType').isIn(['immediate', 'delayed', 'recurring', 'cron', 'event_driven']),
-            (0, express_validator_1.body)('timezone').isLength({ min: 1, max: 50 })
+            body('name').isLength({ min: 1, max: 50 }),
+            body('categoryIds').isArray(),
+            body('scheduleType').isIn(['immediate', 'delayed', 'recurring', 'cron', 'event_driven']),
+            body('timezone').isLength({ min: 1, max: 50 })
         ], this.validateRequest, this.handleCreateNotificationSchedule.bind(this));
         // Update consent settings
         this.router.put('/notifications/consent', this.authenticateUser, [
-            (0, express_validator_1.body)('marketingConsent').optional().isBoolean(),
-            (0, express_validator_1.body)('transactionalConsent').optional().isBoolean(),
-            (0, express_validator_1.body)('researchConsent').optional().isBoolean(),
-            (0, express_validator_1.body)('thirdPartyConsent').optional().isBoolean()
+            body('marketingConsent').optional().isBoolean(),
+            body('transactionalConsent').optional().isBoolean(),
+            body('researchConsent').optional().isBoolean(),
+            body('thirdPartyConsent').optional().isBoolean()
         ], this.validateRequest, this.handleUpdateConsentSettings.bind(this));
         // Get notification history
         this.router.get('/notifications/history', this.authenticateUser, [
-            (0, express_validator_1.query)('categoryId').optional().isUUID(),
-            (0, express_validator_1.query)('channelId').optional().isUUID(),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 })
+            query('categoryId').optional().isUUID(),
+            query('channelId').optional().isUUID(),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('limit').optional().isInt({ min: 1, max: 100 })
         ], this.validateRequest, this.handleGetNotificationHistory.bind(this));
         // Export preferences
         this.router.get('/notifications/export', this.authenticateUser, this.handleExportPreferences.bind(this));
@@ -273,81 +273,81 @@ class SelfServiceController {
         this.router.get('/security/dashboard', this.authenticateUser, this.handleGetSecurityDashboard.bind(this));
         // Add security activity
         this.router.post('/security/activities', this.authenticateUser, [
-            (0, express_validator_1.body)('type').isIn(['login', 'logout', 'password_change', 'mfa_setup', 'mfa_verification', 'profile_update', 'permission_change', 'data_access', 'trade_execution', 'settings_change', 'suspicious_activity']),
-            (0, express_validator_1.body)('category').isIn(['authentication', 'authorization', 'data_access', 'configuration', 'trading', 'compliance']),
-            (0, express_validator_1.body)('severity').isIn(['low', 'medium', 'high', 'critical']),
-            (0, express_validator_1.body)('description').isLength({ min: 1, max: 500 }),
-            (0, express_validator_1.body)('details').isObject()
+            body('type').isIn(['login', 'logout', 'password_change', 'mfa_setup', 'mfa_verification', 'profile_update', 'permission_change', 'data_access', 'trade_execution', 'settings_change', 'suspicious_activity']),
+            body('category').isIn(['authentication', 'authorization', 'data_access', 'configuration', 'trading', 'compliance']),
+            body('severity').isIn(['low', 'medium', 'high', 'critical']),
+            body('description').isLength({ min: 1, max: 500 }),
+            body('details').isObject()
         ], this.validateRequest, this.handleAddSecurityActivity.bind(this));
         // Register device
         this.router.post('/security/devices', this.authenticateUser, [
-            (0, express_validator_1.body)('deviceId').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('name').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('type').isIn(['desktop', 'laptop', 'mobile', 'tablet', 'server', 'iot', 'unknown']),
-            (0, express_validator_1.body)('platform').isLength({ min: 1, max: 50 }),
-            (0, express_validator_1.body)('fingerprint').isLength({ min: 1, max: 200 })
+            body('deviceId').isLength({ min: 1, max: 100 }),
+            body('name').isLength({ min: 1, max: 100 }),
+            body('type').isIn(['desktop', 'laptop', 'mobile', 'tablet', 'server', 'iot', 'unknown']),
+            body('platform').isLength({ min: 1, max: 50 }),
+            body('fingerprint').isLength({ min: 1, max: 200 })
         ], this.validateRequest, this.handleRegisterDevice.bind(this));
         // Create session
         this.router.post('/security/sessions', this.authenticateUser, [
-            (0, express_validator_1.body)('sessionId').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('deviceId').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('ipAddress').isIP(),
-            (0, express_validator_1.body)('location').isObject()
+            body('sessionId').isLength({ min: 1, max: 100 }),
+            body('deviceId').isLength({ min: 1, max: 100 }),
+            body('ipAddress').isIP(),
+            body('location').isObject()
         ], this.validateRequest, this.handleCreateSession.bind(this));
         // Terminate session
         this.router.delete('/security/sessions/:sessionId', this.authenticateUser, [
-            (0, express_validator_1.param)('sessionId').isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 200 })
+            param('sessionId').isLength({ min: 1, max: 100 }),
+            body('reason').isLength({ min: 1, max: 200 })
         ], this.validateRequest, this.handleTerminateSession.bind(this));
         // Generate security report
         this.router.post('/security/reports', this.authenticateUser, [
-            (0, express_validator_1.body)('timeRange.start').isISO8601(),
-            (0, express_validator_1.body)('timeRange.end').isISO8601(),
-            (0, express_validator_1.body)('format').optional().isIn(['json', 'pdf', 'csv'])
+            body('timeRange.start').isISO8601(),
+            body('timeRange.end').isISO8601(),
+            body('format').optional().isIn(['json', 'pdf', 'csv'])
         ], this.validateRequest, this.handleGenerateSecurityReport.bind(this));
         // Update dashboard settings
         this.router.put('/security/dashboard/settings', this.authenticateUser, [
-            (0, express_validator_1.body)('refreshInterval').optional().isInt({ min: 30, max: 3600 }), // 30 seconds to 1 hour
-            (0, express_validator_1.body)('visibleWidgets').optional().isArray(),
-            (0, express_validator_1.body)('theme').optional().isIn(['light', 'dark', 'auto'])
+            body('refreshInterval').optional().isInt({ min: 30, max: 3600 }), // 30 seconds to 1 hour
+            body('visibleWidgets').optional().isArray(),
+            body('theme').optional().isIn(['light', 'dark', 'auto'])
         ], this.validateRequest, this.handleUpdateDashboardSettings.bind(this));
     }
     setupDataRequestRoutes() {
         // Submit data request
         this.router.post('/data/requests', this.authenticateUser, strictRateLimit, [
-            (0, express_validator_1.body)('type').isIn(['export', 'deletion', 'rectification', 'portability', 'restriction', 'objection', 'anonymization', 'pseudonymization']),
-            (0, express_validator_1.body)('requestData.categories').isArray(),
-            (0, express_validator_1.body)('requestData.format').isIn(['json', 'xml', 'csv', 'pdf', 'excel', 'parquet', 'avro']),
-            (0, express_validator_1.body)('requestData.includeMetadata').optional().isBoolean(),
-            (0, express_validator_1.body)('legalBasis.regulation').isIn(['gdpr', 'ccpa', 'pipeda', 'lgpd', 'pdpa_singapore', 'pdpb_india', 'popia']),
-            (0, express_validator_1.body)('legalBasis.lawfulBasis').isIn(['consent', 'contract', 'legal_obligation', 'vital_interests', 'public_task', 'legitimate_interests']),
-            (0, express_validator_1.body)('legalBasis.justification').isLength({ min: 10, max: 500 })
+            body('type').isIn(['export', 'deletion', 'rectification', 'portability', 'restriction', 'objection', 'anonymization', 'pseudonymization']),
+            body('requestData.categories').isArray(),
+            body('requestData.format').isIn(['json', 'xml', 'csv', 'pdf', 'excel', 'parquet', 'avro']),
+            body('requestData.includeMetadata').optional().isBoolean(),
+            body('legalBasis.regulation').isIn(['gdpr', 'ccpa', 'pipeda', 'lgpd', 'pdpa_singapore', 'pdpb_india', 'popia']),
+            body('legalBasis.lawfulBasis').isIn(['consent', 'contract', 'legal_obligation', 'vital_interests', 'public_task', 'legitimate_interests']),
+            body('legalBasis.justification').isLength({ min: 10, max: 500 })
         ], this.validateRequest, this.handleSubmitDataRequest.bind(this));
         // Get data request
         this.router.get('/data/requests/:requestId', this.authenticateUser, [
-            (0, express_validator_1.param)('requestId').isUUID()
+            param('requestId').isUUID()
         ], this.validateRequest, this.handleGetDataRequest.bind(this));
         // Get user data requests
         this.router.get('/data/requests', this.authenticateUser, [
-            (0, express_validator_1.query)('type').optional().isIn(['export', 'deletion', 'rectification', 'portability', 'restriction', 'objection', 'anonymization', 'pseudonymization']),
-            (0, express_validator_1.query)('status').optional().isIn(['submitted', 'validated', 'in_progress', 'processing', 'completed', 'delivered', 'failed', 'cancelled', 'expired', 'partially_completed']),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 50 })
+            query('type').optional().isIn(['export', 'deletion', 'rectification', 'portability', 'restriction', 'objection', 'anonymization', 'pseudonymization']),
+            query('status').optional().isIn(['submitted', 'validated', 'in_progress', 'processing', 'completed', 'delivered', 'failed', 'cancelled', 'expired', 'partially_completed']),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('limit').optional().isInt({ min: 1, max: 50 })
         ], this.validateRequest, this.handleGetUserDataRequests.bind(this));
         // Cancel data request
         this.router.delete('/data/requests/:requestId', this.authenticateUser, [
-            (0, express_validator_1.param)('requestId').isUUID(),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 200 })
+            param('requestId').isUUID(),
+            body('reason').isLength({ min: 1, max: 200 })
         ], this.validateRequest, this.handleCancelDataRequest.bind(this));
         // Download request result
         this.router.get('/data/requests/:requestId/download', this.authenticateUser, [
-            (0, express_validator_1.param)('requestId').isUUID(),
-            (0, express_validator_1.query)('token').optional().isLength({ min: 1, max: 100 })
+            param('requestId').isUUID(),
+            query('token').optional().isLength({ min: 1, max: 100 })
         ], this.validateRequest, this.handleDownloadRequestResult.bind(this));
         // Get request status
         this.router.get('/data/requests/:requestId/status', this.authenticateUser, [
-            (0, express_validator_1.param)('requestId').isUUID()
+            param('requestId').isUUID()
         ], this.validateRequest, this.handleGetRequestStatus.bind(this));
         // Generate data inventory report
         this.router.get('/data/inventory', this.authenticateUser, this.handleGenerateDataInventory.bind(this));
@@ -355,36 +355,36 @@ class SelfServiceController {
     setupAccountClosureRoutes() {
         // Request account closure
         this.router.post('/account/closure', this.authenticateUser, strictRateLimit, [
-            (0, express_validator_1.body)('closureType').isIn(['voluntary', 'involuntary', 'regulatory', 'business_closure', 'migration', 'consolidation', 'suspension', 'dormancy']),
-            (0, express_validator_1.body)('reason').isIn(['user_request', 'inactivity', 'compliance_violation', 'risk_management', 'business_decision', 'regulatory_order', 'fraud_detected', 'terms_violation', 'duplicate_account', 'death', 'bankruptcy', 'sanctions', 'other']),
-            (0, express_validator_1.body)('customReason').optional().isLength({ min: 1, max: 500 }),
-            (0, express_validator_1.body)('urgency').optional().isIn(['routine', 'expedited', 'urgent', 'emergency'])
+            body('closureType').isIn(['voluntary', 'involuntary', 'regulatory', 'business_closure', 'migration', 'consolidation', 'suspension', 'dormancy']),
+            body('reason').isIn(['user_request', 'inactivity', 'compliance_violation', 'risk_management', 'business_decision', 'regulatory_order', 'fraud_detected', 'terms_violation', 'duplicate_account', 'death', 'bankruptcy', 'sanctions', 'other']),
+            body('customReason').optional().isLength({ min: 1, max: 500 }),
+            body('urgency').optional().isIn(['routine', 'expedited', 'urgent', 'emergency'])
         ], this.validateRequest, this.handleRequestAccountClosure.bind(this));
         // Get closure request
         this.router.get('/account/closure/:requestId', this.authenticateUser, [
-            (0, express_validator_1.param)('requestId').isUUID()
+            param('requestId').isUUID()
         ], this.validateRequest, this.handleGetClosureRequest.bind(this));
         // Get user closure requests
         this.router.get('/account/closure', this.authenticateUser, [
-            (0, express_validator_1.query)('status').optional().isIn(['requested', 'under_review', 'approved', 'rejected', 'in_progress', 'paused', 'completed', 'cancelled', 'failed', 'rolled_back']),
-            (0, express_validator_1.query)('closureType').optional().isIn(['voluntary', 'involuntary', 'regulatory', 'business_closure', 'migration', 'consolidation', 'suspension', 'dormancy']),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 50 })
+            query('status').optional().isIn(['requested', 'under_review', 'approved', 'rejected', 'in_progress', 'paused', 'completed', 'cancelled', 'failed', 'rolled_back']),
+            query('closureType').optional().isIn(['voluntary', 'involuntary', 'regulatory', 'business_closure', 'migration', 'consolidation', 'suspension', 'dormancy']),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('limit').optional().isInt({ min: 1, max: 50 })
         ], this.validateRequest, this.handleGetUserClosureRequests.bind(this));
         // Cancel closure request
         this.router.delete('/account/closure/:requestId', this.authenticateUser, [
-            (0, express_validator_1.param)('requestId').isUUID(),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 200 })
+            param('requestId').isUUID(),
+            body('reason').isLength({ min: 1, max: 200 })
         ], this.validateRequest, this.handleCancelClosureRequest.bind(this));
         // Get closure status
         this.router.get('/account/closure/:requestId/status', this.authenticateUser, [
-            (0, express_validator_1.param)('requestId').isUUID()
+            param('requestId').isUUID()
         ], this.validateRequest, this.handleGetClosureStatus.bind(this));
         // Rollback closure (emergency use)
         this.router.post('/account/closure/:requestId/rollback', this.authenticateUser, strictRateLimit, [
-            (0, express_validator_1.param)('requestId').isUUID(),
-            (0, express_validator_1.body)('reason').isLength({ min: 10, max: 500 })
+            param('requestId').isUUID(),
+            body('reason').isLength({ min: 10, max: 500 })
         ], this.validateRequest, this.handleRollbackClosure.bind(this));
     }
     // Authentication middleware
@@ -407,7 +407,7 @@ class SelfServiceController {
     };
     // Request validation middleware
     validateRequest = (req, res, next) => {
-        const errors = (0, express_validator_1.validationResult)(req);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(400).json({
                 error: 'Validation failed',
@@ -620,11 +620,11 @@ class SelfServiceController {
                     region: req.body.region || 'CA',
                     city: req.body.city || 'San Francisco',
                     // timezone: req.body.timezone || 'America/Los_Angeles',
-                    organization: req.body.organization
+                    // organization: req.body.organization
                 },
                 trustLevel: 'medium',
-                metadata: req.body.metadata || {},
-                uploadedBy: req.user?.id || 'system'
+                metadata: req.body.metadata || {}
+                // uploadedBy: req.user?.id || 'system'
             });
             res.status(201).json(device);
         }
@@ -697,7 +697,7 @@ class SelfServiceController {
     async handleVerifyMFASetup(req, res) {
         try {
             const { ipAddress, userAgent } = this.getClientInfo(req);
-            const success = await this.mfaManagementService.verifyMFAMethodSetup(req.user.id, req.user.tenantId, req.params.methodId, req.body.verificationCode, ipAddress, userAgent);
+            const success = await this.mfaManagementService.verifyMFAMethodSetup(req.user.id, req.params.methodId, req.body.verificationCode, ipAddress, userAgent);
             if (!success) {
                 res.status(400).json({ error: 'Invalid verification code' });
                 return;

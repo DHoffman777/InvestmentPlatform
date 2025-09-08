@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchedulingController = void 0;
 const express_1 = __importDefault(require("express"));
-const { body, query, param, validationResult } = require('express-validator');
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -135,17 +134,19 @@ class SchedulingController extends events_1.EventEmitter {
     authenticateRequest = (req, res, next) => {
         const apiKey = req.headers[this.config.authentication.apiKeyHeader];
         if (!apiKey) {
-            return res.status(401).json({
+            res.status(401).json({
                 error: 'Authentication required',
                 message: `Missing ${this.config.authentication.apiKeyHeader} header`
             });
+            return;
         }
         // Mock authentication - replace with actual authentication logic
         if (apiKey.length < 10) {
-            return res.status(401).json({
+            res.status(401).json({
                 error: 'Invalid API key',
                 message: 'Please provide a valid API key'
             });
+            return;
         }
         // Add user context to request
         req.user = {
@@ -186,113 +187,112 @@ class SchedulingController extends events_1.EventEmitter {
     setupCalendarRoutes(router) {
         // Calendar provider management
         router.get('/calendar/providers', this.getCalendarProviders);
-        router.get('/calendar/providers/:providerId', param('providerId').isString().notEmpty(), this.handleValidationErrors, this.getCalendarProvider);
+        router.get('/calendar/providers/:providerId', this.getCalendarProvider);
         // Calendar connections
-        router.post('/calendar/connections', body('providerId').isString().notEmpty(), body('accountEmail').isEmail(), body('displayName').isString().notEmpty(), body('accessToken').isString().notEmpty(), this.handleValidationErrors, this.createCalendarConnection);
-        router.get('/calendar/connections', query('userId').optional().isString(), this.handleValidationErrors, this.getCalendarConnections);
-        router.put('/calendar/connections/:connectionId', param('connectionId').isUUID(), this.handleValidationErrors, this.updateCalendarConnection);
-        router.delete('/calendar/connections/:connectionId', param('connectionId').isUUID(), this.handleValidationErrors, this.deleteCalendarConnection);
+        router.post('/calendar/connections', this.createCalendarConnection);
+        router.get('/calendar/connections', this.getCalendarConnections);
+        router.put('/calendar/connections/:connectionId', this.updateCalendarConnection);
+        router.delete('/calendar/connections/:connectionId', this.deleteCalendarConnection);
         // Calendar events
-        router.post('/calendar/events', body('connectionId').isUUID(), body('title').isString().notEmpty(), body('startTime').isISO8601(), body('endTime').isISO8601(), this.handleValidationErrors, this.createCalendarEvent);
-        router.get('/calendar/events', query('connectionId').isUUID(), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getCalendarEvents);
+        router.post('/calendar/events', this.createCalendarEvent);
+        router.get('/calendar/events', this.getCalendarEvents);
         // Calendar sync
-        router.post('/calendar/sync/:connectionId', param('connectionId').isUUID(), query('syncType').optional().isIn(['full', 'incremental', 'delta']), this.handleValidationErrors, this.scheduleCalendarSync);
-        router.get('/calendar/sync/:syncId/status', param('syncId').isUUID(), this.handleValidationErrors, this.getCalendarSyncStatus);
+        router.post('/calendar/sync/:connectionId', this.scheduleCalendarSync);
+        router.get('/calendar/sync/:syncId/status', this.getCalendarSyncStatus);
     }
     setupBookingRoutes(router) {
         // Workflow management
         router.get('/booking/workflows', this.getBookingWorkflows);
-        router.post('/booking/workflows', body('name').isString().notEmpty(), body('type').isIn(['client_meeting', 'internal_meeting', 'consultation', 'review', 'presentation', 'custom']), this.handleValidationErrors, this.createBookingWorkflow);
+        router.post('/booking/workflows', this.createBookingWorkflow);
         // Meeting booking
-        router.post('/booking/requests', body('workflowId').isUUID(), body('title').isString().notEmpty(), body('type').isString().notEmpty(), body('preferredTimes').isArray({ min: 1 }), body('duration').isInt({ min: 15, max: 480 }), body('attendees').isArray({ min: 1 }), this.handleValidationErrors, this.createBookingRequest);
-        router.get('/booking/requests', query('status').optional().isIn(['draft', 'pending_approval', 'approved', 'confirmed', 'cancelled', 'rejected']), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getBookingRequests);
-        router.get('/booking/requests/:bookingId', param('bookingId').isUUID(), this.handleValidationErrors, this.getBookingRequest);
-        router.put('/booking/requests/:bookingId', param('bookingId').isUUID(), this.handleValidationErrors, this.updateBookingRequest);
+        router.post('/booking/requests', this.createBookingRequest);
+        router.get('/booking/requests', this.getBookingRequests);
+        router.get('/booking/requests/:bookingId', this.getBookingRequest);
+        router.put('/booking/requests/:bookingId', this.updateBookingRequest);
         // Booking approvals
-        router.post('/booking/requests/:bookingId/approve', param('bookingId').isUUID(), body('comments').optional().isString(), this.handleValidationErrors, this.approveBooking);
-        router.post('/booking/requests/:bookingId/reject', param('bookingId').isUUID(), body('reason').isString().notEmpty(), this.handleValidationErrors, this.rejectBooking);
+        router.post('/booking/requests/:bookingId/approve', this.approveBooking);
+        router.post('/booking/requests/:bookingId/reject', this.rejectBooking);
         // Booking cancellation
-        router.post('/booking/requests/:bookingId/cancel', param('bookingId').isUUID(), body('reason').optional().isString(), this.handleValidationErrors, this.cancelBooking);
+        router.post('/booking/requests/:bookingId/cancel', this.cancelBooking);
     }
     setupAvailabilityRoutes(router) {
         // Availability profiles
-        router.post('/availability/profiles', body('name').isString().notEmpty(), body('timeZone').isString().notEmpty(), this.handleValidationErrors, this.createAvailabilityProfile);
-        router.get('/availability/profiles', query('userId').optional().isString(), this.handleValidationErrors, this.getAvailabilityProfiles);
-        router.get('/availability/profiles/:profileId', param('profileId').isUUID(), this.handleValidationErrors, this.getAvailabilityProfile);
-        router.put('/availability/profiles/:profileId', param('profileId').isUUID(), this.handleValidationErrors, this.updateAvailabilityProfile);
+        router.post('/availability/profiles', this.createAvailabilityProfile);
+        router.get('/availability/profiles', this.getAvailabilityProfiles);
+        router.get('/availability/profiles/:profileId', this.getAvailabilityProfile);
+        router.put('/availability/profiles/:profileId', this.updateAvailabilityProfile);
         // Availability queries
-        router.post('/availability/query', body('userIds').isArray({ min: 1 }), body('startDate').isISO8601(), body('endDate').isISO8601(), body('duration').isInt({ min: 15 }), this.handleValidationErrors, this.queryAvailability);
-        router.post('/availability/bulk-query', body('queries').isArray({ min: 1 }), this.handleValidationErrors, this.bulkQueryAvailability);
+        router.post('/availability/query', this.queryAvailability);
+        router.post('/availability/bulk-query', this.bulkQueryAvailability);
         // Slot management
-        router.post('/availability/slots/:slotId/book', param('slotId').isUUID(), body('bookingId').isUUID(), body('meetingType').optional().isString(), this.handleValidationErrors, this.bookAvailabilitySlot);
-        router.post('/availability/slots/:slotId/release', param('slotId').isUUID(), body('bookingId').isUUID(), this.handleValidationErrors, this.releaseAvailabilitySlot);
+        router.post('/availability/slots/:slotId/book', this.bookAvailabilitySlot);
+        router.post('/availability/slots/:slotId/release', this.releaseAvailabilitySlot);
     }
     setupNotificationRoutes(router) {
         // Templates
         router.get('/notifications/templates', this.getNotificationTemplates);
-        router.post('/notifications/templates', body('name').isString().notEmpty(), body('type').isIn(['reminder', 'confirmation', 'cancellation', 'reschedule', 'follow_up', 'custom']), body('subject').isString().notEmpty(), body('content.text').isString().notEmpty(), this.handleValidationErrors, this.createNotificationTemplate);
+        router.post('/notifications/templates', this.createNotificationTemplate);
         // Rules
         router.get('/notifications/rules', this.getNotificationRules);
-        router.post('/notifications/rules', body('name').isString().notEmpty(), body('trigger.event').isString().notEmpty(), body('actions').isArray({ min: 1 }), this.handleValidationErrors, this.createNotificationRule);
+        router.post('/notifications/rules', this.createNotificationRule);
         // Reminders
-        router.post('/notifications/reminders', body('meetingId').isUUID(), body('userId').isString().notEmpty(), body('type').isIn(['email', 'sms', 'push', 'in_app']), body('timing.minutesBefore').isInt({ min: 0 }), this.handleValidationErrors, this.createMeetingReminder);
+        router.post('/notifications/reminders', this.createMeetingReminder);
         // Statistics
-        router.get('/notifications/stats', query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getNotificationStats);
+        router.get('/notifications/stats', this.getNotificationStats);
     }
     setupNotesRoutes(router) {
         // Notes
-        router.post('/notes', body('meetingId').isUUID(), body('title').isString().notEmpty(), body('content.text').isString().notEmpty(), this.handleValidationErrors, this.createMeetingNotes);
-        router.post('/notes/from-template', body('templateId').isUUID(), body('meetingId').isUUID(), body('title').isString().notEmpty(), this.handleValidationErrors, this.createNotesFromTemplate);
-        router.get('/notes', query('meetingId').optional().isUUID(), this.handleValidationErrors, this.getMeetingNotes);
-        router.get('/notes/:notesId', param('notesId').isUUID(), this.handleValidationErrors, this.getMeetingNotesById);
-        router.put('/notes/:notesId', param('notesId').isUUID(), this.handleValidationErrors, this.updateMeetingNotes);
+        router.post('/notes', this.createMeetingNotes);
+        router.post('/notes/from-template', this.createNotesFromTemplate);
+        router.get('/notes', this.getMeetingNotes);
+        router.get('/notes/:notesId', this.getMeetingNotesById);
+        router.put('/notes/:notesId', this.updateMeetingNotes);
         // Follow-ups
-        router.post('/notes/follow-ups', body('meetingId').isUUID(), body('type').isIn(['action_item', 'decision', 'question', 'reminder', 'task', 'custom']), body('title').isString().notEmpty(), body('assignedTo').isArray({ min: 1 }), this.handleValidationErrors, this.createFollowUp);
-        router.get('/notes/follow-ups', query('meetingId').optional().isUUID(), query('assignedTo').optional().isString(), query('status').optional().isIn(['pending', 'in_progress', 'completed', 'cancelled', 'overdue']), this.handleValidationErrors, this.getFollowUps);
-        router.put('/notes/follow-ups/:followUpId', param('followUpId').isUUID(), this.handleValidationErrors, this.updateFollowUp);
-        router.post('/notes/follow-ups/:followUpId/comments', param('followUpId').isUUID(), body('comment').isString().notEmpty(), this.handleValidationErrors, this.addFollowUpComment);
+        router.post('/notes/follow-ups', this.createFollowUp);
+        router.get('/notes/follow-ups', this.getFollowUps);
+        router.put('/notes/follow-ups/:followUpId', this.updateFollowUp);
+        router.post('/notes/follow-ups/:followUpId/comments', this.addFollowUpComment);
         // Templates
         router.get('/notes/templates', this.getNotesTemplates);
-        router.post('/notes/templates', body('name').isString().notEmpty(), body('type').isIn(['meeting_type', 'department', 'project', 'custom']), body('sections').isArray({ min: 1 }), this.handleValidationErrors, this.createNotesTemplate);
+        router.post('/notes/templates', this.createNotesTemplate);
     }
     setupVideoRoutes(router) {
         // Providers
         router.get('/video/providers', this.getVideoProviders);
-        router.put('/video/providers/:providerId', param('providerId').isString().notEmpty(), this.handleValidationErrors, this.updateVideoProvider);
+        router.put('/video/providers/:providerId', this.updateVideoProvider);
         // Meetings
-        router.post('/video/meetings', body('meetingId').isUUID(), body('title').isString().notEmpty(), body('startTime').isISO8601(), body('endTime').isISO8601(), body('host.email').isEmail(), body('participants').isArray({ min: 1 }), this.handleValidationErrors, this.createVideoMeeting);
-        router.get('/video/meetings', query('status').optional().isIn(['scheduled', 'waiting', 'started', 'ended', 'cancelled']), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getVideoMeetings);
-        router.get('/video/meetings/:meetingId', param('meetingId').isUUID(), this.handleValidationErrors, this.getVideoMeeting);
-        router.put('/video/meetings/:meetingId', param('meetingId').isUUID(), this.handleValidationErrors, this.updateVideoMeeting);
-        router.delete('/video/meetings/:meetingId', param('meetingId').isUUID(), this.handleValidationErrors, this.deleteVideoMeeting);
+        router.post('/video/meetings', this.createVideoMeeting);
+        router.get('/video/meetings', this.getVideoMeetings);
+        router.get('/video/meetings/:meetingId', this.getVideoMeeting);
+        router.put('/video/meetings/:meetingId', this.updateVideoMeeting);
+        router.delete('/video/meetings/:meetingId', this.deleteVideoMeeting);
         // Meeting control
-        router.post('/video/meetings/:meetingId/start', param('meetingId').isUUID(), this.handleValidationErrors, this.startVideoMeeting);
-        router.post('/video/meetings/:meetingId/end', param('meetingId').isUUID(), this.handleValidationErrors, this.endVideoMeeting);
+        router.post('/video/meetings/:meetingId/start', this.startVideoMeeting);
+        router.post('/video/meetings/:meetingId/end', this.endVideoMeeting);
         // Participants
-        router.post('/video/meetings/:meetingId/join', param('meetingId').isUUID(), body('email').isEmail(), body('name').isString().notEmpty(), this.handleValidationErrors, this.joinVideoMeeting);
-        router.post('/video/meetings/:meetingId/leave', param('meetingId').isUUID(), body('participantEmail').isEmail(), this.handleValidationErrors, this.leaveVideoMeeting);
+        router.post('/video/meetings/:meetingId/join', this.joinVideoMeeting);
+        router.post('/video/meetings/:meetingId/leave', this.leaveVideoMeeting);
         // Recordings
-        router.get('/video/meetings/:meetingId/recordings', param('meetingId').isUUID(), this.handleValidationErrors, this.getVideoMeetingRecordings);
-        router.get('/video/meetings/:meetingId/recordings/:recordingId/download', param('meetingId').isUUID(), param('recordingId').isUUID(), this.handleValidationErrors, this.downloadVideoRecording);
+        router.get('/video/meetings/:meetingId/recordings', this.getVideoMeetingRecordings);
+        router.get('/video/meetings/:meetingId/recordings/:recordingId/download', this.downloadVideoRecording);
         // Templates
         router.get('/video/templates', this.getVideoTemplates);
-        router.post('/video/templates', body('name').isString().notEmpty(), body('providerId').isString().notEmpty(), this.handleValidationErrors, this.createVideoTemplate);
+        router.post('/video/templates', this.createVideoTemplate);
         // Webhooks
-        router.post('/video/webhooks/:providerId', param('providerId').isString().notEmpty(), this.processVideoWebhook);
+        router.post('/video/webhooks/:providerId', this.processVideoWebhook);
     }
     setupAnalyticsRoutes(router) {
         // Metrics collection
-        router.post('/analytics/metrics', body('meetingId').isUUID(), body('title').isString().notEmpty(), body('type').isString().notEmpty(), body('startTime').isISO8601(), body('endTime').isISO8601(), body('participants').isArray(), this.handleValidationErrors, this.collectMeetingMetrics);
-        router.get('/analytics/metrics', query('meetingId').optional().isUUID(), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getMeetingMetrics);
+        router.post('/analytics/metrics', this.collectMeetingMetrics);
+        router.get('/analytics/metrics', this.getMeetingMetrics);
         // Reports
-        router.post('/analytics/reports', body('name').isString().notEmpty(), body('type').isIn(['executive_summary', 'detailed_analysis', 'comparison', 'trend_analysis',
-            'department_report', 'user_report', 'meeting_type_report', 'custom']), body('period.start').isISO8601(), body('period.end').isISO8601(), this.handleValidationErrors, this.generateAnalyticsReport);
+        router.post('/analytics/reports', this.generateAnalyticsReport);
         router.get('/analytics/reports', this.getAnalyticsReports);
-        router.get('/analytics/reports/:reportId', param('reportId').isUUID(), this.handleValidationErrors, this.getAnalyticsReport);
+        router.get('/analytics/reports/:reportId', this.getAnalyticsReport);
         // Dashboards
         router.get('/analytics/dashboards', this.getAnalyticsDashboards);
-        router.post('/analytics/dashboards', body('name').isString().notEmpty(), body('layout.widgets').isArray({ min: 1 }), this.handleValidationErrors, this.createAnalyticsDashboard);
-        router.get('/analytics/dashboards/:dashboardId', param('dashboardId').isUUID(), this.handleValidationErrors, this.getAnalyticsDashboard);
+        router.post('/analytics/dashboards', this.createAnalyticsDashboard);
+        router.get('/analytics/dashboards/:dashboardId', this.getAnalyticsDashboard);
         // Benchmarks
         router.get('/analytics/benchmarks', this.getAnalyticsBenchmarks);
         // Predictive insights
@@ -300,17 +300,17 @@ class SchedulingController extends events_1.EventEmitter {
     }
     setupMobileRoutes(router) {
         // Mobile-optimized endpoints
-        router.get('/mobile/sync', query('lastSync').optional().isISO8601(), query('batchSize').optional().isInt({ min: 1, max: this.config.mobile.maxSyncBatchSize }), this.handleValidationErrors, this.mobileSync);
-        router.post('/mobile/sync/upload', body('changes').isArray(), this.handleValidationErrors, this.mobileSyncUpload);
+        router.get('/mobile/sync', this.mobileSync);
+        router.post('/mobile/sync/upload', this.mobileSyncUpload);
         // Push notifications
         if (this.config.mobile.enablePushNotifications) {
-            router.post('/mobile/push/register', body('deviceToken').isString().notEmpty(), body('platform').isIn(['ios', 'android']), this.handleValidationErrors, this.registerPushDevice);
-            router.delete('/mobile/push/unregister', body('deviceToken').isString().notEmpty(), this.handleValidationErrors, this.unregisterPushDevice);
+            router.post('/mobile/push/register', this.registerPushDevice);
+            router.delete('/mobile/push/unregister', this.unregisterPushDevice);
         }
         // Offline support
         if (this.config.mobile.enableOfflineSync) {
             router.get('/mobile/offline/manifest', this.getOfflineManifest);
-            router.post('/mobile/offline/conflict-resolution', body('conflicts').isArray({ min: 1 }), this.handleValidationErrors, this.resolveOfflineConflicts);
+            router.post('/mobile/offline/conflict-resolution', this.resolveOfflineConflicts);
         }
     }
     setupRealTimeRoutes(router) {
@@ -327,48 +327,10 @@ class SchedulingController extends events_1.EventEmitter {
     }
     setupDocumentation(router) {
         // API documentation
-        router.get('/docs', (req, res) => {
-            res.json({
-                name: 'Meeting Scheduling API',
-                version: this.config.documentation.version,
-                description: 'Comprehensive meeting scheduling and management API',
-                endpoints: {
-                    calendar: '/api/scheduling/calendar/*',
-                    booking: '/api/scheduling/booking/*',
-                    availability: '/api/scheduling/availability/*',
-                    notifications: '/api/scheduling/notifications/*',
-                    notes: '/api/scheduling/notes/*',
-                    video: '/api/scheduling/video/*',
-                    analytics: '/api/scheduling/analytics/*',
-                    mobile: '/api/scheduling/mobile/*',
-                    realtime: '/api/scheduling/realtime/*'
-                },
-                authentication: {
-                    type: 'API Key',
-                    header: this.config.authentication.apiKeyHeader
-                },
-                rateLimit: {
-                    requests: this.config.rateLimiting.maxRequests,
-                    window: `${this.config.rateLimiting.windowMs / 1000} seconds`
-                }
-            });
-        });
+        router.get('/docs', this.getDocs);
         // OpenAPI specification
-        router.get('/openapi.json', (req, res) => {
-            res.json(this.generateOpenAPISpec());
-        });
+        router.get('/openapi.json', this.getOpenAPISpec);
     }
-    // Validation helper
-    handleValidationErrors = (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                error: 'Validation failed',
-                details: errors.array()
-            });
-        }
-        next();
-    };
     // Route handlers
     getHealth = async (req, res) => {
         try {
@@ -418,6 +380,9 @@ class SchedulingController extends events_1.EventEmitter {
     };
     createCalendarConnection = async (req, res) => {
         try {
+            if (!req.user) {
+                return res.status(401).json({ error: 'User not authenticated' });
+            }
             const connection = await this.calendarService.createConnection({
                 tenantId: req.user.tenantId,
                 userId: req.user.id,
@@ -539,6 +504,8 @@ class SchedulingController extends events_1.EventEmitter {
     };
     getBookingRequests = async (req, res) => {
         try {
+            if (!this.checkAuthentication(req, res))
+                return;
             const bookings = await this.bookingService.getBookings(req.user.tenantId, {
                 status: req.query.status ? req.query.status.split(',') : undefined,
                 startDate: req.query.startDate ? new Date(req.query.startDate) : undefined,
@@ -658,7 +625,7 @@ class SchedulingController extends events_1.EventEmitter {
     bulkQueryAvailability = async (req, res) => {
         try {
             const results = await this.availabilityService.getBulkAvailability({
-                queries: req.body.queries.map(q => ({
+                queries: req.body.queries.map((q) => ({
                     ...q,
                     startDate: new Date(q.startDate),
                     endDate: new Date(q.endDate)
@@ -1242,7 +1209,7 @@ class SchedulingController extends events_1.EventEmitter {
     resolveOfflineConflicts = async (req, res) => {
         try {
             const conflicts = req.body.conflicts;
-            const resolutions = conflicts.map(conflict => ({
+            const resolutions = conflicts.map((conflict) => ({
                 id: conflict.id,
                 resolution: 'server_wins', // Simple resolution strategy
                 resolved: true
@@ -1291,6 +1258,44 @@ class SchedulingController extends events_1.EventEmitter {
             },
             heartbeatInterval: this.config.realTime.heartbeatInterval
         });
+    };
+    // Helper method to check authentication
+    checkAuthentication(req, res) {
+        if (!req.user) {
+            res.status(401).json({ error: 'User not authenticated' });
+            return false;
+        }
+        return true;
+    }
+    // Documentation handlers
+    getDocs = (req, res) => {
+        res.json({
+            name: 'Meeting Scheduling API',
+            version: this.config.documentation.version,
+            description: 'Comprehensive meeting scheduling and management API',
+            endpoints: {
+                calendar: '/api/scheduling/calendar/*',
+                booking: '/api/scheduling/booking/*',
+                availability: '/api/scheduling/availability/*',
+                notifications: '/api/scheduling/notifications/*',
+                notes: '/api/scheduling/notes/*',
+                video: '/api/scheduling/video/*',
+                analytics: '/api/scheduling/analytics/*',
+                mobile: '/api/scheduling/mobile/*',
+                realtime: '/api/scheduling/realtime/*'
+            },
+            authentication: {
+                type: 'API Key',
+                header: this.config.authentication.apiKeyHeader
+            },
+            rateLimit: {
+                requests: this.config.rateLimiting.maxRequests,
+                window: `${this.config.rateLimiting.windowMs / 1000} seconds`
+            }
+        });
+    };
+    getOpenAPISpec = (req, res) => {
+        res.json(this.generateOpenAPISpec());
     };
     // Utility methods
     generateOpenAPISpec() {
@@ -1344,7 +1349,7 @@ class SchedulingController extends events_1.EventEmitter {
                 this.server = this.app.listen(this.config.port, () => {
                     console.log(`Scheduling API server running on port ${this.config.port}`);
                     this.emit('started', { port: this.config.port });
-                    resolve();
+                    resolve(undefined);
                 });
                 this.server.on('error', (error) => {
                     console.error('Server error:', error);
@@ -1363,11 +1368,11 @@ class SchedulingController extends events_1.EventEmitter {
                 this.server.close(() => {
                     console.log('Scheduling API server stopped');
                     this.emit('stopped');
-                    resolve();
+                    resolve(undefined);
                 });
             }
             else {
-                resolve();
+                resolve(undefined);
             }
         });
     }

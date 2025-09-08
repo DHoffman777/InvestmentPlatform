@@ -37,7 +37,7 @@ exports.DependencyInventoryService = void 0;
 const events_1 = require("events");
 const fs = __importStar(require("fs/promises"));
 const path = __importStar(require("path"));
-const glob_1 = require("glob");
+const glob = require('glob');
 class DependencyInventoryService extends events_1.EventEmitter {
     inventories = new Map();
     scanResults = new Map();
@@ -141,7 +141,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             }
             for (const filePattern of pattern.files) {
                 const globPattern = path.join(projectPath, '**', filePattern);
-                const files = await (0, glob_1.glob)(globPattern, {
+                const files = await glob(globPattern, {
                     ignore: options.excludePatterns || [
                         '**/node_modules/**',
                         '**/vendor/**',

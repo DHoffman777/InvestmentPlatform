@@ -30,8 +30,8 @@ router.get('/',
     query('search').optional().isString().trim(),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:read']),
+  requireTenantAccess as any,
+  requirePermission(['position:read']) as any,
   async (req: any, res: any) => {
     try {
       const {
@@ -127,8 +127,8 @@ router.get('/:id',
     param('id').isUUID().withMessage('Invalid position ID'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:read']),
+  requireTenantAccess as any,
+  requirePermission(['position:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -183,8 +183,8 @@ router.get('/:id/tax-lots',
     query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:read']),
+  requireTenantAccess as any,
+  requirePermission(['position:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -255,8 +255,8 @@ router.get('/:id/performance',
     query('period').optional().isIn(['1D', '1W', '1M', '3M', '6M', '1Y', 'YTD', 'ALL']),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:read']),
+  requireTenantAccess as any,
+  requirePermission(['position:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;

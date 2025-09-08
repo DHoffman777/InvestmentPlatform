@@ -355,7 +355,7 @@ class ComplianceMonitoringService extends events_1.EventEmitter {
     }
     requiresImmediateReporting(violation) {
         return violation.severity === 'CRITICAL' ||
-            (violation.reportingRequired && violation.reportingDeadline &&
+            (!!violation.reportingRequired && !!violation.reportingDeadline &&
                 violation.reportingDeadline.getTime() - Date.now() < 24 * 60 * 60 * 1000);
     }
     async triggerImmediateReporting(violation) {

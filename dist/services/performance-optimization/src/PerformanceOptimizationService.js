@@ -442,7 +442,7 @@ class PerformanceOptimizationService {
         console.log('Shutting down Performance Optimization Service...');
         await this.stopMonitoring();
         await this.dbOptimizer.disconnect();
-        await this.queryAnalyzer.$disconnect();
+        // await this.queryAnalyzer.disconnect(); // QueryPerformanceAnalyzer doesn't have disconnect method
         await this.dbMonitor.disconnect();
         await this.cachingStrategy.disconnect();
         console.log('Performance Optimization Service shutdown complete');

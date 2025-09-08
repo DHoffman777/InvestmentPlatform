@@ -7,6 +7,8 @@ const fundsService_1 = require("../services/fundsService");
 const database_1 = require("../config/database");
 const logger_1 = require("../utils/logger");
 const auth_1 = require("../middleware/auth");
+const client_1 = require("@prisma/client");
+const { Decimal } = client_1.Prisma;
 const router = (0, express_1.Router)();
 exports.fundsRouter = router;
 const fundsService = new fundsService_1.FundsService(database_1.prisma);
@@ -119,10 +121,7 @@ router.post('/etf', [
         };
         const etf = await fundsService.upsertETF(etfData);
         res.status(201).json({
-            etf: {
-                ...etf,
-                marketCap: etf.marketCap?.toNumber(),
-            },
+            etf,
             message: 'ETF created/updated successfully',
         });
     }
@@ -174,10 +173,7 @@ router.post('/mutual-fund', [
         };
         const fund = await fundsService.upsertMutualFund(fundData);
         res.status(201).json({
-            fund: {
-                ...fund,
-                marketCap: fund.marketCap?.toNumber(),
-            },
+            fund,
             message: 'Mutual fund created/updated successfully',
         });
     }

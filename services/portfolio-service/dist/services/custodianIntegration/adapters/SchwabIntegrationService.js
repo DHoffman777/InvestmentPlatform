@@ -314,9 +314,9 @@ class SchwabIntegrationService {
                 successCount > 0 ? 'PARTIAL_SUCCESS' : 'FAILED';
             return {
                 submissionId: crypto.randomUUID(),
-                orderStatuses,
+                orderStatuses: orderStatuses,
                 overallStatus,
-                errors
+                errors: errors
             };
         }
         catch (error) {

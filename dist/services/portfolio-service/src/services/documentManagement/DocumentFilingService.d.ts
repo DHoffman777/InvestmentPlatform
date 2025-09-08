@@ -1,6 +1,5 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
 import { Document, DocumentType, DocumentClassification, ExtractedData } from '../../models/documentManagement/DocumentManagement';
 export interface FilingRequest {
     documentId: string;
@@ -99,7 +98,7 @@ export declare class DocumentFilingService {
     private classificationEngine;
     private taggingEngine;
     private fileSystemManager;
-    constructor(prisma: PrismaClient, logger: Logger, kafkaService: KafkaService);
+    constructor(prisma: PrismaClient, logger: Logger, kafkaService: any);
     fileDocument(request: FilingRequest): Promise<FilingResult>;
     private performAutoClassification;
     private performRuleBasedClassification;

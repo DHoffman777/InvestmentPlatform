@@ -7,6 +7,7 @@ const reitsService_1 = require("../services/reitsService");
 const database_1 = require("../config/database");
 const logger_1 = require("../utils/logger");
 const auth_1 = require("../middleware/auth");
+const library_1 = require("@prisma/client/runtime/library");
 const router = (0, express_1.Router)();
 exports.reitsRouter = router;
 const reitsService = new reitsService_1.REITsService(database_1.prisma);
@@ -113,20 +114,20 @@ router.post('/reit', [
         const reitData = {
             ...req.body,
             securityType: 'REIT',
-            marketCap: new Decimal(req.body.marketCap),
-            dividendYield: req.body.dividendYield ? new Decimal(req.body.dividendYield) : undefined,
-            fundsFromOperations: req.body.fundsFromOperations ? new Decimal(req.body.fundsFromOperations) : undefined,
-            adjustedFFO: req.body.adjustedFFO ? new Decimal(req.body.adjustedFFO) : undefined,
-            netAssetValue: req.body.netAssetValue ? new Decimal(req.body.netAssetValue) : undefined,
-            priceToFFO: req.body.priceToFFO ? new Decimal(req.body.priceToFFO) : undefined,
-            debtToEquityRatio: req.body.debtToEquityRatio ? new Decimal(req.body.debtToEquityRatio) : undefined,
-            occupancyRate: req.body.occupancyRate ? new Decimal(req.body.occupancyRate) : undefined,
-            totalSquareFootage: req.body.totalSquareFootage ? new Decimal(req.body.totalSquareFootage) : undefined,
-            totalReturn1Y: req.body.totalReturn1Y ? new Decimal(req.body.totalReturn1Y) : undefined,
-            totalReturn3Y: req.body.totalReturn3Y ? new Decimal(req.body.totalReturn3Y) : undefined,
-            totalReturn5Y: req.body.totalReturn5Y ? new Decimal(req.body.totalReturn5Y) : undefined,
-            beta: req.body.beta ? new Decimal(req.body.beta) : undefined,
-            standardDeviation: req.body.standardDeviation ? new Decimal(req.body.standardDeviation) : undefined,
+            marketCap: new library_1.Decimal(req.body.marketCap),
+            dividendYield: req.body.dividendYield ? new library_1.Decimal(req.body.dividendYield) : undefined,
+            fundsFromOperations: req.body.fundsFromOperations ? new library_1.Decimal(req.body.fundsFromOperations) : undefined,
+            adjustedFFO: req.body.adjustedFFO ? new library_1.Decimal(req.body.adjustedFFO) : undefined,
+            netAssetValue: req.body.netAssetValue ? new library_1.Decimal(req.body.netAssetValue) : undefined,
+            priceToFFO: req.body.priceToFFO ? new library_1.Decimal(req.body.priceToFFO) : undefined,
+            debtToEquityRatio: req.body.debtToEquityRatio ? new library_1.Decimal(req.body.debtToEquityRatio) : undefined,
+            occupancyRate: req.body.occupancyRate ? new library_1.Decimal(req.body.occupancyRate) : undefined,
+            totalSquareFootage: req.body.totalSquareFootage ? new library_1.Decimal(req.body.totalSquareFootage) : undefined,
+            totalReturn1Y: req.body.totalReturn1Y ? new library_1.Decimal(req.body.totalReturn1Y) : undefined,
+            totalReturn3Y: req.body.totalReturn3Y ? new library_1.Decimal(req.body.totalReturn3Y) : undefined,
+            totalReturn5Y: req.body.totalReturn5Y ? new library_1.Decimal(req.body.totalReturn5Y) : undefined,
+            beta: req.body.beta ? new library_1.Decimal(req.body.beta) : undefined,
+            standardDeviation: req.body.standardDeviation ? new library_1.Decimal(req.body.standardDeviation) : undefined,
         };
         const reit = await reitsService.upsertREIT(reitData);
         res.status(201).json({
@@ -172,24 +173,24 @@ router.post('/mlp', [
         const mlpData = {
             ...req.body,
             securityType: 'MLP',
-            marketCap: new Decimal(req.body.marketCap),
-            distributionYield: req.body.distributionYield ? new Decimal(req.body.distributionYield) : undefined,
-            distributionCoverage: req.body.distributionCoverage ? new Decimal(req.body.distributionCoverage) : undefined,
-            distributionGrowthRate: req.body.distributionGrowthRate ? new Decimal(req.body.distributionGrowthRate) : undefined,
-            distributableCashFlow: req.body.distributableCashFlow ? new Decimal(req.body.distributableCashFlow) : undefined,
-            ebitda: req.body.ebitda ? new Decimal(req.body.ebitda) : undefined,
-            debtToEbitda: req.body.debtToEbitda ? new Decimal(req.body.debtToEbitda) : undefined,
-            returnOnInvestedCapital: req.body.returnOnInvestedCapital ? new Decimal(req.body.returnOnInvestedCapital) : undefined,
-            pipelineMiles: req.body.pipelineMiles ? new Decimal(req.body.pipelineMiles) : undefined,
-            storageCapacity: req.body.storageCapacity ? new Decimal(req.body.storageCapacity) : undefined,
-            processingCapacity: req.body.processingCapacity ? new Decimal(req.body.processingCapacity) : undefined,
-            managementFee: req.body.managementFee ? new Decimal(req.body.managementFee) : undefined,
-            qualifiedIncome: req.body.qualifiedIncome ? new Decimal(req.body.qualifiedIncome) : undefined,
-            totalReturn1Y: req.body.totalReturn1Y ? new Decimal(req.body.totalReturn1Y) : undefined,
-            totalReturn3Y: req.body.totalReturn3Y ? new Decimal(req.body.totalReturn3Y) : undefined,
-            totalReturn5Y: req.body.totalReturn5Y ? new Decimal(req.body.totalReturn5Y) : undefined,
-            beta: req.body.beta ? new Decimal(req.body.beta) : undefined,
-            standardDeviation: req.body.standardDeviation ? new Decimal(req.body.standardDeviation) : undefined,
+            marketCap: new library_1.Decimal(req.body.marketCap),
+            distributionYield: req.body.distributionYield ? new library_1.Decimal(req.body.distributionYield) : undefined,
+            distributionCoverage: req.body.distributionCoverage ? new library_1.Decimal(req.body.distributionCoverage) : undefined,
+            distributionGrowthRate: req.body.distributionGrowthRate ? new library_1.Decimal(req.body.distributionGrowthRate) : undefined,
+            distributableCashFlow: req.body.distributableCashFlow ? new library_1.Decimal(req.body.distributableCashFlow) : undefined,
+            ebitda: req.body.ebitda ? new library_1.Decimal(req.body.ebitda) : undefined,
+            debtToEbitda: req.body.debtToEbitda ? new library_1.Decimal(req.body.debtToEbitda) : undefined,
+            returnOnInvestedCapital: req.body.returnOnInvestedCapital ? new library_1.Decimal(req.body.returnOnInvestedCapital) : undefined,
+            pipelineMiles: req.body.pipelineMiles ? new library_1.Decimal(req.body.pipelineMiles) : undefined,
+            storageCapacity: req.body.storageCapacity ? new library_1.Decimal(req.body.storageCapacity) : undefined,
+            processingCapacity: req.body.processingCapacity ? new library_1.Decimal(req.body.processingCapacity) : undefined,
+            managementFee: req.body.managementFee ? new library_1.Decimal(req.body.managementFee) : undefined,
+            qualifiedIncome: req.body.qualifiedIncome ? new library_1.Decimal(req.body.qualifiedIncome) : undefined,
+            totalReturn1Y: req.body.totalReturn1Y ? new library_1.Decimal(req.body.totalReturn1Y) : undefined,
+            totalReturn3Y: req.body.totalReturn3Y ? new library_1.Decimal(req.body.totalReturn3Y) : undefined,
+            totalReturn5Y: req.body.totalReturn5Y ? new library_1.Decimal(req.body.totalReturn5Y) : undefined,
+            beta: req.body.beta ? new library_1.Decimal(req.body.beta) : undefined,
+            standardDeviation: req.body.standardDeviation ? new library_1.Decimal(req.body.standardDeviation) : undefined,
         };
         const mlp = await reitsService.upsertMLP(mlpData);
         res.status(201).json({

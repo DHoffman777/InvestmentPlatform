@@ -1,5 +1,20 @@
 import { EventEmitter } from 'events';
-import { CommunicationRecord, CommunicationType, CommunicationChannel, CommunicationStatus, CommunicationAttachment, Priority, IntegrationSettings } from './CommunicationDataModel';
+import { CommunicationRecord, CommunicationType, CommunicationChannel, CommunicationStatus, CommunicationCategory, CommunicationAttachment, Priority, IntegrationSettings } from './CommunicationDataModel';
+export interface CommunicationSearchQuery {
+    query?: string;
+    date_from?: Date;
+    date_to?: Date;
+    participants?: string[];
+    client_id?: string;
+    advisor_id?: string;
+    type?: CommunicationType[];
+    category?: CommunicationCategory[];
+    status?: CommunicationStatus[];
+    page?: number;
+    page_size?: number;
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
+}
 export interface MultiChannelTrackingConfiguration {
     channels: ChannelConfiguration[];
     integrations: IntegrationSettings;
@@ -193,7 +208,7 @@ export declare enum ChannelStatus {
     OFFLINE = "offline",
     MAINTENANCE = "maintenance"
 }
-export declare class MultiChannelTrackingService extends EventEmitter {
+declare class MultiChannelTrackingService extends EventEmitter {
     private config;
     private adapters;
     private syncIntervals;
@@ -238,6 +253,7 @@ export declare class MultiChannelTrackingService extends EventEmitter {
     private applyTransformation;
     private analyzeSentiment;
     private detectLanguage;
+    private createCommunicationRecord;
 }
 interface TrackingMetrics {
     total_messages: number;

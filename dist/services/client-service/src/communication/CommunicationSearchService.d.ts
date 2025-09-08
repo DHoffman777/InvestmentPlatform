@@ -247,7 +247,7 @@ export interface AdvancedSearchOptions {
     personalized_results: boolean;
     collaborative_filtering: boolean;
 }
-export declare class CommunicationSearchService extends EventEmitter {
+declare class CommunicationSearchService extends EventEmitter {
     private config;
     private searchIndexes;
     private savedSearches;

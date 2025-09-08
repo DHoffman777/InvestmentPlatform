@@ -55,7 +55,7 @@ class MultiLanguageProcessingService {
                     confidence: 1.0,
                     alternativeLanguages: [],
                     isReliable: true,
-                    detectionMethod: 'PREDEFINED'
+                    detectionMethod: 'HYBRID'
                 };
             }
             const translations = new Map();
@@ -260,7 +260,7 @@ class MultiLanguageProcessingService {
     }
     async combineDetectionResults(results, expectedLanguage) {
         const languageScores = new Map();
-        const weights = { CHARACTER_BASED: 0.3, STATISTICAL: 0.4, NEURAL_NETWORK: 0.3 };
+        const weights = { CHARACTER_BASED: 0.3, STATISTICAL: 0.4, NEURAL_NETWORK: 0.3, HYBRID: 0.33, FALLBACK: 0.2 };
         for (const result of results) {
             const weight = weights[result.detectionMethod] || 0.33;
             const currentScore = languageScores.get(result.language) || 0;

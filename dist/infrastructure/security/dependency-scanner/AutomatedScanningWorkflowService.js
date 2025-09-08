@@ -121,7 +121,7 @@ class AutomatedScanningWorkflowService extends events_1.EventEmitter {
         const schedule = this.schedules.get(scheduleId);
         if (!schedule || !schedule.enabled)
             return;
-        const job = new cron_1.CronJob(schedule.cronExpression, () => this.executeSchedule(scheduleId, 'SCHEDULE'), null, true, schedule.timezone || 'UTC');
+        const job = new cron_1.CronJob(schedule.cronExpression, () => { this.executeSchedule(scheduleId, 'SCHEDULE'); }, null, true, schedule.timezone || 'UTC', null, false);
         this.cronJobs.set(scheduleId, job);
         // Update next run time
         schedule.nextRun = job.nextDate().toJSDate();
@@ -219,7 +219,7 @@ class AutomatedScanningWorkflowService extends events_1.EventEmitter {
                     executionId: execution.id,
                     projectPath
                 });
-                const inventory = await this.dependencyService.scanProject(projectPath, schedule.tenantId, this.extractProjectName(projectPath), schedule.scanOptions);
+                const inventory = await this.dependencyService.scanProject(projectPath, schedule.tenantId, await this.extractProjectName(projectPath), schedule.scanOptions);
                 results.push({
                     projectPath,
                     inventoryId: inventory.id,
@@ -527,7 +527,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
             return false;
         }
     }
-    extractProjectName(projectPath) {
+    async extractProjectName(projectPath) {
         const path = await Promise.resolve().then(() => __importStar(require('path')));
         return path.basename(projectPath);
     }

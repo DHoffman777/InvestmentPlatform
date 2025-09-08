@@ -775,12 +775,13 @@ class RiskLimitMonitoringService {
     estimateResolutionCost(breach) {
         // Simplified cost estimation
         const baseCost = 10000;
-        const severityMultiplier = {
+        const severityMap = {
             'LOW': 1,
             'MEDIUM': 2,
             'HIGH': 4,
             'CRITICAL': 8
-        }[breach.severity];
+        };
+        const severityMultiplier = severityMap[breach.severity] || 1;
         return baseCost * severityMultiplier;
     }
     groupLimitsByType(limits) {

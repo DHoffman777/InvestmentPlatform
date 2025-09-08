@@ -40,6 +40,7 @@ exports.FidelityIntegrationService = void 0;
 const axios_1 = __importDefault(require("axios"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+// @ts-ignore - ssh2-sftp-client types not installed
 const ssh2_sftp_client_1 = require("ssh2-sftp-client");
 const logger_1 = require("../../../utils/logger");
 const CustodianIntegration_1 = require("../../../models/custodianIntegration/CustodianIntegration");
@@ -189,7 +190,7 @@ class FidelityIntegrationService {
         try {
             // Set API key for test
             const originalHeaders = this.client.defaults.headers;
-            this.client.defaults.headers['X-API-Key'] = config.authentication.credentials.apiKey;
+            this.client.defaults.headers['X-API-Key'] = config.authentication.credentials.apiKey || '';
             const response = await this.client.get('/auth/validate', {
                 timeout: 10000
             });
@@ -381,7 +382,7 @@ class FidelityIntegrationService {
             const filePattern = this.getFidelityFilePattern(request.feedType, request.dateFrom, request.dateTo);
             // List files matching pattern
             const files = await this.sftpClient.list(connection.connectionConfig.fileTransfer.directory);
-            const matchingFiles = files.filter(file => this.matchesPattern(file.name, filePattern));
+            const matchingFiles = files.filter((file) => this.matchesPattern(file.name, filePattern));
             if (matchingFiles.length === 0) {
                 throw new Error(`No files found matching pattern: ${filePattern}`);
             }
@@ -402,7 +403,7 @@ class FidelityIntegrationService {
                 metadata: {
                     recordCount: allRecords.length,
                     retrievedAt: new Date(),
-                    filesProcessed: matchingFiles.map(f => f.name),
+                    filesProcessed: matchingFiles.map((f) => f.name),
                     source: 'SFTP'
                 }
             };

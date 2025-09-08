@@ -322,7 +322,7 @@ export class ResourcePlanningDashboardService extends EventEmitter {
         break;
       
       case WidgetType.COST_BREAKDOWN:
-        data = this.generateCostBreakdown(costData);
+        data = this.generateCostBreakdown(Array.from(costData.values()));
         break;
       
       case WidgetType.WASTE_ANALYSIS:

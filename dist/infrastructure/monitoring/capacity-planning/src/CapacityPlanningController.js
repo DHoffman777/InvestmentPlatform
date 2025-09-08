@@ -635,7 +635,7 @@ class CapacityPlanningController extends events_1.EventEmitter {
     }
     async getReportTemplate(req, res) {
         try {
-            const template = this.services.reportGenerator.getTemplate(req.params.templateId);
+            const template = this.services.reportGenerator.getTemplateById(req.params.templateId);
             if (!template) {
                 res.status(404).json({ success: false, error: 'Template not found' });
                 return;
@@ -952,7 +952,7 @@ class CapacityPlanningController extends events_1.EventEmitter {
     handleError(res, error) {
         console.error('API Error:', error);
         const statusCode = error.statusCode || 500;
-        const message = error instanceof Error ? error.message : 'Unknown error' || 'Internal server error';
+        const message = error instanceof Error ? error.message : 'Internal server error';
         res.status(statusCode).json({
             success: false,
             error: message

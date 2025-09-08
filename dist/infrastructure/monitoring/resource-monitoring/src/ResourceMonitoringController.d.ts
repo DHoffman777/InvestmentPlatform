@@ -49,5 +49,5 @@ export declare class ResourceMonitoringController extends EventEmitter {
     private authenticateRequest;
     private getContentType;
     start(): Promise<any>;
-    shutdown(): Promise<any>;
+    shutdown(): Promise<void>;
 }

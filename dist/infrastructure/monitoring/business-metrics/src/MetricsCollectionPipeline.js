@@ -100,7 +100,7 @@ class MetricsCollectionPipeline extends events_1.EventEmitter {
             job.errorCount++;
             job.lastError = error instanceof Error ? error.message : 'Unknown error';
             result.errors.push({
-                type: 'execution',
+                type: 'validation',
                 message: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date(),
                 isRetryable: this.isRetryableError(error)

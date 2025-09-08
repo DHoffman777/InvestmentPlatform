@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireAuth = exports.authenticateToken = exports.requireTenantAccess = exports.requirePermission = exports.requireRole = exports.authMiddleware = void 0;
+// Removed local interface - using global Express namespace declaration
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const logger_1 = require("../utils/logger");
 const authMiddleware = (req, res, next) => {

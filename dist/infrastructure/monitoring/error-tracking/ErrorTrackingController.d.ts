@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AutoRecoveryConfig } from './ErrorRecoveryService';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 export interface ErrorTrackingControllerConfig {
     prisma: PrismaClient;
     autoRecoveryConfig: AutoRecoveryConfig;

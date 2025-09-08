@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client/runtime';
+import { PrismaClient } from '@prisma/client';
 export interface FinancialQueryPattern {
     id: string;
     name: string;

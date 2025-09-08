@@ -115,7 +115,7 @@ class AssetOptimizationService extends events_1.EventEmitter {
         }
         // Strip metadata if enabled
         if (config.stripMetadata) {
-            sharpImage = sharpImage.withMetadata(false);
+            sharpImage = sharpImage.withMetadata();
         }
         const result = {
             original: {

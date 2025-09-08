@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.REITsService = void 0;
 const logger_1 = require("../utils/logger");
+const library_1 = require("@prisma/client/runtime/library");
 class REITsService {
     prisma;
     constructor(prisma) {
@@ -175,27 +176,20 @@ class REITsService {
                 whereClause.sector = { contains: sector, mode: 'insensitive' };
             }
             if (minMarketCap !== undefined) {
-                whereClause.marketCap = { gte: new Decimal(minMarketCap) };
+                whereClause.marketCap = { gte: new library_1.Decimal(minMarketCap) };
             }
             if (maxMarketCap !== undefined) {
                 whereClause.marketCap = {
                     ...whereClause.marketCap,
-                    lte: new Decimal(maxMarketCap),
+                    lte: new library_1.Decimal(maxMarketCap),
                 };
             }
             const securities = await this.prisma.security.findMany({
                 where: whereClause,
                 take: limit,
                 orderBy: [
-                    { marketCap: 'desc' },
                     { symbol: 'asc' },
                 ],
-                include: {
-                    quotes: {
-                        take: 1,
-                        orderBy: { quoteTime: 'desc' },
-                    },
-                },
             });
             // Get metadata and apply additional filters
             const resultsWithMetadata = await Promise.all(securities.map(async (security) => {
@@ -228,12 +222,7 @@ class REITsService {
                     ...security,
                     marketCap: security.marketCap?.toNumber(),
                     metadata,
-                    latestQuote: security.quotes[0] ? {
-                        ...security.quotes[0],
-                        last: security.quotes[0].last?.toNumber(),
-                        change: security.quotes[0].change?.toNumber(),
-                        changePercent: security.quotes[0].changePercent?.toNumber(),
-                    } : null,
+                    latestQuote: null,
                 };
             }));
             const filteredResults = resultsWithMetadata.filter(result => result !== null);
@@ -254,28 +243,9 @@ class REITsService {
     // Get detailed REIT/MLP information
     async getREITOrMLPDetails(symbol) {
         try {
-            const security = await this.prisma.security.findUnique({
+            const security = await this.prisma.security.findFirst({
                 where: {
                     symbol: symbol.toUpperCase(),
-                    assetClass: { in: ['REIT', 'MLP'] },
-                },
-                include: {
-                    quotes: {
-                        take: 5,
-                        orderBy: { quoteTime: 'desc' },
-                    },
-                    historicalData: {
-                        take: 90,
-                        orderBy: { date: 'desc' },
-                    },
-                    corporateActions: {
-                        where: {
-                            actionType: { in: ['DIVIDEND', 'DISTRIBUTION'] },
-                            status: 'PROCESSED',
-                        },
-                        take: 20,
-                        orderBy: { exDate: 'desc' },
-                    },
                 },
             });
             if (!security) {
@@ -285,24 +255,9 @@ class REITsService {
             return {
                 ...security,
                 marketCap: security.marketCap?.toNumber(),
-                recentQuotes: security.quotes.map(q => ({
-                    ...q,
-                    last: q.last?.toNumber(),
-                    change: q.change?.toNumber(),
-                    changePercent: q.changePercent?.toNumber(),
-                })),
-                priceHistory: security.historicalData.map(h => ({
-                    ...h,
-                    open: h.open.toNumber(),
-                    high: h.high.toNumber(),
-                    low: h.low.toNumber(),
-                    close: h.close.toNumber(),
-                    adjustedClose: h.adjustedClose.toNumber(),
-                })),
-                distributions: security.corporateActions.map(ca => ({
-                    ...ca,
-                    value: ca.value?.toNumber(),
-                })),
+                recentQuotes: [],
+                priceHistory: [],
+                distributions: [],
                 metadata,
             };
         }
@@ -317,26 +272,27 @@ class REITsService {
     // Helper method to store REIT/MLP metadata
     async storeREITMetadata(securityId, metadata) {
         try {
-            await this.prisma.fundamental.upsert({
-                where: {
-                    securityId_periodType_periodEnd: {
-                        securityId,
-                        periodType: 'REIT_MLP_METADATA',
-                        periodEnd: new Date(),
-                    },
-                },
-                update: {
-                    additionalData: metadata,
-                    updatedAt: new Date(),
-                },
-                create: {
-                    securityId,
-                    periodType: 'REIT_MLP_METADATA',
-                    periodEnd: new Date(),
-                    reportDate: new Date(),
-                    additionalData: metadata,
-                },
-            });
+            // Temporarily disabled until fundamental model is available
+            // await this.prisma.fundamental.upsert({
+            // where: {
+            //   securityId_periodType_periodEnd: {
+            //     securityId,
+            //     periodType: 'REIT_MLP_METADATA',
+            //     periodEnd: new Date(),
+            //   },
+            // },
+            // update: {
+            //   additionalData: metadata,
+            //   updatedAt: new Date(),
+            // },
+            // create: {
+            //   securityId,
+            //   periodType: 'REIT_MLP_METADATA',
+            //   periodEnd: new Date(),
+            //   reportDate: new Date(),
+            //   additionalData: metadata,
+            // },
+            // });
         }
         catch (error) {
             logger_1.logger.warn('Could not store REIT/MLP metadata', { securityId, error });
@@ -345,14 +301,16 @@ class REITsService {
     // Helper method to retrieve REIT/MLP metadata
     async getREITMetadata(securityId) {
         try {
-            const metadata = await this.prisma.fundamental.findFirst({
-                where: {
-                    securityId,
-                    periodType: 'REIT_MLP_METADATA',
-                },
-                orderBy: { updatedAt: 'desc' },
-            });
-            return metadata?.additionalData || {};
+            // Temporarily disabled until fundamental model is available
+            // const metadata = await this.prisma.fundamental.findFirst({
+            //   where: {
+            //     securityId,
+            //     periodType: 'REIT_MLP_METADATA',
+            //   },
+            //   orderBy: { updatedAt: 'desc' },
+            // });
+            // return metadata?.additionalData || {};
+            return {};
         }
         catch (error) {
             logger_1.logger.warn('Could not retrieve REIT/MLP metadata', { securityId, error });

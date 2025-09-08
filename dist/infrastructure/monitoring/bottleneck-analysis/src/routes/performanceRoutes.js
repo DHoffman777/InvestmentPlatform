@@ -81,7 +81,7 @@ router.post('/profiling/:profileId/stop', [param('profileId').notEmpty().withMes
 router.get('/profiling/:profileId/status', [param('profileId').notEmpty().withMessage('Profile ID is required')], handleValidationErrors, async (req, res) => {
     try {
         const { profileId } = req.params;
-        const status = await profilingService.getProfilingStatistics(profileId);
+        const status = await profilingService.getProfilingStatistics();
         res.json({
             success: true,
             data: status
@@ -185,7 +185,7 @@ router.post('/root-cause/analyze', [
                 error: 'Bottleneck or profile not found'
             });
         }
-        const rootCauses = await rootCauseService.analyzeBottleneck(bottleneck, profile);
+        const rootCauses = await rootCauseService.analyzeBottleneck(bottleneck[0], profile);
         res.json({
             success: true,
             data: rootCauses
@@ -253,7 +253,7 @@ router.post('/optimization/recommendations', [
         for (const bottleneckId of bottleneck_ids) {
             const bottleneck = await detectionService.getBottlenecks();
             if (bottleneck) {
-                bottlenecks.push(bottleneck);
+                bottlenecks.push(bottleneck[0]);
             }
         }
         const rootCauses = [];
@@ -293,7 +293,12 @@ router.post('/testing/tests', [
 ], handleValidationErrors, async (req, res) => {
     try {
         const { name, description, type, configuration } = req.body;
-        const testId = await testingService.createTest(name, description || '', type, configuration);
+        const testId = await testingService.createTest({
+            name,
+            description: description || '',
+            type: type,
+            configuration: configuration
+        });
         res.json({
             success: true,
             data: { test_id: testId }
@@ -440,12 +445,13 @@ router.post('/reporting/reports/generate', [
             });
         }
         else {
-            const exportedReport = await reportingService.exportReport(JSON.stringify(reportData, format));
-            const contentType = {
+            const exportedReport = await reportingService.exportReport(JSON.stringify(reportData), format);
+            const contentTypeMap = {
                 pdf: 'application/pdf',
                 html: 'text/html',
                 csv: 'text/csv'
-            }[format] || 'application/octet-stream';
+            };
+            const contentType = contentTypeMap[format] || 'application/octet-stream';
             res.setHeader('Content-Type', contentType);
             res.setHeader('Content-Disposition', `attachment; filename="performance-report.${format}"`);
             res.send(exportedReport);

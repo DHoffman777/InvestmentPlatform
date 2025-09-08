@@ -484,7 +484,8 @@ class CommunicationSearchService extends events_1.EventEmitter {
         }
         // Get suggestions if enabled
         if (this.config.autocomplete_enabled && query.query) {
-            result.suggestions = await this.getSuggestions(query.query);
+            const suggestions = await this.getSuggestions(query.query);
+            result.suggestions = suggestions.map(s => s.text);
         }
         return result;
     }

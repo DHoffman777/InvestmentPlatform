@@ -67,26 +67,22 @@ class TransactionService {
                     portfolioId: tradeData.portfolioId,
                     // securityId: tradeData.securityId, // TODO: Add security relation to schema
                     transactionType: tradeData.transactionType,
-                    // transactionDate: // TODO: Field doesn't exist, using createdAt tradeData.tradeDate,
-                    // settleDate, // TODO: Field doesn't exist in schema
+                    transactionDate: tradeData.tradeDate,
+                    tradeDate: tradeData.tradeDate,
+                    settlementDate: tradeData.settleDate || new Date(tradeData.tradeDate.getTime() + 2 * 24 * 60 * 60 * 1000), // T+2 settlement
                     quantity: tradeData.quantity,
                     price: tradeData.price,
                     fees: tradeData.fees || new client_1.Prisma.Decimal(0),
                     taxes: tradeData.taxes || new client_1.Prisma.Decimal(0),
+                    commission: tradeData.commission || new client_1.Prisma.Decimal(0),
                     netAmount,
-                    description: `${tradeData.transactionType} ${tradeData.quantity} ${security.symbol} @ ${tradeData.price}`,
+                    description: `${tradeData.transactionType} ${tradeData.quantity} ${security.symbol} @ ${tradeData.price} - ${tradeData.source}`,
                     externalId: tradeData.externalTradeId,
+                    confirmationNumber: tradeData.executionId || tradeData.orderId,
                     status: 'PENDING',
-                    metadata: {
-                        source: tradeData.source,
-                        commission: tradeData.commission?.toString(),
-                        counterparty: tradeData.counterparty,
-                        orderId: tradeData.orderId,
-                        executionId: tradeData.executionId,
-                        venue: tradeData.venue,
-                        captureTimestamp: new Date().toISOString(),
-                        rawData: tradeData.rawData,
-                    }
+                    symbol: security.symbol,
+                    tenantId: portfolio.tenantId,
+                    createdBy: 'system',
                 },
                 // include: {
                 //   security: {

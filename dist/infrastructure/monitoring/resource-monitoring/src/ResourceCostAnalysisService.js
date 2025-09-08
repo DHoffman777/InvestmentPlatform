@@ -484,6 +484,16 @@ class ResourceCostAnalysisService extends events_1.EventEmitter {
             ]
         };
     }
+    mapEffortLevel(effort) {
+        switch (effort) {
+            case 'trivial':
+                return 'minimal';
+            case 'expert':
+                return 'extensive';
+            default:
+                return effort;
+        }
+    }
     async generateCostRecommendations(resourceId, correlations, costDrivers, opportunities) {
         const recommendations = [];
         // High-impact optimization recommendations
@@ -498,7 +508,7 @@ class ResourceCostAnalysisService extends events_1.EventEmitter {
                 expected_savings: opportunity.savings_amount,
                 implementation: {
                     priority: opportunity.priority > 75 ? 'high' : 'medium',
-                    effort: opportunity.implementation.effort,
+                    effort: this.mapEffortLevel(opportunity.implementation.effort),
                     timeline: opportunity.implementation.timeline,
                     steps: opportunity.implementation.steps,
                     risks: [`Performance impact: ${opportunity.impact_analysis.performance_impact}`],

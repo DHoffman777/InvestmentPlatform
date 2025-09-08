@@ -63,9 +63,9 @@ class CapacityPlanningSystem {
     setupIntegrations() {
         // Connect threshold monitor alerts to workflow manager
         this.thresholdMonitor.on('alertCreated', async (event) => {
-            const alert = this.thresholdMonitor.getActiveAlerts(event.resourceId);
-            if (alert.length > 0) {
-                await this.workflowManager.processAlert(alert[0]);
+            const alerts = await this.thresholdMonitor.getActiveAlerts(event.resourceId);
+            if (alerts.length > 0) {
+                await this.workflowManager.processAlert(alerts[0]);
             }
         });
         // Connect prediction service to recommendation engine

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 export interface ErrorMetadata {
     userId?: string;
     sessionId?: string;

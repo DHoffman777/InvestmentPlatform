@@ -7,7 +7,7 @@ export interface LanguageDetectionResult {
     confidence: number;
     alternativeLanguages: AlternativeLanguage[];
     isReliable: boolean;
-    detectionMethod: 'CHARACTER_BASED' | 'STATISTICAL' | 'NEURAL_NETWORK' | 'HYBRID';
+    detectionMethod: 'CHARACTER_BASED' | 'STATISTICAL' | 'NEURAL_NETWORK' | 'HYBRID' | 'FALLBACK';
 }
 export interface AlternativeLanguage {
     language: Language;
@@ -25,7 +25,7 @@ export interface TranslationResult {
     confidence: number;
     sourceLanguage: Language;
     targetLanguage: Language;
-    translationMethod: 'RULE_BASED' | 'STATISTICAL' | 'NEURAL_NETWORK' | 'HYBRID';
+    translationMethod: 'RULE_BASED' | 'STATISTICAL' | 'NEURAL_NETWORK' | 'HYBRID' | 'NO_TRANSLATION_NEEDED' | 'FALLBACK';
     alternativeTranslations?: string[];
     metadata: TranslationMetadata;
 }

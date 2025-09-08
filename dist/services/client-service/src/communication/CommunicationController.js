@@ -845,7 +845,7 @@ class CommunicationController {
         }
         try {
             const tenantId = req.tenantId;
-            const criteria = { ...req.query, tenantId };
+            const criteria = { ...req.query };
             const recordings = await this.recordingService.searchRecordings(tenantId, criteria);
             res.json({
                 success: true,

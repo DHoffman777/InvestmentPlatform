@@ -195,7 +195,7 @@ const suitabilityAssessmentSchema = {
  * @access Private
  */
 router.post('/profiles', 
-  authMiddleware, 
+  authMiddleware as any, 
   validateRequest(clientProfileSchema),
   async (req: any, res: any) => {
     try {
@@ -245,7 +245,7 @@ router.post('/profiles',
  * @access Private
  */
 router.get('/profiles/:clientId', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -283,7 +283,7 @@ router.get('/profiles/:clientId',
  * @access Private
  */
 router.put('/profiles/:clientId', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -330,7 +330,7 @@ router.put('/profiles/:clientId',
  * @access Private
  */
 router.get('/profiles', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
@@ -386,7 +386,7 @@ router.get('/profiles',
  * @access Private
  */
 router.post('/meetings', 
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(meetingRequestSchema),
   async (req: any, res: any) => {
     try {
@@ -443,7 +443,7 @@ router.post('/meetings',
  * @access Private
  */
 router.get('/meetings', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
@@ -499,7 +499,7 @@ router.get('/meetings',
  * @access Private
  */
 router.post('/communications', 
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(communicationRequestSchema),
   async (req: any, res: any) => {
     try {
@@ -554,7 +554,7 @@ router.post('/communications',
  * @access Private
  */
 router.get('/communications/:clientId', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -611,7 +611,7 @@ router.get('/communications/:clientId',
  * @access Private
  */
 router.post('/suitability-assessments', 
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(suitabilityAssessmentSchema),
   async (req: any, res: any) => {
     try {
@@ -669,7 +669,7 @@ router.post('/suitability-assessments',
  * @access Private
  */
 router.get('/suitability-assessments/:clientId', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -719,7 +719,7 @@ router.get('/suitability-assessments/:clientId',
  * @access Private
  */
 router.get('/onboarding/:clientId', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -765,7 +765,7 @@ router.get('/onboarding/:clientId',
  * @access Private
  */
 router.put('/onboarding/:workflowId/steps/:stepNumber', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { workflowId, stepNumber } = req.params;
@@ -817,7 +817,7 @@ router.put('/onboarding/:workflowId/steps/:stepNumber',
  * @access Private
  */
 router.get('/analytics/:clientId', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -855,7 +855,7 @@ router.get('/analytics/:clientId',
  * @access Private
  */
 router.get('/segmentation', 
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;

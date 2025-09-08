@@ -512,9 +512,9 @@ class BottleneckReportingService extends events_1.EventEmitter {
 
 ## Financial Impact
 
-- **Estimated Cost of Issues:** ${{ estimated_cost }}
-- **Potential Savings from Fixes:** ${{ potential_savings }}
-- **ROI of Recommended Improvements:** {{roi_percentage}}%
+- **Estimated Cost of Issues:** ${'${{estimated_cost}}'}
+- **Potential Savings from Fixes:** ${'${{potential_savings}}'}
+- **ROI of Recommended Improvements:** ${'{{roi_percentage}}'}%
 
 ## Next Steps
 

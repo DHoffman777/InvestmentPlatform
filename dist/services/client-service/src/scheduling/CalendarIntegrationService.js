@@ -442,7 +442,8 @@ class CalendarIntegrationService extends events_1.EventEmitter {
                         startTime: slotStart,
                         endTime: slotEnd,
                         status: conflictingEvent ?
-                            conflictingEvent.availability :
+                            (conflictingEvent.availability === 'free' ? 'available' :
+                                conflictingEvent.availability) :
                             'available',
                         eventId: conflictingEvent?.id,
                         eventTitle: conflictingEvent?.title
@@ -702,7 +703,7 @@ class CalendarIntegrationService extends events_1.EventEmitter {
         }
         return {
             status,
-            providers,
+            providers: providers,
             connections,
             syncJobs,
             timestamp: new Date()

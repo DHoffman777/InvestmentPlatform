@@ -327,6 +327,9 @@ class VideoConferencingService extends events_1.EventEmitter {
                 requireRegistration: false,
                 allowGuests: false
             },
+            branding: {
+                customWelcomeMessage: 'Welcome to the internal team meeting'
+            },
             integrations: {
                 calendar: true,
                 crm: false,

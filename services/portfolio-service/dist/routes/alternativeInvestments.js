@@ -135,7 +135,7 @@ router.get('/', async (req, res) => {
                 (Array.isArray(req.query.generalPartners) ? req.query.generalPartners : [req.query.generalPartners]) :
                 undefined,
             vintages: req.query.vintages ?
-                (Array.isArray(req.query.vintages) ? req.query.vintages : [req.query.vintages]).map(v => parseInt(v)) :
+                (Array.isArray(req.query.vintages) ? req.query.vintages : [req.query.vintages]).map((v) => parseInt(v)) :
                 undefined,
             sectorFocus: req.query.sectorFocus ?
                 (Array.isArray(req.query.sectorFocus) ? req.query.sectorFocus : [req.query.sectorFocus]) :

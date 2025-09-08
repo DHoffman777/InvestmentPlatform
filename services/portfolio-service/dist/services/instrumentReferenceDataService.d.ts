@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { InstrumentMaster, CorporateAction, MarketDataSnapshot, CreateInstrumentRequest, UpdateInstrumentRequest, SearchInstrumentRequest, ProcessCorporateActionRequest, InstrumentLookupRequest, BulkInstrumentUpdateRequest, InstrumentValidationResult, InstrumentSearchResult, DataQualityReport } from '../models/assets/InstrumentReferenceData';
+import { InstrumentMaster, CorporateAction, CreateInstrumentRequest, UpdateInstrumentRequest, SearchInstrumentRequest, ProcessCorporateActionRequest, InstrumentLookupRequest, BulkInstrumentUpdateRequest, InstrumentValidationResult, InstrumentSearchResult, DataQualityReport } from '../models/assets/InstrumentReferenceData';
 export declare class InstrumentReferenceDataService {
     private prisma;
     private kafkaService;
@@ -9,9 +9,9 @@ export declare class InstrumentReferenceDataService {
     searchInstruments(request: SearchInstrumentRequest): Promise<InstrumentSearchResult>;
     lookupInstrument(request: InstrumentLookupRequest): Promise<InstrumentMaster | null>;
     processCorporateAction(request: ProcessCorporateActionRequest): Promise<CorporateAction>;
-    getCorporateActions(securityId: string, tenantId: string): Promise<CorporateAction[]>;
-    updateMarketData(securityId: string, marketData: Partial<MarketDataSnapshot>, tenantId: string): Promise<any>;
-    getMarketData(securityId: string, tenantId: string): Promise<MarketDataSnapshot | null>;
+    getCorporateActions(securityId: string): Promise<CorporateAction[]>;
+    updateMarketData(securityId: string, marketData: any): Promise<any>;
+    getMarketData(securityId: string): Promise<any>;
     bulkUpdateInstruments(request: BulkInstrumentUpdateRequest): Promise<{
         successful: string[];
         failed: Array<{
@@ -33,4 +33,11 @@ export declare class InstrumentReferenceDataService {
     private generateActionCode;
     private generateActionDescription;
     private scheduleCorporateActionProcessing;
+    private validateInstrumentUpdateDuplicate;
+    private enrichWithMarketData;
+    private getCorporateActionsBySecurityId;
+    private applyDividendAction;
+    private applyStockSplitAction;
+    private applyMergerAction;
+    private processInBatch;
 }

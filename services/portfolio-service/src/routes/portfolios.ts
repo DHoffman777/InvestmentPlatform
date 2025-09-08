@@ -31,7 +31,7 @@ router.get('/',
     query('search').optional().isString().trim(),
   ],
   validateRequest,
-  requireTenantAccess,
+  requireTenantAccess as any,
   async (req: any, res: any) => {
     try {
       const {
@@ -69,7 +69,7 @@ router.get('/:id',
     param('id').isUUID().withMessage('Invalid portfolio ID'),
   ],
   validateRequest,
-  requireTenantAccess,
+  requireTenantAccess as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -146,8 +146,8 @@ router.post('/',
       .withMessage('Max cash percentage must be between 0 and 100'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['portfolio:create']),
+  requireTenantAccess as any,
+  requirePermission(['portfolio:create']) as any,
   async (req: any, res: any) => {
     try {
       const portfolioData = {
@@ -231,8 +231,8 @@ router.put('/:id',
       .withMessage('Max cash percentage must be between 0 and 100'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['portfolio:update']),
+  requireTenantAccess as any,
+  requirePermission(['portfolio:update']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -278,8 +278,8 @@ router.delete('/:id',
     param('id').isUUID().withMessage('Invalid portfolio ID'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['portfolio:delete']),
+  requireTenantAccess as any,
+  requirePermission(['portfolio:delete']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -320,7 +320,7 @@ router.get('/:id/summary',
     param('id').isUUID().withMessage('Invalid portfolio ID'),
   ],
   validateRequest,
-  requireTenantAccess,
+  requireTenantAccess as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -354,7 +354,7 @@ router.get('/:id/allocations',
     param('id').isUUID().withMessage('Invalid portfolio ID'),
   ],
   validateRequest,
-  requireTenantAccess,
+  requireTenantAccess as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;

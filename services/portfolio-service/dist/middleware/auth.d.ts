@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-interface JWTPayload {
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
+interface LocalJWTPayload {
     sub: string;
     id: string;
     userId: string;
@@ -10,13 +10,10 @@ interface JWTPayload {
     permissions: string[];
     iat: number;
     exp: number;
+    sessionId?: string;
 }
-declare global {
-    namespace Express {
-        interface Request {
-            user?: JWTPayload;
-        }
-    }
+interface Request extends ExpressRequest {
+    user?: LocalJWTPayload;
 }
 export declare const authMiddleware: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
 export declare const requireRole: (requiredRoles: string[]) => (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
@@ -24,7 +21,4 @@ export declare const requirePermission: (requiredPermissions: string[]) => (req:
 export declare const requireTenantAccess: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
 export declare const authenticateToken: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
 export declare const requireAuth: (req: Request, res: Response, next: NextFunction) => Response<any, Record<string, any>> | undefined;
-export interface AuthenticatedRequest extends Request {
-    user: JWTPayload;
-}
 export {};

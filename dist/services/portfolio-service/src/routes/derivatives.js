@@ -4,13 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../utils/prisma");
 const kafka_mock_1 = require("../utils/kafka-mock");
 const derivativesAnalyticsService_1 = require("../services/derivativesAnalyticsService");
 const logger_1 = require("../utils/logger");
 const DerivativesAnalytics_1 = require("../models/derivatives/DerivativesAnalytics");
 const router = express_1.default.Router();
-const prisma = new client_1.PrismaClient();
+const prisma = (0, prisma_1.getPrismaClient)(); // Models are defined in schema but TS can't infer them
 const kafkaService = (0, kafka_mock_1.getKafkaService)();
 const derivativesService = new derivativesAnalyticsService_1.DerivativesAnalyticsService(prisma, kafkaService);
 // Greeks Calculation Routes
@@ -187,7 +187,7 @@ router.get('/volatility-surface/:underlyingSymbol', async (req, res) => {
                             expirationDate: expirationDate ? new Date(expirationDate) : undefined
                         },
                         select: { id: true } // using id instead of securityId
-                    }).then(instruments => instruments.map(i => i.id))
+                    }).then((instruments) => instruments.map((i) => i.id))
                 }
             },
             orderBy: [
@@ -662,7 +662,7 @@ router.get('/dashboard', async (req, res) => {
             },
             recentActivity: recentCalculations.slice(0, 10),
             performance: {
-                calculationsToday: recentCalculations.filter(calc => calc.createdAt >= new Date(new Date().setHours(0, 0, 0, 0)) // using createdAt not calculationDate
+                calculationsToday: recentCalculations.filter((calc) => calc.createdAt >= new Date(new Date().setHours(0, 0, 0, 0)) // using createdAt not calculationDate
                 ).length,
                 calculationsThisWeek: recentCalculations.length
             }

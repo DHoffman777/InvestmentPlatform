@@ -301,7 +301,7 @@ router.post('/instruments/:securityId/corporate-actions', async (req, res) => {
 router.get('/instruments/:securityId/corporate-actions', async (req, res) => {
     try {
         const { securityId } = req.params;
-        const corporateActions = await instrumentService.getCorporateActions(securityId, req.user.tenantId);
+        const corporateActions = await instrumentService.getCorporateActions(securityId);
         res.json({
             success: true,
             data: corporateActions,
@@ -332,7 +332,7 @@ router.post('/instruments/:securityId/market-data', async (req, res) => {
                 error: `Missing required fields: ${missingFields.join(', ')}`
             });
         }
-        await instrumentService.updateMarketData(securityId, marketData, req.user.tenantId);
+        await instrumentService.updateMarketData(securityId, marketData);
         res.json({
             success: true,
             message: 'Market data updated successfully'
@@ -351,7 +351,7 @@ router.post('/instruments/:securityId/market-data', async (req, res) => {
 router.get('/instruments/:securityId/market-data', async (req, res) => {
     try {
         const { securityId } = req.params;
-        const marketData = await instrumentService.getMarketData(securityId, req.user.tenantId);
+        const marketData = await instrumentService.getMarketData(securityId);
         if (!marketData) {
             return res.status(404).json({
                 success: false,

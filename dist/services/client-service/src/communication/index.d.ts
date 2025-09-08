@@ -1,8 +1,10 @@
-import { CommunicationService } from './CommunicationService';
 import { CommunicationAnalyticsService } from './CommunicationAnalyticsService';
 import { ComplianceRecordingService } from './ComplianceRecordingService';
 import { CommunicationTimelineService } from './CommunicationTimelineService';
 import { CommunicationController } from './CommunicationController';
+import { MultiChannelTrackingService } from './MultiChannelTrackingService';
+import { CommunicationCategorizationService } from './CommunicationCategorizationService';
+import { CommunicationSearchService } from './CommunicationSearchService';
 export interface CommunicationSystemConfig {
     communication: {
         enableMultiChannel: boolean;
@@ -117,7 +119,9 @@ export interface CommunicationSystemConfig {
     };
 }
 export declare class CommunicationSystem {
-    private communicationService;
+    private multiChannelService?;
+    private categorizationService?;
+    private searchService?;
     private analyticsService?;
     private recordingService?;
     private timelineService?;
@@ -130,7 +134,9 @@ export declare class CommunicationSystem {
     private initializeServices;
     private setupServiceIntegrations;
     initialize(): Promise<any>;
-    getCommunicationService(): CommunicationService;
+    getMultiChannelService(): MultiChannelTrackingService | undefined;
+    getCategorizationService(): CommunicationCategorizationService | undefined;
+    getSearchService(): CommunicationSearchService | undefined;
     getAnalyticsService(): CommunicationAnalyticsService | undefined;
     getRecordingService(): ComplianceRecordingService | undefined;
     getTimelineService(): CommunicationTimelineService | undefined;
@@ -157,8 +163,10 @@ export declare class CommunicationSystem {
     }>;
     shutdown(): Promise<any>;
 }
-export { CommunicationService, CommunicationAnalyticsService, ComplianceRecordingService, CommunicationTimelineService, CommunicationController };
-export * from './CommunicationService';
+export { MultiChannelTrackingService, CommunicationCategorizationService, CommunicationSearchService, CommunicationAnalyticsService, ComplianceRecordingService, CommunicationTimelineService, CommunicationController };
+export * from './MultiChannelTrackingService';
+export * from './CommunicationCategorizationService';
+export * from './CommunicationSearchService';
 export * from './CommunicationAnalyticsService';
 export * from './ComplianceRecordingService';
 export * from './CommunicationTimelineService';

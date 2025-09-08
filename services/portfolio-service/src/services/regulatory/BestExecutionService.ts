@@ -382,8 +382,8 @@ export class BestExecutionService {
       }
 
       // Calculate analysis results
-      const venueConcentration = this.calculateVenueConcentration(report.executionVenues as ExecutionVenueData[]);
-      const averageExecutionQuality = this.calculateAverageExecutionQuality(report.executionVenues as ExecutionVenueData[]);
+      const venueConcentration = this.calculateVenueConcentration(report.executionVenues as unknown as ExecutionVenueData[]);
+      const averageExecutionQuality = this.calculateAverageExecutionQuality(report.executionVenues as unknown as ExecutionVenueData[]);
       const complianceScore = this.calculateComplianceScore(errors.length, warnings.length);
 
       // Calculate completion percentage

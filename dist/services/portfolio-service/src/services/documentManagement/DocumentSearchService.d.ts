@@ -1,6 +1,5 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
 import { Document, DocumentSearchRequest, DocumentSearchResult, DocumentType, Language, ExtractedData } from '../../models/documentManagement/DocumentManagement';
 export interface SearchQuery {
     query: string;
@@ -181,10 +180,10 @@ export declare class DocumentSearchService {
     private searchEngine;
     private vectorDatabase;
     private queryAnalyzer;
-    private semanticSearch;
+    private semanticSearchEngine;
     private indexManager;
     private cacheManager;
-    constructor(prisma: PrismaClient, logger: Logger, kafkaService: KafkaService);
+    constructor(prisma: PrismaClient, logger: Logger, kafkaService: any);
     searchDocuments(request: DocumentSearchRequest): Promise<EnhancedSearchResult>;
     semanticSearch(query: SemanticSearchQuery, tenantId: string): Promise<SemanticSearchResult[]>;
     indexDocument(document: Document, extractedData?: ExtractedData): Promise<any>;

@@ -83,7 +83,7 @@ const customReportSchema = [
 
 // Create report template
 router.post('/templates',
-  authMiddleware,
+  authMiddleware as any,
   createTemplateSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -129,7 +129,7 @@ router.post('/templates',
 
 // Get report templates
 router.get('/templates',
-  authMiddleware,
+  authMiddleware as any,
   [
     query('reportType').optional().isIn(Object.values(ReportType)).withMessage('Invalid report type'),
     query('category').optional().isString().withMessage('Category must be a string'),
@@ -179,7 +179,7 @@ router.get('/templates',
 
 // Get report template by ID
 router.get('/templates/:templateId',
-  authMiddleware,
+  authMiddleware as any,
   [param('templateId').isUUID().withMessage('Valid template ID required') as any],
   validateRequest,
   async (req: any, res: any) => {
@@ -223,7 +223,7 @@ router.get('/templates/:templateId',
 
 // Update report template
 router.put('/templates/:templateId',
-  authMiddleware,
+  authMiddleware as any,
   updateTemplateSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -267,7 +267,7 @@ router.put('/templates/:templateId',
 
 // Delete report template
 router.delete('/templates/:templateId',
-  authMiddleware,
+  authMiddleware as any,
   [param('templateId').isUUID().withMessage('Valid template ID required') as any],
   validateRequest,
   async (req: any, res: any) => {
@@ -305,7 +305,7 @@ router.delete('/templates/:templateId',
 
 // Duplicate report template
 router.post('/templates/:templateId/duplicate',
-  authMiddleware,
+  authMiddleware as any,
   [
     param('templateId').isUUID().withMessage('Valid template ID required'),
     body('name').isLength({ min: 1, max: 255 }).withMessage('New template name is required')
@@ -354,7 +354,7 @@ router.post('/templates/:templateId/duplicate',
 
 // Generate report
 router.post('/generate',
-  authMiddleware,
+  authMiddleware as any,
   generateReportSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -406,7 +406,7 @@ router.post('/generate',
 
 // Get report jobs
 router.get('/jobs',
-  authMiddleware,
+  authMiddleware as any,
   [
     query('templateId').optional().isUUID().withMessage('Invalid template ID'),
     query('status').optional().isIn(Object.values(ReportStatus)).withMessage('Invalid status'),
@@ -458,7 +458,7 @@ router.get('/jobs',
 
 // Get report job by ID
 router.get('/jobs/:jobId',
-  authMiddleware,
+  authMiddleware as any,
   [param('jobId').isUUID().withMessage('Valid job ID required') as any],
   validateRequest,
   async (req: any, res: any) => {
@@ -494,7 +494,7 @@ router.get('/jobs/:jobId',
 
 // Cancel report job
 router.post('/jobs/:jobId/cancel',
-  authMiddleware,
+  authMiddleware as any,
   [param('jobId').isUUID().withMessage('Valid job ID required') as any],
   validateRequest,
   async (req: any, res: any) => {
@@ -532,7 +532,7 @@ router.post('/jobs/:jobId/cancel',
 
 // Generate performance report
 router.post('/performance',
-  authMiddleware,
+  authMiddleware as any,
   [
     body('portfolioIds').isArray({ min: 1 }).withMessage('At least one portfolio ID required'),
     body('dateRange').isObject().withMessage('Date range is required'),
@@ -592,7 +592,7 @@ router.post('/performance',
 
 // Generate holdings report
 router.post('/holdings',
-  authMiddleware,
+  authMiddleware as any,
   [
     body('portfolioIds').isArray({ min: 1 }).withMessage('At least one portfolio ID required'),
     body('asOfDate').isISO8601().withMessage('Valid as-of date required'),
@@ -647,7 +647,7 @@ router.post('/holdings',
 
 // Custom Report Builder
 router.post('/custom/build',
-  authMiddleware,
+  authMiddleware as any,
   customReportSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -686,7 +686,7 @@ router.post('/custom/build',
 
 // Dashboard and Analytics
 router.get('/dashboard',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;

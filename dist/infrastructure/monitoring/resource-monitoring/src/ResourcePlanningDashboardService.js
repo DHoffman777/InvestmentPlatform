@@ -119,7 +119,7 @@ class ResourcePlanningDashboardService extends events_1.EventEmitter {
                 data = this.generatePerformanceMetricsData(resourceData, filters);
                 break;
             case WidgetType.COST_BREAKDOWN:
-                data = this.generateCostBreakdownData(costData, filters);
+                data = this.generateCostBreakdown(Array.from(costData.values()));
                 break;
             case WidgetType.WASTE_ANALYSIS:
                 data = this.generateWasteAnalysisData(resourceData, efficiencyData, filters);

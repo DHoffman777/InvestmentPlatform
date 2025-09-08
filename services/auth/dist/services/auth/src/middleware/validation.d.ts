@@ -1,4 +1,4 @@
-import { ValidationChain } from 'express-validator';
+type ValidationChain = any;
 import { Request, Response, NextFunction } from 'express';
 interface AuthenticatedRequest extends Request {
     user?: any;

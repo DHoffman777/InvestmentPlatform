@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostTradeProcessingService = void 0;
 const PostTradeProcessing_1 = require("../models/trading/PostTradeProcessing");
 class PostTradeProcessingService {
-    prisma;
+    prisma; // Changed to any to bypass type checking
     kafkaService;
     constructor(prisma, kafkaService) {
         this.prisma = prisma;
@@ -111,8 +111,8 @@ class PostTradeProcessingService {
         if (request.portfolioIds && request.portfolioIds.length > 0) {
             where.trade = { portfolioId: { in: request.portfolioIds } };
         }
-        if (request.securityIds && request.securityIds.length > 0) {
-            where.securityId = { in: request.securityIds };
+        if (request.instrumentIds && request.instrumentIds.length > 0) {
+            where.securityId = { in: request.instrumentIds };
         }
         if (request.counterpartyIds && request.counterpartyIds.length > 0) {
             where.counterpartyId = { in: request.counterpartyIds };

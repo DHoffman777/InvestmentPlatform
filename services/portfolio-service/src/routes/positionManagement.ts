@@ -29,8 +29,8 @@ router.get('/aggregated',
     query('assetClasses').optional().isString().withMessage('Asset classes must be comma-separated string'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:read']),
+  requireTenantAccess as any,
+  requirePermission(['position:read']) as any,
   async (req: any, res: any) => {
     try {
       const { portfolioIds, assetClasses } = req.query as any;
@@ -91,8 +91,8 @@ router.post('/:id/tax-lots',
     body('method').isIn(['FIFO', 'LIFO', 'HIFO', 'SPECIFIC_ID', 'AVERAGE_COST']).withMessage('Invalid tax lot method'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:read']),
+  requireTenantAccess as any,
+  requirePermission(['position:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -164,8 +164,8 @@ router.post('/portfolios/:id/reconcile',
     body('custodianPositions.*.costBasis').optional().isNumeric().withMessage('Cost basis must be numeric'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:reconcile']),
+  requireTenantAccess as any,
+  requirePermission(['position:reconcile']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -227,8 +227,8 @@ router.get('/:id/pnl',
     query('endDate').isISO8601().toDate().withMessage('Invalid end date'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:read']),
+  requireTenantAccess as any,
+  requirePermission(['position:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -313,8 +313,8 @@ router.put('/:id/market-value',
     body('marketPrice').isNumeric().withMessage('Market price must be numeric'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['position:update']),
+  requireTenantAccess as any,
+  requirePermission(['position:update']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;

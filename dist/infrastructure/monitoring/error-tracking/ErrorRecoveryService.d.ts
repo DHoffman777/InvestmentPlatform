@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 import { StructuredError, ErrorCategory } from './ErrorTrackingService';
 import { RootCauseAnalysis } from './ErrorCorrelationService';
 export interface RecoveryStrategy {

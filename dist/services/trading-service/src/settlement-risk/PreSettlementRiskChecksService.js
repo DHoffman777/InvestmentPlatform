@@ -185,7 +185,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
                 message,
                 details: { currentPosition, newPosition, limits: positionLimits.length },
                 recommendedAction,
-                bypassable: status !== 'FAIL' || severity !== 'CRITICAL',
+                bypassable: status !== 'FAIL' || severity === 'INFO',
                 executedAt: new Date(),
                 executionTimeMs: Date.now() - startTime
             };
@@ -205,8 +205,9 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             let severity = 'INFO';
             let message = 'Counterparty exposure check passed';
             let recommendedAction;
+            let utilizationPercentage = 0;
             for (const limit of exposureLimits) {
-                const utilizationPercentage = newExposure / limit.limitValue * 100;
+                utilizationPercentage = newExposure / limit.limitValue * 100;
                 if (utilizationPercentage > limit.breachThreshold) {
                     status = 'FAIL';
                     severity = 'HIGH';
@@ -232,7 +233,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
                 actualValue: utilizationPercentage,
                 threshold: exposureLimits[0]?.breachThreshold,
                 recommendedAction,
-                bypassable: status !== 'FAIL' || severity !== 'CRITICAL',
+                bypassable: status !== 'FAIL' || severity === 'INFO',
                 executedAt: new Date(),
                 executionTimeMs: Date.now() - startTime
             };
@@ -472,7 +473,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
                 message,
                 details: { violations, rulesChecked: regulatoryRules.length },
                 recommendedAction,
-                bypassable: status !== 'FAIL' || severity !== 'CRITICAL',
+                bypassable: status !== 'FAIL' || severity === 'INFO',
                 executedAt: new Date(),
                 executionTimeMs: Date.now() - startTime
             };

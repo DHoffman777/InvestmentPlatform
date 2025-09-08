@@ -218,7 +218,7 @@ class ScalingThresholdMonitor extends events_1.EventEmitter {
             catch (rollbackError) {
                 this.emit('rollbackFailed', {
                     resourceId: decision.resourceId,
-                    error: rollbackError.message
+                    error: rollbackError instanceof Error ? rollbackError.message : 'Unknown rollback error'
                 });
             }
         }

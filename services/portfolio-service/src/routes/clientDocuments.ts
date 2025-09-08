@@ -93,7 +93,7 @@ const bulkOperationSchema = [
 
 // Upload client document
 router.post('/upload',
-  authMiddleware,
+  authMiddleware as any,
   upload.single('file'),
   clientDocumentUploadSchema,
   validateRequest,
@@ -171,7 +171,7 @@ router.post('/upload',
 
 // Get client documents
 router.get('/client/:clientId',
-  authMiddleware,
+  authMiddleware as any,
   [
     param('clientId').isUUID().withMessage('Valid client ID required'),
     query('documentType').optional().isIn(Object.values(DocumentType)).withMessage('Invalid document type'),
@@ -236,7 +236,7 @@ router.get('/client/:clientId',
 
 // Get document by ID
 router.get('/:documentId',
-  authMiddleware,
+  authMiddleware as any,
   [param('documentId').isUUID().withMessage('Valid document ID required') as any],
   validateRequest,
   async (req: any, res: any) => {
@@ -290,7 +290,7 @@ router.get('/:documentId',
 
 // Update document
 router.put('/:documentId',
-  authMiddleware,
+  authMiddleware as any,
   documentUpdateSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -341,7 +341,7 @@ router.put('/:documentId',
 
 // Delete document
 router.delete('/:documentId',
-  authMiddleware,
+  authMiddleware as any,
   [
     param('documentId').isUUID().withMessage('Valid document ID required'),
     body('reason').optional().isString().withMessage('Reason must be a string')
@@ -395,7 +395,7 @@ router.delete('/:documentId',
 
 // Share document
 router.post('/:documentId/share',
-  authMiddleware,
+  authMiddleware as any,
   documentShareSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -449,7 +449,7 @@ router.post('/:documentId/share',
 
 // Get document templates
 router.get('/templates',
-  authMiddleware,
+  authMiddleware as any,
   [query('documentType').optional().isIn(Object.values(DocumentType)).withMessage('Invalid document type')],
   validateRequest,
   async (req: any, res: any) => {
@@ -493,7 +493,7 @@ router.get('/templates',
 
 // Bulk operations
 router.post('/bulk-operation',
-  authMiddleware,
+  authMiddleware as any,
   bulkOperationSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -547,7 +547,7 @@ router.post('/bulk-operation',
 
 // Get client document statistics
 router.get('/client/:clientId/stats',
-  authMiddleware,
+  authMiddleware as any,
   [param('clientId').isUUID().withMessage('Valid client ID required') as any],
   validateRequest,
   async (req: any, res: any) => {

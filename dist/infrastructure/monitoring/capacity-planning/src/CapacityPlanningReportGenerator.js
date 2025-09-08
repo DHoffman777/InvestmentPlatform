@@ -26,7 +26,7 @@ class CapacityPlanningReportGenerator extends events_1.EventEmitter {
         this.emit('reportGenerationStarted', { reportId, type: reportConfig.type });
         try {
             const template = reportConfig.templateId
-                ? this.getTemplate(reportConfig.templateId)
+                ? this.getReportTemplate(reportConfig.templateId)
                 : this.getDefaultTemplate(reportConfig.type);
             if (!template) {
                 throw new Error(`No template available for report type ${reportConfig.type}`);
@@ -277,7 +277,7 @@ ${summaryData.topRecommendations.map(rec => `- ${rec}`).join('\n')}
         const headerRow = `| ${headers.join(' | ')} |`;
         const separatorRow = `| ${headers.map(() => '---').join(' | ')} |`;
         const dataRows = data.slice(0, configuration.maxRows || 10).map(item => {
-            const values = headers.map(header => {
+            const values = headers.map((header) => {
                 const value = item[header];
                 return typeof value === 'number' ? value.toFixed(2) : (value || 'N/A');
             });
@@ -349,7 +349,7 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
     async sendReportEmail(recipient, report, renderedReports) {
         console.log(`Sending report ${report.name} to ${recipient}`);
     }
-    getTemplate(templateId) {
+    getReportTemplate(templateId) {
         return this.templates.get(templateId) || null;
     }
     getDefaultTemplate(reportType) {
@@ -501,7 +501,7 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
     getAllReports() {
         return Array.from(this.reports.values());
     }
-    getTemplate(templateId) {
+    getTemplateById(templateId) {
         return this.templates.get(templateId) || null;
     }
     getAllTemplates() {
@@ -638,7 +638,7 @@ class ChartGenerator {
                 datasets: [{
                         label: 'Trend Count',
                         data: Object.values(trendDirections),
-                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                        backgroundColor: '#FF6384,#36A2EB,#FFCE56'.split(','),
                         borderWidth: 1
                     }]
             },
@@ -689,7 +689,7 @@ class ChartGenerator {
                 datasets: [{
                         label: 'Count',
                         data: Object.values(priorityCount),
-                        backgroundColor: ['#FF6384', '#FF9F40', '#FFCE56', '#4BC0C0'],
+                        backgroundColor: '#FF6384,#FF9F40,#FFCE56,#4BC0C0'.split(','),
                         borderWidth: 1
                     }]
             },

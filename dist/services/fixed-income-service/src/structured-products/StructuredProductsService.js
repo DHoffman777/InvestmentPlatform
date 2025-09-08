@@ -23,10 +23,19 @@ class StructuredProductsService extends events_1.EventEmitter {
     async createMBS(mbsData) {
         try {
             const mbsId = (0, crypto_1.randomUUID)();
+            // Create temporary MBS object for calculations
+            const tempMbs = {
+                ...mbsData,
+                id: mbsId,
+                cashFlows: [], // Will be replaced
+                riskMetrics: {}, // Will be replaced
+                active: true
+            };
             // Generate cash flows using prepayment model
-            const cashFlows = await this.generateMBSCashFlows(mbsData);
+            const cashFlows = await this.generateMBSCashFlows(tempMbs);
+            tempMbs.cashFlows = cashFlows;
             // Calculate risk metrics
-            const riskMetrics = await this.calculateMBSRiskMetrics(mbsData, cashFlows);
+            const riskMetrics = await this.calculateMBSRiskMetrics(tempMbs, cashFlows);
             const mbs = {
                 ...mbsData,
                 id: mbsId,
@@ -60,10 +69,19 @@ class StructuredProductsService extends events_1.EventEmitter {
     async createABS(absData) {
         try {
             const absId = (0, crypto_1.randomUUID)();
+            // Create temporary ABS object for calculations
+            const tempAbs = {
+                ...absData,
+                id: absId,
+                cashFlows: [], // Will be replaced
+                riskMetrics: {}, // Will be replaced
+                active: true
+            };
             // Generate cash flows based on collateral performance
-            const cashFlows = await this.generateABSCashFlows(absData);
+            const cashFlows = await this.generateABSCashFlows(tempAbs);
+            tempAbs.cashFlows = cashFlows;
             // Calculate risk metrics
-            const riskMetrics = await this.calculateABSRiskMetrics(absData, cashFlows);
+            const riskMetrics = await this.calculateABSRiskMetrics(tempAbs, cashFlows);
             const abs = {
                 ...absData,
                 id: absId,
@@ -97,13 +115,22 @@ class StructuredProductsService extends events_1.EventEmitter {
     async createCallableBond(bondData) {
         try {
             const bondId = (0, crypto_1.randomUUID)();
-            // Calculate call-adjusted metrics
-            const yieldToCall = this.calculateYieldToCall(bondData);
+            // Calculate call-adjusted metrics - create temporary bond object for calculations
+            const tempBond = {
+                ...bondData,
+                id: bondId,
+                yieldToCall: 0, // Will be replaced
+                yieldToWorst: 0, // Will be replaced
+                callRisk: {}, // Will be replaced
+                cashFlows: [], // Will be replaced
+                active: true
+            };
+            const yieldToCall = this.calculateYieldToCall(tempBond);
             const yieldToWorst = Math.min(bondData.yield, yieldToCall);
             // Generate cash flows considering call scenarios
-            const cashFlows = await this.generateCallableBondCashFlows(bondData);
+            const cashFlows = await this.generateCallableBondCashFlows(tempBond);
             // Calculate call risk metrics
-            const callRisk = await this.calculateCallRisk(bondData, cashFlows);
+            const callRisk = await this.calculateCallRisk(tempBond, cashFlows);
             const bond = {
                 ...bondData,
                 id: bondId,

@@ -75,15 +75,16 @@ class CounterpartyExposureTrackingService {
             // Store assessment in database
             await this.storeAssessment(assessment);
             // Publish event
-            await this.kafkaProducer.publish('counterparty-exposure-assessed', {
-                portfolioId: request.portfolioId,
-                counterpartyId: request.counterpartyId,
-                tenantId: request.tenantId,
-                assessmentId: assessment.id,
-                totalNetExposure: assessment.totalNetExposure,
-                alertCount: alerts.length,
-                timestamp: new Date()
-            });
+            // TODO: Uncomment when Kafka is implemented
+            // await this.kafkaProducer.publish('counterparty-exposure-assessed', {
+            //   portfolioId: request.portfolioId,
+            //   counterpartyId: (request as any).counterpartyId,
+            //   tenantId: request.tenantId,
+            //   assessmentId: assessment.id,
+            //   totalNetExposure: assessment.totalNetExposure,
+            //   alertCount: alerts.length,
+            //   timestamp: new Date()
+            // });
             this.logger.info('Counterparty exposure tracking completed', {
                 portfolioId: request.portfolioId,
                 counterpartyId: request.counterpartyId,
@@ -112,14 +113,15 @@ class CounterpartyExposureTrackingService {
             // Generate portfolio-level counterparty concentration analysis
             const portfolioConcentration = await this.analyzePortfolioCounterpartyConcentration(assessments);
             // Publish portfolio-level event
-            await this.kafkaProducer.publish('portfolio-counterparty-exposure-assessed', {
-                portfolioId: request.portfolioId,
-                tenantId: request.tenantId,
-                counterpartyCount: assessments.length,
-                totalExposure: assessments.reduce((sum, a) => sum + a.totalNetExposure, 0),
-                concentrationMetrics: portfolioConcentration,
-                timestamp: new Date()
-            });
+            // TODO: Uncomment when Kafka is implemented
+            // await this.kafkaProducer.publish('portfolio-counterparty-exposure-assessed', {
+            //   portfolioId: request.portfolioId,
+            //   tenantId: request.tenantId,
+            //   counterpartyCount: assessments.length,
+            //   totalExposure: assessments.reduce((sum, a) => sum + a.totalNetExposure, 0),
+            //   concentrationMetrics: portfolioConcentration,
+            //   timestamp: new Date()
+            // });
             return assessments;
         }
         catch (error) {

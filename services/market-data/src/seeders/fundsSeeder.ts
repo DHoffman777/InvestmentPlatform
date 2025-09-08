@@ -23,14 +23,14 @@ const etfs: ETFData[] = [
     managementFee: new Decimal('0.0945'),
     expenseRatio: new Decimal('0.0945'),
     trackingIndex: 'S&P 500 Index',
-    aum: new Decimal('380000000000'), // $380B
+    // aum: new Decimal('380000000000'), // $380B - removed, not in ETFData type
     dividendYield: new Decimal('1.37'),
-    distributionFrequency: 'QUARTERLY',
-    fundFamily: 'State Street Global Advisors',
-    inceptionDate: new Date('1993-01-22'),
-    primaryBenchmark: 'S&P 500',
-    averageDailyVolume: new Decimal('85000000'),
-    navFrequency: 'DAILY',
+    // distributionFrequency: 'QUARTERLY', - removed, not in ETFData type
+    // fundFamily: 'State Street Global Advisors', - removed, not in ETFData type
+    launchDate: new Date('1993-01-22'),
+    // primaryBenchmark: 'S&P 500', - removed, not in ETFData type
+    // averageDailyVolume: new Decimal('85000000'), - removed, not in ETFData type
+    // navFrequency: 'DAILY', - removed, not in ETFData type
     investmentStyle: 'BLEND',
     marketCapFocus: 'LARGE_CAP',
     geographicFocus: 'DOMESTIC',
@@ -52,14 +52,14 @@ const etfs: ETFData[] = [
     managementFee: new Decimal('0.20'),
     expenseRatio: new Decimal('0.20'),
     trackingIndex: 'NASDAQ-100 Index',
-    aum: new Decimal('180000000000'), // $180B
+    // aum: new Decimal('180000000000'), // $180B - removed, not in ETFData type
     dividendYield: new Decimal('0.62'),
-    distributionFrequency: 'QUARTERLY',
-    fundFamily: 'Invesco',
-    inceptionDate: new Date('1999-03-10'),
-    primaryBenchmark: 'NASDAQ-100',
-    averageDailyVolume: new Decimal('35000000'),
-    navFrequency: 'DAILY',
+    // distributionFrequency: 'QUARTERLY', - removed, not in ETFData type
+    // fundFamily: 'Invesco', - removed, not in ETFData type
+    launchDate: new Date('1999-03-10'),
+    // primaryBenchmark: 'NASDAQ-100', - removed, not in ETFData type
+    // averageDailyVolume: new Decimal('35000000'), - removed, not in ETFData type
+    // navFrequency: 'DAILY', - removed, not in ETFData type
     investmentStyle: 'GROWTH',
     marketCapFocus: 'LARGE_CAP',
     geographicFocus: 'DOMESTIC',
@@ -81,14 +81,14 @@ const etfs: ETFData[] = [
     managementFee: new Decimal('0.03'),
     expenseRatio: new Decimal('0.03'),
     trackingIndex: 'CRSP US Total Market Index',
-    aum: new Decimal('280000000000'), // $280B
+    // aum: new Decimal('280000000000'), // $280B - removed, not in ETFData type
     dividendYield: new Decimal('1.28'),
-    distributionFrequency: 'QUARTERLY',
-    fundFamily: 'Vanguard',
-    inceptionDate: new Date('2001-05-24'),
-    primaryBenchmark: 'CRSP US Total Market',
-    averageDailyVolume: new Decimal('4500000'),
-    navFrequency: 'DAILY',
+    // distributionFrequency: 'QUARTERLY', - removed, not in ETFData type
+    // fundFamily: 'Vanguard', - removed, not in ETFData type
+    launchDate: new Date('2001-05-24'),
+    // primaryBenchmark: 'CRSP US Total Market', - removed, not in ETFData type
+    // averageDailyVolume: new Decimal('4500000'), - removed, not in ETFData type
+    // navFrequency: 'DAILY', - removed, not in ETFData type
     investmentStyle: 'BLEND',
     marketCapFocus: 'MULTI_CAP',
     geographicFocus: 'DOMESTIC',
@@ -110,14 +110,14 @@ const etfs: ETFData[] = [
     managementFee: new Decimal('0.03'),
     expenseRatio: new Decimal('0.03'),
     trackingIndex: 'Bloomberg U.S. Aggregate Bond Index',
-    aum: new Decimal('85000000000'), // $85B
+    // aum: new Decimal('85000000000'), // $85B - removed, not in ETFData type
     dividendYield: new Decimal('3.2'),
-    distributionFrequency: 'MONTHLY',
-    fundFamily: 'iShares',
-    inceptionDate: new Date('2003-09-22'),
-    primaryBenchmark: 'Bloomberg US Aggregate Bond',
-    averageDailyVolume: new Decimal('6500000'),
-    navFrequency: 'DAILY',
+    // distributionFrequency: 'MONTHLY', - removed, not in ETFData type
+    // fundFamily: 'iShares', - removed, not in ETFData type
+    launchDate: new Date('2003-09-22'),
+    // primaryBenchmark: 'Bloomberg US Aggregate Bond', - removed, not in ETFData type
+    // averageDailyVolume: new Decimal('6500000'), - removed, not in ETFData type
+    // navFrequency: 'DAILY', - removed, not in ETFData type
     geographicFocus: 'DOMESTIC',
     standardDeviation: new Decimal('4.2'),
   },
@@ -136,11 +136,11 @@ const etfs: ETFData[] = [
     managementFee: new Decimal('0.40'),
     expenseRatio: new Decimal('0.40'),
     trackingIndex: 'Gold Price',
-    aum: new Decimal('58000000000'), // $58B
-    fundFamily: 'State Street Global Advisors',
-    inceptionDate: new Date('2004-11-18'),
-    averageDailyVolume: new Decimal('8500000'),
-    navFrequency: 'DAILY',
+    // aum: new Decimal('58000000000'), // $58B - removed, not in ETFData type
+    // fundFamily: 'State Street Global Advisors', - removed, not in ETFData type
+    launchDate: new Date('2004-11-18'),
+    // averageDailyVolume: new Decimal('8500000'), - removed, not in ETFData type
+    // navFrequency: 'DAILY', - removed, not in ETFData type
     geographicFocus: 'GLOBAL',
     standardDeviation: new Decimal('16.8'),
   },
@@ -156,29 +156,18 @@ const mutualFunds: MutualFundData[] = [
     fundType: 'MUTUAL_FUND',
     currency: 'USD',
     country: 'US',
-    sector: 'Diversified',
-    category: 'Large Blend',
     assetClass: 'EQUITY_FUND',
     managementFee: new Decimal('0.015'),
     expenseRatio: new Decimal('0.015'),
-    aum: new Decimal('420000000000'), // $420B
     dividendYield: new Decimal('1.25'),
-    distributionFrequency: 'QUARTERLY',
     fundFamily: 'Fidelity',
     inceptionDate: new Date('1988-02-17'),
-    primaryBenchmark: 'S&P 500 Index',
     shareClass: 'I',
     minimumInvestment: new Decimal('0'),
-    navFrequency: 'DAILY',
-    cutoffTime: '4:00 PM ET',
-    settlementDays: 1,
     investmentStyle: 'BLEND',
-    marketCapFocus: 'LARGE_CAP',
-    geographicFocus: 'DOMESTIC',
     beta: new Decimal('1.00'),
     standardDeviation: new Decimal('18.0'),
     morningstarRating: 4,
-    isClosedToNewInvestors: false,
   },
   {
     symbol: 'VTSAX',
@@ -188,30 +177,18 @@ const mutualFunds: MutualFundData[] = [
     fundType: 'MUTUAL_FUND',
     currency: 'USD',
     country: 'US',
-    sector: 'Diversified',
-    category: 'Large Blend',
     assetClass: 'EQUITY_FUND',
     managementFee: new Decimal('0.04'),
     expenseRatio: new Decimal('0.04'),
-    aum: new Decimal('350000000000'), // $350B
     dividendYield: new Decimal('1.31'),
-    distributionFrequency: 'QUARTERLY',
     fundFamily: 'Vanguard',
     inceptionDate: new Date('2000-11-13'),
-    primaryBenchmark: 'CRSP US Total Market Index',
     shareClass: 'A',
     minimumInvestment: new Decimal('3000'),
-    minimumSubsequent: new Decimal('1'),
-    navFrequency: 'DAILY',
-    cutoffTime: '4:00 PM ET',
-    settlementDays: 1,
     investmentStyle: 'BLEND',
-    marketCapFocus: 'MULTI_CAP',
-    geographicFocus: 'DOMESTIC',
     beta: new Decimal('1.00'),
     standardDeviation: new Decimal('18.3'),
     morningstarRating: 5,
-    isClosedToNewInvestors: false,
   },
   {
     symbol: 'PIMIX',
@@ -221,29 +198,18 @@ const mutualFunds: MutualFundData[] = [
     fundType: 'MUTUAL_FUND',
     currency: 'USD',
     country: 'US',
-    sector: 'Fixed Income',
-    category: 'Multisector Bond',
     assetClass: 'BOND_FUND',
     managementFee: new Decimal('0.55'),
     expenseRatio: new Decimal('0.55'),
-    aum: new Decimal('120000000000'), // $120B
     dividendYield: new Decimal('4.8'),
-    distributionFrequency: 'MONTHLY',
     fundFamily: 'PIMCO',
     inceptionDate: new Date('2007-03-01'),
     fundManager: 'Dan Ivascyn',
-    primaryBenchmark: 'Bloomberg US Aggregate Bond Index',
     shareClass: 'I',
     minimumInvestment: new Decimal('1000000'),
-    minimumSubsequent: new Decimal('1000'),
-    navFrequency: 'DAILY',
-    cutoffTime: '4:00 PM ET',
-    settlementDays: 1,
-    geographicFocus: 'GLOBAL',
     beta: new Decimal('0.15'),
     standardDeviation: new Decimal('3.8'),
     morningstarRating: 4,
-    isClosedToNewInvestors: false,
   },
   {
     symbol: 'FSMDX',
@@ -253,29 +219,18 @@ const mutualFunds: MutualFundData[] = [
     fundType: 'MUTUAL_FUND',
     currency: 'USD',
     country: 'US',
-    sector: 'Diversified',
-    category: 'Mid-Cap Blend',
     assetClass: 'EQUITY_FUND',
     managementFee: new Decimal('0.025'),
     expenseRatio: new Decimal('0.025'),
-    aum: new Decimal('25000000000'), // $25B
     dividendYield: new Decimal('1.1'),
-    distributionFrequency: 'QUARTERLY',
     fundFamily: 'Fidelity',
     inceptionDate: new Date('1997-09-26'),
-    primaryBenchmark: 'S&P MidCap 400 Index',
     shareClass: 'I',
     minimumInvestment: new Decimal('0'),
-    navFrequency: 'DAILY',
-    cutoffTime: '4:00 PM ET',
-    settlementDays: 1,
     investmentStyle: 'BLEND',
-    marketCapFocus: 'MID_CAP',
-    geographicFocus: 'DOMESTIC',
     beta: new Decimal('1.05'),
     standardDeviation: new Decimal('22.1'),
     morningstarRating: 4,
-    isClosedToNewInvestors: false,
   },
   {
     symbol: 'VMOT',
@@ -285,28 +240,17 @@ const mutualFunds: MutualFundData[] = [
     fundType: 'MUTUAL_FUND',
     currency: 'USD',
     country: 'US',
-    sector: 'Fixed Income',
-    category: 'Inflation-Protected Bond',
     assetClass: 'BOND_FUND',
     managementFee: new Decimal('0.06'),
     expenseRatio: new Decimal('0.06'),
-    aum: new Decimal('8000000000'), // $8B
     dividendYield: new Decimal('2.3'),
-    distributionFrequency: 'MONTHLY',
     fundFamily: 'Vanguard',
     inceptionDate: new Date('2012-10-12'),
-    primaryBenchmark: 'Bloomberg U.S. Treasury Inflation-Protected Securities (TIPS) 0-5 Year Index',
     shareClass: 'A',
     minimumInvestment: new Decimal('3000'),
-    minimumSubsequent: new Decimal('1'),
-    navFrequency: 'DAILY',
-    cutoffTime: '4:00 PM ET',
-    settlementDays: 1,
-    geographicFocus: 'DOMESTIC',
     beta: new Decimal('0.05'),
     standardDeviation: new Decimal('1.8'),
     morningstarRating: 3,
-    isClosedToNewInvestors: false,
   },
 ];
 
@@ -332,29 +276,29 @@ export async function seedFunds() {
 
     // Generate summary statistics
     const totalETFs = await prisma.security.count({
-      where: { assetClass: 'ETF', isActive: true }
+      where: { assetClass: 'ETF', isActive: true } as any
     });
     
     const totalMutualFunds = await prisma.security.count({
-      where: { assetClass: 'MUTUAL_FUND', isActive: true }
+      where: { assetClass: 'MUTUAL_FUND', isActive: true } as any
     });
 
     const fundTypes = await prisma.security.groupBy({
-      by: ['assetClass'],
+      by: ['assetClass'] as any,
       where: { 
         assetClass: { in: ['ETF', 'MUTUAL_FUND'] }, 
         isActive: true 
-      },
-      _count: { assetClass: true },
-    });
+      } as any,
+      _count: { assetClass: true } as any,
+    } as any);
 
     logger.info('Fund seeding summary:', {
       totalETFs,
       totalMutualFunds,
       totalFunds: totalETFs + totalMutualFunds,
       breakdown: fundTypes.map(type => ({
-        type: type.assetClass,
-        count: type._count.assetClass,
+        type: (type as any).assetClass,
+        count: (type as any)._count?.assetClass || 0,
       })),
     });
 

@@ -80,12 +80,11 @@ class SLAHistoricalAnalysisService extends events_1.EventEmitter {
             patterns.push({
                 type: 'seasonal',
                 description: `Seasonal pattern detected with period of ${seasonalityAnalysis.period} ${this.getTimeUnit(seasonalityAnalysis.period)}`,
-                frequency: seasonalityAnalysis.period,
+                frequency: String(seasonalityAnalysis.period),
                 timeWindow: {
                     start: data[0].timestamp,
                     end: data[data.length - 1].timestamp
                 },
-                affectedSLAs: [slaId],
                 strength: seasonalityAnalysis.strength,
                 impact: this.determinePatternImpact(seasonalityAnalysis.strength)
             });
@@ -96,12 +95,11 @@ class SLAHistoricalAnalysisService extends events_1.EventEmitter {
             patterns.push({
                 type: 'trending',
                 description: `${trendAnalysis.direction} trend detected with slope ${trendAnalysis.slope.toFixed(4)}`,
-                frequency: 0,
+                frequency: '0',
                 timeWindow: {
                     start: data[0].timestamp,
                     end: data[data.length - 1].timestamp
                 },
-                affectedSLAs: [slaId],
                 strength: Math.abs(trendAnalysis.slope),
                 impact: trendAnalysis.direction === 'improving' ? 'positive' : 'negative'
             });
@@ -111,12 +109,11 @@ class SLAHistoricalAnalysisService extends events_1.EventEmitter {
         patterns.push(...cyclicalPatterns.map(cp => ({
             type: 'cyclical',
             description: `Cyclical pattern with period ${cp.period}`,
-            frequency: cp.period,
+            frequency: String(cp.period),
             timeWindow: {
                 start: data[0].timestamp,
                 end: data[data.length - 1].timestamp
             },
-            affectedSLAs: [slaId],
             strength: cp.strength,
             impact: 'neutral'
         })));
@@ -438,12 +435,11 @@ class SLAHistoricalAnalysisService extends events_1.EventEmitter {
                 patterns.push({
                     type: 'recurring',
                     description: `Recurring breach pattern every ${Math.round(avgInterval / (60 * 60 * 1000))} hours`,
-                    frequency: avgInterval,
+                    frequency: String(avgInterval),
                     timeWindow: {
                         start: breaches[0].timestamp,
                         end: breaches[breaches.length - 1].timestamp
                     },
-                    affectedSLAs: [slaId],
                     strength: 1 - (stdDev / avgInterval),
                     impact: 'negative'
                 });

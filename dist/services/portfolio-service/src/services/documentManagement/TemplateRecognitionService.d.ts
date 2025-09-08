@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
+import { KafkaService } from '../../utils/kafka-mock';
 import { DocumentTemplate, DocumentType, Language, BoundingBox, OCRResult } from '../../models/documentManagement/DocumentManagement';
 export interface TemplateRecognitionRequest {
     documentId: string;
@@ -40,7 +40,7 @@ export interface RecognitionMetadata {
     recognizedAt: Date;
 }
 export interface LayoutFeature {
-    type: 'HEADER' | 'FOOTER' | 'TABLE' | 'LOGO' | 'SIGNATURE' | 'FORM_FIELD' | 'BARCODE' | 'QR_CODE';
+    type: 'HEADER' | 'FOOTER' | 'TABLE' | 'LOGO' | 'SIGNATURE' | 'FORM_FIELD' | 'BARCODE' | 'QR_CODE' | 'TEXT_BLOCK';
     boundingBox: BoundingBox;
     confidence: number;
     text?: string;

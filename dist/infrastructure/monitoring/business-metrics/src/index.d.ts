@@ -1,7 +1,9 @@
 export * from './BusinessMetricsController';
-export * from './BusinessThresholdAlerting';
-export { DrillDownService, type DrillDownOptions, type DrillDownFilter, type DrillDownLevel } from './DrillDownCapabilities';
 export * from './ExecutiveReportingDashboard';
-export * from './MetricsCollectionPipeline';
 export * from './RealTimeMetricsStreaming';
 export * from './DashboardTemplateSystem';
+export { DrillDownCapabilities, type DrillDownFilter, type DrillDownLevel, type DrillDownPath, type DrillDownContext, type DrillDownResult, type DrillDownDataPoint, type DrillDownAggregation, type DrillDownMetadata } from './DrillDownCapabilities';
+export { BusinessThresholdAlerting } from './BusinessThresholdAlerting';
+export { MetricsCollectionPipeline, type CollectionConfig } from './MetricsCollectionPipeline';
+export { type AlertRule, // This will be the one from BusinessMetricsDataModel
+type DataTransformation } from './BusinessMetricsDataModel';

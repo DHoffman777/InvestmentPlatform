@@ -462,8 +462,8 @@ class DatabaseMonitor extends events_1.EventEmitter {
             tuplesInserted: row.n_tup_ins,
             tuplesUpdated: row.n_tup_upd,
             tuplesDeleted: row.n_tup_del,
-            lastVacuum: row.last_vacuum,
-            lastAnalyze: row.last_analyze,
+            lastVacuum: row.last_vacuum ?? undefined,
+            lastAnalyze: row.last_analyze ?? undefined,
         }));
     }
     async getIndexStatistics() {

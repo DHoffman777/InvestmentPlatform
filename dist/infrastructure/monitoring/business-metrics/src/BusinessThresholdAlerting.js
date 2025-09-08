@@ -131,7 +131,7 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
             conditionEvaluations.push(evaluation);
         }
         const requiredConditionsMet = conditionEvaluations
-            .filter(eval => eval.isMet && rule.conditions.find(c => c.id === eval.conditionId)?.isRequired)
+            .filter(e => e.isMet && rule.conditions.find(c => c.id === e.conditionId)?.isRequired)
             .length;
         const requiredConditionsCount = rule.conditions.filter(c => c.isRequired).length;
         const isTriggered = requiredConditionsMet === requiredConditionsCount &&
@@ -157,7 +157,7 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
             conditionEvaluations.push(evaluation);
         }
         const requiredConditionsMet = conditionEvaluations
-            .filter(eval => eval.isMet && rule.conditions.find(c => c.id === eval.conditionId)?.isRequired)
+            .filter(e => e.isMet && rule.conditions.find(c => c.id === e.conditionId)?.isRequired)
             .length;
         const requiredConditionsCount = rule.conditions.filter(c => c.isRequired).length;
         const isTriggered = requiredConditionsMet === requiredConditionsCount &&
@@ -177,27 +177,27 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
         let isMet = false;
         switch (condition.type) {
             case 'value':
-                isMet = this.evaluateValueCondition(actualValue, condition);
+                isMet = await this.evaluateValueCondition(actualValue, condition);
                 break;
             case 'change':
                 const previousValue = await this.getPreviousValue(metricValue.metricId);
                 if (previousValue !== null) {
                     actualValue = actualValue - previousValue;
-                    isMet = this.evaluateValueCondition(actualValue, condition);
+                    isMet = await this.evaluateValueCondition(actualValue, condition);
                 }
                 break;
             case 'rate':
                 const rateValue = await this.calculateRate(metricValue.metricId, condition.timeWindow || 3600000);
                 if (rateValue !== null) {
                     actualValue = rateValue;
-                    isMet = this.evaluateValueCondition(actualValue, condition);
+                    isMet = await this.evaluateValueCondition(actualValue, condition);
                 }
                 break;
             case 'pattern':
                 isMet = await this.evaluatePatternCondition(metricValue.metricId, condition);
                 break;
             case 'time_based':
-                isMet = this.evaluateTimeBasedCondition(metricValue, condition);
+                isMet = await this.evaluateTimeBasedCondition(metricValue, condition);
                 break;
         }
         if (condition.dimensions) {
@@ -216,10 +216,10 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
         let isMet = false;
         switch (condition.type) {
             case 'value':
-                isMet = this.evaluateValueCondition(actualValue, condition);
+                isMet = await this.evaluateValueCondition(actualValue, condition);
                 break;
             default:
-                isMet = this.evaluateValueCondition(actualValue, condition);
+                isMet = await this.evaluateValueCondition(actualValue, condition);
         }
         return {
             conditionId: condition.id,
@@ -228,7 +228,7 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
             threshold: Array.isArray(condition.value) ? condition.value[0] : condition.value
         };
     }
-    evaluateValueCondition(value, condition) {
+    async evaluateValueCondition(value, condition) {
         const threshold = condition.value;
         switch (condition.operator) {
             case 'gt': return value > threshold;
@@ -253,7 +253,7 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
             return false;
         return await detector.isAnomaly(await this.getPreviousValue(metricId) || 0);
     }
-    evaluateTimeBasedCondition(metricValue, condition) {
+    async evaluateTimeBasedCondition(metricValue, condition) {
         const hour = metricValue.timestamp.getHours();
         const dayOfWeek = metricValue.timestamp.getDay();
         const timeRanges = condition.value;
@@ -303,6 +303,7 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
         }
         const alert = {
             id: this.generateId(),
+            metricId: '', // Empty for KPI alerts
             kpiTargetId: rule.kpiId,
             tenantId: rule.tenantId,
             alertType: rule.type,
@@ -740,14 +741,14 @@ class AnomalyDetector {
         }
         switch (this.config.algorithm) {
             case 'zscore':
-                return this.zScoreDetection(value);
+                return await this.zScoreDetection(value);
             case 'iqr':
-                return this.iqrDetection(value);
+                return await this.iqrDetection(value);
             default:
                 return false;
         }
     }
-    zScoreDetection(value) {
+    async zScoreDetection(value) {
         const mean = this.trainingData.reduce((sum, val) => sum + val, 0) / this.trainingData.length;
         const variance = this.trainingData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / this.trainingData.length;
         const stdDev = Math.sqrt(variance);
@@ -757,7 +758,7 @@ class AnomalyDetector {
         const threshold = this.getZScoreThreshold(this.config.sensitivity);
         return zScore > threshold;
     }
-    iqrDetection(value) {
+    async iqrDetection(value) {
         const sorted = [...this.trainingData].sort((a, b) => a - b);
         const q1Index = Math.floor(sorted.length * 0.25);
         const q3Index = Math.floor(sorted.length * 0.75);

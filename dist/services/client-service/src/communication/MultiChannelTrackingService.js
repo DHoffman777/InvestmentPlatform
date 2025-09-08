@@ -191,7 +191,7 @@ class MultiChannelTrackingService extends events_1.EventEmitter {
         const cachedResults = this.searchMessageCache(query);
         results.push(...cachedResults);
         // Search in connected channels if needed
-        if (results.length < (query.limit || 50)) {
+        if (results.length < (query.page_size || 50)) {
             const channelSearchPromises = Array.from(this.adapters.entries()).map(async ([channel, adapter]) => {
                 if (adapter.isConnected()) {
                     try {
@@ -376,8 +376,8 @@ class MultiChannelTrackingService extends events_1.EventEmitter {
             if (rule.condition && !this.evaluateCondition(rule.condition, transformedMessage)) {
                 continue;
             }
-            transformedMessage[rule.field] =
-                await this.applyTransformation(transformedMessage[rule.field], rule);
+            const fieldValue = transformedMessage[rule.field];
+            transformedMessage[rule.field] = await this.applyTransformation(fieldValue, rule);
         }
         return transformedMessage;
     }
@@ -557,10 +557,12 @@ class MultiChannelTrackingService extends events_1.EventEmitter {
             const aValue = a[sortField];
             const bValue = b[sortField];
             let comparison = 0;
-            if (aValue < bValue)
-                comparison = -1;
-            if (aValue > bValue)
-                comparison = 1;
+            if (aValue != null && bValue != null) {
+                if (aValue < bValue)
+                    comparison = -1;
+                if (aValue > bValue)
+                    comparison = 1;
+            }
             return sortOrder === 'desc' ? -comparison : comparison;
         });
         // Apply pagination
@@ -614,6 +616,56 @@ class MultiChannelTrackingService extends events_1.EventEmitter {
     async detectLanguage(content) {
         // Placeholder language detection
         return 'en';
+    }
+    async createCommunicationRecord(message, messageId, channel) {
+        return {
+            id: messageId,
+            client_id: '',
+            advisor_id: '',
+            type: message.type,
+            channel,
+            direction: CommunicationDataModel_1.CommunicationDirection.OUTBOUND,
+            subject: message.subject,
+            content: message.content,
+            timestamp: new Date(),
+            status: CommunicationDataModel_1.CommunicationStatus.SENT,
+            category: CommunicationDataModel_1.CommunicationCategory.GENERAL_INQUIRY,
+            tags: [],
+            attachments: message.attachments || [],
+            participants: message.to.map(to => ({
+                id: to,
+                name: to,
+                email: to,
+                phone: '',
+                role: 'recipient',
+                is_client: false,
+                is_internal: false
+            })),
+            metadata: {
+                priority: message.priority,
+                urgency: 'MEDIUM',
+                sensitivity: CommunicationDataModel_1.SensitivityLevel.INTERNAL,
+                language: 'en',
+                timezone: 'UTC',
+                ...(message.metadata || {})
+            },
+            compliance: {
+                retention_required: true,
+                retention_period_years: 7,
+                legal_hold: false,
+                regulatory_requirements: [],
+                privacy_classification: 'internal',
+                access_restrictions: [],
+                audit_trail_required: true,
+                encryption_required: false,
+                review_status: 'pending',
+                compliance_notes: ''
+            },
+            created_at: new Date(),
+            updated_at: new Date(),
+            created_by: 'system',
+            updated_by: 'system'
+        };
     }
 }
 exports.MultiChannelTrackingService = MultiChannelTrackingService;

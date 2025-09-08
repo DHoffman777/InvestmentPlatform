@@ -608,7 +608,7 @@ class FinancialServicesComplianceService extends events_1.EventEmitter {
         return new Promise((resolve) => {
             this.app.listen(this.config.service.port, this.config.service.host, () => {
                 console.log(`Financial Services Compliance Service running on ${this.config.service.host}:${this.config.service.port}`);
-                resolve();
+                resolve(undefined);
             });
         });
     }

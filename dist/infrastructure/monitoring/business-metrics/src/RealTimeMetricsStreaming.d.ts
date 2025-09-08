@@ -30,7 +30,7 @@ export interface StreamFilter {
     value: any;
 }
 export interface StreamMessage {
-    type: 'metric_update' | 'kpi_update' | 'alert' | 'heartbeat' | 'error' | 'subscription_status';
+    type: 'metric_update' | 'kpi_update' | 'alert' | 'heartbeat' | 'error' | 'subscription_status' | 'authentication_required' | 'authentication_success' | 'authentication_failed';
     timestamp: Date;
     subscriptionId?: string;
     payload: any;

@@ -154,7 +154,7 @@ class CustodianIntegrationService {
             // Generate reconciliation summary
             const summary = await this.generateReconciliationSummary(reconciliationResults);
             // Check for material discrepancies
-            const materialDiscrepancies = reconciliationResults.filter(result => result.discrepancies.some(d => !d.withinTolerance));
+            const materialDiscrepancies = reconciliationResults.filter(result => result.discrepancies.some((d) => !d.withinTolerance));
             // Create alerts for material discrepancies
             if (materialDiscrepancies.length > 0) {
                 await this.createReconciliationAlerts(connectionId, materialDiscrepancies);

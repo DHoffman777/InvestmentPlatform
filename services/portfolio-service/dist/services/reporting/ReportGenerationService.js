@@ -393,7 +393,7 @@ class ReportGenerationService {
         const delivery = {
             id: (0, crypto_1.randomUUID)(),
             reportJobId: job.id,
-            method: job.request.deliveryMethod,
+            method: job.request.deliveryMethod === 'PRINT' ? 'DOWNLOAD' : job.request.deliveryMethod,
             recipients: job.request.emailRecipients,
             subject: `Report: ${job.request.name || 'Generated Report'}`,
             message: 'Your requested report is ready.',

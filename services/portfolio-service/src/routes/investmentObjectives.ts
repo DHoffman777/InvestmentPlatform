@@ -122,7 +122,7 @@ const investmentRestrictionSchema = {
  * @access Private
  */
 router.post('/objectives',
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(investmentObjectiveSchema),
   async (req: any, res: any) => {
     try {
@@ -177,7 +177,7 @@ router.post('/objectives',
  * @access Private
  */
 router.post('/restrictions',
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(investmentRestrictionSchema),
   async (req: any, res: any) => {
     try {
@@ -233,7 +233,7 @@ router.post('/restrictions',
  * @access Private
  */
 router.get('/clients/:clientId/objectives',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -271,7 +271,7 @@ router.get('/clients/:clientId/objectives',
  * @access Private
  */
 router.get('/clients/:clientId/restrictions',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -318,7 +318,7 @@ router.get('/clients/:clientId/restrictions',
  * @access Private
  */
 router.put('/objectives/:objectiveId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { objectiveId } = req.params;
@@ -369,7 +369,7 @@ router.put('/objectives/:objectiveId',
  * @access Private
  */
 router.put('/restrictions/:restrictionId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { restrictionId } = req.params;
@@ -421,7 +421,7 @@ router.put('/restrictions/:restrictionId',
  * @access Private
  */
 router.delete('/objectives/:objectiveId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { objectiveId } = req.params;
@@ -460,7 +460,7 @@ router.delete('/objectives/:objectiveId',
  * @access Private
  */
 router.delete('/restrictions/:restrictionId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { restrictionId } = req.params;
@@ -499,7 +499,7 @@ router.delete('/restrictions/:restrictionId',
  * @access Private
  */
 router.get('/clients/:clientId/objectives/analysis',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -537,7 +537,7 @@ router.get('/clients/:clientId/objectives/analysis',
  * @access Private
  */
 router.get('/clients/:clientId/restrictions/analysis',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
@@ -575,7 +575,7 @@ router.get('/clients/:clientId/restrictions/analysis',
  * @access Private
  */
 router.get('/restriction-types',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const restrictionTypes = ['POSITION_LIMIT', 'SECTOR_LIMIT', 'ISSUER_LIMIT', 'ESG_RESTRICTION'].map(type => ({
@@ -605,7 +605,7 @@ router.get('/restriction-types',
  * @access Private
  */
 router.get('/risk-levels',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const riskLevels = ['CONSERVATIVE', 'MODERATE', 'AGGRESSIVE', 'VERY_AGGRESSIVE'].map((level: string) => ({

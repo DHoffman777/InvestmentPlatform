@@ -70,7 +70,7 @@ const clientRelationshipSchema = {
  * @access Private
  */
 router.post('/households',
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(householdSchema),
   async (req: any, res: any) => {
     try {
@@ -120,7 +120,7 @@ router.post('/households',
  * @access Private
  */
 router.get('/households/:householdId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { householdId } = req.params;
@@ -158,7 +158,7 @@ router.get('/households/:householdId',
  * @access Private
  */
 router.get('/households',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
@@ -208,7 +208,7 @@ router.get('/households',
  * @access Private
  */
 router.post('/households/:householdId/relationships',
-  authMiddleware,
+  authMiddleware as any,
   validateRequest(clientRelationshipSchema),
   async (req: any, res: any) => {
     try {
@@ -265,7 +265,7 @@ router.post('/households/:householdId/relationships',
  * @access Private
  */
 router.put('/relationships/:relationshipId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { relationshipId } = req.params;
@@ -316,7 +316,7 @@ router.put('/relationships/:relationshipId',
  * @access Private
  */
 router.delete('/households/:householdId/clients/:clientId',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { householdId, clientId } = req.params;
@@ -360,7 +360,7 @@ router.delete('/households/:householdId/clients/:clientId',
  * @access Private
  */
 router.get('/households/:householdId/analytics',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const { householdId } = req.params;
@@ -398,7 +398,7 @@ router.get('/households/:householdId/analytics',
  * @access Private
  */
 router.get('/relationships/types',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const relationshipTypes = Object.values(RelationshipType).map(type => ({

@@ -106,7 +106,7 @@ export interface MetricAlert {
     metricId: string;
     kpiTargetId?: string;
     tenantId: string;
-    alertType: 'threshold' | 'anomaly' | 'trend' | 'missing_data';
+    alertType: 'threshold' | 'anomaly' | 'trend' | 'missing_data' | 'composite';
     severity: AlertSeverity;
     status: 'active' | 'resolved' | 'suppressed';
     message: string;

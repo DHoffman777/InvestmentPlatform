@@ -325,7 +325,7 @@ export class InstrumentReferenceDataService {
     };
 
     // Store market data in quote table instead
-    await this.prisma.quote.create({
+    await (this.prisma as any).quote.create({
       data: {
         securityId,
         bid: marketData.bidPrice ? new Decimal(marketData.bidPrice) : null,
@@ -347,7 +347,7 @@ export class InstrumentReferenceDataService {
   }
 
   async getMarketData(securityId: string): Promise<any> {
-    return await this.prisma.quote.findFirst({
+    return await (this.prisma as any).quote.findFirst({
       where: {
         securityId
       },

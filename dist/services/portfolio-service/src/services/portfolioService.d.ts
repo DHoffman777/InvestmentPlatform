@@ -62,10 +62,10 @@ export declare class PortfolioService {
             updatedAt: Date;
             name: string;
             description: string | null;
-            baseCurrency: string;
             _count: {
                 positions: number;
             };
+            baseCurrency: string;
             portfolioType: import(".prisma/client").$Enums.PortfolioType;
             riskProfile: import(".prisma/client").$Enums.RiskProfile;
             totalValue: Prisma.Decimal;

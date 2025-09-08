@@ -1,23 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocumentSearchService = void 0;
+// Kafka service will be imported when available
+// import { KafkaService } from '../infrastructure/KafkaService';
 const DocumentManagement_1 = require("../../models/documentManagement/DocumentManagement");
 class DocumentSearchService {
     prisma;
     logger;
-    kafkaService;
+    kafkaService; // KafkaService - type will be restored when module is available
     searchEngine;
     vectorDatabase;
     queryAnalyzer;
-    semanticSearch;
+    semanticSearchEngine;
     indexManager;
     cacheManager;
-    constructor(prisma, logger, kafkaService) {
+    constructor(prisma, logger, kafkaService // KafkaService - type will be restored when module is available
+    ) {
         this.prisma = prisma;
         this.logger = logger;
         this.kafkaService = kafkaService;
         this.queryAnalyzer = new QueryAnalyzer();
-        this.semanticSearch = new SemanticSearchEngine();
+        this.semanticSearchEngine = new SemanticSearchEngine();
         this.indexManager = new SearchIndexManager();
         this.cacheManager = new SearchCacheManager();
         this.initializeSearchService();
@@ -97,7 +100,7 @@ class DocumentSearchService {
                 tenantId,
                 threshold: query.similarityThreshold
             });
-            const embedding = query.embedding || await this.semanticSearch.generateEmbedding(query.text);
+            const embedding = query.embedding || await this.semanticSearchEngine.generateEmbedding(query.text);
             const similarDocuments = await this.vectorDatabase.findSimilar(embedding, query.similarityThreshold, query.maxResults);
             const results = [];
             for (const doc of similarDocuments) {
@@ -145,7 +148,7 @@ class DocumentSearchService {
                     clientId: document.clientId
                 },
                 tags: document.tags,
-                vectors: await this.semanticSearch.generateEmbedding(`${document.title || ''} ${extractedData?.fields.map(f => f.value).join(' ') || ''}`),
+                vectors: await this.semanticSearchEngine.generateEmbedding(`${document.title || ''} ${extractedData?.fields.map(f => f.value).join(' ') || ''}`),
                 lastIndexed: new Date(),
                 indexVersion: '1.0'
             };

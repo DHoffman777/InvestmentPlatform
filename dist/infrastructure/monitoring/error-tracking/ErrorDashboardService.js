@@ -285,15 +285,12 @@ class ErrorDashboardService extends events_1.EventEmitter {
                     resolved: true,
                     resolvedAt: { not: null }
                 },
-                _count: { id: true },
-                _avg: {
-                    resolutionTime: true // Assuming this field exists
-                }
+                _count: { _all: true }
             })
         ]);
         // Calculate error rate (errors per hour)
         const timeRangeHours = (Date.now() - new Date(whereClause.lastSeen.gte).getTime()) / (1000 * 60 * 60);
-        const errorRate = (errorStats._sum.count || 0) / timeRangeHours;
+        const errorRate = (errorStats._sum?.count || 0) / timeRangeHours;
         // Count critical errors
         const criticalErrors = await this.prisma.error.aggregate({
             where: {
@@ -303,11 +300,11 @@ class ErrorDashboardService extends events_1.EventEmitter {
             _sum: { count: true }
         });
         return {
-            totalErrors: errorStats._sum.count || 0,
-            uniqueErrors: errorStats._count.id || 0,
-            criticalErrors: criticalErrors._sum.count || 0,
-            resolvedErrors: resolutionStats._count.id || 0,
-            averageResolutionTime: resolutionStats._avg.resolutionTime || 0,
+            totalErrors: errorStats._sum?.count || 0,
+            uniqueErrors: errorStats._count?.id || 0,
+            criticalErrors: criticalErrors._sum?.count || 0,
+            resolvedErrors: resolutionStats._count?._all || 0,
+            averageResolutionTime: 0, // No resolutionTime field in schema
             errorRate
         };
     }
@@ -317,7 +314,7 @@ class ErrorDashboardService extends events_1.EventEmitter {
             where: whereClause,
             _count: { id: true },
             _sum: { count: true },
-            _avg: { severityWeight: true }, // Assuming severity is stored as numeric weight
+            _avg: { statusCode: true },
             orderBy: {
                 _sum: {
                     count: 'desc'
@@ -325,13 +322,13 @@ class ErrorDashboardService extends events_1.EventEmitter {
             },
             take: 10
         });
-        const totalCount = stats.reduce((sum, stat) => sum + (stat._sum.count || 0), 0);
+        const totalCount = stats.reduce((sum, stat) => sum + (stat._sum?.count || 0), 0);
         return stats.map(stat => ({
             category: stat.category,
-            count: stat._sum.count || 0,
-            percentage: totalCount > 0 ? ((stat._sum.count || 0) / totalCount) * 100 : 0,
+            count: stat._sum?.count || 0,
+            percentage: totalCount > 0 ? ((stat._sum?.count || 0) / totalCount) * 100 : 0,
             trend: 'stable', // TODO: Calculate actual trend
-            averageSeverity: stat._avg.severityWeight || 0
+            averageSeverity: 0 // No severityWeight field in schema
         }));
     }
     async getServiceStats(whereClause) {

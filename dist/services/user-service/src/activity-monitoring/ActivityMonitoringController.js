@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ActivityMonitoringController = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, query, param, validationResult } = require('express-validator');
 const ActivityTrackingService_1 = require("./ActivityTrackingService");
 const ActivityAnalyticsService_1 = require("./ActivityAnalyticsService");
 const SuspiciousActivityDetectionService_1 = require("./SuspiciousActivityDetectionService");
@@ -97,7 +97,7 @@ class ActivityMonitoringController {
     // Activity Management Endpoints
     async getActivities(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -128,7 +128,7 @@ class ActivityMonitoringController {
     }
     async getActivity(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -142,7 +142,7 @@ class ActivityMonitoringController {
     }
     async createActivity(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -162,7 +162,7 @@ class ActivityMonitoringController {
     }
     async getUserSessions(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -178,7 +178,7 @@ class ActivityMonitoringController {
     }
     async getActivityMetrics(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -198,7 +198,7 @@ class ActivityMonitoringController {
     // Streaming Endpoints
     async subscribeToStream(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -212,7 +212,7 @@ class ActivityMonitoringController {
     }
     async unsubscribeFromStream(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -244,7 +244,7 @@ class ActivityMonitoringController {
     }
     async getStreamingHistory(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -260,7 +260,7 @@ class ActivityMonitoringController {
     // Analytics Endpoints
     async getUserActivitySummary(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -279,7 +279,7 @@ class ActivityMonitoringController {
     }
     async getSecurityAnalysis(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -297,7 +297,7 @@ class ActivityMonitoringController {
     }
     async getBehaviorAnalysis(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -315,7 +315,7 @@ class ActivityMonitoringController {
     }
     async getTrendAnalysis(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -332,7 +332,7 @@ class ActivityMonitoringController {
     }
     async getAnomalyDetection(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -349,7 +349,7 @@ class ActivityMonitoringController {
     }
     async createReport(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -372,7 +372,7 @@ class ActivityMonitoringController {
     }
     async updateReport(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -390,7 +390,7 @@ class ActivityMonitoringController {
     }
     async deleteReport(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -405,7 +405,7 @@ class ActivityMonitoringController {
     // Suspicious Activity Detection Endpoints
     async getSuspiciousActivityAlerts(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -430,7 +430,7 @@ class ActivityMonitoringController {
     }
     async getSuspiciousActivityAlert(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -444,7 +444,7 @@ class ActivityMonitoringController {
     }
     async updateAlertStatus(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -462,7 +462,7 @@ class ActivityMonitoringController {
     }
     async createDetectionRule(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -485,7 +485,7 @@ class ActivityMonitoringController {
     }
     async updateDetectionRule(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -503,7 +503,7 @@ class ActivityMonitoringController {
     }
     async deleteDetectionRule(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -526,7 +526,7 @@ class ActivityMonitoringController {
     }
     async addThreatIntelligence(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -541,7 +541,7 @@ class ActivityMonitoringController {
     // Retention and Archival Endpoints
     async createRetentionPolicy(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -567,7 +567,7 @@ class ActivityMonitoringController {
     }
     async updateRetentionPolicy(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -585,7 +585,7 @@ class ActivityMonitoringController {
     }
     async deleteRetentionPolicy(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -599,7 +599,7 @@ class ActivityMonitoringController {
     }
     async applyRetentionPolicy(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -615,7 +615,7 @@ class ActivityMonitoringController {
     }
     async getArchivedActivities(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -636,7 +636,7 @@ class ActivityMonitoringController {
     }
     async getArchivedActivity(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -663,7 +663,7 @@ class ActivityMonitoringController {
     }
     async createRetentionJob(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -677,7 +677,7 @@ class ActivityMonitoringController {
     }
     async processDataSubjectRequest(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -695,7 +695,7 @@ class ActivityMonitoringController {
     // Privacy and Compliance Endpoints
     async createPrivacyPolicy(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -721,7 +721,7 @@ class ActivityMonitoringController {
     }
     async anonymizeActivity(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -735,7 +735,7 @@ class ActivityMonitoringController {
     }
     async recordConsent(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -753,7 +753,7 @@ class ActivityMonitoringController {
     }
     async withdrawConsent(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -767,7 +767,7 @@ class ActivityMonitoringController {
     }
     async processDataSubjectRight(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -785,7 +785,7 @@ class ActivityMonitoringController {
     }
     async exportUserData(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -800,7 +800,7 @@ class ActivityMonitoringController {
     }
     async getPrivacyAuditLogs(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -829,7 +829,7 @@ class ActivityMonitoringController {
     }
     async createDataFlowMapping(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -905,7 +905,7 @@ class ActivityMonitoringController {
     }
     async getUserActivityDashboard(req, res) {
         try {
-            const errors = (0, express_validator_1.validationResult)(req);
+            const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 res.status(400).json({ errors: errors.array() });
                 return;
@@ -962,243 +962,243 @@ class ActivityMonitoringController {
     // Validation middleware
     validateGetActivities() {
         return [
-            (0, express_validator_1.query)('userId').optional().isUUID(),
-            (0, express_validator_1.query)('activityType').optional().isIn(Object.values(ActivityTrackingService_1.ActivityType)),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('severity').optional().isIn(Object.values(ActivityTrackingService_1.ActivitySeverity)),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 1000 }),
-            (0, express_validator_1.query)('offset').optional().isInt({ min: 0 })
+            query('userId').optional().isUUID(),
+            query('activityType').optional().isIn(Object.values(ActivityTrackingService_1.ActivityType)),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('severity').optional().isIn(Object.values(ActivityTrackingService_1.ActivitySeverity)),
+            query('limit').optional().isInt({ min: 1, max: 1000 }),
+            query('offset').optional().isInt({ min: 0 })
         ];
     }
     validateActivityId() {
-        return [(0, express_validator_1.param)('id').isUUID()];
+        return [param('id').isUUID()];
     }
     validateCreateActivity() {
         return [
-            (0, express_validator_1.body)('activityType').isIn(Object.values(ActivityTrackingService_1.ActivityType)),
-            (0, express_validator_1.body)('activityCategory').isIn(Object.values(ActivityTrackingService_1.ActivityCategory)),
-            (0, express_validator_1.body)('action').isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('resource').isString().isLength({ min: 1, max: 200 }),
-            (0, express_validator_1.body)('ipAddress').isIP(),
-            (0, express_validator_1.body)('userAgent').optional().isString()
+            body('activityType').isIn(Object.values(ActivityTrackingService_1.ActivityType)),
+            body('activityCategory').isIn(Object.values(ActivityTrackingService_1.ActivityCategory)),
+            body('action').isString().isLength({ min: 1, max: 100 }),
+            body('resource').isString().isLength({ min: 1, max: 200 }),
+            body('ipAddress').isIP(),
+            body('userAgent').optional().isString()
         ];
     }
     validateUserId() {
-        return [(0, express_validator_1.param)('userId').isUUID()];
+        return [param('userId').isUUID()];
     }
     validateGetMetrics() {
         return [
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601()
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601()
         ];
     }
     validateSubscribe() {
         return [
-            (0, express_validator_1.body)('socketId').isString(),
-            (0, express_validator_1.body)('filter').optional().isObject()
+            body('socketId').isString(),
+            body('filter').optional().isObject()
         ];
     }
     validateSubscriptionId() {
-        return [(0, express_validator_1.param)('subscriptionId').isUUID()];
+        return [param('subscriptionId').isUUID()];
     }
     validateUserSummary() {
         return [
-            (0, express_validator_1.param)('userId').isUUID(),
-            (0, express_validator_1.query)('startDate').isISO8601(),
-            (0, express_validator_1.query)('endDate').isISO8601()
+            param('userId').isUUID(),
+            query('startDate').isISO8601(),
+            query('endDate').isISO8601()
         ];
     }
     validateSecurityAnalysis() {
         return [
-            (0, express_validator_1.query)('startDate').isISO8601(),
-            (0, express_validator_1.query)('endDate').isISO8601()
+            query('startDate').isISO8601(),
+            query('endDate').isISO8601()
         ];
     }
     validateBehaviorAnalysis() {
         return [
-            (0, express_validator_1.param)('userId').isUUID(),
-            (0, express_validator_1.query)('startDate').isISO8601(),
-            (0, express_validator_1.query)('endDate').isISO8601()
+            param('userId').isUUID(),
+            query('startDate').isISO8601(),
+            query('endDate').isISO8601()
         ];
     }
     validateTrendAnalysis() {
         return [
-            (0, express_validator_1.query)('startDate').isISO8601(),
-            (0, express_validator_1.query)('endDate').isISO8601()
+            query('startDate').isISO8601(),
+            query('endDate').isISO8601()
         ];
     }
     validateAnomalyDetection() {
         return [
-            (0, express_validator_1.query)('startDate').isISO8601(),
-            (0, express_validator_1.query)('endDate').isISO8601()
+            query('startDate').isISO8601(),
+            query('endDate').isISO8601()
         ];
     }
     validateCreateReport() {
         return [
-            (0, express_validator_1.body)('name').isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('type').isIn(Object.values(ActivityAnalyticsService_1.ReportType)),
-            (0, express_validator_1.body)('parameters').isObject(),
-            (0, express_validator_1.body)('recipients').isArray()
+            body('name').isString().isLength({ min: 1, max: 100 }),
+            body('type').isIn(Object.values(ActivityAnalyticsService_1.ReportType)),
+            body('parameters').isObject(),
+            body('recipients').isArray()
         ];
     }
     validateUpdateReport() {
         return [
-            (0, express_validator_1.param)('reportId').isUUID(),
-            (0, express_validator_1.body)('name').optional().isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('isActive').optional().isBoolean()
+            param('reportId').isUUID(),
+            body('name').optional().isString().isLength({ min: 1, max: 100 }),
+            body('isActive').optional().isBoolean()
         ];
     }
     validateReportId() {
-        return [(0, express_validator_1.param)('reportId').isUUID()];
+        return [param('reportId').isUUID()];
     }
     validateGetAlerts() {
         return [
-            (0, express_validator_1.query)('userId').optional().isUUID(),
-            (0, express_validator_1.query)('severity').optional().isIn(Object.values(ActivityTrackingService_1.ActivitySeverity)),
-            (0, express_validator_1.query)('status').optional().isIn(Object.values(SuspiciousActivityDetectionService_1.AlertStatus)),
-            (0, express_validator_1.query)('alertType').optional().isIn(Object.values(SuspiciousActivityDetectionService_1.AlertType)),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 1000 }),
-            (0, express_validator_1.query)('offset').optional().isInt({ min: 0 })
+            query('userId').optional().isUUID(),
+            query('severity').optional().isIn(Object.values(ActivityTrackingService_1.ActivitySeverity)),
+            query('status').optional().isIn(Object.values(SuspiciousActivityDetectionService_1.AlertStatus)),
+            query('alertType').optional().isIn(Object.values(SuspiciousActivityDetectionService_1.AlertType)),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('limit').optional().isInt({ min: 1, max: 1000 }),
+            query('offset').optional().isInt({ min: 0 })
         ];
     }
     validateAlertId() {
-        return [(0, express_validator_1.param)('alertId').isUUID()];
+        return [param('alertId').isUUID()];
     }
     validateUpdateAlertStatus() {
         return [
-            (0, express_validator_1.param)('alertId').isUUID(),
-            (0, express_validator_1.body)('status').isIn(Object.values(SuspiciousActivityDetectionService_1.AlertStatus)),
-            (0, express_validator_1.body)('assignedTo').optional().isString(),
-            (0, express_validator_1.body)('resolution').optional().isString()
+            param('alertId').isUUID(),
+            body('status').isIn(Object.values(SuspiciousActivityDetectionService_1.AlertStatus)),
+            body('assignedTo').optional().isString(),
+            body('resolution').optional().isString()
         ];
     }
     validateCreateDetectionRule() {
         return [
-            (0, express_validator_1.body)('name').isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('alertType').isIn(Object.values(SuspiciousActivityDetectionService_1.AlertType)),
-            (0, express_validator_1.body)('severity').isIn(Object.values(ActivityTrackingService_1.ActivitySeverity)),
-            (0, express_validator_1.body)('enabled').isBoolean(),
-            (0, express_validator_1.body)('conditions').isArray(),
-            (0, express_validator_1.body)('threshold').isFloat({ min: 0, max: 1 })
+            body('name').isString().isLength({ min: 1, max: 100 }),
+            body('alertType').isIn(Object.values(SuspiciousActivityDetectionService_1.AlertType)),
+            body('severity').isIn(Object.values(ActivityTrackingService_1.ActivitySeverity)),
+            body('enabled').isBoolean(),
+            body('conditions').isArray(),
+            body('threshold').isFloat({ min: 0, max: 1 })
         ];
     }
     validateUpdateDetectionRule() {
         return [
-            (0, express_validator_1.param)('ruleId').isUUID(),
-            (0, express_validator_1.body)('name').optional().isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('enabled').optional().isBoolean()
+            param('ruleId').isUUID(),
+            body('name').optional().isString().isLength({ min: 1, max: 100 }),
+            body('enabled').optional().isBoolean()
         ];
     }
     validateRuleId() {
-        return [(0, express_validator_1.param)('ruleId').isUUID()];
+        return [param('ruleId').isUUID()];
     }
     validateAddThreatIntelligence() {
         return [
-            (0, express_validator_1.body)('type').isIn(['ip_reputation', 'known_attacker', 'malicious_pattern', 'compromised_credential']),
-            (0, express_validator_1.body)('value').isString(),
-            (0, express_validator_1.body)('severity').isIn(Object.values(ActivityTrackingService_1.ActivitySeverity)),
-            (0, express_validator_1.body)('source').isString(),
-            (0, express_validator_1.body)('description').isString()
+            body('type').isIn(['ip_reputation', 'known_attacker', 'malicious_pattern', 'compromised_credential']),
+            body('value').isString(),
+            body('severity').isIn(Object.values(ActivityTrackingService_1.ActivitySeverity)),
+            body('source').isString(),
+            body('description').isString()
         ];
     }
     validateCreateRetentionPolicy() {
         return [
-            (0, express_validator_1.body)('name').isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('description').isString(),
-            (0, express_validator_1.body)('rules').isArray(),
-            (0, express_validator_1.body)('isActive').isBoolean(),
-            (0, express_validator_1.body)('priority').isInt({ min: 0, max: 100 })
+            body('name').isString().isLength({ min: 1, max: 100 }),
+            body('description').isString(),
+            body('rules').isArray(),
+            body('isActive').isBoolean(),
+            body('priority').isInt({ min: 0, max: 100 })
         ];
     }
     validateUpdateRetentionPolicy() {
         return [
-            (0, express_validator_1.param)('policyId').isUUID(),
-            (0, express_validator_1.body)('name').optional().isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('isActive').optional().isBoolean()
+            param('policyId').isUUID(),
+            body('name').optional().isString().isLength({ min: 1, max: 100 }),
+            body('isActive').optional().isBoolean()
         ];
     }
     validatePolicyId() {
-        return [(0, express_validator_1.param)('policyId').isUUID()];
+        return [param('policyId').isUUID()];
     }
     validateApplyRetention() {
-        return [(0, express_validator_1.param)('policyId').isUUID()];
+        return [param('policyId').isUUID()];
     }
     validateGetArchived() {
         return [
-            (0, express_validator_1.query)('userId').optional().isUUID(),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('policyId').optional().isUUID()
+            query('userId').optional().isUUID(),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('policyId').optional().isUUID()
         ];
     }
     validateArchiveId() {
-        return [(0, express_validator_1.param)('archiveId').isUUID()];
+        return [param('archiveId').isUUID()];
     }
     validateCreateRetentionJob() {
-        return [(0, express_validator_1.body)('policyId').isUUID()];
+        return [body('policyId').isUUID()];
     }
     validateDataSubjectRequest() {
         return [
-            (0, express_validator_1.body)('type').isIn(Object.values(ActivityRetentionService_1.RequestType)),
-            (0, express_validator_1.body)('userId').isUUID(),
-            (0, express_validator_1.body)('requestDetails').isObject(),
-            (0, express_validator_1.body)('verificationRequired').isBoolean()
+            body('type').isIn(Object.values(ActivityRetentionService_1.RequestType)),
+            body('userId').isUUID(),
+            body('requestDetails').isObject(),
+            body('verificationRequired').isBoolean()
         ];
     }
     validateCreatePrivacyPolicy() {
         return [
-            (0, express_validator_1.body)('name').isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('description').isString(),
-            (0, express_validator_1.body)('version').isString(),
-            (0, express_validator_1.body)('effectiveDate').isISO8601(),
-            (0, express_validator_1.body)('isActive').isBoolean(),
-            (0, express_validator_1.body)('rules').isArray()
+            body('name').isString().isLength({ min: 1, max: 100 }),
+            body('description').isString(),
+            body('version').isString(),
+            body('effectiveDate').isISO8601(),
+            body('isActive').isBoolean(),
+            body('rules').isArray()
         ];
     }
     validateAnonymizeActivity() {
         return [
-            (0, express_validator_1.body)('activity').isObject(),
-            (0, express_validator_1.body)('method').isIn(Object.values(ActivityPrivacyService_1.AnonymizationMethod))
+            body('activity').isObject(),
+            body('method').isIn(Object.values(ActivityPrivacyService_1.AnonymizationMethod))
         ];
     }
     validateRecordConsent() {
         return [
-            (0, express_validator_1.body)('policyId').isUUID(),
-            (0, express_validator_1.body)('consentGiven').isBoolean(),
-            (0, express_validator_1.body)('consentMethod').isString(),
-            (0, express_validator_1.body)('purposes').isArray()
+            body('policyId').isUUID(),
+            body('consentGiven').isBoolean(),
+            body('consentMethod').isString(),
+            body('purposes').isArray()
         ];
     }
     validateWithdrawConsent() {
         return [
-            (0, express_validator_1.body)('policyId').isUUID(),
-            (0, express_validator_1.body)('reason').isString()
+            body('policyId').isUUID(),
+            body('reason').isString()
         ];
     }
     validateDataSubjectRight() {
         return [
-            (0, express_validator_1.body)('right').isIn(Object.values(ActivityPrivacyService_1.DataSubjectRight)),
-            (0, express_validator_1.body)('requestDetails').isObject(),
-            (0, express_validator_1.body)('verificationMethod').isString()
+            body('right').isIn(Object.values(ActivityPrivacyService_1.DataSubjectRight)),
+            body('requestDetails').isObject(),
+            body('verificationMethod').isString()
         ];
     }
     validateGetAuditLogs() {
         return [
-            (0, express_validator_1.query)('userId').optional().isUUID(),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601()
+            query('userId').optional().isUUID(),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601()
         ];
     }
     validateCreateDataFlow() {
         return [
-            (0, express_validator_1.body)('name').isString().isLength({ min: 1, max: 100 }),
-            (0, express_validator_1.body)('sourceSystem').isString(),
-            (0, express_validator_1.body)('targetSystem').isString(),
-            (0, express_validator_1.body)('dataCategories').isArray(),
-            (0, express_validator_1.body)('processingOperations').isArray()
+            body('name').isString().isLength({ min: 1, max: 100 }),
+            body('sourceSystem').isString(),
+            body('targetSystem').isString(),
+            body('dataCategories').isArray(),
+            body('processingOperations').isArray()
         ];
     }
 }

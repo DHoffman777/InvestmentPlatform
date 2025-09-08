@@ -65,10 +65,12 @@ export interface EmailConfig {
         pass: string;
     };
     from: string;
+    recipients?: string[];
 }
 export interface SlackConfig {
     token: string;
     defaultChannel: string;
+    channel?: string;
     username?: string;
     iconEmoji?: string;
 }
@@ -76,6 +78,7 @@ export interface SMSConfig {
     accountSid: string;
     authToken: string;
     fromNumber: string;
+    recipients?: string[];
 }
 export interface WebhookConfig {
     url: string;

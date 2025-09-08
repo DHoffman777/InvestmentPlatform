@@ -401,7 +401,7 @@ class ActivityCaptureMiddleware {
         tags.push(`method:${req.method.toLowerCase()}`);
         tags.push(`path:${req.path}`);
         if (req.user?.roles?.length) {
-            tags.push(...req.user.roles.map(role => `role:${role}`));
+            tags.push(...req.user.roles.map((role) => `role:${role}`));
         }
         if (this.isSensitiveRoute(req.path)) {
             tags.push('sensitive');

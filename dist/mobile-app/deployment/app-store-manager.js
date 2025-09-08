@@ -12,7 +12,7 @@ class AppStoreManager extends events_1.EventEmitter {
     builds = new Map();
     submissions = new Map();
     analytics = new Map();
-    releaseManagement;
+    releaseManagement; // Will be initialized in initializeReleaseManagement
     constructor(config) {
         super();
         this.config = config;

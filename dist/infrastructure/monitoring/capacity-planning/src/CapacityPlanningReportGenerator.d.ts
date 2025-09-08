@@ -102,6 +102,7 @@ export declare class CapacityPlanningReportGenerator extends EventEmitter {
     private renderReport;
     private distributeReport;
     private sendReportEmail;
+    private getReportTemplate;
     private getDefaultTemplate;
     private initializeDefaultTemplates;
     private validateTemplate;
@@ -114,6 +115,7 @@ export declare class CapacityPlanningReportGenerator extends EventEmitter {
     private generateScheduleId;
     getReport(reportId: string): CapacityReport | null;
     getAllReports(): CapacityReport[];
+    getTemplateById(templateId: string): ReportTemplate | null;
     getAllTemplates(): ReportTemplate[];
     cancelScheduledReport(scheduleId: string): Promise<any>;
     shutdown(): Promise<any>;

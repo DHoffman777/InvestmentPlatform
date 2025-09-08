@@ -376,7 +376,7 @@ class LiquidityRiskService {
     }
     // Apply stress factors to liquidity metrics
     async applyLiquidityStress(positionLiquidity, stressScenario, request) {
-        return positionLiquidity.map(position => {
+        return Promise.all(positionLiquidity.map(async (position) => {
             // Apply volume reduction
             const stressedVolume = position.averageDailyVolume * stressScenario.volumeReduction;
             // Apply spread increase
@@ -386,16 +386,16 @@ class LiquidityRiskService {
             const maxDailyVolume = stressedVolume * 0.1; // Reduced participation rate under stress
             const stressedDaysToLiquidate = Math.max(1, Math.ceil(positionShares / maxDailyVolume) * stressScenario.liquidityMultiplier);
             // Recalculate liquidation cost
-            const stressedLiquidationCost = this.calculateLiquidationCost(position.marketValue, stressedVolume, stressedSpread, stressedDaysToLiquidate, request.marketImpactModel);
+            const stressedLiquidationCost = await this.calculateLiquidationCost(position.marketValue, stressedVolume, stressedSpread, stressedDaysToLiquidate, request.marketImpactModel);
             return {
                 ...position,
                 daysToLiquidate: stressedDaysToLiquidate,
-                liquidationCost: await stressedLiquidationCost,
-                marketImpact: (await stressedLiquidationCost) / position.marketValue,
+                liquidationCost: stressedLiquidationCost,
+                marketImpact: stressedLiquidationCost / position.marketValue,
                 averageDailyVolume: stressedVolume,
                 bidAskSpread: stressedSpread
             };
-        });
+        }));
     }
     // Helper methods
     async getPortfolioData(portfolioId, asOfDate) {

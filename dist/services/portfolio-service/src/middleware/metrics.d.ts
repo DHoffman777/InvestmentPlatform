@@ -1,5 +1,20 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
 import client from 'prom-client';
+interface Request extends ExpressRequest {
+    user?: {
+        sub: string;
+        id: string;
+        userId: string;
+        clientId?: string;
+        email: string;
+        tenantId: string;
+        roles: string[];
+        permissions: string[];
+        iat: number;
+        exp: number;
+        sessionId?: string;
+    };
+}
 declare const register: client.Registry<"text/plain; version=0.0.4; charset=utf-8">;
 export { register };
 export declare const metricsMiddleware: (req: Request, res: Response, next: NextFunction) => void;

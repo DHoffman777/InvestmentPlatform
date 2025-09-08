@@ -110,7 +110,7 @@ export interface DrillDownQuery {
         granularity: TimeInterval;
     };
     filters: Record<string, any>;
-    aggregation: 'sum' | 'avg' | 'min' | 'max' | 'count';
+    aggregation: 'sum' | 'avg' | 'min' | 'max' | 'count' | 'distinct';
     groupBy: string[];
     orderBy?: {
         field: string;

@@ -18,7 +18,8 @@ const errorHandler = (error, req, res, next) => {
     });
     // Handle Prisma errors
     if (error instanceof client_1.Prisma.PrismaClientKnownRequestError) {
-        switch (error.code) {
+        const prismaError = error;
+        switch (prismaError.code) {
             case 'P2000':
                 statusCode = 400;
                 message = 'The provided value for the column is too long for the column type';

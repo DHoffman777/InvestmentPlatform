@@ -796,7 +796,8 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 return next();
             }
             catch (error) {
-                return res.status(401).json({ error: 'Invalid token' });
+                res.status(401).json({ error: 'Invalid token' });
+                return;
             }
         }
         res.status(401).json({ error: 'Authentication required' });
@@ -820,7 +821,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                         console.log(`API documentation available at http://localhost:${this.config.port}/api-docs`);
                     }
                     this.emit('started', { port: this.config.port, timestamp: new Date() });
-                    resolve();
+                    resolve(undefined);
                 });
             }
             catch (error) {
@@ -834,11 +835,11 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 this.server.close(() => {
                     console.log('Resource Monitoring API server stopped');
                     this.emit('stopped', { timestamp: new Date() });
-                    resolve();
+                    resolve(undefined);
                 });
             }
             else {
-                resolve();
+                resolve(undefined);
             }
         });
     }

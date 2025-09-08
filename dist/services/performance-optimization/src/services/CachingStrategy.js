@@ -64,8 +64,6 @@ class CachingStrategy extends events_1.EventEmitter {
                 password: this.config.redis.password,
                 db: this.config.redis.db,
                 keyPrefix: this.config.redis.keyPrefix,
-                retryDelayOnFailover: 100,
-                maxRetriesPerRequest: 3,
             });
         }
         this.redis.on('connect', () => {

@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
 import { YieldCalculationRequest, YieldCalculationResult, DurationConvexityRequest, DurationConvexityResult, CreditAnalysisRequest, CreditAnalysisResult, FixedIncomePortfolioAnalytics } from '../models/fixedIncome/FixedIncomeAnalytics';
 export declare class FixedIncomeAnalyticsService {
     private prisma;
     private kafkaService;
-    constructor(prisma: PrismaClient, kafkaService: any);
+    constructor(prisma: any, kafkaService: any);
     calculateYields(request: YieldCalculationRequest, tenantId: string, userId: string): Promise<YieldCalculationResult>;
     calculateDurationConvexity(request: DurationConvexityRequest, tenantId: string, userId: string): Promise<DurationConvexityResult>;
     performCreditAnalysis(request: CreditAnalysisRequest, tenantId: string, userId: string): Promise<CreditAnalysisResult>;
@@ -47,9 +46,11 @@ export declare class FixedIncomeAnalyticsService {
     private projectCashFlows;
     private performStressTesting;
     private calculateInterestRateVaR;
+    private calculateCreditVaRPortfolio;
     private getCreditSpread;
     private calculateDefaultProbability;
     private calculateUnexpectedLoss;
+    private calculateSingleCreditVaR;
     private calculateHazardRate;
     private estimateDefaultProbability;
     private calculateAverageRating;

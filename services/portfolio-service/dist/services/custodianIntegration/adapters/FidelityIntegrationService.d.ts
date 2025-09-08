@@ -1,4 +1,4 @@
-import { CustodianConnection, CustodianConnectionConfig, DataFeedRequest, OrderSubmissionRequest, OrderSubmissionResponse, DocumentRetrievalRequest, ConnectionTestResult } from '../../../models/custodianIntegration/CustodianIntegration';
+import { CustodianConnection, CustodianConnectionConfig, DataFeedRequest, OrderSubmissionRequest, OrderSubmissionResponse, DocumentRetrievalRequest, ConnectionTestResult, APIConnectionType } from '../../../models/custodianIntegration/CustodianIntegration';
 export declare class FidelityIntegrationService {
     private client;
     private sftpClient;
@@ -6,8 +6,12 @@ export declare class FidelityIntegrationService {
     private apiVersion;
     constructor();
     private setupInterceptors;
-    validateConfig(config: CustodianConnectionConfig): Promise<any>;
-    testConnection(config: CustodianConnectionConfig): Promise<ConnectionTestResult[]>;
+    validateConfig(config: CustodianConnectionConfig & {
+        connectionType?: APIConnectionType;
+    }): Promise<any>;
+    testConnection(config: CustodianConnectionConfig & {
+        connectionType?: APIConnectionType;
+    }): Promise<ConnectionTestResult[]>;
     private testApiAuthentication;
     private testApiConnectivity;
     private testApiDataRetrieval;

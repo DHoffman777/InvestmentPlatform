@@ -874,19 +874,24 @@ class ErrorCorrelationService extends events_1.EventEmitter {
     }
     async storeCorrelation(correlation) {
         try {
-            await this.prisma.errorCorrelation.create({
-                data: {
-                    id: correlation.id,
-                    primaryErrorId: correlation.primaryErrorId,
-                    relatedErrorIds: correlation.relatedErrorIds,
-                    correlationType: correlation.correlationType,
-                    confidence: correlation.confidence,
-                    strength: correlation.strength,
-                    metadata: correlation.metadata,
-                    createdAt: correlation.createdAt,
-                    updatedAt: correlation.updatedAt
-                }
-            });
+            // Store each correlation relationship separately
+            for (const relatedErrorId of correlation.relatedErrorIds) {
+                await this.prisma.errorCorrelation.create({
+                    data: {
+                        id: `${correlation.id}_${relatedErrorId}`,
+                        errorId: correlation.primaryErrorId,
+                        relatedErrorId: relatedErrorId,
+                        correlationType: correlation.correlationType,
+                        confidence: correlation.confidence,
+                        metadata: {
+                            strength: correlation.strength,
+                            ...correlation.metadata
+                        },
+                        createdAt: correlation.createdAt,
+                        updatedAt: correlation.updatedAt
+                    }
+                });
+            }
         }
         catch (error) {
             this.logger.error('Failed to store correlation', {
@@ -959,13 +964,38 @@ class ErrorCorrelationService extends events_1.EventEmitter {
             const correlations = await this.prisma.errorCorrelation.findMany({
                 where: {
                     OR: [
-                        { primaryErrorId: errorId },
-                        { relatedErrorIds: { has: errorId } }
+                        { errorId: errorId },
+                        { relatedErrorId: errorId }
                     ]
                 },
                 orderBy: { confidence: 'desc' }
             });
-            return correlations;
+            // Group correlations by primary error
+            const groupedCorrelations = new Map();
+            for (const corr of correlations) {
+                const primaryId = corr.errorId === errorId ? corr.relatedErrorId : corr.errorId;
+                const relatedId = corr.errorId === errorId ? corr.errorId : corr.relatedErrorId;
+                if (!groupedCorrelations.has(primaryId)) {
+                    groupedCorrelations.set(primaryId, {
+                        id: corr.id,
+                        primaryErrorId: primaryId,
+                        relatedErrorIds: [relatedId],
+                        correlationType: corr.correlationType,
+                        confidence: corr.confidence,
+                        strength: corr.metadata?.strength || 0,
+                        createdAt: corr.createdAt,
+                        updatedAt: corr.updatedAt,
+                        metadata: corr.metadata || {}
+                    });
+                }
+                else {
+                    const existing = groupedCorrelations.get(primaryId);
+                    if (!existing.relatedErrorIds.includes(relatedId)) {
+                        existing.relatedErrorIds.push(relatedId);
+                    }
+                }
+            }
+            return Array.from(groupedCorrelations.values());
         }
         catch (error) {
             this.logger.error('Failed to get correlations for error', {

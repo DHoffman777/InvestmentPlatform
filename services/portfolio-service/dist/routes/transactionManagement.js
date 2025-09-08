@@ -4,6 +4,7 @@ exports.transactionManagementRouter = void 0;
 const express_1 = require("express");
 const { body, param, query, validationResult } = require('express-validator');
 const client_1 = require("@prisma/client");
+const library_1 = require("@prisma/client/runtime/library");
 const transactionService_1 = require("../services/transactionService");
 const logger_1 = require("../utils/logger");
 const auth_1 = require("../middleware/auth");
@@ -67,13 +68,13 @@ router.post('/capture', [
             portfolioId,
             securityId,
             transactionType,
-            quantity: new Decimal(quantity),
-            price: new Decimal(price),
+            quantity: new library_1.Decimal(quantity),
+            price: new library_1.Decimal(price),
             tradeDate,
             settleDate,
-            fees: fees ? new Decimal(fees) : undefined,
-            taxes: taxes ? new Decimal(taxes) : undefined,
-            commission: commission ? new Decimal(commission) : undefined,
+            fees: fees ? new library_1.Decimal(fees) : undefined,
+            taxes: taxes ? new library_1.Decimal(taxes) : undefined,
+            commission: commission ? new library_1.Decimal(commission) : undefined,
             counterparty,
             orderId,
             executionId,
@@ -141,13 +142,13 @@ router.post('/bulk-capture', [
             portfolioId: trade.portfolioId,
             securityId: trade.securityId,
             transactionType: trade.transactionType,
-            quantity: new Decimal(trade.quantity),
-            price: new Decimal(trade.price),
+            quantity: new library_1.Decimal(trade.quantity),
+            price: new library_1.Decimal(trade.price),
             tradeDate: trade.tradeDate,
             settleDate: trade.settleDate,
-            fees: trade.fees ? new Decimal(trade.fees) : undefined,
-            taxes: trade.taxes ? new Decimal(trade.taxes) : undefined,
-            commission: trade.commission ? new Decimal(trade.commission) : undefined,
+            fees: trade.fees ? new library_1.Decimal(trade.fees) : undefined,
+            taxes: trade.taxes ? new library_1.Decimal(trade.taxes) : undefined,
+            commission: trade.commission ? new library_1.Decimal(trade.commission) : undefined,
             counterparty: trade.counterparty,
             orderId: trade.orderId,
             executionId: trade.executionId,
@@ -260,7 +261,7 @@ router.post('/settlement-instructions', [
             transactionId,
             instructionType,
             deliveryDate,
-            settlementAmount: new Decimal(settlementAmount),
+            settlementAmount: new library_1.Decimal(settlementAmount),
             custodian,
             account,
             status: 'PENDING',

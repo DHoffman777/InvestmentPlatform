@@ -267,7 +267,7 @@ export interface CategoryConfusion {
     count: number;
     confidence_range: string;
 }
-export declare class CommunicationCategorizationService extends EventEmitter {
+declare class CommunicationCategorizationService extends EventEmitter {
     private config;
     private rules;
     private keywordSets;

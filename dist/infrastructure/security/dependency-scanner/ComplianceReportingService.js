@@ -395,7 +395,7 @@ class ComplianceReportingService extends events_1.EventEmitter {
     }
     async analyzePolicyCompliance(reportData) {
         const vulnerabilities = reportData.vulnerabilities || [];
-        const highSeverityCount = vulnerabilities.filter(v => v.vulnerability.severity === 'CRITICAL' || v.vulnerability.severity === 'HIGH').length;
+        const highSeverityCount = vulnerabilities.filter((v) => v.vulnerability.severity === 'CRITICAL' || v.vulnerability.severity === 'HIGH').length;
         const violations = [];
         if (highSeverityCount > 0) {
             violations.push({
@@ -495,14 +495,14 @@ class ComplianceReportingService extends events_1.EventEmitter {
         const scanReports = reportData.scanReports || [];
         // Security metrics
         const totalVulns = vulnerabilities.length;
-        const vulnerabilitiesByService = vulnerabilities.reduce((acc, v) => {
+        const vulnerabilitiesByseverity = vulnerabilities.reduce((acc, v) => {
             const severity = v.vulnerability.severity;
             acc[severity] = (acc[severity] || 0) + 1;
             return acc;
         }, {});
         const security = {
             totalVulnerabilities: totalVulns,
-            vulnerabilitiesByService,
+            vulnerabilitiesByseverity,
             meanTimeToRemediation: 7, // Mock data
             vulnerabilityAge: {
                 new: Math.floor(totalVulns * 0.3),

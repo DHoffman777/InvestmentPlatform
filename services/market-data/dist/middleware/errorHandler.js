@@ -9,11 +9,12 @@ const errorHandler = (error, req, res, next) => {
     let details = null;
     // Handle Prisma errors
     if (error instanceof client_1.Prisma.PrismaClientKnownRequestError) {
-        switch (error.code) {
+        const prismaError = error;
+        switch (prismaError.code) {
             case 'P2002':
                 statusCode = 409;
                 message = 'Unique constraint failed';
-                details = `Duplicate value for field: ${error.meta?.target}`;
+                details = `Duplicate value for field: ${prismaError.meta?.target}`;
                 break;
             case 'P2014':
                 statusCode = 400;

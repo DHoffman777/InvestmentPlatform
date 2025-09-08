@@ -181,12 +181,6 @@ class CashService {
                 orderBy: [
                     { symbol: 'asc' },
                 ],
-                include: {
-                    quotes: {
-                        take: 1,
-                        orderBy: { quoteTime: 'desc' },
-                    },
-                },
             });
             // Get metadata and apply additional filters
             const resultsWithMetadata = await Promise.all(securities.map(async (security) => {
@@ -213,12 +207,7 @@ class CashService {
                     ...security,
                     marketCap: security.marketCap?.toNumber(),
                     metadata,
-                    latestQuote: security.quotes[0] ? {
-                        ...security.quotes[0],
-                        last: security.quotes[0].last?.toNumber(),
-                        change: security.quotes[0].change?.toNumber(),
-                        changePercent: security.quotes[0].changePercent?.toNumber(),
-                    } : null,
+                    latestQuote: null,
                 };
             }));
             const filteredResults = resultsWithMetadata.filter(result => result !== null);
@@ -239,20 +228,10 @@ class CashService {
     // Get cash instrument details
     async getCashInstrumentDetails(symbol) {
         try {
-            const security = await this.prisma.security.findUnique({
+            const security = await this.prisma.security.findFirst({
                 where: {
                     symbol: symbol.toUpperCase(),
                     assetClass: { in: ['CASH_EQUIVALENT', 'TREASURY'] },
-                },
-                include: {
-                    quotes: {
-                        take: 10,
-                        orderBy: { quoteTime: 'desc' },
-                    },
-                    historicalData: {
-                        take: 30,
-                        orderBy: { date: 'desc' },
-                    },
                 },
             });
             if (!security) {
@@ -262,20 +241,20 @@ class CashService {
             return {
                 ...security,
                 marketCap: security.marketCap?.toNumber(),
-                recentQuotes: security.quotes.map(q => ({
+                recentQuotes: security.quotes?.map((q) => ({
                     ...q,
                     last: q.last?.toNumber(),
                     change: q.change?.toNumber(),
                     changePercent: q.changePercent?.toNumber(),
-                })),
-                priceHistory: security.historicalData.map(h => ({
+                })) || [],
+                priceHistory: security.historicalData?.map((h) => ({
                     ...h,
                     open: h.open.toNumber(),
                     high: h.high.toNumber(),
                     low: h.low.toNumber(),
                     close: h.close.toNumber(),
                     adjustedClose: h.adjustedClose.toNumber(),
-                })),
+                })) || [],
                 metadata,
             };
         }
@@ -340,26 +319,27 @@ class CashService {
     // Helper method to store cash instrument metadata
     async storeCashMetadata(securityId, metadata) {
         try {
-            await this.prisma.fundamental.upsert({
-                where: {
-                    securityId_periodType_periodEnd: {
-                        securityId,
-                        periodType: 'CASH_METADATA',
-                        periodEnd: new Date(),
-                    },
-                },
-                update: {
-                    additionalData: metadata,
-                    updatedAt: new Date(),
-                },
-                create: {
-                    securityId,
-                    periodType: 'CASH_METADATA',
-                    periodEnd: new Date(),
-                    reportDate: new Date(),
-                    additionalData: metadata,
-                },
-            });
+            // TODO: Implement metadata storage when fundamental table is available
+            // await this.prisma.fundamental.upsert({
+            //   where: {
+            //     securityId_periodType_periodEnd: {
+            //       securityId,
+            //       periodType: 'CASH_METADATA',
+            //       periodEnd: new Date(),
+            //     },
+            //   },
+            //   update: {
+            //     additionalData: metadata,
+            //     updatedAt: new Date(),
+            //   },
+            //   create: {
+            //     securityId,
+            //     periodType: 'CASH_METADATA',
+            //     periodEnd: new Date(),
+            //     reportDate: new Date(),
+            //     additionalData: metadata,
+            //   },
+            // });
         }
         catch (error) {
             logger_1.logger.warn('Could not store cash instrument metadata', { securityId, error });
@@ -368,14 +348,16 @@ class CashService {
     // Helper method to retrieve cash instrument metadata
     async getCashMetadata(securityId) {
         try {
-            const metadata = await this.prisma.fundamental.findFirst({
-                where: {
-                    securityId,
-                    periodType: 'CASH_METADATA',
-                },
-                orderBy: { updatedAt: 'desc' },
-            });
-            return metadata?.additionalData || {};
+            // TODO: Implement metadata retrieval when fundamental table is available
+            // const metadata = await this.prisma.fundamental.findFirst({
+            //   where: {
+            //     securityId,
+            //     periodType: 'CASH_METADATA',
+            //   },
+            //   orderBy: { updatedAt: 'desc' },
+            // });
+            // return metadata?.additionalData || {};
+            return {};
         }
         catch (error) {
             logger_1.logger.warn('Could not retrieve cash instrument metadata', { securityId, error });

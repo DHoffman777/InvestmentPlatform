@@ -68,7 +68,7 @@ router.get('/:symbol',
       const { symbol } = req.params;
 
       const security = await prisma.security.findUnique({
-        where: { symbol: symbol.toUpperCase() }
+        where: { symbol: symbol.toUpperCase() } as any
       });
 
       if (!security) {
@@ -81,7 +81,7 @@ router.get('/:symbol',
       res.json({
         security: {
           ...security,
-          marketCap: security.marketCap?.toNumber(),
+          marketCap: (security as any).marketCap?.toNumber(),
         }
       });
     } catch (error: any) {
@@ -185,7 +185,7 @@ router.get('/',
 
       const formattedSecurities = securities.map(security => ({
         ...security,
-        marketCap: security.marketCap?.toNumber(),
+        marketCap: (security as any).marketCap?.toNumber(),
       }));
 
       res.json({

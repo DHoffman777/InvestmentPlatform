@@ -68,7 +68,7 @@ class PositionService {
                     const unrealizedGainLoss = marketValue.sub(totalCostBasis);
                     aggregatedMap.set(key, {
                         portfolioId: position.portfolioId,
-                        securityId: position.securityId,
+                        securityId: position.securityId || '',
                         totalQuantity: quantity,
                         averageCostBasis: costBasis,
                         totalCostBasis,
@@ -153,7 +153,7 @@ class PositionService {
             const discrepancies = [];
             const missing = [];
             const custodianMap = new Map(custodianPositions.map(p => [p.symbol, p]));
-            const currentMap = new Map(currentPositions.map(p => [p.security.symbol, p]));
+            const currentMap = new Map(currentPositions.map(p => [p.security?.symbol || '', p]));
             // Check for matches and discrepancies
             for (const [symbol, custodianPos] of custodianMap) {
                 const currentPos = currentMap.get(symbol);
@@ -191,9 +191,9 @@ class PositionService {
             }
             // Check for extra positions in system
             const extra = currentPositions
-                .filter(pos => !custodianMap.has(pos.security.symbol))
+                .filter(pos => !custodianMap.has(pos.security?.symbol || ''))
                 .map(pos => ({
-                symbol: pos.security.symbol,
+                symbol: pos.security?.symbol || '',
                 systemQuantity: pos.quantity.toNumber(),
                 systemMarketValue: pos.marketValue?.toNumber() || 0,
                 custodianQuantity: 0,
@@ -280,7 +280,6 @@ class PositionService {
                     gainLoss,
                     gainLossPercentage,
                     dayChange,
-                    dayChangePercentage,
                     updatedAt: new Date(),
                 }
             });

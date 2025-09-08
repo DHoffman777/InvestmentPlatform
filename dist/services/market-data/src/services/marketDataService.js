@@ -1,9 +1,13 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketDataService = void 0;
 const client_1 = require("@prisma/client");
 const logger_1 = require("../utils/logger");
 const redis_1 = require("../config/redis");
+const decimal_js_1 = __importDefault(require("decimal.js"));
 class MarketDataService {
     prisma;
     kafkaService; // Will be injected
@@ -74,8 +78,8 @@ class MarketDataService {
             let change;
             let changePercent;
             if (quoteData.last && quoteData.previousClose) {
-                change = new Decimal(quoteData.last).sub(new Decimal(quoteData.previousClose));
-                changePercent = change.div(new Decimal(quoteData.previousClose)).mul(100);
+                change = new decimal_js_1.default(quoteData.last).sub(new decimal_js_1.default(quoteData.previousClose));
+                changePercent = change.div(new decimal_js_1.default(quoteData.previousClose)).mul(100);
             }
             // Create the quote
             const quote = await this.prisma.quote.create({
@@ -224,30 +228,30 @@ class MarketDataService {
                 where: { symbol: securityData.symbol },
                 update: {
                     name: securityData.name,
-                    cusip: securityData.cusip,
-                    isin: securityData.isin,
-                    assetClass: securityData.assetClass,
+                    // cusip: securityData.cusip,
+                    // isin: securityData.isin,
+                    // assetClass: securityData.assetClass,
                     securityType: securityData.securityType,
                     exchange: securityData.exchange,
                     currency: securityData.currency || 'USD',
-                    country: securityData.country,
-                    sector: securityData.sector,
-                    industry: securityData.industry,
-                    marketCap: securityData.marketCap ? new client_1.Prisma.Decimal(securityData.marketCap) : null,
+                    // country: securityData.country,
+                    // sector: securityData.sector,
+                    // industry: securityData.industry,
+                    // marketCap: securityData.marketCap ? new Prisma.Decimal(securityData.marketCap) : null,
                 },
                 create: {
                     symbol: securityData.symbol,
                     name: securityData.name,
-                    cusip: securityData.cusip,
-                    isin: securityData.isin,
-                    assetClass: securityData.assetClass,
+                    // cusip: securityData.cusip,
+                    // isin: securityData.isin,
+                    // assetClass: securityData.assetClass,
                     securityType: securityData.securityType,
                     exchange: securityData.exchange,
                     currency: securityData.currency || 'USD',
-                    country: securityData.country,
-                    sector: securityData.sector,
-                    industry: securityData.industry,
-                    marketCap: securityData.marketCap ? new client_1.Prisma.Decimal(securityData.marketCap) : null,
+                    // country: securityData.country,
+                    // sector: securityData.sector,
+                    // industry: securityData.industry,
+                    // marketCap: securityData.marketCap ? new Prisma.Decimal(securityData.marketCap) : null,
                 }
             });
             logger_1.logger.info('Security upserted', {
@@ -269,8 +273,8 @@ class MarketDataService {
                     OR: [
                         { symbol: { contains: query, mode: 'insensitive' } },
                         { name: { contains: query, mode: 'insensitive' } },
-                        { cusip: { contains: query, mode: 'insensitive' } },
-                        { isin: { contains: query, mode: 'insensitive' } },
+                        // { cusip: { contains: query, mode: 'insensitive' } },
+                        // { isin: { contains: query, mode: 'insensitive' } },
                     ],
                     isActive: true,
                 },
@@ -332,9 +336,9 @@ class MarketDataService {
                 data: {
                     securityId: security.id,
                     actionType: corporateActionData.actionType,
-                    exDate: corporateActionData.exDate,
-                    recordDate: corporateActionData.recordDate,
-                    payDate: corporateActionData.payDate,
+                    exDate: corporateActionData.exDate || undefined,
+                    recordDate: corporateActionData.recordDate || undefined,
+                    payDate: corporateActionData.payDate || undefined,
                     announcementDate: corporateActionData.announcementDate,
                     effectiveDate: corporateActionData.effectiveDate,
                     description: corporateActionData.description,

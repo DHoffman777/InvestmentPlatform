@@ -368,11 +368,11 @@ export async function seedREITsAndMLPs() {
 
     // Generate summary statistics
     const totalREITs = await prisma.security.count({
-      where: { assetClass: 'REIT', isActive: true }
+      where: { assetClass: 'REIT', isActive: true } as any
     });
     
     const totalMLPs = await prisma.security.count({
-      where: { assetClass: 'MLP', isActive: true }
+      where: { assetClass: 'MLP', isActive: true } as any
     });
 
     const reitTypes = await prisma.security.groupBy({
@@ -380,18 +380,18 @@ export async function seedREITsAndMLPs() {
       where: { 
         assetClass: 'REIT', 
         isActive: true 
-      },
+      } as any,
       _count: { securityType: true },
-    });
+    } as any);
 
     const mlpTypes = await prisma.security.groupBy({
       by: ['securityType'],
       where: { 
         assetClass: 'MLP', 
         isActive: true 
-      },
+      } as any,
       _count: { securityType: true },
-    });
+    } as any);
 
     logger.info('REITs and MLPs seeding summary:', {
       totalREITs,
@@ -399,11 +399,11 @@ export async function seedREITsAndMLPs() {
       total: totalREITs + totalMLPs,
       reitBreakdown: reitTypes.map(type => ({
         type: type.securityType,
-        count: type._count.securityType,
+        count: (type._count as any)?.securityType || 0,
       })),
       mlpBreakdown: mlpTypes.map(type => ({
         type: type.securityType,
-        count: type._count.securityType,
+        count: (type._count as any)?.securityType || 0,
       })),
     });
 

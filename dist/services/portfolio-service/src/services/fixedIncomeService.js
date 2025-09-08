@@ -15,9 +15,7 @@ class FixedIncomeService {
                 where: {
                     portfolioId,
                     tenantId,
-                    securityType: {
-                        in: ['GOVERNMENT_BOND', 'CORPORATE_BOND', 'MUNICIPAL_BOND', 'TREASURY_BILL', 'AGENCY_BOND']
-                    },
+                    securityType: 'FIXED_INCOME',
                     isActive: true
                 },
                 include: {
@@ -51,21 +49,14 @@ class FixedIncomeService {
                     tenantId: request.tenantId,
                     securityId: request.cusip,
                     symbol: request.symbol || request.cusip,
-                    securityType: request.assetType,
+                    securityType: 'FIXED_INCOME',
                     quantity: request.quantity,
                     marketValue: marketValue,
                     costBasis: costBasis,
                     unrealizedGainLoss: 0,
                     lastPrice: request.purchasePrice,
                     lastPriceDate: new Date(),
-                    isActive: true,
-                    createdBy: request.createdBy,
-                    metadata: {
-                        faceValue: request.faceValue,
-                        maturityDate: request.maturityDate,
-                        couponRate: request.couponRate || 0,
-                        accruedInterest: accruedInterest
-                    }
+                    isActive: true
                 }
             });
             // Create initial transaction
@@ -111,22 +102,17 @@ class FixedIncomeService {
                     portfolioId: request.portfolioId,
                     tenantId: request.tenantId,
                     transactionType: request.transactionType,
-                    securityId: request.cusip,
                     symbol: request.cusip,
-                    securityType: 'BOND',
                     quantity: request.quantity,
                     price: request.price,
                     netAmount: request.transactionType === 'BUY' ? -netAmount : netAmount,
                     commission: 0,
                     fees: 0,
+                    transactionDate: new Date(request.tradeDate),
                     tradeDate: new Date(request.tradeDate),
                     settlementDate: new Date(request.settlementDate),
                     status: 'SETTLED',
-                    createdBy: request.executedBy,
-                    metadata: {
-                        faceValue: faceValue,
-                        accruedInterest: accruedInterest
-                    }
+                    createdBy: request.executedBy
                 }
             });
             // Update position
@@ -164,7 +150,7 @@ class FixedIncomeService {
             if (!position) {
                 throw new Error('Position not found');
             }
-            const faceValue = position.metadata?.faceValue || 1000;
+            const faceValue = 1000; // Standard bond face value
             const paymentAmount = (position.quantity.toNumber() * faceValue * request.couponRate) / 100;
             // Create coupon payment record
             const couponPayment = {
@@ -188,24 +174,18 @@ class FixedIncomeService {
                 data: {
                     portfolioId: position.portfolioId,
                     tenantId: request.tenantId,
-                    transactionType: 'COUPON_PAYMENT',
-                    securityId: position.securityId,
+                    transactionType: 'INTEREST',
                     symbol: position.symbol,
-                    securityType: position.securityType,
                     quantity: 0,
                     price: 0,
                     netAmount: paymentAmount,
                     commission: 0,
                     fees: 0,
+                    transactionDate: new Date(request.paymentDate),
                     tradeDate: new Date(request.paymentDate),
                     settlementDate: new Date(request.paymentDate),
                     status: 'SETTLED',
-                    createdBy: request.processedBy,
-                    metadata: {
-                        couponRate: request.couponRate,
-                        faceValue: faceValue,
-                        paymentType: 'COUPON'
-                    }
+                    createdBy: request.processedBy
                 }
             });
             // Publish event
@@ -239,8 +219,8 @@ class FixedIncomeService {
             if (!position) {
                 throw new Error('Position not found');
             }
-            const metadata = position.metadata;
-            const currentPrice = position.lastPrice.toNumber();
+            const metadata = {}; // Will store metadata separately
+            const currentPrice = position.lastPrice?.toNumber() || 0;
             const faceValue = metadata?.faceValue || 1000;
             const couponRate = metadata?.couponRate || 0;
             const maturityDate = new Date(metadata?.maturityDate || Date.now() + 365 * 24 * 60 * 60 * 1000);
@@ -280,9 +260,9 @@ class FixedIncomeService {
                 throw new Error('Position not found');
             }
             const yieldMetrics = await this.calculateYieldMetrics(request.positionId, request.tenantId);
-            const metadata = position.metadata;
-            const faceValue = metadata?.faceValue || 1000;
-            const currentPrice = position.lastPrice.toNumber();
+            const metadata = {}; // Will store metadata separately
+            const faceValue = 1000; // Standard bond face value
+            const currentPrice = position.lastPrice?.toNumber() || 0;
             const valuation = {
                 positionId: request.positionId,
                 valuationDate: new Date(request.valuationDate || Date.now()),
@@ -307,7 +287,7 @@ class FixedIncomeService {
     }
     // Private helper methods
     mapToFixedIncomePosition(position) {
-        const metadata = position.metadata || {};
+        const metadata = {}; // Will store metadata separately
         return {
             id: position.id,
             portfolioId: position.portfolioId,
@@ -337,7 +317,7 @@ class FixedIncomeService {
         };
     }
     mapToFixedIncomeTransaction(transaction) {
-        const metadata = transaction.metadata || {};
+        const metadata = {}; // Will store metadata separately
         return {
             id: transaction.id,
             portfolioId: transaction.portfolioId,

@@ -434,7 +434,7 @@ class BestExecutionService {
                 ]
             };
             return {
-                overallMetrics,
+                overallMetrics: overallMetrics,
                 venueComparison,
                 recommendations,
                 benchmarkComparison

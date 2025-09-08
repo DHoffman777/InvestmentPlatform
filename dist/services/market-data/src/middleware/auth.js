@@ -6,6 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireTenantAccess = exports.requirePermission = exports.authenticateJWT = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const logger_1 = require("../utils/logger");
+// Using the global declaration from portfolio-service
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       user?: JWTPayload & { sessionId?: string };
+//     }
+//   }
+// }
 const authenticateJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -57,12 +65,12 @@ const requirePermission = (requiredPermissions) => {
                 message: 'User not authenticated',
             });
         }
-        const userPermissions = req.user.permissions || [];
+        const userPermissions = req.user?.permissions || [];
         const hasPermission = requiredPermissions.some(permission => userPermissions.includes(permission));
         if (!hasPermission) {
             logger_1.logger.warn('Authorization failed: Insufficient permissions', {
-                userId: req.user.sub,
-                tenantId: req.user.tenantId,
+                userId: req.user?.sub,
+                tenantId: req.user?.tenantId,
                 requiredPermissions,
                 userPermissions,
                 path: req.path,

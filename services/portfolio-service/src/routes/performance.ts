@@ -29,8 +29,8 @@ router.get('/portfolios/:id',
     query('includeReturns').optional().isBoolean().toBoolean(),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['performance:read']),
+  requireTenantAccess as any,
+  requirePermission(['performance:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -175,8 +175,8 @@ router.get('/portfolios/:id/attribution',
     query('attributionType').optional().isIn(['SECTOR', 'ASSET_CLASS', 'SECURITY', 'GEOGRAPHY']),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['performance:read']),
+  requireTenantAccess as any,
+  requirePermission(['performance:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -329,8 +329,8 @@ router.get('/portfolios/:id/risk-metrics',
     query('period').optional().isIn(['1M', '3M', '6M', '1Y', 'ALL']),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['performance:read']),
+  requireTenantAccess as any,
+  requirePermission(['performance:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;

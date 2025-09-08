@@ -542,7 +542,7 @@ class OnboardingProgressService extends events_1.EventEmitter {
                     timing: 'immediate'
                 },
                 {
-                    type: 'phone',
+                    type: 'call',
                     message: 'Welcome call from relationship manager',
                     timing: 'next_business_day'
                 }

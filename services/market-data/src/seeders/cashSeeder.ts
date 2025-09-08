@@ -294,11 +294,11 @@ export async function seedCashInstruments() {
 
     // Generate summary statistics
     const totalTreasuries = await prisma.security.count({
-      where: { assetClass: 'TREASURY', isActive: true }
+      where: { assetClass: 'TREASURY', isActive: true } as any
     });
     
     const totalCashEquivalents = await prisma.security.count({
-      where: { assetClass: 'CASH_EQUIVALENT', isActive: true }
+      where: { assetClass: 'CASH_EQUIVALENT', isActive: true } as any
     });
 
     const treasuryTypes = await prisma.security.groupBy({
@@ -306,18 +306,18 @@ export async function seedCashInstruments() {
       where: { 
         assetClass: 'TREASURY', 
         isActive: true 
-      },
+      } as any,
       _count: { securityType: true },
-    });
+    } as any);
 
     const cashEquivalentTypes = await prisma.security.groupBy({
       by: ['securityType'],
       where: { 
         assetClass: 'CASH_EQUIVALENT', 
         isActive: true 
-      },
+      } as any,
       _count: { securityType: true },
-    });
+    } as any);
 
     logger.info('Cash instruments seeding summary:', {
       totalTreasuries,
@@ -325,11 +325,11 @@ export async function seedCashInstruments() {
       total: totalTreasuries + totalCashEquivalents,
       treasuryBreakdown: treasuryTypes.map(type => ({
         type: type.securityType,
-        count: type._count.securityType,
+        count: (type._count as any)?.securityType || 0,
       })),
       cashEquivalentBreakdown: cashEquivalentTypes.map(type => ({
         type: type.securityType,
-        count: type._count.securityType,
+        count: (type._count as any)?.securityType || 0,
       })),
     });
 

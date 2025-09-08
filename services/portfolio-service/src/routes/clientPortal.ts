@@ -55,7 +55,7 @@ const preferencesUpdateSchema = [
 
 // Get dashboard layout
 router.get('/dashboard/layout',
-  authMiddleware,
+  authMiddleware as any,
   [query('layoutId').optional().isUUID().withMessage('Invalid layout ID')],
   validateRequest,
   async (req: any, res: any) => {
@@ -93,7 +93,7 @@ router.get('/dashboard/layout',
 
 // Update dashboard layout
 router.put('/dashboard/layout/:layoutId',
-  authMiddleware,
+  authMiddleware as any,
   [param('layoutId').isUUID().withMessage('Valid layout ID required') as any],
   dashboardLayoutUpdateSchema,
   validateRequest,
@@ -137,7 +137,7 @@ router.put('/dashboard/layout/:layoutId',
 
 // Get dashboard data
 router.post('/dashboard/data',
-  authMiddleware,
+  authMiddleware as any,
   dashboardDataSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -188,7 +188,7 @@ router.post('/dashboard/data',
 
 // Refresh widget data
 router.post('/dashboard/widgets/:widgetId/refresh',
-  authMiddleware,
+  authMiddleware as any,
   [param('widgetId').isUUID().withMessage('Valid widget ID required') as any],
   validateRequest,
   async (req: any, res: any) => {
@@ -232,7 +232,7 @@ router.post('/dashboard/widgets/:widgetId/refresh',
 
 // Get client messages
 router.get('/messages',
-  authMiddleware,
+  authMiddleware as any,
   [
     query('status').optional().isIn(Object.values(MessageStatus)).withMessage('Invalid message status'),
     query('type').optional().isIn(Object.values(MessageType)).withMessage('Invalid message type'),
@@ -281,7 +281,7 @@ router.get('/messages',
 
 // Mark message as read
 router.put('/messages/:messageId/read',
-  authMiddleware,
+  authMiddleware as any,
   [param('messageId').isUUID().withMessage('Valid message ID required') as any],
   validateRequest,
   async (req: any, res: any) => {
@@ -320,7 +320,7 @@ router.put('/messages/:messageId/read',
 
 // Get client preferences
 router.get('/preferences',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
@@ -355,7 +355,7 @@ router.get('/preferences',
 
 // Update client preferences
 router.put('/preferences',
-  authMiddleware,
+  authMiddleware as any,
   preferencesUpdateSchema,
   validateRequest,
   async (req: any, res: any) => {
@@ -398,7 +398,7 @@ router.put('/preferences',
 
 // Get portal analytics
 router.get('/analytics',
-  authMiddleware,
+  authMiddleware as any,
   [
     query('startDate').optional().isISO8601().withMessage('Invalid start date'),
     query('endDate').optional().isISO8601().withMessage('Invalid end date')
@@ -449,7 +449,7 @@ router.get('/analytics',
 
 // Create portal session (login)
 router.post('/session',
-  authMiddleware,
+  authMiddleware as any,
   [
     body('deviceInfo').isObject().withMessage('Device info is required'),
     body('deviceInfo.userAgent').isString().withMessage('User agent is required'),
@@ -532,7 +532,7 @@ router.get('/health',
 
 // Configuration endpoint for white-labeling
 router.get('/configuration',
-  authMiddleware,
+  authMiddleware as any,
   async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;

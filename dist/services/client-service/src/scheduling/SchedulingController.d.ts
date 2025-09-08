@@ -80,7 +80,6 @@ export declare class SchedulingController extends EventEmitter {
     private setupMobileRoutes;
     private setupRealTimeRoutes;
     private setupDocumentation;
-    private handleValidationErrors;
     private getHealth;
     private getCalendarProviders;
     private getCalendarProvider;
@@ -161,22 +160,14 @@ export declare class SchedulingController extends EventEmitter {
     private streamRealTimeEvents;
     private getWebSocketInfo;
     private getRealTimeStatus;
+    private checkAuthentication;
+    private getDocs;
+    private getOpenAPISpec;
     private generateOpenAPISpec;
     private setupErrorHandling;
     start(): Promise<any>;
     stop(): Promise<any>;
     getApp(): express.Application;
     getConfig(): SchedulingAPIConfig;
-}
-declare global {
-    namespace Express {
-        interface Request {
-            user: {
-                id: string;
-                tenantId: string;
-                role: string;
-            };
-        }
-    }
 }
 export default SchedulingController;

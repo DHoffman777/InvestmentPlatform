@@ -260,7 +260,7 @@ class RealTimeMetricsStreaming extends events_1.EventEmitter {
                         metricId: metricValue.metricId,
                         subscriptionId: subscription.id,
                         current: metricValue,
-                        previous,
+                        previous: previous || undefined,
                         change: this.calculateChange(metricValue, previous)
                     };
                     if (subscription.aggregationLevel !== 'raw') {
@@ -374,7 +374,7 @@ class RealTimeMetricsStreaming extends events_1.EventEmitter {
         return false;
     }
     async validateAuthentication(token) {
-        return token && token.length > 10;
+        return Boolean(token && token.length > 10);
     }
     addToBuffer(metricValue) {
         if (!this.metricBuffer.has(metricValue.metricId)) {

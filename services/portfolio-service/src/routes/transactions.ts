@@ -32,8 +32,8 @@ router.get('/',
     query('search').optional().isString().trim(),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:read']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:read']) as any,
   async (req: any, res: any) => {
     try {
       const {
@@ -135,8 +135,8 @@ router.get('/:id',
     param('id').isUUID().withMessage('Invalid transaction ID'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:read']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:read']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -201,8 +201,8 @@ router.post('/',
     body('externalId').optional().isString().trim().isLength({ max: 100 }).withMessage('External ID must be less than 100 characters'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:create']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:create']) as any,
   async (req: any, res: any) => {
     try {
       const {
@@ -343,8 +343,8 @@ router.put('/:id',
     body('status').optional().isIn(['PENDING', 'SETTLED', 'CANCELLED', 'FAILED']).withMessage('Invalid status'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:update']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:update']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;
@@ -448,8 +448,8 @@ router.delete('/:id',
     param('id').isUUID().withMessage('Invalid transaction ID'),
   ],
   validateRequest,
-  requireTenantAccess,
-  requirePermission(['transaction:delete']),
+  requireTenantAccess as any,
+  requirePermission(['transaction:delete']) as any,
   async (req: any, res: any) => {
     try {
       const { id } = req.params;

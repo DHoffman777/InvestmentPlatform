@@ -363,12 +363,14 @@ class RegulatoryRuleEngine {
         if (ruleIds && ruleIds.length > 0) {
             whereClause.id = { in: ruleIds };
         }
-        return await this.prisma.regulatoryRule.findMany({
+        const rules = await this.prisma.regulatoryRule.findMany({
             where: whereClause,
             orderBy: [
-                { version: 'desc' }
+                // { version: 'desc' } // Field doesn't exist in RegulatoryRuleOrderByWithRelationInput
+                { createdAt: 'desc' }
             ]
         });
+        return rules;
     }
     // Get portfolio data for evaluation
     async getPortfolioData(portfolioId) {
@@ -458,16 +460,48 @@ class RegulatoryRuleEngine {
             this.parseRuleExpression(ruleData.ruleExpression);
             const rule = await this.prisma.regulatoryRule.create({
                 data: {
-                    ...ruleData,
+                    ruleName: ruleData.regulationName,
+                    isActive: ruleData.isActive,
+                    jurisdiction: ruleData.jurisdiction,
+                    ruleType: 'REGULATORY_LIMIT', // Default value
+                    ruleDefinition: {
+                        regulationCode: ruleData.regulationCode,
+                        regulationName: ruleData.regulationName,
+                        regulatoryBody: ruleData.regulatoryBody,
+                        ruleExpression: ruleData.ruleExpression,
+                        ruleLogic: ruleData.ruleLogic,
+                        parameters: ruleData.parameters,
+                        version: ruleData.version,
+                        effectiveDate: ruleData.effectiveDate?.toISOString(),
+                        lastUpdated: ruleData.lastUpdated?.toISOString()
+                    },
                     tenantId
                 }
             });
             logger_1.logger.info('Regulatory rule created', {
                 ruleId: rule.id,
-                ruleCode: rule.regulationCode,
+                ruleCode: rule.ruleDefinition?.regulationCode,
                 jurisdiction: rule.jurisdiction
             });
-            return rule;
+            // Convert back to RegulatoryRule type
+            const mappedRule = {
+                id: rule.id,
+                tenantId: rule.tenantId,
+                regulationCode: rule.ruleDefinition?.regulationCode || '',
+                regulationName: rule.ruleName,
+                regulatoryBody: rule.ruleDefinition?.regulatoryBody || '',
+                ruleExpression: rule.ruleDefinition?.ruleExpression || '',
+                ruleLogic: rule.ruleDefinition?.ruleLogic || {},
+                parameters: rule.ruleDefinition?.parameters || [],
+                version: rule.ruleDefinition?.version || '1.0',
+                effectiveDate: rule.ruleDefinition?.effectiveDate ? new Date(rule.ruleDefinition.effectiveDate) : new Date(),
+                lastUpdated: rule.ruleDefinition?.lastUpdated ? new Date(rule.ruleDefinition.lastUpdated) : new Date(),
+                isActive: rule.isActive,
+                jurisdiction: rule.jurisdiction,
+                createdAt: rule.createdAt,
+                updatedAt: rule.updatedAt
+            };
+            return mappedRule;
         }
         catch (error) {
             logger_1.logger.error('Error creating regulatory rule:', error);
@@ -481,18 +515,67 @@ class RegulatoryRuleEngine {
             if (updates.ruleExpression) {
                 this.parseRuleExpression(updates.ruleExpression);
             }
+            const updateData = {};
+            // Map RegulatoryRule fields to Prisma model fields
+            if (updates.regulationName !== undefined)
+                updateData.ruleName = updates.regulationName;
+            if (updates.isActive !== undefined)
+                updateData.isActive = updates.isActive;
+            if (updates.jurisdiction !== undefined)
+                updateData.jurisdiction = updates.jurisdiction;
+            // Build ruleDefinition object for nested fields
+            const ruleDefinitionUpdates = {};
+            if (updates.regulationCode !== undefined)
+                ruleDefinitionUpdates.regulationCode = updates.regulationCode;
+            if (updates.regulationName !== undefined)
+                ruleDefinitionUpdates.regulationName = updates.regulationName;
+            if (updates.regulatoryBody !== undefined)
+                ruleDefinitionUpdates.regulatoryBody = updates.regulatoryBody;
+            if (updates.ruleExpression !== undefined)
+                ruleDefinitionUpdates.ruleExpression = updates.ruleExpression;
+            if (updates.ruleLogic !== undefined)
+                ruleDefinitionUpdates.ruleLogic = updates.ruleLogic;
+            if (updates.parameters !== undefined)
+                ruleDefinitionUpdates.parameters = updates.parameters;
+            if (updates.version !== undefined)
+                ruleDefinitionUpdates.version = updates.version;
+            if (updates.effectiveDate !== undefined)
+                ruleDefinitionUpdates.effectiveDate = updates.effectiveDate.toISOString();
+            if (updates.lastUpdated !== undefined)
+                ruleDefinitionUpdates.lastUpdated = updates.lastUpdated.toISOString();
+            if (Object.keys(ruleDefinitionUpdates).length > 0) {
+                updateData.ruleDefinition = ruleDefinitionUpdates;
+            }
             const rule = await this.prisma.regulatoryRule.update({
                 where: {
                     id: ruleId,
                     tenantId
                 },
-                data: updates
+                data: updateData
             });
             logger_1.logger.info('Regulatory rule updated', {
                 ruleId,
-                ruleCode: rule.regulationCode
+                ruleCode: rule.ruleDefinition?.regulationCode
             });
-            return rule;
+            // Convert back to RegulatoryRule type
+            const mappedRule = {
+                id: rule.id,
+                tenantId: rule.tenantId,
+                regulationCode: rule.ruleDefinition?.regulationCode || '',
+                regulationName: rule.ruleName,
+                regulatoryBody: rule.ruleDefinition?.regulatoryBody || '',
+                ruleExpression: rule.ruleDefinition?.ruleExpression || '',
+                ruleLogic: rule.ruleDefinition?.ruleLogic || {},
+                parameters: rule.ruleDefinition?.parameters || [],
+                version: rule.ruleDefinition?.version || '1.0',
+                effectiveDate: rule.ruleDefinition?.effectiveDate ? new Date(rule.ruleDefinition.effectiveDate) : new Date(),
+                lastUpdated: rule.ruleDefinition?.lastUpdated ? new Date(rule.ruleDefinition.lastUpdated) : new Date(),
+                isActive: rule.isActive,
+                jurisdiction: rule.jurisdiction,
+                createdAt: rule.createdAt,
+                updatedAt: rule.updatedAt
+            };
+            return mappedRule;
         }
         catch (error) {
             logger_1.logger.error('Error updating regulatory rule:', error);
@@ -522,12 +605,33 @@ class RegulatoryRuleEngine {
     // Get rule by ID
     async getRule(ruleId, tenantId) {
         try {
-            return await this.prisma.regulatoryRule.findFirst({
+            const rule = await this.prisma.regulatoryRule.findFirst({
                 where: {
                     id: ruleId,
                     tenantId
                 }
             });
+            if (!rule)
+                return null;
+            // Convert to RegulatoryRule type
+            const mappedRule = {
+                id: rule.id,
+                tenantId: rule.tenantId,
+                regulationCode: rule.ruleDefinition?.regulationCode || '',
+                regulationName: rule.ruleName,
+                regulatoryBody: rule.ruleDefinition?.regulatoryBody || '',
+                ruleExpression: rule.ruleDefinition?.ruleExpression || '',
+                ruleLogic: rule.ruleDefinition?.ruleLogic || {},
+                parameters: rule.ruleDefinition?.parameters || [],
+                version: rule.ruleDefinition?.version || '1.0',
+                effectiveDate: rule.ruleDefinition?.effectiveDate ? new Date(rule.ruleDefinition.effectiveDate) : new Date(),
+                lastUpdated: rule.ruleDefinition?.lastUpdated ? new Date(rule.ruleDefinition.lastUpdated) : new Date(),
+                isActive: rule.isActive,
+                jurisdiction: rule.jurisdiction,
+                createdAt: rule.createdAt,
+                updatedAt: rule.updatedAt
+            };
+            return mappedRule;
         }
         catch (error) {
             logger_1.logger.error('Error fetching regulatory rule:', error);
@@ -546,20 +650,40 @@ class RegulatoryRuleEngine {
                     whereClause.isActive = filters.isActive;
                 }
                 if (filters.regulationCode) {
-                    whereClause.regulationCode = {
-                        contains: filters.regulationCode,
-                        mode: 'insensitive'
+                    // Search in ruleDefinition JSON field
+                    whereClause.ruleDefinition = {
+                        path: ['regulationCode'],
+                        string_contains: filters.regulationCode
                     };
                 }
             }
-            return await this.prisma.regulatoryRule.findMany({
+            const rules = await this.prisma.regulatoryRule.findMany({
                 where: whereClause,
                 orderBy: [
                     { jurisdiction: 'asc' },
-                    { regulationCode: 'asc' },
-                    { version: 'desc' }
+                    // { regulationCode: 'asc' }, // Field doesn't exist
+                    // { version: 'desc' } // Field doesn't exist
+                    { createdAt: 'desc' }
                 ]
             });
+            // Convert to RegulatoryRule type
+            return rules.map(rule => ({
+                id: rule.id,
+                tenantId: rule.tenantId,
+                regulationCode: rule.ruleDefinition?.regulationCode || '',
+                regulationName: rule.ruleName,
+                regulatoryBody: rule.ruleDefinition?.regulatoryBody || '',
+                ruleExpression: rule.ruleDefinition?.ruleExpression || '',
+                ruleLogic: rule.ruleDefinition?.ruleLogic || {},
+                parameters: rule.ruleDefinition?.parameters || [],
+                version: rule.ruleDefinition?.version || '1.0',
+                effectiveDate: rule.ruleDefinition?.effectiveDate ? new Date(rule.ruleDefinition.effectiveDate) : new Date(),
+                lastUpdated: rule.ruleDefinition?.lastUpdated ? new Date(rule.ruleDefinition.lastUpdated) : new Date(),
+                isActive: rule.isActive,
+                jurisdiction: rule.jurisdiction,
+                createdAt: rule.createdAt,
+                updatedAt: rule.updatedAt
+            }));
         }
         catch (error) {
             logger_1.logger.error('Error fetching regulatory rules:', error);

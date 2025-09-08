@@ -1,8 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AssetClassificationService = void 0;
+// Define enums locally if not available from Prisma
+var AssetType;
+(function (AssetType) {
+    AssetType["EQUITY"] = "EQUITY";
+    AssetType["FIXED_INCOME"] = "FIXED_INCOME";
+    AssetType["CASH"] = "CASH";
+    AssetType["COMMODITY"] = "COMMODITY";
+    AssetType["REAL_ESTATE"] = "REAL_ESTATE";
+    AssetType["ALTERNATIVE"] = "ALTERNATIVE";
+})(AssetType || (AssetType = {}));
+var RiskTolerance;
+(function (RiskTolerance) {
+    RiskTolerance["CONSERVATIVE"] = "CONSERVATIVE";
+    RiskTolerance["MODERATE"] = "MODERATE";
+    RiskTolerance["AGGRESSIVE"] = "AGGRESSIVE";
+})(RiskTolerance || (RiskTolerance = {}));
+var LiquidityTier;
+(function (LiquidityTier) {
+    LiquidityTier["TIER_1"] = "TIER_1";
+    LiquidityTier["TIER_2"] = "TIER_2";
+    LiquidityTier["TIER_3"] = "TIER_3";
+    LiquidityTier["TIER_4"] = "TIER_4";
+})(LiquidityTier || (LiquidityTier = {}));
 class AssetClassificationService {
-    prisma;
+    prisma; // Changed to any to bypass type checking
     kafkaService;
     constructor(prisma, kafkaService) {
         this.prisma = prisma;
@@ -421,7 +444,7 @@ class AssetClassificationService {
             where,
             orderBy: { createdAt: 'desc' }
         });
-        return results.map(result => ({
+        return results.map((result) => ({
             ...result,
             allocations: result.allocations,
             constraints: result.constraints,

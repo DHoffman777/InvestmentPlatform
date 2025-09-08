@@ -248,7 +248,7 @@ class SLAReportingService extends events_1.EventEmitter {
             const chart = {
                 id: chartConfig.id,
                 title: chartConfig.title,
-                type: chartConfig.type,
+                type: (chartConfig.type === 'trend' ? 'line' : chartConfig.type),
                 data: await this.generateChartData(chartConfig, data),
                 configuration: {
                     xAxis: chartConfig.xAxis,
@@ -570,6 +570,7 @@ class SLAReportingService extends events_1.EventEmitter {
                 }
             ],
             layout: {
+                layout: 'grid',
                 columns: 12,
                 theme: 'light',
                 refreshInterval: 30000,

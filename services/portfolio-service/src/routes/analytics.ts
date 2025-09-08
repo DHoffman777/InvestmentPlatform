@@ -25,7 +25,7 @@ const anomalyService = new AnomalyDetectionService();
 const biService = new BusinessIntelligenceService();
 
 // Apply authentication to all routes
-router.use(authenticateToken);
+router.use(authenticateToken as any);
 
 // ===== DATA VISUALIZATION ROUTES =====
 
