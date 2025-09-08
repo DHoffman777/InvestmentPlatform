@@ -27,8 +27,8 @@ export interface RegulatoryRule {
   jurisdiction: string;
   regulatoryBody: string;
   ruleExpression: string;
-  ruleLogic: Record<string, any>;
-  parameters: Record<string, any>;
+  ruleLogic: RuleLogic;
+  parameters: RuleParameter[];
   effectiveDate: Date;
   lastUpdated: Date;
   version: string;
@@ -154,7 +154,7 @@ export interface ComplianceRule {
   updatedBy: string;
 }
 
-export interface RuleCondition {
+export interface RuleConditionExtended {
   field: string;
   operator: 'EQUALS' | 'NOT_EQUALS' | 'GREATER_THAN' | 'LESS_THAN' | 'GREATER_EQUAL' | 'LESS_EQUAL' | 'IN' | 'NOT_IN' | 'CONTAINS' | 'REGEX';
   value: any;
@@ -306,7 +306,7 @@ export interface RestrictedList {
 }
 
 export interface RestrictedSecurity {
-  instrumentId: string;
+  securityId: string;
   symbol: string;
   securityName: string;
   securityType: string;

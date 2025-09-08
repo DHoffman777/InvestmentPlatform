@@ -268,7 +268,7 @@ export interface RecoveryExecution {
   status: 'initiated' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
   currentPhase: string;
   completedProcedures: string[];
-  activeProced→ures: string[];
+  activeProcedures: string[];
   pendingProcedures: string[];
   resources: ResourceAllocation;
   timeline: ExecutionTimeline;
@@ -323,10 +323,10 @@ export class BusinessContinuityManager extends EventEmitter {
 
       return plan;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('planError', {
         operation: 'create',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -372,10 +372,10 @@ export class BusinessContinuityManager extends EventEmitter {
 
       return assessment;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('riskAssessmentError', {
         planId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -420,10 +420,10 @@ export class BusinessContinuityManager extends EventEmitter {
 
       return bia;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('biaError', {
         planId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -472,10 +472,10 @@ export class BusinessContinuityManager extends EventEmitter {
 
       return { event, execution };
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('disasterResponseError', {
         planId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -517,7 +517,7 @@ export class BusinessContinuityManager extends EventEmitter {
         
         if (!stepResult.success) {
           // Handle step failure
-          await this.handleStepFailure(execution, procedure, step, stepResult.error);
+          await this.handleStepFailure(execution, procedure, step, stepResult.error || 'Unknown error');
           break;
         }
       }
@@ -540,7 +540,7 @@ export class BusinessContinuityManager extends EventEmitter {
       // Update execution status
       if (success) {
         execution.completedProcedures.push(procedureId);
-        execution.activeProc→edures = execution.activeProcedures.filter(p => p !== procedureId);
+        execution.activeProcedures = execution.activeProcedures.filter(p => p !== procedureId);
       }
 
       execution.timeline.events.push({
@@ -565,11 +565,11 @@ export class BusinessContinuityManager extends EventEmitter {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('procedureExecutionError', {
         executionId,
         procedureId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -621,11 +621,11 @@ export class BusinessContinuityManager extends EventEmitter {
 
       return testEvent;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('testSchedulingError', {
         planId,
         testType,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -777,7 +777,7 @@ export class BusinessContinuityManager extends EventEmitter {
   private async sendEmergencyNotifications(
     plan: BusinessContinuityPlan,
     event: DisasterEvent
-  ): Promise<void> {
+  ): Promise<any> {
     // Send notifications to response team and stakeholders
     const notifications = plan.communicationPlan.stakeholderGroups
       .filter(group => group.emergencyNotification)
@@ -794,7 +794,7 @@ export class BusinessContinuityManager extends EventEmitter {
     }
   }
 
-  private async sendNotification(contact: any, notification: any): Promise<void> {
+  private async sendNotification(contact: any, notification: any): Promise<any> {
     // Mock notification sending
     this.emit('notificationSent', {
       recipient: contact.email || contact.phone,
@@ -840,7 +840,7 @@ export class BusinessContinuityManager extends EventEmitter {
     procedure: RecoveryProcedure,
     step: ProcedureStep,
     error: string
-  ): Promise<void> {
+  ): Promise<any> {
     const issue: RecoveryIssue = {
       id: randomUUID(),
       type: 'step_failure',
@@ -890,14 +890,14 @@ export class BusinessContinuityManager extends EventEmitter {
   }
 
   private threatLevelToNumber(likelihood: string, impact: string): number {
-    const likelihoodScores = { very_low: 1, low: 2, medium: 3, high: 4, very_high: 5 };
-    const impactScores = { minimal: 1, minor: 2, moderate: 3, major: 4, catastrophic: 5 };
+    const likelihoodScores: Record<string, number> = { very_low: 1, low: 2, medium: 3, high: 4, very_high: 5 };
+    const impactScores: Record<string, number> = { minimal: 1, minor: 2, moderate: 3, major: 4, catastrophic: 5 };
     
     return (likelihoodScores[likelihood] || 3) * (impactScores[impact] || 3);
   }
 
   private severityToNumber(severity: string): number {
-    const severityScores = { low: 2, medium: 4, high: 6, critical: 8 };
+    const severityScores: Record<string, number> = { low: 2, medium: 4, high: 6, critical: 8 };
     return severityScores[severity] || 4;
   }
 
@@ -1008,7 +1008,7 @@ export class BusinessContinuityManager extends EventEmitter {
   }
 
   private getTestObjectives(testType: string): string[] {
-    const objectives = {
+    const objectives: Record<string, string[]> = {
       'walkthrough': ['Familiarize team with procedures', 'Identify gaps in documentation'],
       'tabletop': ['Test decision-making processes', 'Validate communication protocols'],
       'functional': ['Test specific system recoveries', 'Validate technical procedures'],
@@ -1030,7 +1030,7 @@ export class BusinessContinuityManager extends EventEmitter {
   }
 
   private getTestDuration(testType: string): number {
-    const durations = {
+    const durations: Record<string, number> = {
       'walkthrough': 2,
       'tabletop': 4,
       'functional': 8,
@@ -1101,7 +1101,7 @@ export class BusinessContinuityManager extends EventEmitter {
             responsibilities: ['Overall incident coordination', 'Decision making'],
             expertise: ['Risk Management', 'Business Continuity'],
             location: 'Primary Office',
-            availability: { hours: '24/7', timeZone: 'EST' }
+            availability: { hours: '24/7', timeZone: 'EST', holidays: true, backup: 'Deputy Commander' }
           },
           deputies: [],
           functionalLeads: [],
@@ -1662,3 +1662,4 @@ interface BCPDashboard {
 }
 
 export default BusinessContinuityManager;
+

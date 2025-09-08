@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 // GET /health - Basic health check
-router.get('/', async (req, res) => {
+router.get('/', async (req: any, res: any) => {
   try {
     const startTime = Date.now();
     
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
       const dbStart = Date.now();
       await prisma.$queryRaw`SELECT 1`;
       dbLatency = Date.now() - dbStart;
-    } catch (error) {
+    } catch (error: any) {
       dbStatus = 'unhealthy';
       logger.error('Database health check failed:', error);
     }
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
       const redisClient = getRedisClient();
       await redisClient.ping();
       redisLatency = Date.now() - redisStart;
-    } catch (error) {
+    } catch (error: any) {
       redisStatus = 'unhealthy';
       logger.warn('Redis health check failed:', error);
     }
@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
 
     const statusCode = health.status === 'healthy' ? 200 : 503;
     res.status(statusCode).json(health);
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Health check error:', error);
     res.status(503).json({
       status: 'unhealthy',
@@ -71,7 +71,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /health/ready - Readiness probe
-router.get('/ready', async (req, res) => {
+router.get('/ready', async (req: any, res: any) => {
   try {
     // Check if database is ready
     await prisma.$queryRaw`SELECT 1`;
@@ -81,7 +81,7 @@ router.get('/ready', async (req, res) => {
       timestamp: new Date().toISOString(),
       service: 'market-data-service',
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Readiness check failed:', error);
     res.status(503).json({
       status: 'not ready',

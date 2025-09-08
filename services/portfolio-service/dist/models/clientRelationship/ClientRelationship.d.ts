@@ -1,4 +1,5 @@
 import { Decimal } from '@prisma/client/runtime/library';
+import type { DocumentDeliveryPreference } from '@prisma/client';
 export declare enum ClientType {
     INDIVIDUAL = "INDIVIDUAL",
     JOINT = "JOINT",
@@ -33,11 +34,6 @@ export declare enum LiquidityNeeds {
     MODERATE = "MODERATE",
     HIGH = "HIGH",
     IMMEDIATE = "IMMEDIATE"
-}
-export declare enum DocumentDeliveryPreference {
-    ELECTRONIC = "ELECTRONIC",
-    PAPER = "PAPER",
-    BOTH = "BOTH"
 }
 export declare enum CommunicationMethod {
     EMAIL = "EMAIL",

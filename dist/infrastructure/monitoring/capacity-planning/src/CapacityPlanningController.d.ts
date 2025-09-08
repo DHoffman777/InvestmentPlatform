@@ -121,6 +121,6 @@ export declare class CapacityPlanningController extends EventEmitter {
     private healthCheck;
     private systemMetrics;
     private setupSwaggerDocs;
-    start(): Promise<void>;
+    start(): Promise<any>;
     getApp(): express.Application;
 }

@@ -163,8 +163,8 @@ export declare class SchedulingController extends EventEmitter {
     private getRealTimeStatus;
     private generateOpenAPISpec;
     private setupErrorHandling;
-    start(): Promise<void>;
-    stop(): Promise<void>;
+    start(): Promise<any>;
+    stop(): Promise<any>;
     getApp(): express.Application;
     getConfig(): SchedulingAPIConfig;
 }

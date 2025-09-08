@@ -1,6 +1,6 @@
 import { PrismaClient, Security } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { Decimal } from 'decimal.js';
+import { Prisma } from '@prisma/client';
 
 export interface CashEquivalentData {
   symbol: string;
@@ -16,15 +16,15 @@ export interface CashEquivalentData {
   maturityDate?: Date;
   issueDate?: Date;
   daysToMaturity?: number;
-  minimumDenomination: Decimal;
-  parValue?: Decimal;
-  currentYield?: Decimal;
+  minimumDenomination: Prisma.Decimal;
+  parValue?: Prisma.Decimal;
+  currentYield?: Prisma.Decimal;
   
   // Rates and pricing
-  discountRate?: Decimal; // For discount instruments like T-bills
-  bankDiscountYield?: Decimal;
-  bondEquivalentYield?: Decimal;
-  effectiveAnnualRate?: Decimal;
+  discountRate?: Prisma.Decimal; // For discount instruments like T-bills
+  bankDiscountYield?: Prisma.Decimal;
+  bondEquivalentYield?: Prisma.Decimal;
+  effectiveAnnualRate?: Prisma.Decimal;
   
   // Issuer information
   issuer: string;
@@ -63,33 +63,33 @@ export interface CashAccountData {
   accountNumber?: string; // Masked/encrypted
   
   // Rates
-  currentAPY?: Decimal; // Annual Percentage Yield
-  currentAPR?: Decimal; // Annual Percentage Rate
+  currentAPY?: Prisma.Decimal; // Annual Percentage Yield
+  currentAPR?: Prisma.Decimal; // Annual Percentage Rate
   
   // Balance tiers and rates
   balanceTiers?: {
-    minBalance: Decimal;
-    maxBalance?: Decimal;
-    apy: Decimal;
+    minBalance: Prisma.Decimal;
+    maxBalance?: Prisma.Decimal;
+    apy: Prisma.Decimal;
   }[];
   
   // Features
-  minimumBalance?: Decimal;
-  maximumBalance?: Decimal;
-  monthlyMaintenanceFee?: Decimal;
+  minimumBalance?: Prisma.Decimal;
+  maximumBalance?: Prisma.Decimal;
+  monthlyMaintenanceFee?: Prisma.Decimal;
   transactionLimits?: {
-    dailyLimit?: Decimal;
-    monthlyLimit?: Decimal;
-    perTransactionLimit?: Decimal;
+    dailyLimit?: Prisma.Decimal;
+    monthlyLimit?: Prisma.Decimal;
+    perTransactionLimit?: Prisma.Decimal;
   };
   
   // FDIC Insurance
   fdicInsured: boolean;
-  fdicInsuranceLimit?: Decimal;
+  fdicInsuranceLimit?: Prisma.Decimal;
   
   // Sweep features
   isSweepAccount?: boolean;
-  sweepThreshold?: Decimal;
+  sweepThreshold?: Prisma.Decimal;
   sweepTargetFunds?: string[];
   
   isActive?: boolean;
@@ -110,30 +110,30 @@ export interface TreasuryData {
   settlementDate?: Date;
   
   // Denominations
-  parValue: Decimal;
-  minimumBid: Decimal;
-  bidIncrement: Decimal;
+  parValue: Prisma.Decimal;
+  minimumBid: Prisma.Decimal;
+  bidIncrement: Prisma.Decimal;
   
   // Auction details
   auctionType?: 'SINGLE_PRICE' | 'MULTIPLE_PRICE';
-  competitiveBidAccepted?: Decimal;
-  noncompetitiveBidAccepted?: Decimal;
-  totalIssued?: Decimal;
+  competitiveBidAccepted?: Prisma.Decimal;
+  noncompetitiveBidAccepted?: Prisma.Decimal;
+  totalIssued?: Prisma.Decimal;
   
   // Rates
-  discountRate?: Decimal; // For bills
-  couponRate?: Decimal; // For notes/bonds
-  yield?: Decimal;
+  discountRate?: Prisma.Decimal; // For bills
+  couponRate?: Prisma.Decimal; // For notes/bonds
+  yield?: Prisma.Decimal;
   
   // TIPS specific (if instrumentType is TIPS)
-  inflationIndexRatio?: Decimal;
-  realYield?: Decimal;
-  breakEvenInflationRate?: Decimal;
+  inflationIndexRatio?: Prisma.Decimal;
+  realYield?: Prisma.Decimal;
+  breakEvenInflationRate?: Prisma.Decimal;
   
   // Characteristics
   daysToMaturity: number;
-  duration?: Decimal; // Modified duration
-  convexity?: Decimal;
+  duration?: Prisma.Decimal; // Modified duration
+  convexity?: Prisma.Decimal;
   
   // Payment details
   interestPaymentDates?: Date[];
@@ -218,7 +218,7 @@ export class CashService {
       });
 
       return security;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error upserting cash equivalent', {
         symbol: cashData.symbol,
         error: error instanceof Error ? error.message : String(error),
@@ -296,7 +296,7 @@ export class CashService {
       });
 
       return security;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error upserting treasury security', {
         symbol: treasuryData.symbol,
         error: error instanceof Error ? error.message : String(error),
@@ -356,7 +356,6 @@ export class CashService {
         where: whereClause,
         take: limit,
         orderBy: [
-          { maturityDate: 'asc' },
           { symbol: 'asc' },
         ],
         include: {
@@ -417,7 +416,7 @@ export class CashService {
       });
 
       return filteredResults;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error searching cash instruments', {
         filters,
         error: error instanceof Error ? error.message : String(error),
@@ -471,7 +470,7 @@ export class CashService {
         })),
         metadata,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting cash instrument details', {
         symbol,
         error: error instanceof Error ? error.message : String(error),
@@ -523,7 +522,7 @@ export class CashService {
       };
 
       return rates;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting money market rates', {
         error: error instanceof Error ? error.message : String(error),
       });
@@ -532,7 +531,7 @@ export class CashService {
   }
 
   // Helper method to store cash instrument metadata
-  private async storeCashMetadata(securityId: string, metadata: any): Promise<void> {
+  private async storeCashMetadata(securityId: string, metadata: any): Promise<any> {
     try {
       await this.prisma.fundamental.upsert({
         where: {
@@ -554,7 +553,7 @@ export class CashService {
           additionalData: metadata,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Could not store cash instrument metadata', { securityId, error });
     }
   }
@@ -571,9 +570,11 @@ export class CashService {
       });
 
       return metadata?.additionalData || {};
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Could not retrieve cash instrument metadata', { securityId, error });
       return {};
     }
   }
 }
+
+

@@ -592,7 +592,11 @@ export interface HookAction {
     endpoint?: string;
     parameters: Record<string, any>;
 }
-export interface PrerequisiteType {
+export declare enum PrerequisiteType {
+    SYSTEM_CHECK = "system_check",
+    DATA_VALIDATION = "data_validation",
+    APPROVAL_CHECK = "approval_check",
+    DEPENDENCY_CHECK = "dependency_check"
 }
 export interface ActionExecutor {
     type: ExecutorType;
@@ -1105,4 +1109,5 @@ export declare class AccountClosureService extends EventEmitter {
     private addAuditEntry;
     private initializeWorkflowDefinitions;
     private startProcessingScheduler;
+    private getErrorMessage;
 }

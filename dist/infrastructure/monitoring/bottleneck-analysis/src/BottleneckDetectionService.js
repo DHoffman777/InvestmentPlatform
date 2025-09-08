@@ -18,6 +18,7 @@ class BottleneckDetectionService extends events_1.EventEmitter {
     historicalProfiles = [];
     detectedBottlenecks = new Map();
     anomalyBaselines = new Map();
+    activeBottlenecks = new Map();
     constructor(config) {
         super();
         this.config = config;
@@ -130,11 +131,11 @@ class BottleneckDetectionService extends events_1.EventEmitter {
                 });
             }
             catch (error) {
-                console.error(`Bottleneck detection algorithm ${algorithmId} failed:`, error.message);
+                console.error(`Bottleneck detection algorithm ${algorithmId} failed:`, error instanceof Error ? error.message : 'Unknown error');
                 this.emit('algorithmError', {
                     algorithmId,
                     profileId: profile.id,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }
@@ -1001,6 +1002,9 @@ class BottleneckDetectionService extends events_1.EventEmitter {
         this.detectedBottlenecks.clear();
         this.anomalyBaselines.clear();
         console.log('Bottleneck Detection Service shutdown complete');
+    }
+    getBottlenecks() {
+        return Array.from(this.activeBottlenecks.values());
     }
 }
 exports.BottleneckDetectionService = BottleneckDetectionService;

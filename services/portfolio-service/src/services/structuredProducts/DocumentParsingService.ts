@@ -223,7 +223,7 @@ export class DocumentParsingService {
 
         return parsingResult;
 
-      } catch (error) {
+      } catch (error: any) {
         parsingResult.parsingStatus = 'FAILED';
         parsingResult.processingEndTime = new Date();
         parsingResult.processingDuration = Date.now() - startTime;
@@ -238,7 +238,7 @@ export class DocumentParsingService {
         throw error;
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in document parsing:', error);
       throw error;
     }
@@ -269,7 +269,7 @@ export class DocumentParsingService {
           throw new Error(`Unsupported OCR engine: ${this.parsingConfig.ocrEngine}`);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('OCR processing failed:', error);
       throw error;
     }
@@ -372,7 +372,7 @@ export class DocumentParsingService {
         if (extractedValue !== null) {
           this.setNestedValue(extractedTerms, fieldName, extractedValue);
         }
-      } catch (error) {
+      } catch (error: any) {
         logger.warn('Failed to extract field', { fieldName, error });
       }
     }
@@ -452,7 +452,7 @@ export class DocumentParsingService {
         default:
           return value;
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Data type conversion failed', { value, dataType, error });
       return value;
     }
@@ -545,7 +545,7 @@ export class DocumentParsingService {
 
       return enhancedTerms;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('ML enhancement failed, returning original terms:', error);
       return extractedTerms;
     }
@@ -731,13 +731,13 @@ export class DocumentParsingService {
       hasCapitalProtection: extractedTerms.capitalProtection !== undefined,
       protectionLevel: extractedTerms.capitalProtection,
       
-      settlementType: 'CASH',
+      settlementType: 'CASH' as any,
       settlementDays: 3,
       
       riskFactors: extractedTerms.riskFactors || [],
       creditRating: extractedTerms.creditRating,
       
-      status: 'DRAFT',
+      status: 'DRAFT' as any,
       isActive: true
     };
 
@@ -746,17 +746,17 @@ export class DocumentParsingService {
 
   // Map payoff description to payoff type
   private mapPayoffType(description?: string): PayoffType {
-    if (!description) return 'PARTICIPATION';
+    if (!description) return 'PARTICIPATION' as any;
     
     const lowerDesc = description.toLowerCase();
     
-    if (lowerDesc.includes('participation')) return 'PARTICIPATION';
-    if (lowerDesc.includes('leverage')) return 'LEVERAGED';
-    if (lowerDesc.includes('cap')) return 'CAPPED';
-    if (lowerDesc.includes('digital')) return 'DIGITAL';
-    if (lowerDesc.includes('fixed')) return 'FIXED_COUPON';
+    if (lowerDesc.includes('participation')) return 'PARTICIPATION' as any;
+    if (lowerDesc.includes('leverage')) return 'LEVERAGED' as any;
+    if (lowerDesc.includes('cap')) return 'CAPPED' as any;
+    if (lowerDesc.includes('digital')) return 'DIGITAL' as any;
+    if (lowerDesc.includes('fixed')) return 'FIXED_COUPON' as any;
     
-    return 'PARTICIPATION';
+    return 'PARTICIPATION' as any;
   }
 
   // Generate payoff formula
@@ -793,13 +793,13 @@ export class DocumentParsingService {
   // Determine underlying type
   private determineUnderlyingType(underlyingAssets?: any[]): UnderlyingType {
     if (!underlyingAssets || underlyingAssets.length === 0) {
-      return 'SINGLE_STOCK';
+      return 'SINGLE_STOCK' as any;
     }
     
     if (underlyingAssets.length === 1) {
-      return 'SINGLE_STOCK';
+      return 'SINGLE_STOCK' as any;
     } else {
-      return 'BASKET';
+      return 'BASKET' as any;
     }
   }
 
@@ -836,24 +836,24 @@ export class DocumentParsingService {
 
   // Map barrier type
   private mapBarrierType(type?: string): BarrierType {
-    if (!type) return 'DOWN_AND_OUT';
+    if (!type) return 'DOWN_AND_OUT' as any;
     
     const lowerType = type.toLowerCase();
     
     if (lowerType.includes('knock-out') || lowerType.includes('knock out')) {
-      return 'DOWN_AND_OUT';
+      return 'DOWN_AND_OUT' as any;
     }
     if (lowerType.includes('knock-in') || lowerType.includes('knock in')) {
-      return 'DOWN_AND_IN';
+      return 'DOWN_AND_IN' as any;
     }
     if (lowerType.includes('up') && lowerType.includes('out')) {
-      return 'UP_AND_OUT';
+      return 'UP_AND_OUT' as any;
     }
     if (lowerType.includes('up') && lowerType.includes('in')) {
-      return 'UP_AND_IN';
+      return 'UP_AND_IN' as any;
     }
     
-    return 'DOWN_AND_OUT';
+    return 'DOWN_AND_OUT' as any;
   }
 
   // Map observation frequency
@@ -938,7 +938,7 @@ export class DocumentParsingService {
   }
 
   // Store parsing result
-  private async storeParsingResult(result: DocumentParsingResult): Promise<void> {
+  private async storeParsingResult(result: DocumentParsingResult): Promise<any> {
     try {
       // In a real implementation, this would store in database
       logger.debug('Storing parsing result', {
@@ -946,13 +946,13 @@ export class DocumentParsingService {
         overallConfidence: result.overallConfidence,
         requiresReview: result.requiresReview
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error storing parsing result:', error);
     }
   }
 
   // Publish parsing event
-  private async publishParsingEvent(result: DocumentParsingResult): Promise<void> {
+  private async publishParsingEvent(result: DocumentParsingResult): Promise<any> {
     try {
       await this.kafkaService.publishEvent('structured-products.document.parsed', {
         documentId: result.documentId,
@@ -962,7 +962,7 @@ export class DocumentParsingService {
         requiresReview: result.requiresReview,
         processingDuration: result.processingDuration
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing parsing event:', error);
     }
   }
@@ -999,7 +999,7 @@ export class DocumentParsingService {
 
       return results;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in batch document parsing:', error);
       throw error;
     }
@@ -1011,7 +1011,7 @@ export class DocumentParsingService {
       // In a real implementation, this would query the database
       logger.debug('Retrieving parsing result', { documentId });
       return null; // Placeholder
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving parsing result:', error);
       return null;
     }
@@ -1065,9 +1065,10 @@ export class DocumentParsingService {
 
       return updatedResult;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing review corrections:', error);
       throw error;
     }
   }
 }
+

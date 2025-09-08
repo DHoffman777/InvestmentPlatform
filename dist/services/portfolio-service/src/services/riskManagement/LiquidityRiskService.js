@@ -105,7 +105,7 @@ class LiquidityRiskService {
         const marketImpact = liquidationCost / position.marketValue;
         return {
             positionId: position.positionId,
-            instrumentId: position.instrumentId,
+            securityId: position.securityId,
             symbol: position.symbol,
             marketValue: position.marketValue,
             liquidityCategory,
@@ -390,8 +390,8 @@ class LiquidityRiskService {
             return {
                 ...position,
                 daysToLiquidate: stressedDaysToLiquidate,
-                liquidationCost: stressedLiquidationCost,
-                marketImpact: stressedLiquidationCost / position.marketValue,
+                liquidationCost: await stressedLiquidationCost,
+                marketImpact: (await stressedLiquidationCost) / position.marketValue,
                 averageDailyVolume: stressedVolume,
                 bidAskSpread: stressedSpread
             };
@@ -403,7 +403,7 @@ class LiquidityRiskService {
         return [
             {
                 positionId: 'pos_001',
-                instrumentId: 'AAPL',
+                securityId: 'AAPL',
                 symbol: 'AAPL',
                 marketValue: 1000000,
                 assetClass: 'EQUITY',
@@ -411,7 +411,7 @@ class LiquidityRiskService {
             },
             {
                 positionId: 'pos_002',
-                instrumentId: 'GOOGL',
+                securityId: 'GOOGL',
                 symbol: 'GOOGL',
                 marketValue: 800000,
                 assetClass: 'EQUITY',
@@ -419,7 +419,7 @@ class LiquidityRiskService {
             },
             {
                 positionId: 'pos_003',
-                instrumentId: 'BND',
+                securityId: 'BND',
                 symbol: 'BND',
                 marketValue: 500000,
                 assetClass: 'FIXED_INCOME',
@@ -427,7 +427,7 @@ class LiquidityRiskService {
             },
             {
                 positionId: 'pos_004',
-                instrumentId: 'VNQ',
+                securityId: 'VNQ',
                 symbol: 'VNQ',
                 marketValue: 300000,
                 assetClass: 'ALTERNATIVES',

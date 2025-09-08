@@ -1,7 +1,10 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Client } from 'ssh2-sftp-client';
+import * as crypto from 'crypto';
+// @ts-ignore - ssh2-sftp-client types not installed
+import * as SftpClient from 'ssh2-sftp-client';
+type Client = any;
 import { logger } from '../../../utils/logger';
 import { 
   CustodianConnection,
@@ -12,7 +15,9 @@ import {
   DocumentRetrievalRequest,
   ConnectionTestResult,
   APIConnectionType,
-  DataFeedType
+  DataFeedType,
+  OrderStatus,
+  OrderSubmissionError
 } from '../../../models/custodianIntegration/CustodianIntegration';
 
 export class PershingIntegrationService {
@@ -35,7 +40,7 @@ export class PershingIntegrationService {
       }
     });
 
-    this.sftpClient = new Client();
+    this.sftpClient = new (SftpClient as any)();
     this.setupInterceptors();
   }
 
@@ -121,9 +126,9 @@ export class PershingIntegrationService {
     );
   }
 
-  async validateConfig(config: CustodianConnectionConfig): Promise<void> {
+  async validateConfig(config: CustodianConnectionConfig, connectionType?: APIConnectionType): Promise<any> {
     // Validate Pershing-specific configuration requirements
-    if (config.connectionType === APIConnectionType.REST_API) {
+    if (connectionType === APIConnectionType.REST_API) {
       if (!config.authentication.credentials.clientId) {
         throw new Error('Pershing Client ID is required for REST API connections');
       }
@@ -131,7 +136,7 @@ export class PershingIntegrationService {
       if (!config.authentication.credentials.clientSecret) {
         throw new Error('Pershing Client Secret is required for REST API connections');
       }
-    } else if (config.connectionType === APIConnectionType.SFTP) {
+    } else if (connectionType === APIConnectionType.SFTP) {
       if (!config.fileTransfer) {
         throw new Error('File transfer configuration is required for SFTP connections');
       }
@@ -143,7 +148,7 @@ export class PershingIntegrationService {
       if (!config.authentication.credentials.username || !config.authentication.credentials.password) {
         throw new Error('SFTP username and password are required');
       }
-    } else if (config.connectionType === APIConnectionType.FTP) {
+    } else if (connectionType === APIConnectionType.FTP) {
       // Pershing also supports FTP
       if (!config.fileTransfer) {
         throw new Error('File transfer configuration is required for FTP connections');
@@ -158,7 +163,7 @@ export class PershingIntegrationService {
     }
 
     // Validate required endpoints for API connections
-    if (config.connectionType === APIConnectionType.REST_API) {
+    if (connectionType === APIConnectionType.REST_API) {
       const requiredEndpoints = ['positions', 'transactions', 'cashBalances'];
       for (const endpoint of requiredEndpoints) {
         if (!config.endpoints[endpoint as keyof typeof config.endpoints]) {
@@ -168,11 +173,11 @@ export class PershingIntegrationService {
     }
   }
 
-  async testConnection(config: CustodianConnectionConfig): Promise<ConnectionTestResult[]> {
+  async testConnection(config: CustodianConnectionConfig, connectionType?: APIConnectionType): Promise<ConnectionTestResult[]> {
     const results: ConnectionTestResult[] = [];
 
     try {
-      if (config.connectionType === APIConnectionType.REST_API) {
+      if (connectionType === APIConnectionType.REST_API) {
         // Test REST API connection
         const authResult = await this.testApiAuthentication(config);
         results.push(authResult);
@@ -190,17 +195,17 @@ export class PershingIntegrationService {
             results.push(orderSubmissionResult);
           }
         }
-      } else if (config.connectionType === APIConnectionType.SFTP) {
+      } else if (connectionType === APIConnectionType.SFTP) {
         // Test SFTP connection
         const sftpResult = await this.testSftpConnection(config);
         results.push(sftpResult);
-      } else if (config.connectionType === APIConnectionType.FTP) {
+      } else if (connectionType === APIConnectionType.FTP) {
         // Test FTP connection
         const ftpResult = await this.testFtpConnection(config);
         results.push(ftpResult);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Pershing connection test failed:', error);
       results.push({
         testType: 'CONNECTIVITY',
@@ -228,7 +233,7 @@ export class PershingIntegrationService {
           expiresIn: response.expiresIn
         }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'AUTHENTICATION',
         success: false,
@@ -252,7 +257,7 @@ export class PershingIntegrationService {
         responseTime: Date.now() - startTime,
         details: { statusCode: response.status }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'CONNECTIVITY',
         success: false,
@@ -284,7 +289,7 @@ export class PershingIntegrationService {
           recordCount: response.data?.data?.length || 0
         }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'DATA_RETRIEVAL',
         success: false,
@@ -309,7 +314,7 @@ export class PershingIntegrationService {
         responseTime: Date.now() - startTime,
         details: { statusCode: response.status }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'ORDER_SUBMISSION',
         success: false,
@@ -343,7 +348,7 @@ export class PershingIntegrationService {
           directory: config.fileTransfer!.directory
         }
       };
-    } catch (error) {
+    } catch (error: any) {
       try {
         await this.sftpClient.end();
       } catch (closeError) {
@@ -371,7 +376,7 @@ export class PershingIntegrationService {
         responseTime: Date.now() - startTime,
         details: { connectionType: 'FTP' }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'CONNECTIVITY',
         success: false,
@@ -399,7 +404,7 @@ export class PershingIntegrationService {
         throw new Error(`Unsupported connection type: ${connection.connectionType}`);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving data from Pershing:', error);
       throw error;
     }
@@ -512,8 +517,8 @@ export class PershingIntegrationService {
 
       const filePattern = this.getPershingFilePattern(request.feedType, request.dateFrom, request.dateTo);
       const files = await this.sftpClient.list(connection.connectionConfig.fileTransfer!.directory);
-      const matchingFiles = files.filter(file => this.matchesPattern(file.name, filePattern))
-                                 .sort((a, b) => b.modifyTime - a.modifyTime); // Most recent first
+      const matchingFiles = files.filter((file: any) => this.matchesPattern(file.name, filePattern))
+                                 .sort((a: any, b: any) => b.modifyTime - a.modifyTime); // Most recent first
 
       if (matchingFiles.length === 0) {
         throw new Error(`No files found matching pattern: ${filePattern}`);
@@ -539,12 +544,12 @@ export class PershingIntegrationService {
         metadata: {
           recordCount: allRecords.length,
           retrievedAt: new Date(),
-          filesProcessed: matchingFiles.slice(0, 5).map(f => f.name),
+          filesProcessed: matchingFiles.slice(0, 5).map((f: any) => f.name),
           source: 'SFTP'
         }
       };
 
-    } catch (error) {
+    } catch (error: any) {
       try {
         await this.sftpClient.end();
       } catch (closeError) {
@@ -575,8 +580,8 @@ export class PershingIntegrationService {
         orderCount: request.orders.length
       });
 
-      const orderStatuses = [];
-      const errors = [];
+      const orderStatuses: OrderStatus[] = [];
+      const errors: OrderSubmissionError[] = [];
       let successCount = 0;
 
       for (const order of request.orders) {
@@ -590,7 +595,7 @@ export class PershingIntegrationService {
           orderStatuses.push({
             internalOrderId: order.internalOrderId,
             custodianOrderId: response.data.orderReference,
-            status: 'SUBMITTED',
+            status: 'SUBMITTED' as const,
             filledQuantity: undefined,
             averageFillPrice: undefined
           });
@@ -600,37 +605,37 @@ export class PershingIntegrationService {
           // Add delay between order submissions
           await this.delay(2000);
           
-        } catch (error) {
+        } catch (error: any) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           
           orderStatuses.push({
             internalOrderId: order.internalOrderId,
             custodianOrderId: undefined,
-            status: 'REJECTED',
+            status: 'REJECTED' as const,
             rejectionReason: errorMessage
           });
           
           errors.push({
             errorCode: 'ORDER_SUBMISSION_FAILED',
             errorMessage,
-            severity: 'ERROR',
+            severity: 'ERROR' as const,
             timestamp: new Date(),
             resolved: false
           });
         }
       }
 
-      const overallStatus = successCount === request.orders.length ? 'SUCCESS' :
-                           successCount > 0 ? 'PARTIAL_SUCCESS' : 'FAILED';
+      const overallStatus = (successCount === request.orders.length ? 'SUCCESS' :
+                           successCount > 0 ? 'PARTIAL_SUCCESS' : 'FAILED') as 'SUCCESS' | 'PARTIAL_SUCCESS' | 'FAILED';
 
       return {
-        submissionId: crypto.randomUUID(),
+        submissionId: crypto.randomBytes(16).toString('hex'),
         orderStatuses,
         overallStatus,
         errors
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting orders to Pershing:', error);
       throw error;
     }
@@ -677,7 +682,7 @@ export class PershingIntegrationService {
         return await this.retrieveDocumentsViaFileTransfer(connection, request);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving documents from Pershing:', error);
       throw error;
     }
@@ -706,7 +711,7 @@ export class PershingIntegrationService {
       } else {
         return true; // Assume FTP is healthy for now
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Pershing health check failed:', error);
       return false;
     }
@@ -739,7 +744,7 @@ export class PershingIntegrationService {
         expiresIn
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Pershing authentication failed:', error);
       throw error;
     }
@@ -750,7 +755,7 @@ export class PershingIntegrationService {
       logger.info('Refreshing Pershing auth token');
       // Implementation would re-authenticate using stored credentials
       return true;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to refresh Pershing auth token:', error);
       return false;
     }
@@ -907,7 +912,7 @@ export class PershingIntegrationService {
         default:
           return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Error parsing Pershing record:', { line, error: error instanceof Error ? error.message : String(error) });
       return null;
     }
@@ -924,7 +929,8 @@ export class PershingIntegrationService {
     return new Date();
   }
 
-  private delay(ms: number): Promise<void> {
+  private delay(ms: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+

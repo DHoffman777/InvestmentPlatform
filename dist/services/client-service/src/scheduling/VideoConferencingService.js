@@ -931,7 +931,7 @@ class VideoConferencingService extends events_1.EventEmitter {
                 await this.processWebhookEventInternal(webhook);
             }
             catch (error) {
-                webhook.error = error.message;
+                webhook.error = error instanceof Error ? error.message : 'Unknown error';
                 webhook.processed = true;
                 webhook.processedAt = new Date();
                 this.webhooks.set(webhook.id, webhook);

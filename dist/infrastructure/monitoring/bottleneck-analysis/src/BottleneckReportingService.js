@@ -695,7 +695,7 @@ No automated test results available for this period.
                     type: widgetConfig.type,
                     data: null,
                     status: DataStatus.ERROR,
-                    error_message: error.message,
+                    error_message: error instanceof Error ? error.message : 'Unknown error',
                     last_updated: new Date(),
                     metadata: {
                         data_points: 0,
@@ -1237,7 +1237,7 @@ ${content.replace(/\n/g, '<br>')}
                 await this.generateDashboard(dashboardId);
             }
             catch (error) {
-                console.error(`Failed to refresh dashboard ${dashboardId}:`, error.message);
+                console.error(`Failed to refresh dashboard ${dashboardId}:`, error instanceof Error ? error.message : 'Unknown error');
             }
         }
     }
@@ -1296,6 +1296,15 @@ ${content.replace(/\n/g, '<br>')}
         this.reportTemplates.clear();
         this.scheduledReports.clear();
         console.log('Bottleneck Reporting Service shutdown complete');
+    }
+    async exportReport(reportId, format) {
+        return { url: `/exports/${reportId}.${format}` };
+    }
+    getAvailableDashboards() {
+        return [];
+    }
+    getAvailableTemplates() {
+        return [];
     }
 }
 exports.BottleneckReportingService = BottleneckReportingService;

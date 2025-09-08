@@ -8,7 +8,7 @@ class GIPSCompositeService {
     eventPublisher;
     composites = new Map();
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('GIPSComposite');
     }
     async createComposite(data) {
         try {

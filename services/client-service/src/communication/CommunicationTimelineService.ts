@@ -367,7 +367,7 @@ export class CommunicationTimelineService extends EventEmitter {
     entryId: string,
     reason: string,
     deletedBy: string
-  ): Promise<void> {
+  ): Promise<any> {
     const entry = this.timelineEntries.get(entryId);
     if (!entry) {
       throw new Error(`Timeline entry ${entryId} not found`);
@@ -397,7 +397,7 @@ export class CommunicationTimelineService extends EventEmitter {
       }
     };
 
-    this.timelineEntries.set(entryId, archivedEntry);
+    this.timelineEntries.set(entryId, archivedEntry as TimelineEntry);
 
     this.emit('entryDeleted', { 
       entryId, 
@@ -406,7 +406,7 @@ export class CommunicationTimelineService extends EventEmitter {
     });
 
     if (this.config.enableRealTimeUpdates) {
-      await this.broadcastUpdate(archivedEntry, 'entry_deleted');
+      await this.broadcastUpdate(archivedEntry as TimelineEntry, 'entry_deleted');
     }
   }
 
@@ -876,8 +876,23 @@ export class CommunicationTimelineService extends EventEmitter {
     }
 
     const entries = await this.getClientTimelineEntries(clientId, tenantId);
-    const insights = [];
-    const recommendations = [];
+    const insights: Array<{
+      type: 'communication_gap' | 'upcoming_task' | 'overdue_item' | 'engagement_pattern' | 'milestone_risk';
+      confidence: number;
+      description: string;
+      recommendation: string;
+      impact: 'low' | 'medium' | 'high';
+      timeline: string;
+      data: Record<string, any>;
+    }> = [];
+    const recommendations: Array<{
+      action: string;
+      priority: 'low' | 'medium' | 'high' | 'urgent';
+      category: string;
+      description: string;
+      estimatedEffort: string;
+      expectedOutcome: string;
+    }> = [];
 
     // Analyze communication patterns
     const communicationPattern = this.analyzeCommunicationPattern(entries);
@@ -961,7 +976,7 @@ export class CommunicationTimelineService extends EventEmitter {
     return { insights, recommendations };
   }
 
-  private async validateTimelineEntry(entry: TimelineEntry): Promise<void> {
+  private async validateTimelineEntry(entry: TimelineEntry): Promise<any> {
     // Validate required fields
     if (!entry.tenantId || !entry.clientId || !entry.subject || !entry.summary) {
       throw new Error('Missing required timeline entry fields');
@@ -978,7 +993,7 @@ export class CommunicationTimelineService extends EventEmitter {
     }
   }
 
-  private async enrichTimelineEntry(entry: TimelineEntry): Promise<void> {
+  private async enrichTimelineEntry(entry: TimelineEntry): Promise<any> {
     // Auto-classify entry
     if (this.config.complianceSettings.automaticClassification) {
       entry.categories = await this.classifyEntry(entry);
@@ -994,7 +1009,7 @@ export class CommunicationTimelineService extends EventEmitter {
     entry.compliance.complianceFlags = await this.determineComplianceFlags(entry);
   }
 
-  private async updateRelatedViews(entry: TimelineEntry): Promise<void> {
+  private async updateRelatedViews(entry: TimelineEntry): Promise<any> {
     const relatedViews = Array.from(this.timelineViews.values())
       .filter(view => view.clientId === entry.clientId && view.tenantId === entry.tenantId);
 
@@ -1013,7 +1028,7 @@ export class CommunicationTimelineService extends EventEmitter {
     }
   }
 
-  private async checkEntryAlerts(entry: TimelineEntry): Promise<void> {
+  private async checkEntryAlerts(entry: TimelineEntry): Promise<any> {
     if (!this.config.alertSettings.enableAlerts) {
       return;
     }
@@ -1064,7 +1079,7 @@ export class CommunicationTimelineService extends EventEmitter {
     }
   }
 
-  private async broadcastUpdate(entry: TimelineEntry, eventType: string): Promise<void> {
+  private async broadcastUpdate(entry: TimelineEntry, eventType: string): Promise<any> {
     const connections = Array.from(this.realTimeConnections.values())
       .filter(conn => 
         conn.tenantId === entry.tenantId && 
@@ -1246,7 +1261,7 @@ export class CommunicationTimelineService extends EventEmitter {
     };
   }
 
-  private async createAlert(alertData: Omit<TimelineAlert, 'id' | 'escalation' | 'resolution' | 'createdAt' | 'updatedAt'>): Promise<void> {
+  private async createAlert(alertData: Omit<TimelineAlert, 'id' | 'escalation' | 'resolution' | 'createdAt' | 'updatedAt'>): Promise<any> {
     const alert: TimelineAlert = {
       id: randomUUID(),
       ...alertData,
@@ -1269,7 +1284,7 @@ export class CommunicationTimelineService extends EventEmitter {
   }
 
   // Additional mock methods
-  private async validateComplianceRequirements(entry: TimelineEntry): Promise<void> {
+  private async validateComplianceRequirements(entry: TimelineEntry): Promise<any> {
     // Mock implementation
   }
 
@@ -1293,7 +1308,7 @@ export class CommunicationTimelineService extends EventEmitter {
     return [];
   }
 
-  private async validateEntryDeletion(entry: TimelineEntry, deletedBy: string): Promise<void> {
+  private async validateEntryDeletion(entry: TimelineEntry, deletedBy: string): Promise<any> {
     // Mock implementation
   }
 
@@ -1313,19 +1328,19 @@ export class CommunicationTimelineService extends EventEmitter {
     return `/exports/timeline_${Date.now()}.${format}`;
   }
 
-  private async performMaintenanceCleanup(): Promise<void> {
+  private async performMaintenanceCleanup(): Promise<any> {
     // Mock implementation
   }
 
-  private async processAlertQueue(): Promise<void> {
+  private async processAlertQueue(): Promise<any> {
     // Mock implementation
   }
 
-  private async monitorForAlertConditions(): Promise<void> {
+  private async monitorForAlertConditions(): Promise<any> {
     // Mock implementation
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     // Clear all scheduled tasks
     this.scheduledTasks.forEach((task, key) => {
       clearInterval(task);

@@ -697,7 +697,7 @@ export class AccountSetupService extends EventEmitter {
     }));
   }
 
-  private async processNextStep(setupId: string): Promise<void> {
+  private async processNextStep(setupId: string): Promise<any> {
     const setup = this.setupRequests.get(setupId);
     if (!setup) return;
 
@@ -735,7 +735,7 @@ export class AccountSetupService extends EventEmitter {
     await this.executeSetupStep(setupId, nextStep.id);
   }
 
-  private async executeSetupStep(setupId: string, stepId: string): Promise<void> {
+  private async executeSetupStep(setupId: string, stepId: string): Promise<any> {
     const setup = this.setupRequests.get(setupId);
     if (!setup) return;
 
@@ -789,13 +789,13 @@ export class AccountSetupService extends EventEmitter {
       // Process next step
       await this.processNextStep(setupId);
 
-    } catch (error) {
+    } catch (error: any) {
       step.status = StepStatus.FAILED;
-      step.errors.push(error.message);
+      step.errors.push(error instanceof Error ? error.message : 'Unknown error');
       
       setup.errors.push({
         code: 'STEP_EXECUTION_FAILED',
-        message: `Step "${step.name}" failed: ${error.message}`,
+        message: `Step "${step.name}" failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         severity: 'high',
         stepId: step.id,
         timestamp: new Date(),
@@ -813,7 +813,7 @@ export class AccountSetupService extends EventEmitter {
     setup.updatedAt = new Date();
   }
 
-  private async validateAccountConfiguration(setup: AccountSetupRequest): Promise<void> {
+  private async validateAccountConfiguration(setup: AccountSetupRequest): Promise<any> {
     const config = setup.accountConfiguration;
     
     // Validate account type compatibility
@@ -834,7 +834,7 @@ export class AccountSetupService extends EventEmitter {
     }
   }
 
-  private async checkRegulatoryCompliance(setup: AccountSetupRequest): Promise<void> {
+  private async checkRegulatoryCompliance(setup: AccountSetupRequest): Promise<any> {
     const config = setup.accountConfiguration;
     
     // Check jurisdiction-specific requirements
@@ -859,7 +859,7 @@ export class AccountSetupService extends EventEmitter {
     });
   }
 
-  private async verifyTaxStatus(setup: AccountSetupRequest): Promise<void> {
+  private async verifyTaxStatus(setup: AccountSetupRequest): Promise<any> {
     // Tax status verification logic
     const config = setup.accountConfiguration;
     
@@ -868,7 +868,7 @@ export class AccountSetupService extends EventEmitter {
     }
   }
 
-  private async setupTradingPermissions(setup: AccountSetupRequest): Promise<void> {
+  private async setupTradingPermissions(setup: AccountSetupRequest): Promise<any> {
     // Trading permissions setup logic
     const permissions = setup.accountConfiguration.tradingPermissions;
     
@@ -878,7 +878,7 @@ export class AccountSetupService extends EventEmitter {
     }
   }
 
-  private async setupBankingIntegration(setup: AccountSetupRequest): Promise<void> {
+  private async setupBankingIntegration(setup: AccountSetupRequest): Promise<any> {
     const banking = setup.fundingSetup.bankingInstructions;
     
     if (banking.routingNumber && banking.accountNumber) {
@@ -889,7 +889,7 @@ export class AccountSetupService extends EventEmitter {
     }
   }
 
-  private async verifyFunding(setup: AccountSetupRequest): Promise<void> {
+  private async verifyFunding(setup: AccountSetupRequest): Promise<any> {
     const funding = setup.fundingSetup;
     
     if (funding.initialFundingRequired && !funding.plannedInitialDeposit) {
@@ -912,7 +912,7 @@ export class AccountSetupService extends EventEmitter {
     });
   }
 
-  private async setupInvestmentProfile(setup: AccountSetupRequest): Promise<void> {
+  private async setupInvestmentProfile(setup: AccountSetupRequest): Promise<any> {
     const prefs = setup.investmentPreferences;
     
     // Validate asset allocation
@@ -927,7 +927,7 @@ export class AccountSetupService extends EventEmitter {
     }
   }
 
-  private async provisionAccount(setup: AccountSetupRequest): Promise<void> {
+  private async provisionAccount(setup: AccountSetupRequest): Promise<any> {
     // Final account provisioning
     const accountNumber = this.generateAccountNumber();
     setup.accountConfiguration.custodian = {
@@ -948,7 +948,7 @@ export class AccountSetupService extends EventEmitter {
     };
   }
 
-  private async validateIRACompliance(setup: AccountSetupRequest): Promise<void> {
+  private async validateIRACompliance(setup: AccountSetupRequest): Promise<any> {
     // IRA-specific compliance validation
     const config = setup.accountConfiguration;
     
@@ -957,7 +957,7 @@ export class AccountSetupService extends EventEmitter {
     }
   }
 
-  private async verifyEntity(setup: AccountSetupRequest): Promise<void> {
+  private async verifyEntity(setup: AccountSetupRequest): Promise<any> {
     // Entity verification for corporate accounts
     const config = setup.accountConfiguration;
     
@@ -966,7 +966,7 @@ export class AccountSetupService extends EventEmitter {
     }
   }
 
-  private async reviewTrustDocuments(setup: AccountSetupRequest): Promise<void> {
+  private async reviewTrustDocuments(setup: AccountSetupRequest): Promise<any> {
     // Trust document review
     const config = setup.accountConfiguration;
     
@@ -1069,3 +1069,4 @@ export class AccountSetupService extends EventEmitter {
     };
   }
 }
+

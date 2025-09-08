@@ -106,5 +106,5 @@ export declare class CommunicationController {
     private getSystemMetrics;
     private setupErrorHandling;
     getApp(): express.Application;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

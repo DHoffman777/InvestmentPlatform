@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AccountClosureService = exports.RollbackTriggerAction = exports.ArtifactType = exports.ExecutorType = exports.HookTiming = exports.HookEventType = exports.OutputType = exports.ValidationFailureAction = exports.ValidationType = exports.ActionType = exports.BackoffStrategy = exports.LogicalOperator = exports.ConditionOperator = exports.MilestoneStatus = exports.SystemCriticality = exports.SystemImpactType = exports.ImpactSeverity = exports.ClosureAction = exports.RiskLevel = exports.DataCategory = exports.NotificationTrigger = exports.NotificationRecipient = exports.NotificationType = exports.ApprovalStatus = exports.ApprovalType = exports.DependencyCriticality = exports.DependencyStatus = exports.DependencyType = exports.StepStatus = exports.StepType = exports.ClosureStep = exports.ClosureStatus = exports.UrgencyLevel = exports.ClosurePriority = exports.ClosureReason = exports.ClosureType = void 0;
+exports.AccountClosureService = exports.RollbackTriggerAction = exports.ArtifactType = exports.ExecutorType = exports.HookTiming = exports.HookEventType = exports.OutputType = exports.ValidationFailureAction = exports.ValidationType = exports.ActionType = exports.BackoffStrategy = exports.LogicalOperator = exports.ConditionOperator = exports.PrerequisiteType = exports.MilestoneStatus = exports.SystemCriticality = exports.SystemImpactType = exports.ImpactSeverity = exports.ClosureAction = exports.RiskLevel = exports.DataCategory = exports.NotificationTrigger = exports.NotificationRecipient = exports.NotificationType = exports.ApprovalStatus = exports.ApprovalType = exports.DependencyCriticality = exports.DependencyStatus = exports.DependencyType = exports.StepStatus = exports.StepType = exports.ClosureStep = exports.ClosureStatus = exports.UrgencyLevel = exports.ClosurePriority = exports.ClosureReason = exports.ClosureType = void 0;
 const events_1 = require("events");
 const crypto_1 = require("crypto");
 // Enums
@@ -238,10 +238,13 @@ var MilestoneStatus;
     MilestoneStatus["DELAYED"] = "delayed";
     MilestoneStatus["AT_RISK"] = "at_risk";
 })(MilestoneStatus || (exports.MilestoneStatus = MilestoneStatus = {}));
-SYSTEM_CHECK = 'system_check',
-    DATA_VALIDATION = 'data_validation',
-    APPROVAL_CHECK = 'approval_check',
-    DEPENDENCY_CHECK = 'dependency_check';
+var PrerequisiteType;
+(function (PrerequisiteType) {
+    PrerequisiteType["SYSTEM_CHECK"] = "system_check";
+    PrerequisiteType["DATA_VALIDATION"] = "data_validation";
+    PrerequisiteType["APPROVAL_CHECK"] = "approval_check";
+    PrerequisiteType["DEPENDENCY_CHECK"] = "dependency_check";
+})(PrerequisiteType || (exports.PrerequisiteType = PrerequisiteType = {}));
 // Enums for supporting interfaces
 var ConditionOperator;
 (function (ConditionOperator) {
@@ -616,7 +619,7 @@ class AccountClosureService extends events_1.EventEmitter {
             nextStep.status = StepStatus.FAILED;
             nextStep.endTime = new Date();
             nextStep.errorCount++;
-            this.addAuditEntry(request, ClosureAction.STEP_FAILED, 'system', `Step failed: ${nextStep.name} - ${error.message}`, undefined, undefined, 'system', 'system');
+            this.addAuditEntry(request, ClosureAction.STEP_FAILED, 'system', `Step failed: ${nextStep.name} - ${this.getErrorMessage(error)}`, undefined, undefined, 'system', 'system');
             // Handle step failure
             if (nextStep.retryCount < nextStep.maxRetries) {
                 nextStep.retryCount++;
@@ -625,7 +628,7 @@ class AccountClosureService extends events_1.EventEmitter {
             }
             else {
                 request.status = ClosureStatus.FAILED;
-                this.emit('closureFailed', { request, error: error.message });
+                this.emit('closureFailed', { request, error: this.getErrorMessage(error) });
             }
         }
     }
@@ -1621,8 +1624,6 @@ class AccountClosureService extends events_1.EventEmitter {
                                 actions: ['email_notification']
                             }
                         ],
-                        timeouts: [30, 60, 120],
-                        recipients: ['management'],
                         enabled: true
                     },
                     templates: [
@@ -1632,11 +1633,7 @@ class AccountClosureService extends events_1.EventEmitter {
                             body: 'Step {{stepName}} failed for request {{requestId}}',
                             variables: ['stepName', 'requestId']
                         }
-                    ],
-                    metricsCollection: true,
-                    logAggregation: true,
-                    realTimeAlerts: true,
-                    dashboard: true
+                    ]
                 },
                 escalation: {
                     levels: [
@@ -1676,7 +1673,8 @@ class AccountClosureService extends events_1.EventEmitter {
                     timeoutMinutes: 120,
                     action: {
                         type: ActionType.NOTIFICATION,
-                        parameters: { escalate: true }
+                        parameters: { escalate: true },
+                        notification: true
                     },
                     notification: {
                         recipients: ['operations_manager'],
@@ -1749,6 +1747,12 @@ class AccountClosureService extends events_1.EventEmitter {
                 }
             }
         }, 60 * 60 * 1000); // 1 hour
+    }
+    getErrorMessage(error) {
+        if (error instanceof Error) {
+            return error.message;
+        }
+        return String(error);
     }
 }
 exports.AccountClosureService = AccountClosureService;

@@ -76,7 +76,7 @@ export class CapacityPlanningService extends EventEmitter {
 
       return planId;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('planError', { planId, error: (error as Error).message });
       throw error;
     }

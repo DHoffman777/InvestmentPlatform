@@ -19,9 +19,9 @@ export declare class ReportingEngineService {
         totalCount: number;
     }>;
     updateReportTemplate(tenantId: string, templateId: string, updates: Partial<ReportTemplate>, userId: string): Promise<ReportTemplate>;
-    deleteReportTemplate(tenantId: string, templateId: string, userId: string): Promise<void>;
+    deleteReportTemplate(tenantId: string, templateId: string, userId: string): Promise<any>;
     duplicateReportTemplate(tenantId: string, templateId: string, newName: string, userId: string): Promise<ReportTemplate>;
-    shareReportTemplate(tenantId: string, templateId: string, shareWith: string[], userId: string): Promise<void>;
+    shareReportTemplate(tenantId: string, templateId: string, shareWith: string[], userId: string): Promise<any>;
     generateReport(tenantId: string, request: ReportRequest, userId: string): Promise<ReportJob>;
     getReportJob(jobId: string): Promise<ReportJob | null>;
     getReportJobs(tenantId: string, options?: {
@@ -36,10 +36,10 @@ export declare class ReportingEngineService {
         jobs: ReportJob[];
         totalCount: number;
     }>;
-    cancelReportJob(jobId: string, userId: string): Promise<void>;
-    retryReportJob(jobId: string, userId: string): Promise<void>;
+    cancelReportJob(jobId: string, userId: string): Promise<any>;
+    retryReportJob(jobId: string, userId: string): Promise<any>;
     scheduleReport(tenantId: string, scheduleData: Partial<ReportSchedule>, userId: string): Promise<ReportSchedule>;
-    executeScheduledReport(scheduleId: string): Promise<void>;
+    executeScheduledReport(scheduleId: string): Promise<any>;
     generatePerformanceReport(tenantId: string, portfolioIds: string[], dateRange: {
         startDate: Date;
         endDate: Date;

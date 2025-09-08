@@ -334,7 +334,7 @@ export class ComplianceReportingService extends EventEmitter {
           Each framework has specific requirements and violation thresholds.
         `,
         charts: [
-          {
+          ({
             type: 'bar',
             title: 'Violations by Regulatory Framework',
             data: {
@@ -349,7 +349,7 @@ export class ComplianceReportingService extends EventEmitter {
                 backgroundColor: '#3b82f6'
               }]
             }
-          } as ChartData
+          } as unknown as ChartData)
         ],
         tables: [
           {
@@ -403,7 +403,7 @@ export class ComplianceReportingService extends EventEmitter {
           Immediate attention is required for any HIGH risk areas.
         `,
         charts: [
-          {
+          ({
             type: 'bar',
             title: 'Risk Factor Analysis',
             data: {
@@ -416,7 +416,7 @@ export class ComplianceReportingService extends EventEmitter {
                 )
               }]
             }
-          } as ChartData
+          } as unknown as ChartData)
         ]
       },
       insights: [
@@ -507,7 +507,7 @@ export class ComplianceReportingService extends EventEmitter {
           Trend analysis shows compliance performance over time, helping identify patterns and improvements.
         `,
         charts: [
-          {
+          ({
             type: 'line',
             title: 'Compliance Rate Trend',
             data: {
@@ -519,8 +519,8 @@ export class ComplianceReportingService extends EventEmitter {
                 backgroundColor: 'rgba(59, 130, 246, 0.1)'
               }]
             }
-          } as ChartData,
-          {
+          } as unknown as ChartData),
+          ({
             type: 'bar',
             title: 'Violations Over Time',
             data: {
@@ -531,7 +531,7 @@ export class ComplianceReportingService extends EventEmitter {
                 backgroundColor: '#ef4444'
               }]
             }
-          } as ChartData
+          } as unknown as ChartData)
         ]
       },
       insights: [
@@ -591,7 +591,7 @@ export class ComplianceReportingService extends EventEmitter {
           ${alerts.length} total alerts were generated.
         `,
         charts: [
-          {
+          ({
             type: 'pie',
             title: 'Alerts by Severity',
             data: {
@@ -602,13 +602,13 @@ export class ComplianceReportingService extends EventEmitter {
                 backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#22c55e']
               }]
             }
-          } as ChartData
+          } as unknown as ChartData)
         ]
       },
       insights: [
         `Total alerts: ${alerts.length}`,
         `Critical alerts: ${alertsBySeverity['CRITICAL'] || 0}`,
-        `Most common alert type: ${Object.entries(alertsByType).reduce((a, b) => a[1] > b[1] ? a : b)[0] || 'N/A'}`
+        `Most common alert type: ${Object.entries(alertsByType).reduce((a: [string, unknown], b: [string, unknown]) => (a[1] as number) > (b[1] as number) ? a : b)[0] || 'N/A'}`
       ]
     };
   }

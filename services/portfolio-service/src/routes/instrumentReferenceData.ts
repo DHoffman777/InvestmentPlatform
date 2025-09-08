@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getKafkaService } from '../utils/kafka-mock';
 import { InstrumentReferenceDataService } from '../services/instrumentReferenceDataService';
-import { AuthenticatedRequest } from '../middleware/auth';
+import { } from '../middleware/auth';
 import { logger } from '../utils/logger';
 import { 
   InstrumentType, 
@@ -21,10 +21,10 @@ const instrumentService = new InstrumentReferenceDataService(prisma, kafkaServic
 // Instrument Master Data Routes
 
 // Create new instrument
-router.post('/instruments', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/instruments', async (req: any, res: any) => {
   try {
     const {
-      instrumentId,
+      securityId,
       identifiers,
       name,
       shortName,
@@ -40,10 +40,10 @@ router.post('/instruments', async (req: AuthenticatedRequest, res: Response) => 
     } = req.body;
 
     // Validation
-    if (!instrumentId || !name || !instrumentType || !securityType || !issuerName || !tradingCurrency) {
+    if (!securityId || !name || !instrumentType || !securityType || !issuerName || !tradingCurrency) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: instrumentId, name, instrumentType, securityType, issuerName, tradingCurrency'
+        error: 'Missing required fields: securityId, name, instrumentType, securityType, issuerName, tradingCurrency'
       });
     }
 
@@ -66,7 +66,7 @@ router.post('/instruments', async (req: AuthenticatedRequest, res: Response) => 
     }
 
     const instrument = await instrumentService.createInstrument({
-      instrumentId,
+      securityId,
       identifiers: identifiers || {},
       name,
       shortName,
@@ -88,7 +88,7 @@ router.post('/instruments', async (req: AuthenticatedRequest, res: Response) => 
       data: instrument,
       message: 'Instrument created successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating instrument:', error);
     const statusCode = error instanceof Error && error.message.includes('already exists') ? 409 : 500;
     res.status(statusCode).json({
@@ -100,7 +100,7 @@ router.post('/instruments', async (req: AuthenticatedRequest, res: Response) => 
 });
 
 // Search instruments
-router.get('/instruments/search', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/instruments/search', async (req: any, res: any) => {
   try {
     const {
       query,
@@ -147,7 +147,7 @@ router.get('/instruments/search', async (req: AuthenticatedRequest, res: Respons
       },
       filters: result.filters
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error searching instruments:', error);
     res.status(500).json({
       success: false,
@@ -158,7 +158,7 @@ router.get('/instruments/search', async (req: AuthenticatedRequest, res: Respons
 });
 
 // Lookup instrument by identifier
-router.get('/instruments/lookup/:identifierType/:identifier', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/instruments/lookup/:identifierType/:identifier', async (req: any, res: any) => {
   try {
     const { identifierType, identifier } = req.params;
 
@@ -187,7 +187,7 @@ router.get('/instruments/lookup/:identifierType/:identifier', async (req: Authen
       success: true,
       data: instrument
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error looking up instrument:', error);
     res.status(500).json({
       success: false,
@@ -198,12 +198,12 @@ router.get('/instruments/lookup/:identifierType/:identifier', async (req: Authen
 });
 
 // Get instrument by ID
-router.get('/instruments/:instrumentId', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/instruments/:securityId', async (req: any, res: any) => {
   try {
-    const { instrumentId } = req.params;
+    const { securityId } = req.params;
 
     const instrument = await instrumentService.lookupInstrument({
-      identifier: instrumentId,
+      identifier: securityId,
       identifierType: 'TICKER', // This is a fallback, we'll need to search more broadly
       tenantId: req.user!.tenantId
     });
@@ -219,7 +219,7 @@ router.get('/instruments/:instrumentId', async (req: AuthenticatedRequest, res: 
       success: true,
       data: instrument
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching instrument:', error);
     res.status(500).json({
       success: false,
@@ -230,9 +230,9 @@ router.get('/instruments/:instrumentId', async (req: AuthenticatedRequest, res: 
 });
 
 // Update instrument
-router.put('/instruments/:instrumentId', async (req: AuthenticatedRequest, res: Response) => {
+router.put('/instruments/:securityId', async (req: any, res: any) => {
   try {
-    const { instrumentId } = req.params;
+    const { securityId } = req.params;
     const updates = req.body;
 
     // Remove read-only fields
@@ -241,7 +241,7 @@ router.put('/instruments/:instrumentId', async (req: AuthenticatedRequest, res: 
     delete updates.createdBy;
 
     const instrument = await instrumentService.updateInstrument({
-      instrumentId,
+      securityId,
       updates,
       tenantId: req.user!.tenantId,
       updatedBy: req.user!.userId
@@ -252,7 +252,7 @@ router.put('/instruments/:instrumentId', async (req: AuthenticatedRequest, res: 
       data: instrument,
       message: 'Instrument updated successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error updating instrument:', error);
     res.status(500).json({
       success: false,
@@ -263,7 +263,7 @@ router.put('/instruments/:instrumentId', async (req: AuthenticatedRequest, res: 
 });
 
 // Bulk update instruments
-router.post('/instruments/bulk-update', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/instruments/bulk-update', async (req: any, res: any) => {
   try {
     const { instruments } = req.body;
 
@@ -285,7 +285,7 @@ router.post('/instruments/bulk-update', async (req: AuthenticatedRequest, res: R
       data: result,
       message: `Bulk update completed: ${result.successful.length} successful, ${result.failed.length} failed`
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in bulk update:', error);
     res.status(500).json({
       success: false,
@@ -298,9 +298,9 @@ router.post('/instruments/bulk-update', async (req: AuthenticatedRequest, res: R
 // Corporate Actions Routes
 
 // Create corporate action
-router.post('/instruments/:instrumentId/corporate-actions', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/instruments/:securityId/corporate-actions', async (req: any, res: any) => {
   try {
-    const { instrumentId } = req.params;
+    const { securityId } = req.params;
     const {
       actionType,
       announcementDate,
@@ -334,7 +334,7 @@ router.post('/instruments/:instrumentId/corporate-actions', async (req: Authenti
     }
 
     const corporateAction = await instrumentService.processCorporateAction({
-      instrumentId,
+      securityId,
       actionType,
       announcementDate: new Date(announcementDate),
       exDate: new Date(exDate),
@@ -351,7 +351,7 @@ router.post('/instruments/:instrumentId/corporate-actions', async (req: Authenti
       data: corporateAction,
       message: 'Corporate action created successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating corporate action:', error);
     res.status(500).json({
       success: false,
@@ -362,13 +362,12 @@ router.post('/instruments/:instrumentId/corporate-actions', async (req: Authenti
 });
 
 // Get corporate actions for instrument
-router.get('/instruments/:instrumentId/corporate-actions', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/instruments/:securityId/corporate-actions', async (req: any, res: any) => {
   try {
-    const { instrumentId } = req.params;
+    const { securityId } = req.params;
 
     const corporateActions = await instrumentService.getCorporateActions(
-      instrumentId,
-      req.user!.tenantId
+      securityId
     );
 
     res.json({
@@ -376,7 +375,7 @@ router.get('/instruments/:instrumentId/corporate-actions', async (req: Authentic
       data: corporateActions,
       total: corporateActions.length
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching corporate actions:', error);
     res.status(500).json({
       success: false,
@@ -389,9 +388,9 @@ router.get('/instruments/:instrumentId/corporate-actions', async (req: Authentic
 // Market Data Routes
 
 // Update market data
-router.post('/instruments/:instrumentId/market-data', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/instruments/:securityId/market-data', async (req: any, res: any) => {
   try {
-    const { instrumentId } = req.params;
+    const { securityId } = req.params;
     const marketData = req.body;
 
     // Validate required fields
@@ -405,16 +404,15 @@ router.post('/instruments/:instrumentId/market-data', async (req: AuthenticatedR
     }
 
     await instrumentService.updateMarketData(
-      instrumentId,
-      marketData,
-      req.user!.tenantId
+      securityId,
+      marketData
     );
 
     res.json({
       success: true,
       message: 'Market data updated successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error updating market data:', error);
     res.status(500).json({
       success: false,
@@ -425,13 +423,12 @@ router.post('/instruments/:instrumentId/market-data', async (req: AuthenticatedR
 });
 
 // Get current market data
-router.get('/instruments/:instrumentId/market-data', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/instruments/:securityId/market-data', async (req: any, res: any) => {
   try {
-    const { instrumentId } = req.params;
+    const { securityId } = req.params;
 
     const marketData = await instrumentService.getMarketData(
-      instrumentId,
-      req.user!.tenantId
+      securityId
     );
 
     if (!marketData) {
@@ -445,7 +442,7 @@ router.get('/instruments/:instrumentId/market-data', async (req: AuthenticatedRe
       success: true,
       data: marketData
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching market data:', error);
     res.status(500).json({
       success: false,
@@ -458,12 +455,12 @@ router.get('/instruments/:instrumentId/market-data', async (req: AuthenticatedRe
 // Data Quality and Validation Routes
 
 // Validate instrument data
-router.get('/instruments/:instrumentId/validate', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/instruments/:securityId/validate', async (req: any, res: any) => {
   try {
-    const { instrumentId } = req.params;
+    const { securityId } = req.params;
 
     const validation = await instrumentService.validateInstrumentData(
-      instrumentId,
+      securityId,
       req.user!.tenantId
     );
 
@@ -471,7 +468,7 @@ router.get('/instruments/:instrumentId/validate', async (req: AuthenticatedReque
       success: true,
       data: validation
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error validating instrument:', error);
     res.status(500).json({
       success: false,
@@ -482,12 +479,12 @@ router.get('/instruments/:instrumentId/validate', async (req: AuthenticatedReque
 });
 
 // Generate data quality report
-router.get('/instruments/:instrumentId/data-quality-report', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/instruments/:securityId/data-quality-report', async (req: any, res: any) => {
   try {
-    const { instrumentId } = req.params;
+    const { securityId } = req.params;
 
     const report = await instrumentService.generateDataQualityReport(
-      instrumentId,
+      securityId,
       req.user!.tenantId
     );
 
@@ -495,7 +492,7 @@ router.get('/instruments/:instrumentId/data-quality-report', async (req: Authent
       success: true,
       data: report
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error generating data quality report:', error);
     res.status(500).json({
       success: false,
@@ -508,7 +505,7 @@ router.get('/instruments/:instrumentId/data-quality-report', async (req: Authent
 // Reference Data Routes
 
 // Get standard reference data
-router.get('/reference-data', async (req: Request, res: Response) => {
+router.get('/reference-data', async (req: any, res: any) => {
   try {
     res.json({
       success: true,
@@ -535,7 +532,7 @@ router.get('/reference-data', async (req: Request, res: Response) => {
         dataQualityScores: ['EXCELLENT', 'GOOD', 'FAIR', 'POOR', 'UNVERIFIED']
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching reference data:', error);
     res.status(500).json({
       success: false,
@@ -546,7 +543,7 @@ router.get('/reference-data', async (req: Request, res: Response) => {
 });
 
 // Health check for instrument reference data
-router.get('/health', async (req: Request, res: Response) => {
+router.get('/health', async (req: any, res: any) => {
   try {
     // Basic health check - verify database connectivity
     const count = await prisma.instrumentMaster.count();
@@ -559,7 +556,7 @@ router.get('/health', async (req: Request, res: Response) => {
         timestamp: new Date().toISOString()
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Health check failed:', error);
     res.status(503).json({
       success: false,

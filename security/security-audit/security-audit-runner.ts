@@ -60,13 +60,13 @@ class SecurityAuditRunner {
       await this.handleCriticalFindings(result);
       
       // Exit with appropriate code
-      const criticalIssues = result.findings.filter(f => f.severity === 'CRITICAL').length;
+      const criticalIssues = result.findings.filter((f: any) => f.severity === 'CRITICAL').length;
       process.exit(criticalIssues > 0 ? 1 : 0);
       
     } catch (error) {
-      console.error('❌ Security audit execution failed:', error.message);
+      console.error('❌ Security audit execution failed:', error instanceof Error ? error.message : 'Unknown error');
       if (this.options.verbose) {
-        console.error(error.stack);
+        console.error((error as any).stack);
       }
       process.exit(1);
     }
@@ -248,7 +248,7 @@ class SecurityAuditRunner {
         }
         
       } catch (error) {
-        console.error(`Scan failed: ${error.message}`);
+        console.error(`Scan failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
       
       // Wait for next scan
@@ -309,8 +309,8 @@ class SecurityAuditRunner {
     console.log('==================================');
     
     // Overall security status
-    const criticalCount = result.findings?.filter(f => f.severity === 'CRITICAL').length || 0;
-    const highCount = result.findings?.filter(f => f.severity === 'HIGH').length || 0;
+    const criticalCount = result.findings?.filter((f: any) => f.severity === 'CRITICAL').length || 0;
+    const highCount = result.findings?.filter((f: any) => f.severity === 'HIGH').length || 0;
     const status = criticalCount === 0 && highCount === 0 ? '✅ SECURE' : '⚠️  VULNERABILITIES FOUND';
     console.log(`Security Status: ${status}\n`);
     
@@ -319,8 +319,8 @@ class SecurityAuditRunner {
       console.log('🎯 Security Findings:');
       console.log(`   Critical: ${criticalCount}`);
       console.log(`   High: ${highCount}`);
-      console.log(`   Medium: ${result.findings.filter(f => f.severity === 'MEDIUM').length}`);
-      console.log(`   Low: ${result.findings.filter(f => f.severity === 'LOW').length}`);
+      console.log(`   Medium: ${result.findings.filter((f: any) => f.severity === 'MEDIUM').length}`);
+      console.log(`   Low: ${result.findings.filter((f: any) => f.severity === 'LOW').length}`);
       console.log(`   Total: ${result.findings.length}\n`);
     }
     
@@ -334,7 +334,7 @@ class SecurityAuditRunner {
     // Compliance status
     if (result.complianceStatus) {
       console.log('📋 Compliance Status:');
-      result.complianceStatus.forEach(status => {
+      result.complianceStatus.forEach((status: any) => {
         const complianceStatus = status.score >= 80 ? '✅ Compliant' : '❌ Non-Compliant';
         console.log(`   ${status.framework}: ${status.score}% - ${complianceStatus}`);
       });
@@ -343,10 +343,10 @@ class SecurityAuditRunner {
     
     // Top critical findings
     if (result.findings) {
-      const criticalFindings = result.findings.filter(f => f.severity === 'CRITICAL').slice(0, 5);
+      const criticalFindings = result.findings.filter((f: any) => f.severity === 'CRITICAL').slice(0, 5);
       if (criticalFindings.length > 0) {
         console.log('🚨 Top Critical Vulnerabilities:');
-        criticalFindings.forEach((finding, index) => {
+        criticalFindings.forEach((finding: any, index: number) => {
           console.log(`   ${index + 1}. ${finding.title}`);
           console.log(`      Location: ${finding.location.component}`);
           console.log(`      CVE: ${finding.cve || 'N/A'}`);
@@ -359,7 +359,7 @@ class SecurityAuditRunner {
     // Recommendations
     if (result.recommendations) {
       console.log('💡 Top Security Recommendations:');
-      result.recommendations.slice(0, 3).forEach((rec, index) => {
+      result.recommendations.slice(0, 3).forEach((rec: any, index: number) => {
         console.log(`   ${index + 1}. ${rec.title} (${rec.priority})`);
         console.log(`      Timeline: ${rec.timeline}`);
       });
@@ -376,7 +376,7 @@ class SecurityAuditRunner {
   private async handleCriticalFindings(result: any): Promise<void> {
     if (!result.findings) return;
     
-    const criticalFindings = result.findings.filter(f => f.severity === 'CRITICAL');
+    const criticalFindings = result.findings.filter((f: any) => f.severity === 'CRITICAL');
     
     if (criticalFindings.length > 0) {
       console.log(`\n🚨 SECURITY ALERT: ${criticalFindings.length} critical vulnerabilities require immediate attention!`);
@@ -499,7 +499,7 @@ class SecurityAuditRunner {
       prod: 'https://app.investmentplatform.com'
     };
     
-    return envUrls[env] || env;
+    return envUrls[env as keyof typeof envUrls] || env;
   }
 
   private generateFindingsSummary(findings: any[]): any {
@@ -518,7 +518,7 @@ class SecurityAuditRunner {
   private calculateRiskScore(findings: any[]): number {
     const weights = { CRITICAL: 10, HIGH: 7, MEDIUM: 4, LOW: 2, INFO: 1 };
     const totalRisk = findings.reduce((acc, finding) => {
-      return acc + (weights[finding.severity] || 0);
+      return acc + (weights[finding.severity as keyof typeof weights] || 0);
     }, 0);
     
     return Math.min(100, totalRisk);

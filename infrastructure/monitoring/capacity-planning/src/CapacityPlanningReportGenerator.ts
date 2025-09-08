@@ -100,7 +100,7 @@ export class CapacityPlanningReportGenerator extends EventEmitter {
 
     try {
       const template = reportConfig.templateId 
-        ? this.getTemplate(reportConfig.templateId)
+        ? this.getReportTemplate(reportConfig.templateId)
         : this.getDefaultTemplate(reportConfig.type);
 
       if (!template) {
@@ -115,7 +115,7 @@ export class CapacityPlanningReportGenerator extends EventEmitter {
         id: reportId,
         name: reportConfig.name,
         type: reportConfig.type,
-        scope: reportConfig.scope,
+        scope: reportConfig.scope as { resourceIds: string[]; resourceTypes: ResourceType[]; timeRange: { start: Date; end: Date; } },
         content: {
           summary: content.summary,
           sections: content.sections,
@@ -146,8 +146,8 @@ export class CapacityPlanningReportGenerator extends EventEmitter {
       });
 
       return report;
-    } catch (error) {
-      this.emit('reportGenerationFailed', { reportId, type: reportConfig.type, error: error.message });
+    } catch (error: any) {
+      this.emit('reportGenerationFailed', { reportId, type: reportConfig.type, error: error instanceof Error ? error.message : 'Unknown error' });
       
       const failedReport = this.reports.get(reportId);
       if (failedReport) {
@@ -186,8 +186,8 @@ export class CapacityPlanningReportGenerator extends EventEmitter {
         });
 
         this.emit('scheduledReportGenerated', { scheduleId, reportId: report.id });
-      } catch (error) {
-        this.emit('scheduledReportFailed', { scheduleId, error: error.message });
+      } catch (error: any) {
+        this.emit('scheduledReportFailed', { scheduleId, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }, this.getScheduleInterval(reportConfig.schedule));
 
@@ -434,7 +434,7 @@ ${summaryData.topRecommendations.map(rec => `- ${rec}`).join('\n')}
     const separatorRow = `| ${headers.map(() => '---').join(' | ')} |`;
     
     const dataRows = data.slice(0, configuration.maxRows || 10).map(item => {
-      const values = headers.map(header => {
+      const values = headers.map((header: any) => {
         const value = item[header];
         return typeof value === 'number' ? value.toFixed(2) : (value || 'N/A');
       });
@@ -495,7 +495,7 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
       try {
         const rendered = await this.reportRenderer.render(report, format);
         renderedReports.set(format, rendered);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to render report in ${format} format:`, error);
       }
     }
@@ -503,13 +503,13 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
     return renderedReports;
   }
 
-  private async distributeReport(report: CapacityReport, renderedReports: Map<ReportFormat, string>): Promise<void> {
+  private async distributeReport(report: CapacityReport, renderedReports: Map<ReportFormat, string>): Promise<any> {
     for (const recipient of report.recipients) {
       try {
         await this.sendReportEmail(recipient, report, renderedReports);
         this.emit('reportDistributed', { reportId: report.id, recipient });
-      } catch (error) {
-        this.emit('reportDistributionFailed', { reportId: report.id, recipient, error: error.message });
+      } catch (error: any) {
+        this.emit('reportDistributionFailed', { reportId: report.id, recipient, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
   }
@@ -518,11 +518,11 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
     recipient: string, 
     report: CapacityReport, 
     renderedReports: Map<ReportFormat, string>
-  ): Promise<void> {
+  ): Promise<any> {
     console.log(`Sending report ${report.name} to ${recipient}`);
   }
 
-  private getTemplate(templateId: string): ReportTemplate | null {
+  private getReportTemplate(templateId: string): ReportTemplate | null {
     return this.templates.get(templateId) || null;
   }
 
@@ -594,7 +594,7 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
     });
   }
 
-  private async validateTemplate(template: ReportTemplate): Promise<void> {
+  private async validateTemplate(template: ReportTemplate): Promise<any> {
     if (!template.name || template.name.trim().length === 0) {
       throw new Error('Template name is required');
     }
@@ -695,7 +695,7 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
     return Array.from(this.reports.values());
   }
 
-  getTemplate(templateId: string): ReportTemplate | null {
+  getTemplateById(templateId: string): ReportTemplate | null {
     return this.templates.get(templateId) || null;
   }
 
@@ -703,7 +703,7 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
     return Array.from(this.templates.values());
   }
 
-  async cancelScheduledReport(scheduleId: string): Promise<void> {
+  async cancelScheduledReport(scheduleId: string): Promise<any> {
     const timer = this.scheduledReports.get(scheduleId);
     if (timer) {
       clearInterval(timer);
@@ -712,7 +712,7 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
     }
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     for (const [scheduleId, timer] of this.scheduledReports) {
       clearInterval(timer);
     }
@@ -848,7 +848,7 @@ class ChartGenerator {
         datasets: [{
           label: 'Trend Count',
           data: Object.values(trendDirections),
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+          backgroundColor: '#FF6384,#36A2EB,#FFCE56'.split(',') as any,
           borderWidth: 1
         }]
       },
@@ -902,7 +902,7 @@ class ChartGenerator {
         datasets: [{
           label: 'Count',
           data: Object.values(priorityCount),
-          backgroundColor: ['#FF6384', '#FF9F40', '#FFCE56', '#4BC0C0'],
+          backgroundColor: '#FF6384,#FF9F40,#FFCE56,#4BC0C0'.split(',') as any,
           borderWidth: 1
         }]
       },
@@ -948,3 +948,4 @@ class DataAggregator {
     return [];
   }
 }
+

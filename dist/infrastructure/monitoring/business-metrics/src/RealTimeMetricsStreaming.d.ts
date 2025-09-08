@@ -120,9 +120,9 @@ export declare class RealTimeMetricsStreaming extends EventEmitter {
     private handleUnsubscription;
     private createSubscription;
     private sendInitialData;
-    publishMetricUpdate(metricValue: MetricValue): Promise<void>;
-    publishKPIUpdate(kpiId: string, kpiData: KPIStreamData): Promise<void>;
-    publishAlert(alert: MetricAlert): Promise<void>;
+    publishMetricUpdate(metricValue: MetricValue): Promise<any>;
+    publishKPIUpdate(kpiId: string, kpiData: KPIStreamData): Promise<any>;
+    publishAlert(alert: MetricAlert): Promise<any>;
     private sendMessage;
     private sendError;
     private handleClientDisconnection;
@@ -148,5 +148,5 @@ export declare class RealTimeMetricsStreaming extends EventEmitter {
     getConnectedClients(): number;
     getActiveSubscriptions(): number;
     getServerStats(): any;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

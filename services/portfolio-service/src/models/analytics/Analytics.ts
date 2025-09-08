@@ -195,6 +195,9 @@ export interface RealTimeAnalyticsEvent {
   timestamp: Date;
   data: Record<string, any>;
   severity: 'low' | 'medium' | 'high' | 'critical';
+  processed: boolean;
+  processedAt?: Date;
+  createdAt: Date;
   acknowledged?: boolean;
   acknowledgedBy?: string;
   acknowledgedAt?: Date;

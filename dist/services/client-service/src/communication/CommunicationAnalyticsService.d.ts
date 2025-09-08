@@ -241,5 +241,5 @@ export declare class CommunicationAnalyticsService extends EventEmitter {
     private updateClientProfiles;
     private performMaintenanceTasks;
     private calculateAverageClientSatisfaction;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

@@ -158,13 +158,17 @@ app.get('/', (req, res) => {
 // Error handling
 app.use(errorHandler_1.notFoundHandler);
 app.use(errorHandler_1.errorHandler);
+// Server instance
+let serverInstance = null;
 // Graceful shutdown handler
 const gracefulShutdown = async (signal) => {
     logger_1.logger.info(`Received ${signal}, shutting down gracefully...`);
     // Close server
-    server.close(() => {
-        logger_1.logger.info('HTTP server closed');
-    });
+    if (serverInstance) {
+        serverInstance.close(() => {
+            logger_1.logger.info('HTTP server closed');
+        });
+    }
     // Close database connection
     try {
         await database_1.prisma.$disconnect();
@@ -194,7 +198,7 @@ const startServer = async () => {
         await database_1.prisma.$connect();
         logger_1.logger.info('Database connected successfully');
         // Start server
-        const server = app.listen(PORT, () => {
+        serverInstance = app.listen(PORT, () => {
             logger_1.logger.info(`Market Data Service started successfully`, {
                 port: PORT,
                 environment: process.env.NODE_ENV || 'development',
@@ -205,7 +209,7 @@ const startServer = async () => {
         // Setup graceful shutdown
         process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
         process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-        return server;
+        return serverInstance;
     }
     catch (error) {
         logger_1.logger.error('Failed to start server:', error);
@@ -213,6 +217,6 @@ const startServer = async () => {
     }
 };
 // Start the server
-const server = startServer();
+startServer();
 exports.default = app;
 //# sourceMappingURL=index.js.map

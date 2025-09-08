@@ -99,9 +99,9 @@ const suitabilityAssessmentSchema = {
  * @access Private
  */
 router.post('/questionnaire',
-  authMiddleware,
-  validateRequest(riskQuestionnaireSchema),
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  validateRequest(riskQuestionnaireSchema) as any,
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -116,6 +116,7 @@ router.post('/questionnaire',
       const questionnaire = {
         clientId: req.body.clientId,
         questionnaireVersion: req.body.questionnaireVersion,
+        completedBy: userId,
         responses: req.body.responses.map((response: any) => ({
           questionId: response.questionId,
           questionText: response.questionText,
@@ -146,7 +147,7 @@ router.post('/questionnaire',
         message: 'Risk assessment completed successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing risk questionnaire:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -162,9 +163,9 @@ router.post('/questionnaire',
  * @access Private
  */
 router.post('/suitability-assessment',
-  authMiddleware,
-  validateRequest(suitabilityAssessmentSchema),
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  validateRequest(suitabilityAssessmentSchema) as any,
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -178,8 +179,8 @@ router.post('/suitability-assessment',
 
       const assessmentRequest: SuitabilityAssessmentRequest = {
         ...req.body,
-        netWorth: new Decimal(req.body.netWorth),
-        annualIncome: new Decimal(req.body.annualIncome)
+        netWorth: new (Decimal as any)(req.body.netWorth),
+        annualIncome: new (Decimal as any)(req.body.annualIncome)
       };
 
       logger.info('Performing suitability assessment', {
@@ -201,7 +202,7 @@ router.post('/suitability-assessment',
         message: 'Suitability assessment completed successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing suitability assessment:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -217,8 +218,8 @@ router.post('/suitability-assessment',
  * @access Private
  */
 router.get('/clients/:clientId/risk-profile-history',
-  authMiddleware,
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -239,7 +240,7 @@ router.get('/clients/:clientId/risk-profile-history',
         data: result
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving risk profile history:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -255,8 +256,8 @@ router.get('/clients/:clientId/risk-profile-history',
  * @access Private
  */
 router.get('/clients/:clientId/suitability-alerts',
-  authMiddleware,
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -277,7 +278,7 @@ router.get('/clients/:clientId/suitability-alerts',
         data: result
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving suitability alerts:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -293,8 +294,8 @@ router.get('/clients/:clientId/suitability-alerts',
  * @access Private
  */
 router.post('/clients/:clientId/monitor-suitability',
-  authMiddleware,
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -316,7 +317,7 @@ router.post('/clients/:clientId/monitor-suitability',
         message: `Generated ${result.length} suitability alerts`
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error monitoring suitability:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -332,8 +333,8 @@ router.post('/clients/:clientId/monitor-suitability',
  * @access Private
  */
 router.put('/alerts/:alertId/acknowledge',
-  authMiddleware,
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  async (req: any, res: any) => {
     try {
       const { alertId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -376,7 +377,7 @@ router.put('/alerts/:alertId/acknowledge',
         message: 'Alert acknowledged successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error acknowledging alert:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -392,8 +393,8 @@ router.put('/alerts/:alertId/acknowledge',
  * @access Private
  */
 router.put('/alerts/:alertId/resolve',
-  authMiddleware,
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  async (req: any, res: any) => {
     try {
       const { alertId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -446,7 +447,7 @@ router.put('/alerts/:alertId/resolve',
         message: 'Alert resolved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error resolving alert:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -462,8 +463,8 @@ router.put('/alerts/:alertId/resolve',
  * @access Private
  */
 router.get('/risk-tolerance-levels',
-  authMiddleware,
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  async (req: any, res: any) => {
     try {
       const riskToleranceLevels = Object.values(RiskTolerance).map(level => ({
         value: level,
@@ -478,7 +479,7 @@ router.get('/risk-tolerance-levels',
         data: riskToleranceLevels
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving risk tolerance levels:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -494,8 +495,8 @@ router.get('/risk-tolerance-levels',
  * @access Private
  */
 router.get('/questionnaire-template/:version?',
-  authMiddleware,
-  async (req: Request, res: Response) => {
+  authMiddleware as any,
+  async (req: any, res: any) => {
     try {
       const { version = 'latest' } = req.params;
 
@@ -509,7 +510,7 @@ router.get('/questionnaire-template/:version?',
         data: template
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving questionnaire template:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -696,3 +697,4 @@ function getQuestionnaireTemplate(version: string) {
 }
 
 export default router;
+

@@ -24,6 +24,22 @@ import {
   IntegrationSettings
 } from './CommunicationDataModel';
 
+export interface CommunicationSearchQuery {
+  query?: string;
+  date_from?: Date;
+  date_to?: Date;
+  participants?: string[];
+  client_id?: string;
+  advisor_id?: string;
+  type?: CommunicationType[];
+  category?: CommunicationCategory[];
+  status?: CommunicationStatus[];
+  page?: number;
+  page_size?: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
+
 export interface MultiChannelTrackingConfiguration {
   channels: ChannelConfiguration[];
   integrations: IntegrationSettings;
@@ -183,12 +199,12 @@ export enum TransformationType {
 
 export interface ChannelAdapter {
   channel: CommunicationChannel;
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
+  connect(): Promise<any>;
+  disconnect(): Promise<any>;
   isConnected(): boolean;
   fetchMessages(since?: Date): Promise<CommunicationRecord[]>;
   sendMessage(message: OutgoingMessage): Promise<string>;
-  updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void>;
+  updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any>;
   searchMessages(query: ChannelSearchQuery): Promise<CommunicationRecord[]>;
   getHealth(): Promise<ChannelHealthStatus>;
 }
@@ -237,7 +253,7 @@ export enum ChannelStatus {
   MAINTENANCE = 'maintenance'
 }
 
-export class MultiChannelTrackingService extends EventEmitter {
+class MultiChannelTrackingService extends EventEmitter {
   private config: MultiChannelTrackingConfiguration;
   private adapters: Map<CommunicationChannel, ChannelAdapter>;
   private syncIntervals: Map<CommunicationChannel, NodeJS.Timeout>;
@@ -259,7 +275,7 @@ export class MultiChannelTrackingService extends EventEmitter {
     this.initializeAdapters();
   }
 
-  async startTracking(): Promise<void> {
+  async startTracking(): Promise<any> {
     if (this.isRunning) {
       throw new Error('Multi-channel tracking is already running');
     }
@@ -283,13 +299,13 @@ export class MultiChannelTrackingService extends EventEmitter {
       this.emit('tracking_started');
       console.log('Multi-channel tracking started successfully');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to start multi-channel tracking:', error);
       throw error;
     }
   }
 
-  async stopTracking(): Promise<void> {
+  async stopTracking(): Promise<any> {
     if (!this.isRunning) {
       return;
     }
@@ -308,7 +324,7 @@ export class MultiChannelTrackingService extends EventEmitter {
       this.emit('tracking_stopped');
       console.log('Multi-channel tracking stopped successfully');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error stopping multi-channel tracking:', error);
       throw error;
     }
@@ -340,7 +356,7 @@ export class MultiChannelTrackingService extends EventEmitter {
 
       return processedCount;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error syncing channel ${channel}:`, error);
       this.metricsCollector.recordError(channel, error as Error);
       this.emit('sync_error', { channel, error });
@@ -370,7 +386,7 @@ export class MultiChannelTrackingService extends EventEmitter {
       this.emit('message_sent', { channel, message_id: messageId });
       return messageId;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error sending message via ${channel}:`, error);
       this.metricsCollector.recordError(channel, error as Error);
       throw error;
@@ -385,7 +401,7 @@ export class MultiChannelTrackingService extends EventEmitter {
     results.push(...cachedResults);
 
     // Search in connected channels if needed
-    if (results.length < (query.limit || 50)) {
+    if (results.length < (query.page_size || 50)) {
       const channelSearchPromises = Array.from(this.adapters.entries()).map(async ([channel, adapter]) => {
         if (adapter.isConnected()) {
           try {
@@ -400,7 +416,7 @@ export class MultiChannelTrackingService extends EventEmitter {
               offset: (query.page || 1 - 1) * (query.page_size || 20)
             };
             return await adapter.searchMessages(channelQuery);
-          } catch (error) {
+          } catch (error: any) {
             console.error(`Error searching in channel ${channel}:`, error);
             return [];
           }
@@ -420,7 +436,7 @@ export class MultiChannelTrackingService extends EventEmitter {
     const healthPromises = Array.from(this.adapters.entries()).map(async ([channel, adapter]) => {
       try {
         return await adapter.getHealth();
-      } catch (error) {
+      } catch (error: any) {
         return {
           channel,
           status: ChannelStatus.OFFLINE,
@@ -472,21 +488,21 @@ export class MultiChannelTrackingService extends EventEmitter {
     }
   }
 
-  private async connectAdapter(adapter: ChannelAdapter): Promise<void> {
+  private async connectAdapter(adapter: ChannelAdapter): Promise<any> {
     try {
       await adapter.connect();
       console.log(`Connected to channel: ${adapter.channel}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to connect to channel ${adapter.channel}:`, error);
       throw error;
     }
   }
 
-  private async disconnectAdapter(adapter: ChannelAdapter): Promise<void> {
+  private async disconnectAdapter(adapter: ChannelAdapter): Promise<any> {
     try {
       await adapter.disconnect();
       console.log(`Disconnected from channel: ${adapter.channel}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error disconnecting from channel ${adapter.channel}:`, error);
     }
   }
@@ -499,7 +515,7 @@ export class MultiChannelTrackingService extends EventEmitter {
         const interval = setInterval(async () => {
           try {
             await this.syncChannel(channel);
-          } catch (error) {
+          } catch (error: any) {
             console.error(`Scheduled sync failed for channel ${channel}:`, error);
           }
         }, intervalMs);
@@ -572,7 +588,7 @@ export class MultiChannelTrackingService extends EventEmitter {
         
         processedCount++;
         
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error processing message ${message.id}:`, error);
         this.metricsCollector.recordError(channel, error as Error);
       }
@@ -594,8 +610,8 @@ export class MultiChannelTrackingService extends EventEmitter {
         continue;
       }
       
-      transformedMessage[rule.field as keyof CommunicationRecord] = 
-        await this.applyTransformation(transformedMessage[rule.field as keyof CommunicationRecord], rule);
+      const fieldValue = transformedMessage[rule.field as keyof CommunicationRecord];
+      (transformedMessage as any)[rule.field] = await this.applyTransformation(fieldValue, rule);
     }
     
     return transformedMessage;
@@ -607,18 +623,18 @@ export class MultiChannelTrackingService extends EventEmitter {
     if (this.config.content_enrichment) {
       // Add sentiment analysis
       if (this.config.sentiment_analysis) {
-        enrichedMessage.metadata.sentiment = await this.analyzeSentiment(message.content);
+        (enrichedMessage.metadata as any).sentiment = await this.analyzeSentiment(message.content);
       }
       
       // Add language detection
       if (this.config.language_detection) {
-        enrichedMessage.metadata.language = await this.detectLanguage(message.content);
+        (enrichedMessage.metadata as any).language = await this.detectLanguage(message.content);
       }
       
       // Add additional metadata
-      enrichedMessage.metadata.processed_at = new Date();
-      enrichedMessage.metadata.processing_version = '1.0';
-      enrichedMessage.metadata.source_channel = channel;
+      (enrichedMessage.metadata as any).processed_at = new Date();
+      (enrichedMessage.metadata as any).processing_version = '1.0';
+      (enrichedMessage.metadata as any).source_channel = channel;
     }
     
     return enrichedMessage;
@@ -694,7 +710,7 @@ export class MultiChannelTrackingService extends EventEmitter {
     return 'internal';
   }
 
-  private async storeMessage(message: CommunicationRecord): Promise<void> {
+  private async storeMessage(message: CommunicationRecord): Promise<any> {
     // Store in cache
     this.messageCache.set(message.id, message);
     
@@ -704,7 +720,7 @@ export class MultiChannelTrackingService extends EventEmitter {
     this.emit('message_stored', message);
   }
 
-  private async linkToThread(message: CommunicationRecord): Promise<void> {
+  private async linkToThread(message: CommunicationRecord): Promise<any> {
     // Simple thread linking based on subject and participants
     const threadKey = this.generateThreadKey(message);
     
@@ -816,8 +832,10 @@ export class MultiChannelTrackingService extends EventEmitter {
       const bValue = b[sortField as keyof CommunicationRecord];
       
       let comparison = 0;
-      if (aValue < bValue) comparison = -1;
-      if (aValue > bValue) comparison = 1;
+      if (aValue != null && bValue != null) {
+        if (aValue < bValue) comparison = -1;
+        if (aValue > bValue) comparison = 1;
+      }
       
       return sortOrder === 'desc' ? -comparison : comparison;
     });
@@ -842,7 +860,7 @@ export class MultiChannelTrackingService extends EventEmitter {
     try {
       // This is a simplified implementation - in production use a safe expression evaluator
       return true; // Placeholder
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error evaluating condition:', error);
       return false;
     }
@@ -879,6 +897,57 @@ export class MultiChannelTrackingService extends EventEmitter {
     // Placeholder language detection
     return 'en';
   }
+
+  private async createCommunicationRecord(message: OutgoingMessage, messageId: string, channel: CommunicationChannel): Promise<CommunicationRecord> {
+    return {
+      id: messageId,
+      client_id: '',
+      advisor_id: '',
+      type: message.type,
+      channel,
+      direction: CommunicationDirection.OUTBOUND,
+      subject: message.subject,
+      content: message.content,
+      timestamp: new Date(),
+      status: CommunicationStatus.SENT,
+      category: CommunicationCategory.GENERAL_INQUIRY,
+      tags: [],
+      attachments: message.attachments || [],
+      participants: message.to.map(to => ({
+        id: to,
+        name: to,
+        email: to,
+        phone: '',
+        role: 'recipient' as any,
+        is_client: false,
+        is_internal: false
+      })) as unknown as CommunicationParticipant[],
+      metadata: {
+        priority: message.priority,
+        urgency: 'MEDIUM' as any,
+        sensitivity: SensitivityLevel.INTERNAL,
+        language: 'en',
+        timezone: 'UTC',
+        ...(message.metadata || {})
+      } as CommunicationMetadata,
+      compliance: {
+        retention_required: true,
+        retention_period_years: 7,
+        legal_hold: false,
+        regulatory_requirements: [],
+        privacy_classification: 'internal' as any,
+        access_restrictions: [],
+        audit_trail_required: true,
+        encryption_required: false,
+        review_status: 'pending' as any,
+        compliance_notes: ''
+      },
+      created_at: new Date(),
+      updated_at: new Date(),
+      created_by: 'system',
+      updated_by: 'system'
+    };
+  }
 }
 
 interface SentimentResult {
@@ -912,13 +981,13 @@ class RateLimiter {
 class MetricsCollector {
   private metrics: TrackingMetrics = {
     total_messages: 0,
-    messages_by_channel: {},
+    messages_by_channel: {} as Record<CommunicationChannel, number>,
     sync_operations: 0,
     sync_errors: 0,
     average_sync_time: 0,
     uptime_percentage: 100,
-    last_sync_times: {},
-    error_counts: {}
+    last_sync_times: {} as Record<CommunicationChannel, Date>,
+    error_counts: {} as Record<CommunicationChannel, number>
   };
 
   recordSync(channel: CommunicationChannel, messageCount: number, syncTime: number): void {
@@ -962,11 +1031,11 @@ abstract class BaseChannelAdapter implements ChannelAdapter {
   }
 
   abstract get channel(): CommunicationChannel;
-  abstract connect(): Promise<void>;
-  abstract disconnect(): Promise<void>;
+  abstract connect(): Promise<any>;
+  abstract disconnect(): Promise<any>;
   abstract fetchMessages(since?: Date): Promise<CommunicationRecord[]>;
   abstract sendMessage(message: OutgoingMessage): Promise<string>;
-  abstract updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void>;
+  abstract updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any>;
   abstract searchMessages(query: ChannelSearchQuery): Promise<CommunicationRecord[]>;
 
   isConnected(): boolean {
@@ -999,12 +1068,12 @@ class EmailChannelAdapter extends BaseChannelAdapter {
     return CommunicationChannel.EMAIL_SYSTEM;
   }
 
-  async connect(): Promise<void> {
+  async connect(): Promise<any> {
     // Implement email provider connection
     this.connected = true;
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(): Promise<any> {
     this.connected = false;
   }
 
@@ -1018,7 +1087,7 @@ class EmailChannelAdapter extends BaseChannelAdapter {
     return `email_${Date.now()}`;
   }
 
-  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void> {
+  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any> {
     // Implement status update
   }
 
@@ -1040,11 +1109,11 @@ class PhoneChannelAdapter extends BaseChannelAdapter {
     return CommunicationChannel.PHONE_SYSTEM;
   }
 
-  async connect(): Promise<void> {
+  async connect(): Promise<any> {
     this.connected = true;
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(): Promise<any> {
     this.connected = false;
   }
 
@@ -1056,7 +1125,7 @@ class PhoneChannelAdapter extends BaseChannelAdapter {
     return `call_${Date.now()}`;
   }
 
-  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void> {
+  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any> {
   }
 
   async searchMessages(query: ChannelSearchQuery): Promise<CommunicationRecord[]> {
@@ -1076,11 +1145,11 @@ class VideoChannelAdapter extends BaseChannelAdapter {
     return CommunicationChannel.VIDEO_PLATFORM;
   }
 
-  async connect(): Promise<void> {
+  async connect(): Promise<any> {
     this.connected = true;
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(): Promise<any> {
     this.connected = false;
   }
 
@@ -1092,7 +1161,7 @@ class VideoChannelAdapter extends BaseChannelAdapter {
     return `meeting_${Date.now()}`;
   }
 
-  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void> {
+  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any> {
   }
 
   async searchMessages(query: ChannelSearchQuery): Promise<CommunicationRecord[]> {
@@ -1112,11 +1181,11 @@ class ChatChannelAdapter extends BaseChannelAdapter {
     return CommunicationChannel.MESSAGING_SYSTEM;
   }
 
-  async connect(): Promise<void> {
+  async connect(): Promise<any> {
     this.connected = true;
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(): Promise<any> {
     this.connected = false;
   }
 
@@ -1128,7 +1197,7 @@ class ChatChannelAdapter extends BaseChannelAdapter {
     return `chat_${Date.now()}`;
   }
 
-  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void> {
+  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any> {
   }
 
   async searchMessages(query: ChannelSearchQuery): Promise<CommunicationRecord[]> {
@@ -1148,11 +1217,11 @@ class CRMChannelAdapter extends BaseChannelAdapter {
     return CommunicationChannel.CRM_SYSTEM;
   }
 
-  async connect(): Promise<void> {
+  async connect(): Promise<any> {
     this.connected = true;
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(): Promise<any> {
     this.connected = false;
   }
 
@@ -1164,7 +1233,7 @@ class CRMChannelAdapter extends BaseChannelAdapter {
     return `crm_${Date.now()}`;
   }
 
-  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void> {
+  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any> {
   }
 
   async searchMessages(query: ChannelSearchQuery): Promise<CommunicationRecord[]> {
@@ -1184,11 +1253,11 @@ class DocumentChannelAdapter extends BaseChannelAdapter {
     return CommunicationChannel.DOCUMENT_PORTAL;
   }
 
-  async connect(): Promise<void> {
+  async connect(): Promise<any> {
     this.connected = true;
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(): Promise<any> {
     this.connected = false;
   }
 
@@ -1200,7 +1269,7 @@ class DocumentChannelAdapter extends BaseChannelAdapter {
     return `doc_${Date.now()}`;
   }
 
-  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void> {
+  async updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any> {
   }
 
   async searchMessages(query: ChannelSearchQuery): Promise<CommunicationRecord[]> {

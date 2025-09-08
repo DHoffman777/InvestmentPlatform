@@ -2,13 +2,19 @@ import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
 import { ActivityTrackingService, ActivityData, ActivityType, ActivityCategory, ActivitySeverity, ActivityStatus, ActivityOutcome, DeviceInfo, GeolocationData } from './ActivityTrackingService';
 
+declare global {
+  namespace Express {
+    interface User {
+      id: string;
+      tenantId: string;
+      roles: string[];
+      permissions: string[];
+    }
+  }
+}
+
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    tenantId: string;
-    roles: string[];
-    permissions: string[];
-  };
+  user?: any; // Simplified to avoid type conflicts
   sessionId?: string;
   activityContext?: ActivityContext;
 }
@@ -89,13 +95,13 @@ export class ActivityCaptureMiddleware {
         res.on('finish', async () => {
           try {
             await this.captureResponseActivity(req, res, requestActivity, startTime);
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error capturing response activity:', error);
           }
         });
 
         next();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error in activity capture middleware:', error);
         next();
       }
@@ -120,7 +126,7 @@ export class ActivityCaptureMiddleware {
       res.on('finish', async () => {
         try {
           await this.captureAuthenticationActivity(req, res);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error capturing auth activity:', error);
         }
       });
@@ -140,7 +146,7 @@ export class ActivityCaptureMiddleware {
         activity.severity = this.assessBusinessEventSeverity(eventType);
 
         await this.activityService.trackActivity(activity);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error capturing business event:', error);
       }
 
@@ -160,7 +166,7 @@ export class ActivityCaptureMiddleware {
         activity.sensitiveData = true;
 
         await this.activityService.trackActivity(activity);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error capturing security event:', error);
       }
 
@@ -192,7 +198,7 @@ export class ActivityCaptureMiddleware {
     res: Response, 
     requestActivityId: string,
     startTime: number
-  ): Promise<void> {
+  ): Promise<any> {
     const activity = await this.createBaseActivity(req);
     activity.parentActivityId = requestActivityId;
     activity.action = 'request_complete';
@@ -215,7 +221,7 @@ export class ActivityCaptureMiddleware {
     await this.activityService.trackActivity(activity);
   }
 
-  private async captureAuthenticationActivity(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async captureAuthenticationActivity(req: AuthenticatedRequest, res: Response): Promise<any> {
     const activity = await this.createBaseActivity(req);
     activity.activityType = ActivityType.AUTHENTICATION;
     activity.activityCategory = ActivityCategory.SECURITY_EVENT;
@@ -361,7 +367,7 @@ export class ActivityCaptureMiddleware {
 
       this.ipGeoCache.set(ip, mockGeoData);
       return mockGeoData;
-    } catch (error) {
+    } catch (error: any) {
       return undefined;
     }
   }
@@ -452,7 +458,7 @@ export class ActivityCaptureMiddleware {
     tags.push(`path:${req.path}`);
 
     if (req.user?.roles?.length) {
-      tags.push(...req.user.roles.map(role => `role:${role}`));
+      tags.push(...req.user.roles.map((role: any) => `role:${role}`));
     }
 
     if (this.isSensitiveRoute(req.path)) {
@@ -559,3 +565,4 @@ interface RouteClassification {
   activityType: ActivityType;
   severity: ActivitySeverity;
 }
+

@@ -1,4 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+
+interface AuthenticatedRequest extends Request {
+  user?: any;
+  userId?: string;
+  tenantId?: string;
+}
 import jwt from 'jsonwebtoken';
 import { logger } from '../utils/logger';
 
@@ -10,15 +16,17 @@ interface JWTPayload {
   permissions: string[];
   iat: number;
   exp: number;
+  sessionId?: string;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload;
-    }
-  }
-}
+// Using the global declaration from portfolio-service
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       user?: JWTPayload & { sessionId?: string };
+//     }
+//   }
+// }
 
 export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -43,9 +51,9 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
     }
 
     const decoded = jwt.verify(token, secret) as JWTPayload;
-    req.user = decoded;
+    (req as any).user = decoded;
     next();
-  } catch (error) {
+  } catch (error: any) {
     logger.warn('Authentication failed: Invalid token', {
       path: req.path,
       method: req.method,
@@ -53,7 +61,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
       error: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    if (error instanceof jwt.TokenExpiredError) {
+    if ((error as any) instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
         error: 'Token expired',
         message: 'Please log in again',
@@ -69,22 +77,22 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 
 export const requirePermission = (requiredPermissions: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    if (!(req as any).user) {
       return res.status(401).json({
         error: 'Authentication required',
         message: 'User not authenticated',
       });
     }
 
-    const userPermissions = req.user.permissions || [];
+    const userPermissions = (req as any).user?.permissions || [];
     const hasPermission = requiredPermissions.some(permission => 
       userPermissions.includes(permission)
     );
 
     if (!hasPermission) {
       logger.warn('Authorization failed: Insufficient permissions', {
-        userId: req.user.sub,
-        tenantId: req.user.tenantId,
+        userId: (req as any).user?.sub,
+        tenantId: (req as any).user?.tenantId,
         requiredPermissions,
         userPermissions,
         path: req.path,
@@ -103,9 +111,9 @@ export const requirePermission = (requiredPermissions: string[]) => {
 };
 
 export const requireTenantAccess = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.user?.tenantId) {
+  if (!(req as any).user?.tenantId) {
     logger.warn('Authorization failed: No tenant ID', {
-      userId: req.user?.sub,
+      userId: (req as any).user?.sub,
       path: req.path,
       method: req.method,
     });
@@ -118,3 +126,4 @@ export const requireTenantAccess = (req: Request, res: Response, next: NextFunct
 
   next();
 };
+

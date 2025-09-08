@@ -17,12 +17,12 @@ const instrumentService = new instrumentReferenceDataService_1.InstrumentReferen
 // Create new instrument
 router.post('/instruments', async (req, res) => {
     try {
-        const { instrumentId, identifiers, name, shortName, description, instrumentType, securityType, issuerName, issuerCountry, primaryExchange, tradingCurrency, dataSource, dataVendor } = req.body;
+        const { securityId, identifiers, name, shortName, description, instrumentType, securityType, issuerName, issuerCountry, primaryExchange, tradingCurrency, dataSource, dataVendor } = req.body;
         // Validation
-        if (!instrumentId || !name || !instrumentType || !securityType || !issuerName || !tradingCurrency) {
+        if (!securityId || !name || !instrumentType || !securityType || !issuerName || !tradingCurrency) {
             return res.status(400).json({
                 success: false,
-                error: 'Missing required fields: instrumentId, name, instrumentType, securityType, issuerName, tradingCurrency'
+                error: 'Missing required fields: securityId, name, instrumentType, securityType, issuerName, tradingCurrency'
             });
         }
         const validInstrumentTypes = [
@@ -42,7 +42,7 @@ router.post('/instruments', async (req, res) => {
             });
         }
         const instrument = await instrumentService.createInstrument({
-            instrumentId,
+            securityId,
             identifiers: identifiers || {},
             name,
             shortName,
@@ -157,11 +157,11 @@ router.get('/instruments/lookup/:identifierType/:identifier', async (req, res) =
     }
 });
 // Get instrument by ID
-router.get('/instruments/:instrumentId', async (req, res) => {
+router.get('/instruments/:securityId', async (req, res) => {
     try {
-        const { instrumentId } = req.params;
+        const { securityId } = req.params;
         const instrument = await instrumentService.lookupInstrument({
-            identifier: instrumentId,
+            identifier: securityId,
             identifierType: 'TICKER', // This is a fallback, we'll need to search more broadly
             tenantId: req.user.tenantId
         });
@@ -186,16 +186,16 @@ router.get('/instruments/:instrumentId', async (req, res) => {
     }
 });
 // Update instrument
-router.put('/instruments/:instrumentId', async (req, res) => {
+router.put('/instruments/:securityId', async (req, res) => {
     try {
-        const { instrumentId } = req.params;
+        const { securityId } = req.params;
         const updates = req.body;
         // Remove read-only fields
         delete updates.id;
         delete updates.createdAt;
         delete updates.createdBy;
         const instrument = await instrumentService.updateInstrument({
-            instrumentId,
+            securityId,
             updates,
             tenantId: req.user.tenantId,
             updatedBy: req.user.userId
@@ -247,9 +247,9 @@ router.post('/instruments/bulk-update', async (req, res) => {
 });
 // Corporate Actions Routes
 // Create corporate action
-router.post('/instruments/:instrumentId/corporate-actions', async (req, res) => {
+router.post('/instruments/:securityId/corporate-actions', async (req, res) => {
     try {
-        const { instrumentId } = req.params;
+        const { securityId } = req.params;
         const { actionType, announcementDate, exDate, recordDate, payableDate, actionDetails, dataSource } = req.body;
         // Validation
         if (!actionType || !announcementDate || !exDate || !recordDate) {
@@ -271,7 +271,7 @@ router.post('/instruments/:instrumentId/corporate-actions', async (req, res) => 
             });
         }
         const corporateAction = await instrumentService.processCorporateAction({
-            instrumentId,
+            securityId,
             actionType,
             announcementDate: new Date(announcementDate),
             exDate: new Date(exDate),
@@ -298,10 +298,10 @@ router.post('/instruments/:instrumentId/corporate-actions', async (req, res) => 
     }
 });
 // Get corporate actions for instrument
-router.get('/instruments/:instrumentId/corporate-actions', async (req, res) => {
+router.get('/instruments/:securityId/corporate-actions', async (req, res) => {
     try {
-        const { instrumentId } = req.params;
-        const corporateActions = await instrumentService.getCorporateActions(instrumentId, req.user.tenantId);
+        const { securityId } = req.params;
+        const corporateActions = await instrumentService.getCorporateActions(securityId, req.user.tenantId);
         res.json({
             success: true,
             data: corporateActions,
@@ -319,9 +319,9 @@ router.get('/instruments/:instrumentId/corporate-actions', async (req, res) => {
 });
 // Market Data Routes
 // Update market data
-router.post('/instruments/:instrumentId/market-data', async (req, res) => {
+router.post('/instruments/:securityId/market-data', async (req, res) => {
     try {
-        const { instrumentId } = req.params;
+        const { securityId } = req.params;
         const marketData = req.body;
         // Validate required fields
         const requiredFields = ['dataSource', 'dataVendor'];
@@ -332,7 +332,7 @@ router.post('/instruments/:instrumentId/market-data', async (req, res) => {
                 error: `Missing required fields: ${missingFields.join(', ')}`
             });
         }
-        await instrumentService.updateMarketData(instrumentId, marketData, req.user.tenantId);
+        await instrumentService.updateMarketData(securityId, marketData, req.user.tenantId);
         res.json({
             success: true,
             message: 'Market data updated successfully'
@@ -348,10 +348,10 @@ router.post('/instruments/:instrumentId/market-data', async (req, res) => {
     }
 });
 // Get current market data
-router.get('/instruments/:instrumentId/market-data', async (req, res) => {
+router.get('/instruments/:securityId/market-data', async (req, res) => {
     try {
-        const { instrumentId } = req.params;
-        const marketData = await instrumentService.getMarketData(instrumentId, req.user.tenantId);
+        const { securityId } = req.params;
+        const marketData = await instrumentService.getMarketData(securityId, req.user.tenantId);
         if (!marketData) {
             return res.status(404).json({
                 success: false,
@@ -374,10 +374,10 @@ router.get('/instruments/:instrumentId/market-data', async (req, res) => {
 });
 // Data Quality and Validation Routes
 // Validate instrument data
-router.get('/instruments/:instrumentId/validate', async (req, res) => {
+router.get('/instruments/:securityId/validate', async (req, res) => {
     try {
-        const { instrumentId } = req.params;
-        const validation = await instrumentService.validateInstrumentData(instrumentId, req.user.tenantId);
+        const { securityId } = req.params;
+        const validation = await instrumentService.validateInstrumentData(securityId, req.user.tenantId);
         res.json({
             success: true,
             data: validation
@@ -393,10 +393,10 @@ router.get('/instruments/:instrumentId/validate', async (req, res) => {
     }
 });
 // Generate data quality report
-router.get('/instruments/:instrumentId/data-quality-report', async (req, res) => {
+router.get('/instruments/:securityId/data-quality-report', async (req, res) => {
     try {
-        const { instrumentId } = req.params;
-        const report = await instrumentService.generateDataQualityReport(instrumentId, req.user.tenantId);
+        const { securityId } = req.params;
+        const report = await instrumentService.generateDataQualityReport(securityId, req.user.tenantId);
         res.json({
             success: true,
             data: report

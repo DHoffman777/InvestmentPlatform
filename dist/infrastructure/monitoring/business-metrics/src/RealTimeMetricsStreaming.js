@@ -172,7 +172,7 @@ class RealTimeMetricsStreaming extends events_1.EventEmitter {
             });
         }
         catch (error) {
-            this.sendError(client, `Subscription failed: ${error.message}`);
+            this.sendError(client, `Subscription failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     async handleUnsubscription(client, payload) {

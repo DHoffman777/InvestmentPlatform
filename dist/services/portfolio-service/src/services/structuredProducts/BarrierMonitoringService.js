@@ -89,7 +89,7 @@ class BarrierMonitoringService {
                 {
                     id: 'sp_001',
                     tenantId: 'tenant_001',
-                    instrumentId: 'inst_sp_001',
+                    securityId: 'inst_sp_001',
                     productName: 'AAPL Barrier Note',
                     productType: 'STRUCTURED_NOTE',
                     issuer: 'Bank ABC',

@@ -17,7 +17,7 @@ export class MetricsCollector extends EventEmitter {
     this.collectionInterval = setInterval(async () => {
       try {
         await this.collectAllMetrics();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Metrics collection failed:', error);
         this.emit('error', { type: 'collection_failed', error });
       }
@@ -35,7 +35,7 @@ export class MetricsCollector extends EventEmitter {
     console.log('Metrics collection stopped');
   }
 
-  private async collectAllMetrics(): Promise<void> {
+  private async collectAllMetrics(): Promise<any> {
     const services = this.getMonitoredServices();
     const collectionPromises = services.map(service => this.collectServiceMetrics(service));
     
@@ -104,7 +104,7 @@ export class MetricsCollector extends EventEmitter {
       mockData.unhealthy = mockData.current - mockData.healthy;
       
       return mockData;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to get instance metrics for ${serviceName}:`, error);
       return { current: 0, desired: 0, healthy: 0, unhealthy: 0 };
     }
@@ -129,7 +129,7 @@ export class MetricsCollector extends EventEmitter {
           outbound: Math.random() * 10000000, // bytes/sec
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to get resource metrics for ${serviceName}:`, error);
       return {
         cpu: { usage: 0, request: 0, limit: 0 },
@@ -148,7 +148,7 @@ export class MetricsCollector extends EventEmitter {
         errorRate: Math.random() * 5, // 0-5%
         queueLength: Math.floor(Math.random() * 100), // 0-100 queued requests
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to get performance metrics for ${serviceName}:`, error);
       return { responseTime: 0, throughput: 0, errorRate: 0, queueLength: 0 };
     }
@@ -183,7 +183,7 @@ export class MetricsCollector extends EventEmitter {
       }
       
       return customMetrics;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to get custom metrics for ${serviceName}:`, error);
       return {};
     }
@@ -206,7 +206,7 @@ export class MetricsCollector extends EventEmitter {
       }
       
       return 0;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to query Prometheus:', error);
       throw error;
     }
@@ -247,7 +247,7 @@ export class MetricsCollector extends EventEmitter {
         default:
           console.warn(`Unknown metric source type: ${source.type}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to evaluate metric source ${source.name}:`, error);
       value = 0;
     }
@@ -328,3 +328,4 @@ export class MetricsCollector extends EventEmitter {
     };
   }
 }
+

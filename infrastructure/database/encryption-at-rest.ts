@@ -53,15 +53,17 @@ export class DatabaseEncryptionService {
       const key = await this.deriveKey(this.masterKey, salt);
       
       // Create cipher
-      const cipher = crypto.createCipher(this.config.algorithm, key);
-      cipher.setAAD(Buffer.from(associatedData || '', 'utf8'));
+      const cipher = crypto.createCipheriv(this.config.algorithm, key, iv) as any;
+      if (cipher.setAAD) {
+        cipher.setAAD(Buffer.from(associatedData || '', 'utf8'));
+      }
       
       // Encrypt data
       let encrypted = cipher.update(plaintext, 'utf8', 'hex');
       encrypted += cipher.final('hex');
       
       // Get authentication tag
-      const tag = cipher.getAuthTag();
+      const tag = cipher.getAuthTag ? cipher.getAuthTag() : Buffer.alloc(0);
       
       return {
         encryptedData: encrypted,
@@ -70,8 +72,8 @@ export class DatabaseEncryptionService {
         salt: salt.toString('hex')
       };
       
-    } catch (error) {
-      throw new Error(`Encryption failed: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -89,9 +91,13 @@ export class DatabaseEncryptionService {
       const key = await this.deriveKey(this.masterKey, salt);
       
       // Create decipher
-      const decipher = crypto.createDecipher(this.config.algorithm, key);
-      decipher.setAuthTag(tag);
-      decipher.setAAD(Buffer.from(associatedData || '', 'utf8'));
+      const decipher = crypto.createDecipheriv(this.config.algorithm, key, iv) as any;
+      if (decipher.setAuthTag) {
+        decipher.setAuthTag(tag);
+      }
+      if (decipher.setAAD) {
+        decipher.setAAD(Buffer.from(associatedData || '', 'utf8'));
+      }
       
       // Decrypt data
       let decrypted = decipher.update(encrypted.encryptedData, 'hex', 'utf8');
@@ -99,8 +105,8 @@ export class DatabaseEncryptionService {
       
       return decrypted;
       
-    } catch (error) {
-      throw new Error(`Decryption failed: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -266,28 +272,28 @@ archive_command = 'encrypt_backup %p %f'
 
 set -e
 
-PGUSER="${POSTGRES_USER:-postgres}"
-PGDB="${POSTGRES_DB:-investment_platform}"
-KEY_BACKUP_PATH="${TDE_KEY_BACKUP_PATH:-/var/lib/postgresql/keys}"
+PGUSER="\${POSTGRES_USER:-postgres}"
+PGDB="\${POSTGRES_DB:-investment_platform}"
+KEY_BACKUP_PATH="\${TDE_KEY_BACKUP_PATH:-/var/lib/postgresql/keys}"
 
-echo "Starting TDE key rotation for database: $PGDB"
+echo "Starting TDE key rotation for database: \$PGDB"
 
 # Create key backup directory
-mkdir -p $KEY_BACKUP_PATH
+mkdir -p \$KEY_BACKUP_PATH
 
 # Backup current key
-psql -U $PGUSER -d $PGDB -c "SELECT tde_backup_master_key('$KEY_BACKUP_PATH/master_key_$(date +%Y%m%d_%H%M%S).backup');"
+psql -U \$PGUSER -d \$PGDB -c "SELECT tde_backup_master_key('\$KEY_BACKUP_PATH/master_key_\$(date +%Y%m%d_%H%M%S).backup');"
 
 # Generate new master key
-NEW_KEY=$(openssl rand -hex 32)
+NEW_KEY=\$(openssl rand -hex 32)
 
 # Rotate master key
-psql -U $PGUSER -d $PGDB -c "SELECT tde_rotate_master_key('$NEW_KEY');"
+psql -U \$PGUSER -d \$PGDB -c "SELECT tde_rotate_master_key('\$NEW_KEY');"
 
 echo "TDE key rotation completed successfully"
 
 # Log rotation event
-logger "PostgreSQL TDE key rotated for database $PGDB"
+logger "PostgreSQL TDE key rotated for database \$PGDB"
     `.trim();
   }
 }
@@ -312,7 +318,7 @@ export class ExpressEncryptionMiddleware {
           req.body = await this.encryptSensitiveFields(req.body);
         }
         next();
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({
           error: 'Encryption error',
           message: 'Failed to encrypt sensitive data'
@@ -325,17 +331,18 @@ export class ExpressEncryptionMiddleware {
    * Middleware to decrypt response data
    */
   public decryptResponse() {
+    const self = this;
     return async (req: any, res: any, next: any) => {
       const originalSend = res.send;
       
       res.send = async function(data: any) {
         try {
           if (data && typeof data === 'object') {
-            data = await this.decryptSensitiveFields(data);
+            data = await self.decryptSensitiveFields(data);
           }
-          originalSend.call(this, data);
-        } catch (error) {
-          originalSend.call(this, {
+          originalSend.call(res, data);
+        } catch (error: any) {
+          originalSend.call(res, {
             error: 'Decryption error',
             message: 'Failed to decrypt sensitive data'
           });

@@ -1,14 +1,18 @@
-import { Request, Response, NextFunction } from 'express';
 const expressValidator = require('express-validator');
-const { validationResult } = expressValidator;
+const validationResult = expressValidator.validationResult;
 type ValidationChain = any;
+import { Request, Response, NextFunction } from 'express';
 import { logger } from '../config/logger';
 
+interface AuthenticatedRequest extends Request {
+  user?: any;
+  userId?: string;
+  tenantId?: string;
+}
 export const validateRequest = (validations: ValidationChain[]) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     // Run all validations
     await Promise.all(validations.map(validation => validation.run(req)));
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       logger.warn('Validation failed:', {
@@ -16,7 +20,6 @@ export const validateRequest = (validations: ValidationChain[]) => {
         errors: errors.array(),
         body: req.body
       });
-
       res.status(400).json({
         success: false,
         error: 'Validation failed',
@@ -29,7 +32,7 @@ export const validateRequest = (validations: ValidationChain[]) => {
       });
       return;
     }
-
     next();
   };
 };
+

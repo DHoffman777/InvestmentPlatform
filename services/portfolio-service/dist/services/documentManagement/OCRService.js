@@ -79,12 +79,12 @@ class OCRService {
         catch (error) {
             this.logger.error('OCR processing failed', {
                 documentId: request.documentId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             const job = this.processingQueue.get(request.documentId);
             if (job) {
-                await this.updateJobStatus(job.id, DocumentManagement_1.ProcessingStatus.FAILED, { error: error.message });
+                await this.updateJobStatus(job.id, DocumentManagement_1.ProcessingStatus.FAILED, { error: error instanceof Error ? error.message : 'Unknown error' });
                 this.processingQueue.delete(request.documentId);
             }
             throw error;
@@ -326,7 +326,7 @@ class OCRService {
             return correctedWords.join(' ');
         }
         catch (error) {
-            this.logger.warn('Spell check failed', { error: error.message });
+            this.logger.warn('Spell check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             return text;
         }
     }
@@ -338,7 +338,7 @@ class OCRService {
             return tokens.join(' ');
         }
         catch (error) {
-            this.logger.warn('Language model application failed', { error: error.message });
+            this.logger.warn('Language model application failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             return text;
         }
     }
@@ -653,7 +653,7 @@ class OCRService {
             });
         }
         catch (error) {
-            this.logger.error('Failed to initialize ML models', { error: error.message });
+            this.logger.error('Failed to initialize ML models', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async createProcessingJob(request) {

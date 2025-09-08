@@ -11,8 +11,8 @@ class BusinessIntelligenceService {
     biIntegrations = new Map();
     reportTemplates = new Map();
     scheduledReports = new Map();
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    constructor(eventPublisher) {
+        this.eventPublisher = eventPublisher || new eventPublisher_1.EventPublisher('BusinessIntelligenceService');
         this.initializeReportTemplates();
         this.initializeBIIntegrations();
     }

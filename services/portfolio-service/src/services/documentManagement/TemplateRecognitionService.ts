@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
+import { KafkaService } from '../../utils/kafka-mock';
 import {
   Document,
   DocumentTemplate,
@@ -9,6 +9,7 @@ import {
   Language,
   BoundingBox,
   OCRResult,
+  OCRLine,
   ProcessingStatus
 } from '../../models/documentManagement/DocumentManagement';
 
@@ -55,7 +56,7 @@ export interface RecognitionMetadata {
 }
 
 export interface LayoutFeature {
-  type: 'HEADER' | 'FOOTER' | 'TABLE' | 'LOGO' | 'SIGNATURE' | 'FORM_FIELD' | 'BARCODE' | 'QR_CODE';
+  type: 'HEADER' | 'FOOTER' | 'TABLE' | 'LOGO' | 'SIGNATURE' | 'FORM_FIELD' | 'BARCODE' | 'QR_CODE' | 'TEXT_BLOCK';
   boundingBox: BoundingBox;
   confidence: number;
   text?: string;
@@ -200,10 +201,10 @@ export class TemplateRecognitionService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Template recognition failed', {
         documentId: request.documentId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack
       });
       throw error;
@@ -639,8 +640,8 @@ export class TemplateRecognitionService {
         });
       }
 
-    } catch (error) {
-      this.logger.warn('ML-based recognition failed', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('ML-based recognition failed', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
 
     return scores.sort((a, b) => b.confidenceScore - a.confidenceScore);
@@ -779,7 +780,7 @@ export class TemplateRecognitionService {
     return patterns;
   }
 
-  private async initializeTemplateRecognition(): Promise<void> {
+  private async initializeTemplateRecognition(): Promise<any> {
     try {
       await this.loadDefaultTemplates();
       await this.initializeMLModels();
@@ -788,12 +789,12 @@ export class TemplateRecognitionService {
         templates: this.templates.size,
         models: this.mlModels.size
       });
-    } catch (error) {
-      this.logger.error('Failed to initialize template recognition', { error: error.message });
+    } catch (error: any) {
+      this.logger.error('Failed to initialize template recognition', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async loadDefaultTemplates(): Promise<void> {
+  private async loadDefaultTemplates(): Promise<any> {
     const defaultTemplates: DocumentTemplate[] = [
       {
         id: 'trade_confirmation_v1',
@@ -868,7 +869,7 @@ export class TemplateRecognitionService {
     this.logger.info('Default templates loaded', { count: defaultTemplates.length });
   }
 
-  private async initializeMLModels(): Promise<void> {
+  private async initializeMLModels(): Promise<any> {
     try {
       this.mlModels.set('document_classifier', {
         predict: async (features: number[]) => {
@@ -877,8 +878,8 @@ export class TemplateRecognitionService {
       });
 
       this.logger.info('ML models initialized for template recognition');
-    } catch (error) {
-      this.logger.warn('Failed to initialize ML models', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Failed to initialize ML models', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -886,7 +887,7 @@ export class TemplateRecognitionService {
     documentId: string,
     tenantId: string,
     result: TemplateRecognitionResult
-  ): Promise<void> {
+  ): Promise<any> {
     const event = {
       eventType: 'TEMPLATE_RECOGNITION_COMPLETED',
       documentId,
@@ -900,3 +901,4 @@ export class TemplateRecognitionService {
     await this.kafkaService.publishEvent('document-processing', event);
   }
 }
+

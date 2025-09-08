@@ -69,7 +69,7 @@ export class CloudFrontProvider extends EventEmitter implements CDNProvider {
         url,
         etag: result.ETag || '',
       };
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'uploadAsset', key, error });
       throw error;
     }
@@ -88,7 +88,7 @@ export class CloudFrontProvider extends EventEmitter implements CDNProvider {
       this.emit('assetDeleted', { key });
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'deleteAsset', key, error });
       return false;
     }
@@ -114,7 +114,7 @@ export class CloudFrontProvider extends EventEmitter implements CDNProvider {
         category: result.Metadata?.category,
         cachePolicy: this.parseCachePolicy(result.CacheControl),
       };
-    } catch (error) {
+    } catch (error: any) {
       if ((error as any).name === 'NotFound') {
         return null;
       }
@@ -148,7 +148,7 @@ export class CloudFrontProvider extends EventEmitter implements CDNProvider {
       this.emit('cacheInvalidated', invalidationResult);
       
       return invalidationResult;
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'invalidateCache', paths, error });
       throw error;
     }
@@ -166,7 +166,7 @@ export class CloudFrontProvider extends EventEmitter implements CDNProvider {
       // 3. Update the distribution
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'setCachePolicy', pattern, error });
       return false;
     }
@@ -187,7 +187,7 @@ export class CloudFrontProvider extends EventEmitter implements CDNProvider {
         hitRatio: 0.95,
         bandwidth: 0,
       };
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'getStats', error });
       throw error;
     }
@@ -201,7 +201,7 @@ export class CloudFrontProvider extends EventEmitter implements CDNProvider {
       
       const result = await this.cloudfront.send(command);
       return result.Distribution?.DomainName || 'unknown';
-    } catch (error) {
+    } catch (error: any) {
       return 'unknown';
     }
   }

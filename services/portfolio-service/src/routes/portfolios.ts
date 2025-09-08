@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+import { Router, Request, Response } from 'express';
+const { body, param, query, validationResult } = require('express-validator');
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PortfolioService } from '../services/portfolioService';
 import { logger } from '../utils/logger';
@@ -32,7 +32,7 @@ router.get('/',
   ],
   validateRequest,
   requireTenantAccess,
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const {
         page = 1,
@@ -53,7 +53,7 @@ router.get('/',
       });
 
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching portfolios:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -70,7 +70,7 @@ router.get('/:id',
   ],
   validateRequest,
   requireTenantAccess,
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const portfolio = await portfolioService.getPortfolioById(
@@ -87,7 +87,7 @@ router.get('/:id',
       }
 
       res.json(portfolio);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching portfolio:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -131,7 +131,7 @@ router.post('/',
     body('minCashPercentage')
       .optional()
       .isDecimal({ decimal_digits: '0,2' })
-      .custom((value) => {
+      .custom((value: any) => {
         const num = parseFloat(value);
         return num >= 0 && num <= 100;
       })
@@ -139,7 +139,7 @@ router.post('/',
     body('maxCashPercentage')
       .optional()
       .isDecimal({ decimal_digits: '0,2' })
-      .custom((value) => {
+      .custom((value: any) => {
         const num = parseFloat(value);
         return num >= 0 && num <= 100;
       })
@@ -148,7 +148,7 @@ router.post('/',
   validateRequest,
   requireTenantAccess,
   requirePermission(['portfolio:create']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const portfolioData = {
         ...req.body,
@@ -168,8 +168,8 @@ router.post('/',
       });
 
       res.status(201).json(portfolio);
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    } catch (error: any) {
+      if ((error as any) instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           return res.status(409).json({
             error: 'Portfolio already exists',
@@ -216,7 +216,7 @@ router.put('/:id',
     body('minCashPercentage')
       .optional()
       .isDecimal({ decimal_digits: '0,2' })
-      .custom((value) => {
+      .custom((value: any) => {
         const num = parseFloat(value);
         return num >= 0 && num <= 100;
       })
@@ -224,7 +224,7 @@ router.put('/:id',
     body('maxCashPercentage')
       .optional()
       .isDecimal({ decimal_digits: '0,2' })
-      .custom((value) => {
+      .custom((value: any) => {
         const num = parseFloat(value);
         return num >= 0 && num <= 100;
       })
@@ -233,7 +233,7 @@ router.put('/:id',
   validateRequest,
   requireTenantAccess,
   requirePermission(['portfolio:update']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const updateData = {
@@ -262,7 +262,7 @@ router.put('/:id',
       });
 
       res.json(portfolio);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating portfolio:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -280,7 +280,7 @@ router.delete('/:id',
   validateRequest,
   requireTenantAccess,
   requirePermission(['portfolio:delete']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
 
@@ -304,7 +304,7 @@ router.delete('/:id',
       });
 
       res.status(204).send();
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deleting portfolio:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -321,7 +321,7 @@ router.get('/:id/summary',
   ],
   validateRequest,
   requireTenantAccess,
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const summary = await portfolioService.getPortfolioSummary(
@@ -338,7 +338,7 @@ router.get('/:id/summary',
       }
 
       res.json(summary);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching portfolio summary:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -355,7 +355,7 @@ router.get('/:id/allocations',
   ],
   validateRequest,
   requireTenantAccess,
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const allocations = await portfolioService.getPortfolioAllocations(
@@ -372,7 +372,7 @@ router.get('/:id/allocations',
       }
 
       res.json(allocations);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching portfolio allocations:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -383,3 +383,4 @@ router.get('/:id/allocations',
 );
 
 export { router as portfolioRoutes };
+

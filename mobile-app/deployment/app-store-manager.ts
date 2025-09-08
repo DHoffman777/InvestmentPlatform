@@ -426,7 +426,7 @@ export class AppStoreManager extends EventEmitter {
   private builds: Map<string, AppBuild> = new Map();
   private submissions: Map<string, AppSubmission> = new Map();
   private analytics: Map<string, AppStoreAnalytics> = new Map();
-  private releaseManagement: ReleaseManagement;
+  private releaseManagement!: ReleaseManagement;  // Will be initialized in initializeReleaseManagement
 
   constructor(config: AppStoreConfig) {
     super();
@@ -493,7 +493,7 @@ export class AppStoreManager extends EventEmitter {
       this.emit('buildError', {
         platform,
         buildType,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -571,7 +571,7 @@ export class AppStoreManager extends EventEmitter {
       this.emit('submissionError', {
         buildId,
         store,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -621,7 +621,7 @@ export class AppStoreManager extends EventEmitter {
       this.emit('rolloutError', {
         submissionId,
         action,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -656,7 +656,7 @@ export class AppStoreManager extends EventEmitter {
       this.emit('analyticsError', {
         period,
         platform,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -731,7 +731,7 @@ export class AppStoreManager extends EventEmitter {
     } catch (error) {
       this.emit('featureFlagError', {
         flagName: flag.name,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -830,7 +830,7 @@ export class AppStoreManager extends EventEmitter {
       build.duration = build.endTime.getTime() - build.startTime.getTime();
       build.errors.push({
         type: 'compile',
-        message: error.message,
+        message: error instanceof Error ? error.message : 'Unknown error',
         severity: 'error'
       });
 
@@ -861,7 +861,7 @@ export class AppStoreManager extends EventEmitter {
 
     } catch (error) {
       submission.status = 'rejected';
-      submission.rejectionReason = error.message;
+      submission.rejectionReason = error instanceof Error ? error.message : 'Unknown error';
       this.submissions.set(submission.id, submission);
       throw error;
     }
@@ -1464,7 +1464,7 @@ export class AppStoreManager extends EventEmitter {
     }, 60 * 60 * 1000); // Every hour
   }
 
-  private async fetchAndStoreAnalytics(): void {
+  private async fetchAndStoreAnalytics(): Promise<void> {
     const period = {
       start: new Date(Date.now() - 24 * 60 * 60 * 1000),
       end: new Date()
@@ -1482,7 +1482,7 @@ export class AppStoreManager extends EventEmitter {
     } catch (error) {
       this.emit('analyticsCollectionError', {
         period,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
     }

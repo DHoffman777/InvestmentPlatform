@@ -182,11 +182,11 @@ export class CashManagementService extends EventEmitter {
 
       return newAccount;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('cashManagementError', {
         operation: 'create_account',
         portfolioId: account.portfolioId,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
       throw error;
@@ -227,11 +227,11 @@ export class CashManagementService extends EventEmitter {
 
       return sweepProgram;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('sweepError', {
         operation: 'create_program',
         portfolioId,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
       throw error;
@@ -272,11 +272,11 @@ export class CashManagementService extends EventEmitter {
 
       return sweepTransactions;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('sweepError', {
         operation: 'execute_sweep',
         portfolioId,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
       throw error;
@@ -328,11 +328,11 @@ export class CashManagementService extends EventEmitter {
 
       return newTransaction;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('transactionError', {
         portfolioId: transaction.portfolioId,
         accountId: transaction.accountId,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
       throw error;
@@ -392,10 +392,10 @@ export class CashManagementService extends EventEmitter {
 
       return forecast;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('forecastError', {
         portfolioId,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
       throw error;
@@ -590,7 +590,7 @@ export class CashManagementService extends EventEmitter {
     return transaction;
   }
 
-  private async validateSweepDestinations(destinations: SweepDestination[]): Promise<void> {
+  private async validateSweepDestinations(destinations: SweepDestination[]): Promise<any> {
     for (const dest of destinations) {
       if (dest.minimumDeposit <= 0) {
         throw new Error(`Invalid minimum deposit for destination ${dest.accountId}`);
@@ -622,7 +622,7 @@ export class CashManagementService extends EventEmitter {
     return maxAmount;
   }
 
-  private async updateAccountBalance(accountId: string, transactionType: string, amount: number): Promise<void> {
+  private async updateAccountBalance(accountId: string, transactionType: string, amount: number): Promise<any> {
     const account = this.cashAccounts.get(accountId);
     if (!account) return;
 
@@ -833,3 +833,4 @@ export class CashManagementService extends EventEmitter {
 }
 
 export default CashManagementService;
+

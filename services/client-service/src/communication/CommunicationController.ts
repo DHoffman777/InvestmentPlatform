@@ -1,5 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { body, query, param, validationResult } from 'express-validator';
+const { body, query, param, validationResult } = require('express-validator');
+
+interface AuthenticatedRequest extends Request {
+  user?: any;
+  userId?: string;
+  tenantId?: string;
+}
 import rateLimit from 'express-rate-limit';
 import { CommunicationService } from './CommunicationService';
 import { CommunicationAnalyticsService } from './CommunicationAnalyticsService';
@@ -123,7 +129,7 @@ export class CommunicationController {
     this.app.use('/api/communication', limiter);
 
     // Tenant extraction middleware
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
+    this.app.use((req: AuthenticatedRequest, res: Response, next: NextFunction) => {
       const tenantId = req.headers['x-tenant-id'] as string;
       if (this.config.security.requireAuth && !tenantId) {
         return res.status(400).json({
@@ -141,7 +147,7 @@ export class CommunicationController {
     }
   }
 
-  private authenticateRequest = (req: Request, res: Response, next: NextFunction): void => {
+  private authenticateRequest = (req: AuthenticatedRequest, res: Response, next: NextFunction): void | Response => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
@@ -175,44 +181,44 @@ export class CommunicationController {
 
     // Communication CRUD routes
     router.post('/communications', 
-      this.validateCreateCommunication(),
+      this.validateCreateCommunication() as any,
       this.handleValidationErrors,
       this.createCommunication
     );
 
     router.get('/communications',
-      this.validateGetCommunications(),
+      this.validateGetCommunications() as any,
       this.handleValidationErrors,
       this.getCommunications
     );
 
     router.get('/communications/:id',
-      this.validateGetCommunication(),
+      this.validateGetCommunication() as any,
       this.handleValidationErrors,
       this.getCommunication
     );
 
     router.put('/communications/:id',
-      this.validateUpdateCommunication(),
+      this.validateUpdateCommunication() as any,
       this.handleValidationErrors,
       this.updateCommunication
     );
 
     router.delete('/communications/:id',
-      this.validateDeleteCommunication(),
+      this.validateDeleteCommunication() as any,
       this.handleValidationErrors,
       this.deleteCommunication
     );
 
     // Search and filtering routes
     router.post('/communications/search',
-      this.validateSearchCommunications(),
+      this.validateSearchCommunications() as any,
       this.handleValidationErrors,
       this.searchCommunications
     );
 
     router.get('/communications/client/:clientId',
-      this.validateGetClientCommunications(),
+      this.validateGetClientCommunications() as any,
       this.handleValidationErrors,
       this.getClientCommunications
     );
@@ -220,37 +226,37 @@ export class CommunicationController {
     // Analytics routes (if enabled)
     if (this.config.features.enableAnalytics && this.analyticsService) {
       router.get('/analytics/metrics',
-        this.validateGetMetrics(),
+        this.validateGetMetrics() as any,
         this.handleValidationErrors,
         this.getCommunicationMetrics
       );
 
       router.get('/analytics/trends',
-        this.validateGetTrends(),
+        this.validateGetTrends() as any,
         this.handleValidationErrors,
         this.getCommunicationTrends
       );
 
       router.get('/analytics/client-profile/:clientId',
-        this.validateGetClientProfile(),
+        this.validateGetClientProfile() as any,
         this.handleValidationErrors,
         this.getClientCommunicationProfile
       );
 
       router.post('/analytics/reports',
-        this.validateGenerateReport(),
+        this.validateGenerateReport() as any,
         this.handleValidationErrors,
         this.generateCommunicationReport
       );
 
       router.get('/analytics/sentiment',
-        this.validateGetSentiment(),
+        this.validateGetSentiment() as any,
         this.handleValidationErrors,
         this.performSentimentAnalysis
       );
 
       router.get('/analytics/risk-factors/:clientId',
-        this.validateGetRiskFactors(),
+        this.validateGetRiskFactors() as any,
         this.handleValidationErrors,
         this.getClientRiskFactors
       );
@@ -259,61 +265,61 @@ export class CommunicationController {
     // Recording routes (if enabled)
     if (this.config.features.enableRecording && this.recordingService) {
       router.post('/recording/sessions',
-        this.validateStartRecording(),
+        this.validateStartRecording() as any,
         this.handleValidationErrors,
         this.startRecordingSession
       );
 
       router.patch('/recording/sessions/:sessionId/stop',
-        this.validateStopRecording(),
+        this.validateStopRecording() as any,
         this.handleValidationErrors,
         this.stopRecordingSession
       );
 
       router.patch('/recording/sessions/:sessionId/pause',
-        param('sessionId').isUUID(),
+              param('sessionId').isUUID() as any,
         this.handleValidationErrors,
         this.pauseRecording
       );
 
       router.patch('/recording/sessions/:sessionId/resume',
-        param('sessionId').isUUID(),
+              param('sessionId').isUUID() as any,
         this.handleValidationErrors,
         this.resumeRecording
       );
 
       router.get('/recording/recordings',
-        this.validateSearchRecordings(),
+        this.validateSearchRecordings() as any,
         this.handleValidationErrors,
         this.searchRecordings
       );
 
       router.post('/recording/policies',
-        this.validateCreatePolicy(),
+        this.validateCreatePolicy() as any,
         this.handleValidationErrors,
         this.createCompliancePolicy
       );
 
       router.patch('/recording/recordings/:recordingId/retention',
-        this.validateExtendRetention(),
+        this.validateExtendRetention() as any,
         this.handleValidationErrors,
         this.extendRetentionPeriod
       );
 
       router.patch('/recording/recordings/:recordingId/legal-hold',
-        this.validateLegalHold(),
+        this.validateLegalHold() as any,
         this.handleValidationErrors,
         this.placeRecordingOnLegalHold
       );
 
       router.post('/recording/audits',
-        this.validatePerformAudit(),
+        this.validatePerformAudit() as any,
         this.handleValidationErrors,
         this.performComplianceAudit
       );
 
       router.post('/recording/reports',
-        this.validateGenerateComplianceReport(),
+        this.validateGenerateComplianceReport() as any,
         this.handleValidationErrors,
         this.generateComplianceReport
       );
@@ -322,61 +328,61 @@ export class CommunicationController {
     // Timeline routes (if enabled)
     if (this.config.features.enableTimeline && this.timelineService) {
       router.post('/timeline/entries',
-        this.validateCreateTimelineEntry(),
+        this.validateCreateTimelineEntry() as any,
         this.handleValidationErrors,
         this.addTimelineEntry
       );
 
       router.put('/timeline/entries/:entryId',
-        this.validateUpdateTimelineEntry(),
+        this.validateUpdateTimelineEntry() as any,
         this.handleValidationErrors,
         this.updateTimelineEntry
       );
 
       router.delete('/timeline/entries/:entryId',
-        this.validateDeleteTimelineEntry(),
+        this.validateDeleteTimelineEntry() as any,
         this.handleValidationErrors,
         this.deleteTimelineEntry
       );
 
       router.post('/timeline/views',
-        this.validateCreateTimelineView(),
+        this.validateCreateTimelineView() as any,
         this.handleValidationErrors,
         this.createTimelineView
       );
 
       router.get('/timeline/views/:viewId',
-        param('viewId').isUUID(),
+        param('viewId').isUUID() as any,
         this.handleValidationErrors,
         this.getTimelineView
       );
 
       router.post('/timeline/templates',
-        this.validateCreateTimelineTemplate(),
+        this.validateCreateTimelineTemplate() as any,
         this.handleValidationErrors,
         this.createTimelineTemplate
       );
 
       router.post('/timeline/templates/:templateId/apply',
-        this.validateApplyTemplate(),
+        this.validateApplyTemplate() as any,
         this.handleValidationErrors,
         this.applyTemplate
       );
 
       router.post('/timeline/search',
-        this.validateSearchTimeline(),
+        this.validateSearchTimeline() as any,
         this.handleValidationErrors,
         this.searchTimeline
       );
 
       router.post('/timeline/views/:viewId/export',
-        this.validateExportTimeline(),
+        this.validateExportTimeline() as any,
         this.handleValidationErrors,
         this.exportTimeline
       );
 
       router.get('/timeline/insights/:clientId',
-        param('clientId').isUUID(),
+              param('clientId').isUUID() as any,
         this.handleValidationErrors,
         this.generatePredictiveInsights
       );
@@ -392,273 +398,273 @@ export class CommunicationController {
   // Validation middleware methods
   private validateCreateCommunication() {
     return [
-      body('type').isIn(['email', 'phone', 'sms', 'chat', 'meeting', 'document', 'note']),
-      body('channel').isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'portal']),
-      body('direction').isIn(['inbound', 'outbound', 'internal']),
-      body('subject').isLength({ min: 1, max: 200 }),
-      body('content').optional().isLength({ max: this.config.validation.maxContentLength }),
-      body('clientId').isUUID(),
-      body('employeeId').isUUID(),
-      body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
-      body('scheduledFor').optional().isISO8601(),
-      body('participants').optional().isArray(),
-      body('attachments').optional().isArray(),
-      body('tags').optional().isArray(),
-      body('categories').optional().isArray()
+      body('type').isIn(['email', 'phone', 'sms', 'chat', 'meeting', 'document', 'note']) as any,
+      body('channel').isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'portal']) as any,
+      body('direction').isIn(['inbound', 'outbound', 'internal']) as any,
+      body('subject').isLength({ min: 1, max: 200 }) as any,
+      body('content').optional().isLength({ max: this.config.validation.maxContentLength }) as any,
+      body('clientId').isUUID() as any,
+      body('employeeId').isUUID() as any,
+      body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']) as any,
+      body('scheduledFor').optional().isISO8601() as any,
+      body('participants').optional().isArray() as any,
+      body('attachments').optional().isArray() as any,
+      body('tags').optional().isArray() as any,
+      body('categories').optional().isArray() as any
     ];
   }
 
   private validateGetCommunications() {
     return [
-      query('clientId').optional().isUUID(),
-      query('employeeId').optional().isUUID(),
-      query('type').optional().isIn(['email', 'phone', 'sms', 'chat', 'meeting', 'document', 'note']),
-      query('channel').optional().isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'portal']),
-      query('startDate').optional().isISO8601(),
-      query('endDate').optional().isISO8601(),
-      query('limit').optional().isInt({ min: 1, max: 1000 }).toInt(),
-      query('offset').optional().isInt({ min: 0 }).toInt(),
-      query('sortBy').optional().isIn(['createdAt', 'scheduledFor', 'priority', 'type']),
-      query('sortOrder').optional().isIn(['asc', 'desc'])
+      query('clientId').optional().isUUID() as any,
+      query('employeeId').optional().isUUID() as any,
+      query('type').optional().isIn(['email', 'phone', 'sms', 'chat', 'meeting', 'document', 'note']) as any,
+      query('channel').optional().isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'portal']) as any,
+      query('startDate').optional().isISO8601() as any,
+      query('endDate').optional().isISO8601() as any,
+      query('limit').optional().isInt({ min: 1, max: 1000 }).toInt() as any,
+      query('offset').optional().isInt({ min: 0 }).toInt() as any,
+      query('sortBy').optional().isIn(['createdAt', 'scheduledFor', 'priority', 'type']) as any,
+      query('sortOrder').optional().isIn(['asc', 'desc']) as any
     ];
   }
 
   private validateGetCommunication() {
     return [
-      param('id').isUUID()
+      param('id').isUUID() as any
     ];
   }
 
   private validateUpdateCommunication() {
     return [
-      param('id').isUUID(),
-      body('status').optional().isIn(['scheduled', 'sent', 'delivered', 'read', 'replied', 'failed', 'cancelled']),
-      body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
-      body('scheduledFor').optional().isISO8601(),
-      body('content').optional().isLength({ max: this.config.validation.maxContentLength }),
-      body('tags').optional().isArray(),
-      body('categories').optional().isArray()
+      param('id').isUUID() as any,
+      body('status').optional().isIn(['scheduled', 'sent', 'delivered', 'read', 'replied', 'failed', 'cancelled']) as any,
+      body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']) as any,
+      body('scheduledFor').optional().isISO8601() as any,
+      body('content').optional().isLength({ max: this.config.validation.maxContentLength }) as any,
+      body('tags').optional().isArray() as any,
+      body('categories').optional().isArray() as any
     ];
   }
 
   private validateDeleteCommunication() {
     return [
-      param('id').isUUID(),
-      body('reason').isLength({ min: 1, max: 500 })
+      param('id').isUUID() as any,
+      body('reason').isLength({ min: 1, max: 500 }) as any
     ];
   }
 
   private validateSearchCommunications() {
     return [
-      body('query').optional().isLength({ min: 1, max: 500 }),
-      body('filters').optional().isObject(),
-      body('dateRange').optional().isObject(),
-      body('sortBy').optional().isIn(['relevance', 'date', 'priority']),
-      body('limit').optional().isInt({ min: 1, max: 1000 }),
-      body('offset').optional().isInt({ min: 0 })
+      body('query').optional().isLength({ min: 1, max: 500 }) as any,
+      body('filters').optional().isObject() as any,
+      body('dateRange').optional().isObject() as any,
+      body('sortBy').optional().isIn(['relevance', 'date', 'priority']) as any,
+      body('limit').optional().isInt({ min: 1, max: 1000 }) as any,
+      body('offset').optional().isInt({ min: 0 }) as any
     ];
   }
 
   private validateGetClientCommunications() {
     return [
-      param('clientId').isUUID(),
-      query('limit').optional().isInt({ min: 1, max: 1000 }).toInt(),
-      query('offset').optional().isInt({ min: 0 }).toInt()
+      param('clientId').isUUID() as any,
+      query('limit').optional().isInt({ min: 1, max: 1000 }).toInt() as any,
+      query('offset').optional().isInt({ min: 0 }).toInt() as any
     ];
   }
 
   // Analytics validation methods
   private validateGetMetrics() {
     return [
-      query('startDate').isISO8601(),
-      query('endDate').isISO8601(),
-      query('clientIds').optional().isArray(),
-      query('channels').optional().isArray(),
-      query('types').optional().isArray()
+      query('startDate').isISO8601() as any,
+      query('endDate').isISO8601() as any,
+      query('clientIds').optional().isArray() as any,
+      query('channels').optional().isArray() as any,
+      query('types').optional().isArray() as any
     ];
   }
 
   private validateGetTrends() {
     return [
-      query('startDate').isISO8601(),
-      query('endDate').isISO8601(),
-      query('periodType').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly'])
+      query('startDate').isISO8601() as any,
+      query('endDate').isISO8601() as any,
+      query('periodType').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly']) as any
     ];
   }
 
   private validateGetClientProfile() {
     return [
-      param('clientId').isUUID()
+      param('clientId').isUUID() as any
     ];
   }
 
   private validateGenerateReport() {
     return [
-      body('reportType').isIn(['summary', 'detailed', 'compliance', 'performance', 'client_analysis']),
-      body('startDate').isISO8601(),
-      body('endDate').isISO8601(),
-      body('options').optional().isObject()
+      body('reportType').isIn(['summary', 'detailed', 'compliance', 'performance', 'client_analysis']) as any,
+      body('startDate').isISO8601() as any,
+      body('endDate').isISO8601() as any,
+      body('options').optional().isObject() as any
     ];
   }
 
   private validateGetSentiment() {
     return [
-      query('communicationIds').isArray(),
-      query('includeEmotions').optional().isBoolean(),
-      query('includeTopics').optional().isBoolean()
+      query('communicationIds').isArray() as any,
+      query('includeEmotions').optional().isBoolean() as any,
+      query('includeTopics').optional().isBoolean() as any
     ];
   }
 
   private validateGetRiskFactors() {
     return [
-      param('clientId').isUUID()
+      param('clientId').isUUID() as any
     ];
   }
 
   // Recording validation methods
   private validateStartRecording() {
     return [
-      body('communicationId').isUUID(),
-      body('sessionType').isIn(['phone', 'video', 'screen_share', 'meeting', 'webinar']),
-      body('participants').isArray({ min: 1 })
+      body('communicationId').isUUID() as any,
+      body('sessionType').isIn(['phone', 'video', 'screen_share', 'meeting', 'webinar']) as any,
+      body('participants').isArray({ min: 1 }) as any
     ];
   }
 
   private validateStopRecording() {
     return [
-      param('sessionId').isUUID(),
-      body('reason').optional().isLength({ max: 500 })
+      param('sessionId').isUUID() as any,
+      body('reason').optional().isLength({ max: 500 }) as any
     ];
   }
 
   private validateSearchRecordings() {
     return [
-      query('clientIds').optional().isArray(),
-      query('employeeIds').optional().isArray(),
-      query('startDate').optional().isISO8601(),
-      query('endDate').optional().isISO8601(),
-      query('recordingTypes').optional().isArray(),
-      query('limit').optional().isInt({ min: 1, max: 1000 }),
-      query('offset').optional().isInt({ min: 0 })
+      query('clientIds').optional().isArray() as any,
+      query('employeeIds').optional().isArray() as any,
+      query('startDate').optional().isISO8601() as any,
+      query('endDate').optional().isISO8601() as any,
+      query('recordingTypes').optional().isArray() as any,
+      query('limit').optional().isInt({ min: 1, max: 1000 }) as any,
+      query('offset').optional().isInt({ min: 0 }) as any
     ];
   }
 
   private validateCreatePolicy() {
     return [
-      body('name').isLength({ min: 1, max: 200 }),
-      body('description').isLength({ min: 1, max: 1000 }),
-      body('scope').isObject(),
-      body('recordingRules').isObject(),
-      body('retentionRules').isObject()
+      body('name').isLength({ min: 1, max: 200 }) as any,
+      body('description').isLength({ min: 1, max: 1000 }) as any,
+      body('scope').isObject() as any,
+      body('recordingRules').isObject() as any,
+      body('retentionRules').isObject() as any
     ];
   }
 
   private validateExtendRetention() {
     return [
-      param('recordingId').isUUID(),
-      body('additionalDays').isInt({ min: 1, max: 3650 }),
-      body('reason').isLength({ min: 1, max: 500 }),
-      body('requestedBy').isUUID()
+      param('recordingId').isUUID() as any,
+      body('additionalDays').isInt({ min: 1, max: 3650 }) as any,
+      body('reason').isLength({ min: 1, max: 500 }) as any,
+      body('requestedBy').isUUID() as any
     ];
   }
 
   private validateLegalHold() {
     return [
-      param('recordingId').isUUID(),
-      body('reason').isLength({ min: 1, max: 500 }),
-      body('requestedBy').isUUID()
+      param('recordingId').isUUID() as any,
+      body('reason').isLength({ min: 1, max: 500 }) as any,
+      body('requestedBy').isUUID() as any
     ];
   }
 
   private validatePerformAudit() {
     return [
-      body('auditType').isIn(['scheduled', 'random', 'triggered', 'investigation']),
-      body('scope').isObject()
+      body('auditType').isIn(['scheduled', 'random', 'triggered', 'investigation']) as any,
+      body('scope').isObject() as any
     ];
   }
 
   private validateGenerateComplianceReport() {
     return [
-      body('reportType').isIn(['audit', 'retention', 'access', 'quality', 'comprehensive']),
-      body('startDate').isISO8601(),
-      body('endDate').isISO8601(),
-      body('options').optional().isObject()
+      body('reportType').isIn(['audit', 'retention', 'access', 'quality', 'comprehensive']) as any,
+      body('startDate').isISO8601() as any,
+      body('endDate').isISO8601() as any,
+      body('options').optional().isObject() as any
     ];
   }
 
   // Timeline validation methods
   private validateCreateTimelineEntry() {
     return [
-      body('communicationId').isUUID(),
-      body('clientId').isUUID(),
-      body('employeeId').isUUID(),
-      body('timestamp').isISO8601(),
-      body('entryType').isIn(['communication', 'task', 'milestone', 'note', 'document', 'meeting', 'follow_up', 'system_event']),
-      body('channel').isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'system', 'portal']),
-      body('subject').isLength({ min: 1, max: 200 }),
-      body('summary').isLength({ min: 1, max: 1000 })
+      body('communicationId').isUUID() as any,
+      body('clientId').isUUID() as any,
+      body('employeeId').isUUID() as any,
+      body('timestamp').isISO8601() as any,
+      body('entryType').isIn(['communication', 'task', 'milestone', 'note', 'document', 'meeting', 'follow_up', 'system_event']) as any,
+      body('channel').isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'system', 'portal']) as any,
+      body('subject').isLength({ min: 1, max: 200 }) as any,
+      body('summary').isLength({ min: 1, max: 1000 }) as any
     ];
   }
 
   private validateUpdateTimelineEntry() {
     return [
-      param('entryId').isUUID(),
-      body('status').optional().isIn(['scheduled', 'completed', 'cancelled', 'pending', 'in_progress', 'failed']),
-      body('priority').optional().isIn(['low', 'medium', 'high', 'urgent'])
+      param('entryId').isUUID() as any,
+      body('status').optional().isIn(['scheduled', 'completed', 'cancelled', 'pending', 'in_progress', 'failed']) as any,
+      body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']) as any
     ];
   }
 
   private validateDeleteTimelineEntry() {
     return [
-      param('entryId').isUUID(),
-      body('reason').isLength({ min: 1, max: 500 }),
-      body('deletedBy').isUUID()
+      param('entryId').isUUID() as any,
+      body('reason').isLength({ min: 1, max: 500 }) as any,
+      body('deletedBy').isUUID() as any
     ];
   }
 
   private validateCreateTimelineView() {
     return [
-      body('clientId').isUUID(),
-      body('viewType').isIn(['chronological', 'grouped', 'filtered', 'summary', 'interactive']),
-      body('dateRange').isObject(),
-      body('filters').optional().isObject()
+      body('clientId').isUUID() as any,
+      body('viewType').isIn(['chronological', 'grouped', 'filtered', 'summary', 'interactive']) as any,
+      body('dateRange').isObject() as any,
+      body('filters').optional().isObject() as any
     ];
   }
 
   private validateCreateTimelineTemplate() {
     return [
-      body('name').isLength({ min: 1, max: 200 }),
-      body('description').isLength({ min: 1, max: 1000 }),
-      body('templateType').isIn(['client_onboarding', 'project_management', 'issue_resolution', 'compliance_review', 'custom']),
-      body('structure').isObject()
+      body('name').isLength({ min: 1, max: 200 }) as any,
+      body('description').isLength({ min: 1, max: 1000 }) as any,
+      body('templateType').isIn(['client_onboarding', 'project_management', 'issue_resolution', 'compliance_review', 'custom']) as any,
+      body('structure').isObject() as any
     ];
   }
 
   private validateApplyTemplate() {
     return [
-      param('templateId').isUUID(),
-      body('clientId').isUUID(),
-      body('startDate').isISO8601(),
-      body('customizations').optional().isObject()
+      param('templateId').isUUID() as any,
+      body('clientId').isUUID() as any,
+      body('startDate').isISO8601() as any,
+      body('customizations').optional().isObject() as any
     ];
   }
 
   private validateSearchTimeline() {
     return [
-      body('searchCriteria').isObject(),
-      body('options').optional().isObject()
+      body('searchCriteria').isObject() as any,
+      body('options').optional().isObject() as any
     ];
   }
 
   private validateExportTimeline() {
     return [
-      param('viewId').isUUID(),
-      body('exportFormat').isIn(['pdf', 'excel', 'json', 'csv', 'html']),
-      body('options').optional().isObject()
+      param('viewId').isUUID() as any,
+      body('exportFormat').isIn(['pdf', 'excel', 'json', 'csv', 'html']) as any,
+      body('options').optional().isObject() as any
     ];
   }
 
-  private handleValidationErrors = (req: Request, res: Response, next: NextFunction): void => {
+  private handleValidationErrors = (req: AuthenticatedRequest, res: Response, next: NextFunction): void | Response => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -671,7 +677,7 @@ export class CommunicationController {
   };
 
   // Route handler methods
-  private createCommunication = async (req: Request, res: Response): Promise<void> => {
+  private createCommunication = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const tenantId = (req as any).tenantId;
       const communicationData = { ...req.body, tenantId };
@@ -692,7 +698,7 @@ export class CommunicationController {
     }
   };
 
-  private getCommunications = async (req: Request, res: Response): Promise<void> => {
+  private getCommunications = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const tenantId = (req as any).tenantId;
       const filters = { ...req.query, tenantId };
@@ -718,7 +724,7 @@ export class CommunicationController {
     }
   };
 
-  private getCommunication = async (req: Request, res: Response): Promise<void> => {
+  private getCommunication = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const { id } = req.params;
       const tenantId = (req as any).tenantId;
@@ -745,7 +751,7 @@ export class CommunicationController {
     }
   };
 
-  private updateCommunication = async (req: Request, res: Response): Promise<void> => {
+  private updateCommunication = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const { id } = req.params;
       const tenantId = (req as any).tenantId;
@@ -767,7 +773,7 @@ export class CommunicationController {
     }
   };
 
-  private deleteCommunication = async (req: Request, res: Response): Promise<void> => {
+  private deleteCommunication = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const { id } = req.params;
       const { reason } = req.body;
@@ -789,7 +795,7 @@ export class CommunicationController {
     }
   };
 
-  private searchCommunications = async (req: Request, res: Response): Promise<void> => {
+  private searchCommunications = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const tenantId = (req as any).tenantId;
       const { query, filters, dateRange, sortBy, limit, offset } = req.body;
@@ -821,7 +827,7 @@ export class CommunicationController {
     }
   };
 
-  private getClientCommunications = async (req: Request, res: Response): Promise<void> => {
+  private getClientCommunications = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const { clientId } = req.params;
       const tenantId = (req as any).tenantId;
@@ -830,7 +836,7 @@ export class CommunicationController {
       const result = await this.communicationService.getClientCommunications(
         clientId,
         tenantId,
-        { limit: limit as number, offset: offset as number }
+        { limit: limit as unknown as number, offset: offset as unknown as number }
       );
       
       res.json({
@@ -853,7 +859,7 @@ export class CommunicationController {
   };
 
   // Analytics route handlers
-  private getCommunicationMetrics = async (req: Request, res: Response): Promise<void> => {
+  private getCommunicationMetrics = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.analyticsService) {
       return res.status(501).json({
         error: 'Analytics service not available',
@@ -888,7 +894,7 @@ export class CommunicationController {
     }
   };
 
-  private getCommunicationTrends = async (req: Request, res: Response): Promise<void> => {
+  private getCommunicationTrends = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.analyticsService) {
       return res.status(501).json({
         error: 'Analytics service not available',
@@ -905,8 +911,8 @@ export class CommunicationController {
         {
           start: new Date(startDate as string),
           end: new Date(endDate as string),
-          type: periodType as any
-        }
+          type: periodType as any,
+       }
       );
       
       res.json({
@@ -922,7 +928,7 @@ export class CommunicationController {
     }
   };
 
-  private getClientCommunicationProfile = async (req: Request, res: Response): Promise<void> => {
+  private getClientCommunicationProfile = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.analyticsService) {
       return res.status(501).json({
         error: 'Analytics service not available',
@@ -952,7 +958,7 @@ export class CommunicationController {
     }
   };
 
-  private generateCommunicationReport = async (req: Request, res: Response): Promise<void> => {
+  private generateCommunicationReport = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.analyticsService) {
       return res.status(501).json({
         error: 'Analytics service not available',
@@ -984,7 +990,7 @@ export class CommunicationController {
     }
   };
 
-  private performSentimentAnalysis = async (req: Request, res: Response): Promise<void> => {
+  private performSentimentAnalysis = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.analyticsService) {
       return res.status(501).json({
         error: 'Analytics service not available',
@@ -996,7 +1002,7 @@ export class CommunicationController {
       const { communicationIds, includeEmotions, includeTopics } = req.query;
       
       // Mock communication data - replace with actual service call
-      const communications = []; // await this.communicationService.getCommunicationsByIds(communicationIds);
+      const communications: any[] = []; // await this.communicationService.getCommunicationsByIds(communicationIds);
       
       const sentimentResults = await this.analyticsService.performSentimentAnalysis(
         communications,
@@ -1016,7 +1022,7 @@ export class CommunicationController {
     }
   };
 
-  private getClientRiskFactors = async (req: Request, res: Response): Promise<void> => {
+  private getClientRiskFactors = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.analyticsService) {
       return res.status(501).json({
         error: 'Analytics service not available',
@@ -1047,7 +1053,7 @@ export class CommunicationController {
   };
 
   // Recording route handlers
-  private startRecordingSession = async (req: Request, res: Response): Promise<void> => {
+  private startRecordingSession = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1080,7 +1086,7 @@ export class CommunicationController {
     }
   };
 
-  private stopRecordingSession = async (req: Request, res: Response): Promise<void> => {
+  private stopRecordingSession = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1108,7 +1114,7 @@ export class CommunicationController {
     }
   };
 
-  private pauseRecording = async (req: Request, res: Response): Promise<void> => {
+  private pauseRecording = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1134,7 +1140,7 @@ export class CommunicationController {
     }
   };
 
-  private resumeRecording = async (req: Request, res: Response): Promise<void> => {
+  private resumeRecording = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1160,7 +1166,7 @@ export class CommunicationController {
     }
   };
 
-  private searchRecordings = async (req: Request, res: Response): Promise<void> => {
+  private searchRecordings = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1170,9 +1176,9 @@ export class CommunicationController {
 
     try {
       const tenantId = (req as any).tenantId;
-      const criteria = { ...req.query, tenantId };
+      const criteria = { ...req.query };
       
-      const recordings = await this.recordingService.searchRecordings(tenantId, criteria);
+      const recordings = await this.recordingService.searchRecordings(tenantId, criteria as any);
       
       res.json({
         success: true,
@@ -1187,7 +1193,7 @@ export class CommunicationController {
     }
   };
 
-  private createCompliancePolicy = async (req: Request, res: Response): Promise<void> => {
+  private createCompliancePolicy = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1215,7 +1221,7 @@ export class CommunicationController {
     }
   };
 
-  private extendRetentionPeriod = async (req: Request, res: Response): Promise<void> => {
+  private extendRetentionPeriod = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1247,7 +1253,7 @@ export class CommunicationController {
     }
   };
 
-  private placeRecordingOnLegalHold = async (req: Request, res: Response): Promise<void> => {
+  private placeRecordingOnLegalHold = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1278,7 +1284,7 @@ export class CommunicationController {
     }
   };
 
-  private performComplianceAudit = async (req: Request, res: Response): Promise<void> => {
+  private performComplianceAudit = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1310,7 +1316,7 @@ export class CommunicationController {
     }
   };
 
-  private generateComplianceReport = async (req: Request, res: Response): Promise<void> => {
+  private generateComplianceReport = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.recordingService) {
       return res.status(501).json({
         error: 'Recording service not available',
@@ -1344,7 +1350,7 @@ export class CommunicationController {
   };
 
   // Timeline route handlers
-  private addTimelineEntry = async (req: Request, res: Response): Promise<void> => {
+  private addTimelineEntry = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1372,7 +1378,7 @@ export class CommunicationController {
     }
   };
 
-  private updateTimelineEntry = async (req: Request, res: Response): Promise<void> => {
+  private updateTimelineEntry = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1400,7 +1406,7 @@ export class CommunicationController {
     }
   };
 
-  private deleteTimelineEntry = async (req: Request, res: Response): Promise<void> => {
+  private deleteTimelineEntry = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1427,7 +1433,7 @@ export class CommunicationController {
     }
   };
 
-  private createTimelineView = async (req: Request, res: Response): Promise<void> => {
+  private createTimelineView = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1459,7 +1465,7 @@ export class CommunicationController {
     }
   };
 
-  private getTimelineView = async (req: Request, res: Response): Promise<void> => {
+  private getTimelineView = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1485,7 +1491,7 @@ export class CommunicationController {
     }
   };
 
-  private createTimelineTemplate = async (req: Request, res: Response): Promise<void> => {
+  private createTimelineTemplate = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1516,7 +1522,7 @@ export class CommunicationController {
     }
   };
 
-  private applyTemplate = async (req: Request, res: Response): Promise<void> => {
+  private applyTemplate = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1549,7 +1555,7 @@ export class CommunicationController {
     }
   };
 
-  private searchTimeline = async (req: Request, res: Response): Promise<void> => {
+  private searchTimeline = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1586,7 +1592,7 @@ export class CommunicationController {
     }
   };
 
-  private exportTimeline = async (req: Request, res: Response): Promise<void> => {
+  private exportTimeline = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1618,7 +1624,7 @@ export class CommunicationController {
     }
   };
 
-  private generatePredictiveInsights = async (req: Request, res: Response): Promise<void> => {
+  private generatePredictiveInsights = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     if (!this.timelineService) {
       return res.status(501).json({
         error: 'Timeline service not available',
@@ -1649,7 +1655,7 @@ export class CommunicationController {
   };
 
   // System route handlers
-  private healthCheck = async (req: Request, res: Response): Promise<void> => {
+  private healthCheck = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const status = {
         status: 'healthy',
@@ -1672,7 +1678,7 @@ export class CommunicationController {
     }
   };
 
-  private getSystemMetrics = async (req: Request, res: Response): Promise<void> => {
+  private getSystemMetrics = async (req: AuthenticatedRequest, res: Response): Promise<any> => {
     try {
       const metrics = {
         uptime: process.uptime(),
@@ -1707,7 +1713,7 @@ export class CommunicationController {
     });
 
     // 404 handler
-    this.app.use('*', (req: Request, res: Response) => {
+    this.app.use('*', (req: AuthenticatedRequest, res: Response) => {
       res.status(404).json({
         error: 'Endpoint not found',
         code: 'ENDPOINT_NOT_FOUND',
@@ -1720,7 +1726,7 @@ export class CommunicationController {
     return this.app;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     // Graceful shutdown logic
     console.log('Shutting down Communication Controller...');
     
@@ -1739,3 +1745,4 @@ export class CommunicationController {
     console.log('Communication Controller shutdown complete');
   }
 }
+

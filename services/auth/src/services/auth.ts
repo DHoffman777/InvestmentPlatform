@@ -78,7 +78,7 @@ export class AuthService {
 
       logger.info('User registered successfully:', { userId, email: userData.email, tenantId });
       return user;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Registration failed:', { email: userData.email, tenantId, error });
       throw error;
     }
@@ -135,7 +135,7 @@ export class AuthService {
         user: userWithoutPassword,
         tokens
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Login failed:', { email: credentials.email, tenantId, error });
       throw error;
     }
@@ -174,23 +174,23 @@ export class AuthService {
 
       logger.info('Tokens refreshed successfully:', { userId: user.id, tenantId: tokenData.tenantId });
       return tokens;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Token refresh failed:', error);
       throw error;
     }
   }
 
-  async logout(sessionId: string): Promise<void> {
+  async logout(sessionId: string): Promise<any> {
     try {
       await this.jwtService.revokeSession(sessionId);
       logger.info('User logged out successfully:', { sessionId });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Logout failed:', { sessionId, error });
       throw error;
     }
   }
 
-  private async handleFailedLogin(tenantId: string, userId: string): Promise<void> {
+  private async handleFailedLogin(tenantId: string, userId: string): Promise<any> {
     const maxAttempts = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5');
     const lockoutDuration = parseInt(process.env.LOCKOUT_DURATION || '900');
 
@@ -241,7 +241,7 @@ export class AuthService {
     );
   }
 
-  private async assignRole(tenantId: string, userId: string, roleName: string): Promise<void> {
+  private async assignRole(tenantId: string, userId: string, roleName: string): Promise<any> {
     const role = await this.db.queryOne<{ id: string }>(
       'SELECT id FROM roles WHERE name = $1',
       [roleName]
@@ -255,3 +255,4 @@ export class AuthService {
     }
   }
 }
+

@@ -24,7 +24,7 @@ export declare class RegulatoryValidatorService extends EventEmitter {
     private generateRequestId;
     private generateBatchId;
     private generateRuleId;
-    start(port?: number): Promise<void>;
-    stop(): Promise<void>;
+    start(port?: number): Promise<any>;
+    stop(): Promise<any>;
     getApp(): express.Application;
 }

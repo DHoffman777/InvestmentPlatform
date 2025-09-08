@@ -104,8 +104,8 @@ export class AnomalyDetectionService {
     alertThreshold: 0.7
   };
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(eventPublisher?: EventPublisher) {
+    this.eventPublisher = eventPublisher || new EventPublisher('AnomalyDetectionService');
     this.initializeDefaultConfigs();
   }
 
@@ -138,7 +138,7 @@ export class AnomalyDetectionService {
           if (anomaly) {
             detectedAnomalies.push(anomaly);
           }
-        } catch (error) {
+        } catch (error: any) {
           logger.error(`Error in ${method} detection:`, error);
         }
       }
@@ -161,7 +161,7 @@ export class AnomalyDetectionService {
 
       return detectedAnomalies;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in anomaly detection:', error);
       throw error;
     }
@@ -195,7 +195,7 @@ export class AnomalyDetectionService {
         baseline
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in statistical anomaly detection:', error);
       throw error;
     }
@@ -232,7 +232,7 @@ export class AnomalyDetectionService {
         featureContributions
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in isolation forest detection:', error);
       throw error;
     }
@@ -267,7 +267,7 @@ export class AnomalyDetectionService {
         sequencePattern
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in LSTM autoencoder detection:', error);
       throw error;
     }
@@ -308,7 +308,7 @@ export class AnomalyDetectionService {
 
       return null;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in real-time anomaly monitoring:', error);
       return null;
     }
@@ -448,7 +448,7 @@ export class AnomalyDetectionService {
       severity: this.determineSeverity(result.score, method),
       detectionMethod: method,
       anomalyScore: result.score,
-      threshold: config.thresholds[method],
+      threshold: (config.thresholds as any)[method],
       currentValue,
       expectedValue,
       deviation,
@@ -757,7 +757,7 @@ export class AnomalyDetectionService {
     return actions;
   }
 
-  private async generateAnomalyAlert(anomaly: AnomalyDetection, tenantId: string): Promise<void> {
+  private async generateAnomalyAlert(anomaly: AnomalyDetection, tenantId: string): Promise<any> {
     await this.eventPublisher.publish('analytics.anomaly.alert', {
       tenantId,
       anomalyId: anomaly.id,
@@ -772,14 +772,14 @@ export class AnomalyDetectionService {
   private async generateRealTimeAnomalyEvent(
     anomaly: AnomalyDetection,
     tenantId: string
-  ): Promise<void> {
+  ): Promise<any> {
     const event: RealTimeAnalyticsEvent = {
       id: randomUUID(),
       tenantId,
       eventType: 'anomaly_detected',
       metricType: anomaly.metricType,
       entityId: anomaly.entityId,
-      entityType: anomaly.entityType,
+      entityType: anomaly.entityType === 'market' ? 'tenant' : anomaly.entityType,
       timestamp: new Date(),
       data: {
         anomalyId: anomaly.id,
@@ -791,6 +791,8 @@ export class AnomalyDetectionService {
         deviation: anomaly.deviation
       },
       severity: anomaly.severity,
+      processed: false,
+      createdAt: new Date(),
       acknowledged: false
     };
 
@@ -834,3 +836,4 @@ export class AnomalyDetectionService {
     });
   }
 }
+

@@ -179,7 +179,6 @@ class CashService {
                 where: whereClause,
                 take: limit,
                 orderBy: [
-                    { maturityDate: 'asc' },
                     { symbol: 'asc' },
                 ],
                 include: {

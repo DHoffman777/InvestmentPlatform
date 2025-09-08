@@ -261,7 +261,7 @@ class SLACustomerNotificationService extends events_1.EventEmitter {
                 this.emit('deliveryFailed', {
                     customerId: request.customerId,
                     type: request.type,
-                    error: error.message
+                    error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
         }
@@ -283,7 +283,7 @@ class SLACustomerNotificationService extends events_1.EventEmitter {
             catch (error) {
                 this.recordDeliveryResult(request.customerId, request, channel, {
                     success: false,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     deliveryTime: 0
                 });
             }

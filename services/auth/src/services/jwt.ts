@@ -114,7 +114,7 @@ export class JWTService {
         permissions: decoded.permissions,
         email: decoded.email,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('JWT verification failed:', error);
       return null;
     }
@@ -139,31 +139,31 @@ export class JWTService {
         tenantId: decoded.tenantId,
         sessionId: decoded.sessionId,
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Refresh token verification failed:', error);
       return null;
     }
   }
 
-  async revokeSession(sessionId: string): Promise<void> {
+  async revokeSession(sessionId: string): Promise<any> {
     try {
       await this.cache.deleteSession(sessionId);
       await this.cache.del(`refresh:${sessionId}`);
       logger.info('Session revoked:', { sessionId });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to revoke session:', { sessionId, error });
       throw error;
     }
   }
 
-  async revokeAllUserSessions(userId: string): Promise<void> {
+  async revokeAllUserSessions(userId: string): Promise<any> {
     try {
       // This would require a more sophisticated approach in production
       // For now, we'll implement a simple version
       const pattern = `session:*`;
       // Note: In production, you'd want to use Redis SCAN instead of KEYS
       logger.info('Revoking all sessions for user:', { userId });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Failed to revoke all user sessions:', { userId, error });
       throw error;
     }
@@ -178,3 +178,4 @@ export class JWTService {
 }
 
 export default JWTService;
+

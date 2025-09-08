@@ -17,7 +17,7 @@ export declare class BarrierMonitoringService {
     private updateBarrierHitStatus;
     private storeMonitoringResults;
     private publishBarrierAlert;
-    performRealTimeMonitoring(intervalMinutes?: number): Promise<void>;
+    performRealTimeMonitoring(intervalMinutes?: number): Promise<any>;
     getBarrierHistory(productId: string, startDate?: Date, endDate?: Date): Promise<{
         product: StructuredProduct;
         barrierEvents: {

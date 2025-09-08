@@ -62,8 +62,8 @@ export class RealTimeAnalyticsService {
   private performanceMetrics: PerformanceMetrics;
   private updateIntervals: Map<string, NodeJS.Timeout> = new Map();
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(eventPublisher?: EventPublisher) {
+    this.eventPublisher = eventPublisher || new EventPublisher('RealTimeAnalyticsService');
     this.performanceMetrics = {
       updateFrequency: 0,
       averageLatency: 0,
@@ -128,13 +128,13 @@ export class RealTimeAnalyticsService {
 
       return connection;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error starting real-time stream:', error);
       throw error;
     }
   }
 
-  async stopRealTimeStream(connectionId: string): Promise<void> {
+  async stopRealTimeStream(connectionId: string): Promise<any> {
     try {
       logger.info('Stopping real-time stream', { connectionId });
 
@@ -161,7 +161,7 @@ export class RealTimeAnalyticsService {
 
       this.updatePerformanceMetrics();
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error stopping real-time stream:', error);
       throw error;
     }
@@ -192,7 +192,7 @@ export class RealTimeAnalyticsService {
 
       return newThreshold;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating metric threshold:', error);
       throw error;
     }
@@ -225,13 +225,13 @@ export class RealTimeAnalyticsService {
 
       return updatedThreshold;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating metric threshold:', error);
       throw error;
     }
   }
 
-  async deleteMetricThreshold(thresholdId: string): Promise<void> {
+  async deleteMetricThreshold(thresholdId: string): Promise<any> {
     try {
       logger.info('Deleting metric threshold', { thresholdId });
 
@@ -247,7 +247,7 @@ export class RealTimeAnalyticsService {
         thresholdId
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deleting metric threshold:', error);
       throw error;
     }
@@ -281,7 +281,7 @@ export class RealTimeAnalyticsService {
     entityType: string,
     currentValue: number,
     previousValue?: number
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.debug('Processing metric update', {
         tenantId,
@@ -336,7 +336,7 @@ export class RealTimeAnalyticsService {
 
       this.updatePerformanceMetrics();
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing metric update:', error);
       throw error;
     }
@@ -368,13 +368,13 @@ export class RealTimeAnalyticsService {
 
       return updatedConfig;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error configuring real-time settings:', error);
       throw error;
     }
   }
 
-  private async processRealtimeUpdates(connectionId: string): Promise<void> {
+  private async processRealtimeUpdates(connectionId: string): Promise<any> {
     const connection = this.connections.get(connectionId);
     if (!connection || !connection.isActive) {
       return;
@@ -399,7 +399,7 @@ export class RealTimeAnalyticsService {
         await this.sendUpdateToConnection(connection, update);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing real-time updates:', error);
       // Mark connection as inactive on persistent errors
       connection.isActive = false;
@@ -483,7 +483,7 @@ export class RealTimeAnalyticsService {
     threshold: MetricThreshold,
     currentValue: number,
     previousValue?: number
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.warn('Threshold breach detected', {
         thresholdId: threshold.id,
@@ -509,6 +509,8 @@ export class RealTimeAnalyticsService {
           description: threshold.description
         },
         severity: threshold.severity,
+        processed: false,
+        createdAt: new Date(),
         acknowledged: false
       };
 
@@ -535,7 +537,7 @@ export class RealTimeAnalyticsService {
         await this.sendUpdateToConnection(connection, update);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error handling threshold breach:', error);
     }
   }
@@ -543,7 +545,7 @@ export class RealTimeAnalyticsService {
   private async sendUpdateToConnection(
     connection: StreamingConnection,
     update: RealTimeUpdate
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       switch (connection.connectionType) {
         case 'websocket':
@@ -557,23 +559,23 @@ export class RealTimeAnalyticsService {
           break;
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error sending update to connection:', error);
       // Mark connection as potentially problematic but don't disable immediately
     }
   }
 
-  private async sendWebSocketUpdate(connection: StreamingConnection, update: RealTimeUpdate): Promise<void> {
+  private async sendWebSocketUpdate(connection: StreamingConnection, update: RealTimeUpdate): Promise<any> {
     // Mock WebSocket implementation
     logger.debug('Sending WebSocket update', { connectionId: connection.id, updateType: update.type });
   }
 
-  private async sendSSEUpdate(connection: StreamingConnection, update: RealTimeUpdate): Promise<void> {
+  private async sendSSEUpdate(connection: StreamingConnection, update: RealTimeUpdate): Promise<any> {
     // Mock Server-Sent Events implementation
     logger.debug('Sending SSE update', { connectionId: connection.id, updateType: update.type });
   }
 
-  private async sendWebhookUpdate(connection: StreamingConnection, update: RealTimeUpdate): Promise<void> {
+  private async sendWebhookUpdate(connection: StreamingConnection, update: RealTimeUpdate): Promise<any> {
     // Mock Webhook implementation
     logger.debug('Sending webhook update', { 
       connectionId: connection.id, 
@@ -655,11 +657,104 @@ export class RealTimeAnalyticsService {
     };
   }
 
-  private async saveRealTimeConfiguration(tenantId: string, config: AnalyticsConfiguration): Promise<void> {
+  private async saveRealTimeConfiguration(tenantId: string, config: AnalyticsConfiguration): Promise<any> {
     logger.debug('Saving real-time configuration', { tenantId });
   }
 
-  private async saveAnalyticsEvent(event: RealTimeAnalyticsEvent): Promise<void> {
+  private async saveAnalyticsEvent(event: RealTimeAnalyticsEvent): Promise<any> {
     logger.debug('Saving analytics event', { eventId: event.id, eventType: event.eventType });
   }
+
+  async getRecentEvents(
+    tenantId: string,
+    options?: {
+      eventTypes?: string[];
+      limit?: number;
+      startDate?: Date;
+      endDate?: Date;
+    }
+  ): Promise<RealTimeAnalyticsEvent[]> {
+    try {
+      logger.info('Retrieving recent analytics events', {
+        tenantId,
+        options
+      });
+
+      // Mock implementation - replace with actual database query
+      const mockEvents: RealTimeAnalyticsEvent[] = [
+        {
+          id: randomUUID(),
+          tenantId,
+          eventType: 'metric_update',
+          metricType: AnalyticsMetricType.PORTFOLIO_PERFORMANCE,
+          entityId: 'portfolio-1',
+          entityType: 'portfolio',
+          severity: 'low',
+          timestamp: new Date(),
+          data: { 
+            performance: 0.125, 
+            benchmark: 0.118, 
+            source: 'real_time_analytics' 
+          },
+          processed: false,
+          createdAt: new Date()
+        }
+      ];
+
+      return mockEvents;
+    } catch (error: any) {
+      logger.error('Error retrieving recent events:', error);
+      throw error;
+    }
+  }
+
+  async configureAlertThresholds(
+    tenantId: string,
+    thresholds: Array<{
+      metricType: AnalyticsMetricType;
+      entityId: string;
+      entityType: 'portfolio' | 'position' | 'client' | 'tenant';
+      thresholdType: 'absolute' | 'percentage' | 'variance';
+      operator: 'greater_than' | 'less_than' | 'equals' | 'not_equals' | 'between';
+      value: number | { min: number; max: number };
+      severity: 'low' | 'medium' | 'high' | 'critical';
+      description: string;
+    }>,
+    createdBy: string
+  ): Promise<MetricThreshold[]> {
+    try {
+      logger.info('Configuring alert thresholds', {
+        tenantId,
+        thresholdCount: thresholds.length,
+        createdBy
+      });
+
+      const configuredThresholds: MetricThreshold[] = thresholds.map(threshold => ({
+        id: randomUUID(),
+        tenantId,
+        ...threshold,
+        isActive: true,
+        createdBy,
+        createdAt: new Date()
+      }));
+
+      // Store thresholds
+      configuredThresholds.forEach(threshold => {
+        this.thresholds.set(threshold.id, threshold);
+      });
+
+      await this.eventPublisher.publish('analytics.thresholds.configured', {
+        tenantId,
+        thresholdCount: configuredThresholds.length,
+        createdBy
+      });
+
+      return configuredThresholds;
+
+    } catch (error: any) {
+      logger.error('Error configuring alert thresholds:', error);
+      throw error;
+    }
+  }
 }
+

@@ -616,7 +616,7 @@ class ResourceEfficiencyAnalyticsService extends events_1.EventEmitter {
                 await this.runScheduledAnalysis();
             }
             catch (error) {
-                console.error('Scheduled efficiency analysis failed:', error.message);
+                console.error('Scheduled efficiency analysis failed:', error instanceof Error ? error.message : 'Unknown error');
             }
         }, this.config.analysisInterval);
     }

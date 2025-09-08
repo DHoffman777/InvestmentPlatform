@@ -13,7 +13,7 @@ class FormPFService {
     SECTION_4_THRESHOLD = 500000000; // $500M NAV threshold for Section 4
     LARGE_PRIVATE_FUND_THRESHOLD = 1500000000; // $1.5B NAV threshold
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('FormPF');
     }
     async prepareFormPF(data) {
         try {

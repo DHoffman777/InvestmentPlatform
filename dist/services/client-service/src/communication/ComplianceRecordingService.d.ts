@@ -290,8 +290,8 @@ export declare class ComplianceRecordingService extends EventEmitter {
     private initializeMonitoring;
     startRecordingSession(communicationId: string, tenantId: string, sessionType: RecordingSession['sessionType'], participants: RecordingSession['participants']): Promise<RecordingSession>;
     stopRecordingSession(sessionId: string, reason?: string): Promise<ComplianceRecording>;
-    pauseRecording(sessionId: string): Promise<void>;
-    resumeRecording(sessionId: string): Promise<void>;
+    pauseRecording(sessionId: string): Promise<any>;
+    resumeRecording(sessionId: string): Promise<any>;
     createCompliancePolicy(tenantId: string, policyData: Omit<CompliancePolicy, 'id' | 'createdAt' | 'updatedAt'>): Promise<CompliancePolicy>;
     updateCompliancePolicy(policyId: string, updates: Partial<CompliancePolicy>): Promise<CompliancePolicy>;
     performComplianceAudit(tenantId: string, auditType: ComplianceAudit['auditType'], scope: ComplianceAudit['scope']): Promise<ComplianceAudit>;
@@ -320,9 +320,9 @@ export declare class ComplianceRecordingService extends EventEmitter {
         retentionStatus?: 'active' | 'expiring' | 'expired';
         accessLevel?: string;
     }): Promise<ComplianceRecording[]>;
-    extendRetentionPeriod(recordingId: string, additionalDays: number, reason: string, requestedBy: string): Promise<void>;
-    placeRecordingOnLegalHold(recordingId: string, reason: string, requestedBy: string): Promise<void>;
-    removeRecordingFromLegalHold(recordingId: string, reason: string, requestedBy: string): Promise<void>;
+    extendRetentionPeriod(recordingId: string, additionalDays: number, reason: string, requestedBy: string): Promise<any>;
+    placeRecordingOnLegalHold(recordingId: string, reason: string, requestedBy: string): Promise<any>;
+    removeRecordingFromLegalHold(recordingId: string, reason: string, requestedBy: string): Promise<any>;
     private performComplianceMonitoring;
     private monitorRecordingRetention;
     private monitorRecordingQuality;
@@ -351,5 +351,5 @@ export declare class ComplianceRecordingService extends EventEmitter {
     private monitorAccessPatterns;
     private deleteExpiredRecording;
     private assessRecordingQuality;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

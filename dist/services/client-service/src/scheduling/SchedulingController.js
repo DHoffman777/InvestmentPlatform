@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchedulingController = void 0;
 const express_1 = __importDefault(require("express"));
-const express_validator_1 = require("express-validator");
+const { body, query, param, validationResult } = require('express-validator');
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -186,113 +186,113 @@ class SchedulingController extends events_1.EventEmitter {
     setupCalendarRoutes(router) {
         // Calendar provider management
         router.get('/calendar/providers', this.getCalendarProviders);
-        router.get('/calendar/providers/:providerId', (0, express_validator_1.param)('providerId').isString().notEmpty(), this.handleValidationErrors, this.getCalendarProvider);
+        router.get('/calendar/providers/:providerId', param('providerId').isString().notEmpty(), this.handleValidationErrors, this.getCalendarProvider);
         // Calendar connections
-        router.post('/calendar/connections', (0, express_validator_1.body)('providerId').isString().notEmpty(), (0, express_validator_1.body)('accountEmail').isEmail(), (0, express_validator_1.body)('displayName').isString().notEmpty(), (0, express_validator_1.body)('accessToken').isString().notEmpty(), this.handleValidationErrors, this.createCalendarConnection);
-        router.get('/calendar/connections', (0, express_validator_1.query)('userId').optional().isString(), this.handleValidationErrors, this.getCalendarConnections);
-        router.put('/calendar/connections/:connectionId', (0, express_validator_1.param)('connectionId').isUUID(), this.handleValidationErrors, this.updateCalendarConnection);
-        router.delete('/calendar/connections/:connectionId', (0, express_validator_1.param)('connectionId').isUUID(), this.handleValidationErrors, this.deleteCalendarConnection);
+        router.post('/calendar/connections', body('providerId').isString().notEmpty(), body('accountEmail').isEmail(), body('displayName').isString().notEmpty(), body('accessToken').isString().notEmpty(), this.handleValidationErrors, this.createCalendarConnection);
+        router.get('/calendar/connections', query('userId').optional().isString(), this.handleValidationErrors, this.getCalendarConnections);
+        router.put('/calendar/connections/:connectionId', param('connectionId').isUUID(), this.handleValidationErrors, this.updateCalendarConnection);
+        router.delete('/calendar/connections/:connectionId', param('connectionId').isUUID(), this.handleValidationErrors, this.deleteCalendarConnection);
         // Calendar events
-        router.post('/calendar/events', (0, express_validator_1.body)('connectionId').isUUID(), (0, express_validator_1.body)('title').isString().notEmpty(), (0, express_validator_1.body)('startTime').isISO8601(), (0, express_validator_1.body)('endTime').isISO8601(), this.handleValidationErrors, this.createCalendarEvent);
-        router.get('/calendar/events', (0, express_validator_1.query)('connectionId').isUUID(), (0, express_validator_1.query)('startDate').optional().isISO8601(), (0, express_validator_1.query)('endDate').optional().isISO8601(), this.handleValidationErrors, this.getCalendarEvents);
+        router.post('/calendar/events', body('connectionId').isUUID(), body('title').isString().notEmpty(), body('startTime').isISO8601(), body('endTime').isISO8601(), this.handleValidationErrors, this.createCalendarEvent);
+        router.get('/calendar/events', query('connectionId').isUUID(), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getCalendarEvents);
         // Calendar sync
-        router.post('/calendar/sync/:connectionId', (0, express_validator_1.param)('connectionId').isUUID(), (0, express_validator_1.query)('syncType').optional().isIn(['full', 'incremental', 'delta']), this.handleValidationErrors, this.scheduleCalendarSync);
-        router.get('/calendar/sync/:syncId/status', (0, express_validator_1.param)('syncId').isUUID(), this.handleValidationErrors, this.getCalendarSyncStatus);
+        router.post('/calendar/sync/:connectionId', param('connectionId').isUUID(), query('syncType').optional().isIn(['full', 'incremental', 'delta']), this.handleValidationErrors, this.scheduleCalendarSync);
+        router.get('/calendar/sync/:syncId/status', param('syncId').isUUID(), this.handleValidationErrors, this.getCalendarSyncStatus);
     }
     setupBookingRoutes(router) {
         // Workflow management
         router.get('/booking/workflows', this.getBookingWorkflows);
-        router.post('/booking/workflows', (0, express_validator_1.body)('name').isString().notEmpty(), (0, express_validator_1.body)('type').isIn(['client_meeting', 'internal_meeting', 'consultation', 'review', 'presentation', 'custom']), this.handleValidationErrors, this.createBookingWorkflow);
+        router.post('/booking/workflows', body('name').isString().notEmpty(), body('type').isIn(['client_meeting', 'internal_meeting', 'consultation', 'review', 'presentation', 'custom']), this.handleValidationErrors, this.createBookingWorkflow);
         // Meeting booking
-        router.post('/booking/requests', (0, express_validator_1.body)('workflowId').isUUID(), (0, express_validator_1.body)('title').isString().notEmpty(), (0, express_validator_1.body)('type').isString().notEmpty(), (0, express_validator_1.body)('preferredTimes').isArray({ min: 1 }), (0, express_validator_1.body)('duration').isInt({ min: 15, max: 480 }), (0, express_validator_1.body)('attendees').isArray({ min: 1 }), this.handleValidationErrors, this.createBookingRequest);
-        router.get('/booking/requests', (0, express_validator_1.query)('status').optional().isIn(['draft', 'pending_approval', 'approved', 'confirmed', 'cancelled', 'rejected']), (0, express_validator_1.query)('startDate').optional().isISO8601(), (0, express_validator_1.query)('endDate').optional().isISO8601(), this.handleValidationErrors, this.getBookingRequests);
-        router.get('/booking/requests/:bookingId', (0, express_validator_1.param)('bookingId').isUUID(), this.handleValidationErrors, this.getBookingRequest);
-        router.put('/booking/requests/:bookingId', (0, express_validator_1.param)('bookingId').isUUID(), this.handleValidationErrors, this.updateBookingRequest);
+        router.post('/booking/requests', body('workflowId').isUUID(), body('title').isString().notEmpty(), body('type').isString().notEmpty(), body('preferredTimes').isArray({ min: 1 }), body('duration').isInt({ min: 15, max: 480 }), body('attendees').isArray({ min: 1 }), this.handleValidationErrors, this.createBookingRequest);
+        router.get('/booking/requests', query('status').optional().isIn(['draft', 'pending_approval', 'approved', 'confirmed', 'cancelled', 'rejected']), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getBookingRequests);
+        router.get('/booking/requests/:bookingId', param('bookingId').isUUID(), this.handleValidationErrors, this.getBookingRequest);
+        router.put('/booking/requests/:bookingId', param('bookingId').isUUID(), this.handleValidationErrors, this.updateBookingRequest);
         // Booking approvals
-        router.post('/booking/requests/:bookingId/approve', (0, express_validator_1.param)('bookingId').isUUID(), (0, express_validator_1.body)('comments').optional().isString(), this.handleValidationErrors, this.approveBooking);
-        router.post('/booking/requests/:bookingId/reject', (0, express_validator_1.param)('bookingId').isUUID(), (0, express_validator_1.body)('reason').isString().notEmpty(), this.handleValidationErrors, this.rejectBooking);
+        router.post('/booking/requests/:bookingId/approve', param('bookingId').isUUID(), body('comments').optional().isString(), this.handleValidationErrors, this.approveBooking);
+        router.post('/booking/requests/:bookingId/reject', param('bookingId').isUUID(), body('reason').isString().notEmpty(), this.handleValidationErrors, this.rejectBooking);
         // Booking cancellation
-        router.post('/booking/requests/:bookingId/cancel', (0, express_validator_1.param)('bookingId').isUUID(), (0, express_validator_1.body)('reason').optional().isString(), this.handleValidationErrors, this.cancelBooking);
+        router.post('/booking/requests/:bookingId/cancel', param('bookingId').isUUID(), body('reason').optional().isString(), this.handleValidationErrors, this.cancelBooking);
     }
     setupAvailabilityRoutes(router) {
         // Availability profiles
-        router.post('/availability/profiles', (0, express_validator_1.body)('name').isString().notEmpty(), (0, express_validator_1.body)('timeZone').isString().notEmpty(), this.handleValidationErrors, this.createAvailabilityProfile);
-        router.get('/availability/profiles', (0, express_validator_1.query)('userId').optional().isString(), this.handleValidationErrors, this.getAvailabilityProfiles);
-        router.get('/availability/profiles/:profileId', (0, express_validator_1.param)('profileId').isUUID(), this.handleValidationErrors, this.getAvailabilityProfile);
-        router.put('/availability/profiles/:profileId', (0, express_validator_1.param)('profileId').isUUID(), this.handleValidationErrors, this.updateAvailabilityProfile);
+        router.post('/availability/profiles', body('name').isString().notEmpty(), body('timeZone').isString().notEmpty(), this.handleValidationErrors, this.createAvailabilityProfile);
+        router.get('/availability/profiles', query('userId').optional().isString(), this.handleValidationErrors, this.getAvailabilityProfiles);
+        router.get('/availability/profiles/:profileId', param('profileId').isUUID(), this.handleValidationErrors, this.getAvailabilityProfile);
+        router.put('/availability/profiles/:profileId', param('profileId').isUUID(), this.handleValidationErrors, this.updateAvailabilityProfile);
         // Availability queries
-        router.post('/availability/query', (0, express_validator_1.body)('userIds').isArray({ min: 1 }), (0, express_validator_1.body)('startDate').isISO8601(), (0, express_validator_1.body)('endDate').isISO8601(), (0, express_validator_1.body)('duration').isInt({ min: 15 }), this.handleValidationErrors, this.queryAvailability);
-        router.post('/availability/bulk-query', (0, express_validator_1.body)('queries').isArray({ min: 1 }), this.handleValidationErrors, this.bulkQueryAvailability);
+        router.post('/availability/query', body('userIds').isArray({ min: 1 }), body('startDate').isISO8601(), body('endDate').isISO8601(), body('duration').isInt({ min: 15 }), this.handleValidationErrors, this.queryAvailability);
+        router.post('/availability/bulk-query', body('queries').isArray({ min: 1 }), this.handleValidationErrors, this.bulkQueryAvailability);
         // Slot management
-        router.post('/availability/slots/:slotId/book', (0, express_validator_1.param)('slotId').isUUID(), (0, express_validator_1.body)('bookingId').isUUID(), (0, express_validator_1.body)('meetingType').optional().isString(), this.handleValidationErrors, this.bookAvailabilitySlot);
-        router.post('/availability/slots/:slotId/release', (0, express_validator_1.param)('slotId').isUUID(), (0, express_validator_1.body)('bookingId').isUUID(), this.handleValidationErrors, this.releaseAvailabilitySlot);
+        router.post('/availability/slots/:slotId/book', param('slotId').isUUID(), body('bookingId').isUUID(), body('meetingType').optional().isString(), this.handleValidationErrors, this.bookAvailabilitySlot);
+        router.post('/availability/slots/:slotId/release', param('slotId').isUUID(), body('bookingId').isUUID(), this.handleValidationErrors, this.releaseAvailabilitySlot);
     }
     setupNotificationRoutes(router) {
         // Templates
         router.get('/notifications/templates', this.getNotificationTemplates);
-        router.post('/notifications/templates', (0, express_validator_1.body)('name').isString().notEmpty(), (0, express_validator_1.body)('type').isIn(['reminder', 'confirmation', 'cancellation', 'reschedule', 'follow_up', 'custom']), (0, express_validator_1.body)('subject').isString().notEmpty(), (0, express_validator_1.body)('content.text').isString().notEmpty(), this.handleValidationErrors, this.createNotificationTemplate);
+        router.post('/notifications/templates', body('name').isString().notEmpty(), body('type').isIn(['reminder', 'confirmation', 'cancellation', 'reschedule', 'follow_up', 'custom']), body('subject').isString().notEmpty(), body('content.text').isString().notEmpty(), this.handleValidationErrors, this.createNotificationTemplate);
         // Rules
         router.get('/notifications/rules', this.getNotificationRules);
-        router.post('/notifications/rules', (0, express_validator_1.body)('name').isString().notEmpty(), (0, express_validator_1.body)('trigger.event').isString().notEmpty(), (0, express_validator_1.body)('actions').isArray({ min: 1 }), this.handleValidationErrors, this.createNotificationRule);
+        router.post('/notifications/rules', body('name').isString().notEmpty(), body('trigger.event').isString().notEmpty(), body('actions').isArray({ min: 1 }), this.handleValidationErrors, this.createNotificationRule);
         // Reminders
-        router.post('/notifications/reminders', (0, express_validator_1.body)('meetingId').isUUID(), (0, express_validator_1.body)('userId').isString().notEmpty(), (0, express_validator_1.body)('type').isIn(['email', 'sms', 'push', 'in_app']), (0, express_validator_1.body)('timing.minutesBefore').isInt({ min: 0 }), this.handleValidationErrors, this.createMeetingReminder);
+        router.post('/notifications/reminders', body('meetingId').isUUID(), body('userId').isString().notEmpty(), body('type').isIn(['email', 'sms', 'push', 'in_app']), body('timing.minutesBefore').isInt({ min: 0 }), this.handleValidationErrors, this.createMeetingReminder);
         // Statistics
-        router.get('/notifications/stats', (0, express_validator_1.query)('startDate').optional().isISO8601(), (0, express_validator_1.query)('endDate').optional().isISO8601(), this.handleValidationErrors, this.getNotificationStats);
+        router.get('/notifications/stats', query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getNotificationStats);
     }
     setupNotesRoutes(router) {
         // Notes
-        router.post('/notes', (0, express_validator_1.body)('meetingId').isUUID(), (0, express_validator_1.body)('title').isString().notEmpty(), (0, express_validator_1.body)('content.text').isString().notEmpty(), this.handleValidationErrors, this.createMeetingNotes);
-        router.post('/notes/from-template', (0, express_validator_1.body)('templateId').isUUID(), (0, express_validator_1.body)('meetingId').isUUID(), (0, express_validator_1.body)('title').isString().notEmpty(), this.handleValidationErrors, this.createNotesFromTemplate);
-        router.get('/notes', (0, express_validator_1.query)('meetingId').optional().isUUID(), this.handleValidationErrors, this.getMeetingNotes);
-        router.get('/notes/:notesId', (0, express_validator_1.param)('notesId').isUUID(), this.handleValidationErrors, this.getMeetingNotesById);
-        router.put('/notes/:notesId', (0, express_validator_1.param)('notesId').isUUID(), this.handleValidationErrors, this.updateMeetingNotes);
+        router.post('/notes', body('meetingId').isUUID(), body('title').isString().notEmpty(), body('content.text').isString().notEmpty(), this.handleValidationErrors, this.createMeetingNotes);
+        router.post('/notes/from-template', body('templateId').isUUID(), body('meetingId').isUUID(), body('title').isString().notEmpty(), this.handleValidationErrors, this.createNotesFromTemplate);
+        router.get('/notes', query('meetingId').optional().isUUID(), this.handleValidationErrors, this.getMeetingNotes);
+        router.get('/notes/:notesId', param('notesId').isUUID(), this.handleValidationErrors, this.getMeetingNotesById);
+        router.put('/notes/:notesId', param('notesId').isUUID(), this.handleValidationErrors, this.updateMeetingNotes);
         // Follow-ups
-        router.post('/notes/follow-ups', (0, express_validator_1.body)('meetingId').isUUID(), (0, express_validator_1.body)('type').isIn(['action_item', 'decision', 'question', 'reminder', 'task', 'custom']), (0, express_validator_1.body)('title').isString().notEmpty(), (0, express_validator_1.body)('assignedTo').isArray({ min: 1 }), this.handleValidationErrors, this.createFollowUp);
-        router.get('/notes/follow-ups', (0, express_validator_1.query)('meetingId').optional().isUUID(), (0, express_validator_1.query)('assignedTo').optional().isString(), (0, express_validator_1.query)('status').optional().isIn(['pending', 'in_progress', 'completed', 'cancelled', 'overdue']), this.handleValidationErrors, this.getFollowUps);
-        router.put('/notes/follow-ups/:followUpId', (0, express_validator_1.param)('followUpId').isUUID(), this.handleValidationErrors, this.updateFollowUp);
-        router.post('/notes/follow-ups/:followUpId/comments', (0, express_validator_1.param)('followUpId').isUUID(), (0, express_validator_1.body)('comment').isString().notEmpty(), this.handleValidationErrors, this.addFollowUpComment);
+        router.post('/notes/follow-ups', body('meetingId').isUUID(), body('type').isIn(['action_item', 'decision', 'question', 'reminder', 'task', 'custom']), body('title').isString().notEmpty(), body('assignedTo').isArray({ min: 1 }), this.handleValidationErrors, this.createFollowUp);
+        router.get('/notes/follow-ups', query('meetingId').optional().isUUID(), query('assignedTo').optional().isString(), query('status').optional().isIn(['pending', 'in_progress', 'completed', 'cancelled', 'overdue']), this.handleValidationErrors, this.getFollowUps);
+        router.put('/notes/follow-ups/:followUpId', param('followUpId').isUUID(), this.handleValidationErrors, this.updateFollowUp);
+        router.post('/notes/follow-ups/:followUpId/comments', param('followUpId').isUUID(), body('comment').isString().notEmpty(), this.handleValidationErrors, this.addFollowUpComment);
         // Templates
         router.get('/notes/templates', this.getNotesTemplates);
-        router.post('/notes/templates', (0, express_validator_1.body)('name').isString().notEmpty(), (0, express_validator_1.body)('type').isIn(['meeting_type', 'department', 'project', 'custom']), (0, express_validator_1.body)('sections').isArray({ min: 1 }), this.handleValidationErrors, this.createNotesTemplate);
+        router.post('/notes/templates', body('name').isString().notEmpty(), body('type').isIn(['meeting_type', 'department', 'project', 'custom']), body('sections').isArray({ min: 1 }), this.handleValidationErrors, this.createNotesTemplate);
     }
     setupVideoRoutes(router) {
         // Providers
         router.get('/video/providers', this.getVideoProviders);
-        router.put('/video/providers/:providerId', (0, express_validator_1.param)('providerId').isString().notEmpty(), this.handleValidationErrors, this.updateVideoProvider);
+        router.put('/video/providers/:providerId', param('providerId').isString().notEmpty(), this.handleValidationErrors, this.updateVideoProvider);
         // Meetings
-        router.post('/video/meetings', (0, express_validator_1.body)('meetingId').isUUID(), (0, express_validator_1.body)('title').isString().notEmpty(), (0, express_validator_1.body)('startTime').isISO8601(), (0, express_validator_1.body)('endTime').isISO8601(), (0, express_validator_1.body)('host.email').isEmail(), (0, express_validator_1.body)('participants').isArray({ min: 1 }), this.handleValidationErrors, this.createVideoMeeting);
-        router.get('/video/meetings', (0, express_validator_1.query)('status').optional().isIn(['scheduled', 'waiting', 'started', 'ended', 'cancelled']), (0, express_validator_1.query)('startDate').optional().isISO8601(), (0, express_validator_1.query)('endDate').optional().isISO8601(), this.handleValidationErrors, this.getVideoMeetings);
-        router.get('/video/meetings/:meetingId', (0, express_validator_1.param)('meetingId').isUUID(), this.handleValidationErrors, this.getVideoMeeting);
-        router.put('/video/meetings/:meetingId', (0, express_validator_1.param)('meetingId').isUUID(), this.handleValidationErrors, this.updateVideoMeeting);
-        router.delete('/video/meetings/:meetingId', (0, express_validator_1.param)('meetingId').isUUID(), this.handleValidationErrors, this.deleteVideoMeeting);
+        router.post('/video/meetings', body('meetingId').isUUID(), body('title').isString().notEmpty(), body('startTime').isISO8601(), body('endTime').isISO8601(), body('host.email').isEmail(), body('participants').isArray({ min: 1 }), this.handleValidationErrors, this.createVideoMeeting);
+        router.get('/video/meetings', query('status').optional().isIn(['scheduled', 'waiting', 'started', 'ended', 'cancelled']), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getVideoMeetings);
+        router.get('/video/meetings/:meetingId', param('meetingId').isUUID(), this.handleValidationErrors, this.getVideoMeeting);
+        router.put('/video/meetings/:meetingId', param('meetingId').isUUID(), this.handleValidationErrors, this.updateVideoMeeting);
+        router.delete('/video/meetings/:meetingId', param('meetingId').isUUID(), this.handleValidationErrors, this.deleteVideoMeeting);
         // Meeting control
-        router.post('/video/meetings/:meetingId/start', (0, express_validator_1.param)('meetingId').isUUID(), this.handleValidationErrors, this.startVideoMeeting);
-        router.post('/video/meetings/:meetingId/end', (0, express_validator_1.param)('meetingId').isUUID(), this.handleValidationErrors, this.endVideoMeeting);
+        router.post('/video/meetings/:meetingId/start', param('meetingId').isUUID(), this.handleValidationErrors, this.startVideoMeeting);
+        router.post('/video/meetings/:meetingId/end', param('meetingId').isUUID(), this.handleValidationErrors, this.endVideoMeeting);
         // Participants
-        router.post('/video/meetings/:meetingId/join', (0, express_validator_1.param)('meetingId').isUUID(), (0, express_validator_1.body)('email').isEmail(), (0, express_validator_1.body)('name').isString().notEmpty(), this.handleValidationErrors, this.joinVideoMeeting);
-        router.post('/video/meetings/:meetingId/leave', (0, express_validator_1.param)('meetingId').isUUID(), (0, express_validator_1.body)('participantEmail').isEmail(), this.handleValidationErrors, this.leaveVideoMeeting);
+        router.post('/video/meetings/:meetingId/join', param('meetingId').isUUID(), body('email').isEmail(), body('name').isString().notEmpty(), this.handleValidationErrors, this.joinVideoMeeting);
+        router.post('/video/meetings/:meetingId/leave', param('meetingId').isUUID(), body('participantEmail').isEmail(), this.handleValidationErrors, this.leaveVideoMeeting);
         // Recordings
-        router.get('/video/meetings/:meetingId/recordings', (0, express_validator_1.param)('meetingId').isUUID(), this.handleValidationErrors, this.getVideoMeetingRecordings);
-        router.get('/video/meetings/:meetingId/recordings/:recordingId/download', (0, express_validator_1.param)('meetingId').isUUID(), (0, express_validator_1.param)('recordingId').isUUID(), this.handleValidationErrors, this.downloadVideoRecording);
+        router.get('/video/meetings/:meetingId/recordings', param('meetingId').isUUID(), this.handleValidationErrors, this.getVideoMeetingRecordings);
+        router.get('/video/meetings/:meetingId/recordings/:recordingId/download', param('meetingId').isUUID(), param('recordingId').isUUID(), this.handleValidationErrors, this.downloadVideoRecording);
         // Templates
         router.get('/video/templates', this.getVideoTemplates);
-        router.post('/video/templates', (0, express_validator_1.body)('name').isString().notEmpty(), (0, express_validator_1.body)('providerId').isString().notEmpty(), this.handleValidationErrors, this.createVideoTemplate);
+        router.post('/video/templates', body('name').isString().notEmpty(), body('providerId').isString().notEmpty(), this.handleValidationErrors, this.createVideoTemplate);
         // Webhooks
-        router.post('/video/webhooks/:providerId', (0, express_validator_1.param)('providerId').isString().notEmpty(), this.processVideoWebhook);
+        router.post('/video/webhooks/:providerId', param('providerId').isString().notEmpty(), this.processVideoWebhook);
     }
     setupAnalyticsRoutes(router) {
         // Metrics collection
-        router.post('/analytics/metrics', (0, express_validator_1.body)('meetingId').isUUID(), (0, express_validator_1.body)('title').isString().notEmpty(), (0, express_validator_1.body)('type').isString().notEmpty(), (0, express_validator_1.body)('startTime').isISO8601(), (0, express_validator_1.body)('endTime').isISO8601(), (0, express_validator_1.body)('participants').isArray(), this.handleValidationErrors, this.collectMeetingMetrics);
-        router.get('/analytics/metrics', (0, express_validator_1.query)('meetingId').optional().isUUID(), (0, express_validator_1.query)('startDate').optional().isISO8601(), (0, express_validator_1.query)('endDate').optional().isISO8601(), this.handleValidationErrors, this.getMeetingMetrics);
+        router.post('/analytics/metrics', body('meetingId').isUUID(), body('title').isString().notEmpty(), body('type').isString().notEmpty(), body('startTime').isISO8601(), body('endTime').isISO8601(), body('participants').isArray(), this.handleValidationErrors, this.collectMeetingMetrics);
+        router.get('/analytics/metrics', query('meetingId').optional().isUUID(), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.handleValidationErrors, this.getMeetingMetrics);
         // Reports
-        router.post('/analytics/reports', (0, express_validator_1.body)('name').isString().notEmpty(), (0, express_validator_1.body)('type').isIn(['executive_summary', 'detailed_analysis', 'comparison', 'trend_analysis',
-            'department_report', 'user_report', 'meeting_type_report', 'custom']), (0, express_validator_1.body)('period.start').isISO8601(), (0, express_validator_1.body)('period.end').isISO8601(), this.handleValidationErrors, this.generateAnalyticsReport);
+        router.post('/analytics/reports', body('name').isString().notEmpty(), body('type').isIn(['executive_summary', 'detailed_analysis', 'comparison', 'trend_analysis',
+            'department_report', 'user_report', 'meeting_type_report', 'custom']), body('period.start').isISO8601(), body('period.end').isISO8601(), this.handleValidationErrors, this.generateAnalyticsReport);
         router.get('/analytics/reports', this.getAnalyticsReports);
-        router.get('/analytics/reports/:reportId', (0, express_validator_1.param)('reportId').isUUID(), this.handleValidationErrors, this.getAnalyticsReport);
+        router.get('/analytics/reports/:reportId', param('reportId').isUUID(), this.handleValidationErrors, this.getAnalyticsReport);
         // Dashboards
         router.get('/analytics/dashboards', this.getAnalyticsDashboards);
-        router.post('/analytics/dashboards', (0, express_validator_1.body)('name').isString().notEmpty(), (0, express_validator_1.body)('layout.widgets').isArray({ min: 1 }), this.handleValidationErrors, this.createAnalyticsDashboard);
-        router.get('/analytics/dashboards/:dashboardId', (0, express_validator_1.param)('dashboardId').isUUID(), this.handleValidationErrors, this.getAnalyticsDashboard);
+        router.post('/analytics/dashboards', body('name').isString().notEmpty(), body('layout.widgets').isArray({ min: 1 }), this.handleValidationErrors, this.createAnalyticsDashboard);
+        router.get('/analytics/dashboards/:dashboardId', param('dashboardId').isUUID(), this.handleValidationErrors, this.getAnalyticsDashboard);
         // Benchmarks
         router.get('/analytics/benchmarks', this.getAnalyticsBenchmarks);
         // Predictive insights
@@ -300,17 +300,17 @@ class SchedulingController extends events_1.EventEmitter {
     }
     setupMobileRoutes(router) {
         // Mobile-optimized endpoints
-        router.get('/mobile/sync', (0, express_validator_1.query)('lastSync').optional().isISO8601(), (0, express_validator_1.query)('batchSize').optional().isInt({ min: 1, max: this.config.mobile.maxSyncBatchSize }), this.handleValidationErrors, this.mobileSync);
-        router.post('/mobile/sync/upload', (0, express_validator_1.body)('changes').isArray(), this.handleValidationErrors, this.mobileSyncUpload);
+        router.get('/mobile/sync', query('lastSync').optional().isISO8601(), query('batchSize').optional().isInt({ min: 1, max: this.config.mobile.maxSyncBatchSize }), this.handleValidationErrors, this.mobileSync);
+        router.post('/mobile/sync/upload', body('changes').isArray(), this.handleValidationErrors, this.mobileSyncUpload);
         // Push notifications
         if (this.config.mobile.enablePushNotifications) {
-            router.post('/mobile/push/register', (0, express_validator_1.body)('deviceToken').isString().notEmpty(), (0, express_validator_1.body)('platform').isIn(['ios', 'android']), this.handleValidationErrors, this.registerPushDevice);
-            router.delete('/mobile/push/unregister', (0, express_validator_1.body)('deviceToken').isString().notEmpty(), this.handleValidationErrors, this.unregisterPushDevice);
+            router.post('/mobile/push/register', body('deviceToken').isString().notEmpty(), body('platform').isIn(['ios', 'android']), this.handleValidationErrors, this.registerPushDevice);
+            router.delete('/mobile/push/unregister', body('deviceToken').isString().notEmpty(), this.handleValidationErrors, this.unregisterPushDevice);
         }
         // Offline support
         if (this.config.mobile.enableOfflineSync) {
             router.get('/mobile/offline/manifest', this.getOfflineManifest);
-            router.post('/mobile/offline/conflict-resolution', (0, express_validator_1.body)('conflicts').isArray({ min: 1 }), this.handleValidationErrors, this.resolveOfflineConflicts);
+            router.post('/mobile/offline/conflict-resolution', body('conflicts').isArray({ min: 1 }), this.handleValidationErrors, this.resolveOfflineConflicts);
         }
     }
     setupRealTimeRoutes(router) {
@@ -360,7 +360,7 @@ class SchedulingController extends events_1.EventEmitter {
     }
     // Validation helper
     handleValidationErrors = (req, res, next) => {
-        const errors = (0, express_validator_1.validationResult)(req);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
                 error: 'Validation failed',
@@ -401,7 +401,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(providers);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getCalendarProvider = async (req, res) => {
@@ -413,7 +413,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(provider);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createCalendarConnection = async (req, res) => {
@@ -426,7 +426,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(connection);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getCalendarConnections = async (req, res) => {
@@ -435,7 +435,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(connections);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     updateCalendarConnection = async (req, res) => {
@@ -444,7 +444,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(connection);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     deleteCalendarConnection = async (req, res) => {
@@ -453,7 +453,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(204).send();
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createCalendarEvent = async (req, res) => {
@@ -466,7 +466,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(event);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getCalendarEvents = async (req, res) => {
@@ -478,7 +478,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(events);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     scheduleCalendarSync = async (req, res) => {
@@ -487,7 +487,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json({ syncId });
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getCalendarSyncStatus = async (req, res) => {
@@ -499,7 +499,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(status);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     // Meeting Booking handlers
@@ -509,7 +509,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(workflows);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createBookingWorkflow = async (req, res) => {
@@ -521,7 +521,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(workflow);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createBookingRequest = async (req, res) => {
@@ -534,7 +534,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(booking);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getBookingRequests = async (req, res) => {
@@ -547,7 +547,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(bookings);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getBookingRequest = async (req, res) => {
@@ -559,7 +559,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(booking);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     updateBookingRequest = async (req, res) => {
@@ -568,7 +568,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(booking);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     approveBooking = async (req, res) => {
@@ -577,7 +577,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(booking);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     rejectBooking = async (req, res) => {
@@ -586,7 +586,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(booking);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     cancelBooking = async (req, res) => {
@@ -595,7 +595,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(booking);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     // Availability Management handlers
@@ -609,7 +609,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(profile);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getAvailabilityProfiles = async (req, res) => {
@@ -618,7 +618,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(profiles);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getAvailabilityProfile = async (req, res) => {
@@ -630,7 +630,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(profile);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     updateAvailabilityProfile = async (req, res) => {
@@ -639,7 +639,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(profile);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     queryAvailability = async (req, res) => {
@@ -652,7 +652,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(availability);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     bulkQueryAvailability = async (req, res) => {
@@ -669,7 +669,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(results);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     bookAvailabilitySlot = async (req, res) => {
@@ -678,7 +678,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(slot);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     releaseAvailabilitySlot = async (req, res) => {
@@ -687,7 +687,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(slot);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     // Placeholder implementations for other handlers...
@@ -698,7 +698,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(templates);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createNotificationTemplate = async (req, res) => {
@@ -710,7 +710,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(template);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getNotificationRules = async (req, res) => {
@@ -719,7 +719,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(rules);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createNotificationRule = async (req, res) => {
@@ -731,7 +731,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(rule);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createMeetingReminder = async (req, res) => {
@@ -743,7 +743,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(reminder);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getNotificationStats = async (req, res) => {
@@ -756,7 +756,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(stats);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     // Notes handlers
@@ -771,7 +771,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(notes);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createNotesFromTemplate = async (req, res) => {
@@ -786,7 +786,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(notes);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getMeetingNotes = async (req, res) => {
@@ -797,7 +797,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(notes);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getMeetingNotesById = async (req, res) => {
@@ -809,7 +809,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(notes);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     updateMeetingNotes = async (req, res) => {
@@ -818,7 +818,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(notes);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createFollowUp = async (req, res) => {
@@ -834,7 +834,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(followUp);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getFollowUps = async (req, res) => {
@@ -848,7 +848,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(followUps);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     updateFollowUp = async (req, res) => {
@@ -857,7 +857,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(followUp);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     addFollowUpComment = async (req, res) => {
@@ -866,7 +866,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(followUp);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getNotesTemplates = async (req, res) => {
@@ -875,7 +875,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(templates);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createNotesTemplate = async (req, res) => {
@@ -887,7 +887,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(template);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     // Video conferencing handlers (simplified implementations)
@@ -897,7 +897,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(providers);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     updateVideoProvider = async (req, res) => {
@@ -906,7 +906,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(provider);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createVideoMeeting = async (req, res) => {
@@ -918,7 +918,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(meeting);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getVideoMeetings = async (req, res) => {
@@ -932,7 +932,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(meetings);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getVideoMeeting = async (req, res) => {
@@ -944,7 +944,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(meeting);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     updateVideoMeeting = async (req, res) => {
@@ -953,7 +953,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(meeting);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     deleteVideoMeeting = async (req, res) => {
@@ -962,7 +962,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(204).send();
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     startVideoMeeting = async (req, res) => {
@@ -971,7 +971,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(meeting);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     endVideoMeeting = async (req, res) => {
@@ -980,7 +980,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(meeting);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     joinVideoMeeting = async (req, res) => {
@@ -989,7 +989,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(meeting);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     leaveVideoMeeting = async (req, res) => {
@@ -998,7 +998,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(meeting);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getVideoMeetingRecordings = async (req, res) => {
@@ -1007,7 +1007,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(recordings);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     downloadVideoRecording = async (req, res) => {
@@ -1016,7 +1016,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json({ downloadUrl });
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getVideoTemplates = async (req, res) => {
@@ -1025,7 +1025,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(templates);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createVideoTemplate = async (req, res) => {
@@ -1037,7 +1037,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(template);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     processVideoWebhook = async (req, res) => {
@@ -1046,7 +1046,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(200).json({ received: true });
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     // Analytics handlers (simplified implementations)
@@ -1059,7 +1059,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(metrics);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getMeetingMetrics = async (req, res) => {
@@ -1073,7 +1073,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(metrics);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     generateAnalyticsReport = async (req, res) => {
@@ -1091,7 +1091,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(report);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getAnalyticsReports = async (req, res) => {
@@ -1100,7 +1100,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(reports);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getAnalyticsReport = async (req, res) => {
@@ -1112,7 +1112,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(report);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getAnalyticsDashboards = async (req, res) => {
@@ -1121,7 +1121,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(dashboards);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     createAnalyticsDashboard = async (req, res) => {
@@ -1133,7 +1133,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.status(201).json(dashboard);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getAnalyticsDashboard = async (req, res) => {
@@ -1145,7 +1145,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(dashboard);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getAnalyticsBenchmarks = async (req, res) => {
@@ -1154,7 +1154,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(benchmarks);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getPredictiveInsights = async (req, res) => {
@@ -1163,7 +1163,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(insights);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     // Mobile-specific handlers
@@ -1185,7 +1185,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(syncData);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     mobileSyncUpload = async (req, res) => {
@@ -1200,7 +1200,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(results);
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     registerPushDevice = async (req, res) => {
@@ -1209,7 +1209,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json({ registered: true });
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     unregisterPushDevice = async (req, res) => {
@@ -1218,7 +1218,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json({ unregistered: true });
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     getOfflineManifest = async (req, res) => {
@@ -1236,7 +1236,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json(manifest);
         }
         catch (error) {
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     resolveOfflineConflicts = async (req, res) => {
@@ -1250,7 +1250,7 @@ class SchedulingController extends events_1.EventEmitter {
             res.json({ resolutions });
         }
         catch (error) {
-            res.status(400).json({ error: error.message });
+            res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
     // Real-time handlers
@@ -1323,7 +1323,7 @@ class SchedulingController extends events_1.EventEmitter {
             console.error('Unhandled error:', error);
             res.status(500).json({
                 error: 'Internal server error',
-                message: this.config.logging.level === 'debug' ? error.message : 'An unexpected error occurred',
+                message: this.config.logging.level === 'debug' ? error instanceof Error ? error.message : 'Unknown error' : 'An unexpected error occurred',
                 timestamp: new Date().toISOString(),
                 requestId: req.headers['x-request-id'] || 'unknown'
             });

@@ -101,5 +101,5 @@ export declare class RootCauseAnalysisService extends EventEmitter {
     getAnalysisStatistics(): any;
     private generateRootCauseId;
     private generateFixSuggestionId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

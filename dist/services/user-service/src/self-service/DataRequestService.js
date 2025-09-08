@@ -497,8 +497,8 @@ class DataRequestService extends events_1.EventEmitter {
         }
         catch (error) {
             request.status = RequestStatus.FAILED;
-            this.addProcessingError(request, ProcessingStage.DATA_PROCESSING, 'PROCESSING_ERROR', error.message, ErrorSeverity.CRITICAL);
-            this.emit('dataRequestFailed', { request, error: error.message });
+            this.addProcessingError(request, ProcessingStage.DATA_PROCESSING, 'PROCESSING_ERROR', this.getErrorMessage(error), ErrorSeverity.CRITICAL);
+            this.emit('dataRequestFailed', { request, error: this.getErrorMessage(error) });
         }
     }
     async downloadRequestResult(requestId, userId, downloadToken) {
@@ -568,7 +568,11 @@ class DataRequestService extends events_1.EventEmitter {
             complianceStatus: {
                 [DataRegulation.GDPR]: true,
                 [DataRegulation.CCPA]: true,
-                [DataRegulation.PIPEDA]: false
+                [DataRegulation.PIPEDA]: false,
+                [DataRegulation.LGPD]: false,
+                [DataRegulation.PDPA_SINGAPORE]: false,
+                [DataRegulation.PDPB_INDIA]: false,
+                [DataRegulation.POPIA]: false
             }
         };
     }
@@ -874,8 +878,8 @@ class DataRequestService extends events_1.EventEmitter {
         catch (error) {
             stageInfo.status = StageStatus.FAILED;
             stageInfo.endTime = new Date();
-            this.addProcessingError(request, stage, 'STAGE_PROCESSING_ERROR', error.message, ErrorSeverity.HIGH);
-            this.addAuditEntry(request, RequestAction.FAILED_STAGE, 'system', `Failed stage: ${stage} - ${error.message}`, undefined, undefined, 'system', 'system');
+            this.addProcessingError(request, stage, 'STAGE_PROCESSING_ERROR', this.getErrorMessage(error), ErrorSeverity.HIGH);
+            this.addAuditEntry(request, RequestAction.FAILED_STAGE, 'system', `Failed stage: ${stage} - ${this.getErrorMessage(error)}`, undefined, undefined, 'system', 'system');
         }
         // Update overall progress
         const completedStages = request.processingDetails.stages.filter(s => s.status === StageStatus.COMPLETED).length;
@@ -1130,6 +1134,12 @@ class DataRequestService extends events_1.EventEmitter {
                 }
             }
         }, 60 * 60 * 1000);
+    }
+    getErrorMessage(error) {
+        if (error instanceof Error) {
+            return error.message;
+        }
+        return String(error);
     }
 }
 exports.DataRequestService = DataRequestService;

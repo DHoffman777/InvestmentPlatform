@@ -104,7 +104,7 @@ export interface ComponentVaR {
 }
 export interface MarginalVaR {
     positionId: string;
-    instrumentId: string;
+    securityId: string;
     symbol: string;
     marginalVaR: number;
     contribution: number;
@@ -112,7 +112,7 @@ export interface MarginalVaR {
 }
 export interface IncrementalVaR {
     positionId: string;
-    instrumentId: string;
+    securityId: string;
     symbol: string;
     incrementalVaR: number;
     portfolioVaRWithout: number;
@@ -178,7 +178,7 @@ export interface FactorShock {
 }
 export interface PositionImpact {
     positionId: string;
-    instrumentId: string;
+    securityId: string;
     symbol: string;
     currentValue: number;
     stressedValue: number;
@@ -333,7 +333,7 @@ export interface LiquidityBreakdown {
 }
 export interface PositionLiquidity {
     positionId: string;
-    instrumentId: string;
+    securityId: string;
     symbol: string;
     marketValue: number;
     liquidityCategory: LiquidityCategory;
@@ -399,7 +399,7 @@ export interface IssuerConcentration {
 }
 export interface PositionCreditRisk {
     positionId: string;
-    instrumentId: string;
+    securityId: string;
     issuerName: string;
     rating: string;
     ratingNumeric: number;

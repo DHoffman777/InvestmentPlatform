@@ -890,7 +890,7 @@ export class MeetingAnalyticsService extends EventEmitter {
     };
   }
 
-  private async processMetricsRealTime(metrics: MeetingMetrics): Promise<void> {
+  private async processMetricsRealTime(metrics: MeetingMetrics): Promise<any> {
     // Check for alerts
     await this.checkAlertThresholds(metrics);
     
@@ -903,7 +903,7 @@ export class MeetingAnalyticsService extends EventEmitter {
     }
   }
 
-  private async checkAlertThresholds(metrics: MeetingMetrics): Promise<void> {
+  private async checkAlertThresholds(metrics: MeetingMetrics): Promise<any> {
     const alerts: Array<{ type: string; message: string; severity: 'high' | 'medium' | 'low' }> = [];
 
     // Low attendance alert
@@ -953,7 +953,7 @@ export class MeetingAnalyticsService extends EventEmitter {
     }
   }
 
-  private async updateDashboards(metrics: MeetingMetrics): Promise<void> {
+  private async updateDashboards(metrics: MeetingMetrics): Promise<any> {
     // Update real-time dashboards
     const realTimeDashboards = Array.from(this.dashboards.values())
       .filter(dashboard => dashboard.realTimeEnabled);
@@ -1251,7 +1251,7 @@ export class MeetingAnalyticsService extends EventEmitter {
   }
 
   // Predictive analytics
-  private async generatePredictiveInsights(): Promise<void> {
+  private async generatePredictiveInsights(): Promise<any> {
     if (!this.config.enablePredictive) return;
 
     console.log('Generating predictive insights...');
@@ -1305,12 +1305,12 @@ export class MeetingAnalyticsService extends EventEmitter {
     });
   }
 
-  private async updatePredictiveModels(metrics: MeetingMetrics): Promise<void> {
+  private async updatePredictiveModels(metrics: MeetingMetrics): Promise<any> {
     // Update ML models with new data
     console.log(`Updating predictive models with metrics from meeting ${metrics.meetingId}`);
   }
 
-  private async processMetricsBatch(): Promise<void> {
+  private async processMetricsBatch(): Promise<any> {
     console.log('Processing metrics batch...');
     
     // Update internal benchmarks
@@ -1320,7 +1320,7 @@ export class MeetingAnalyticsService extends EventEmitter {
     await this.cleanupOldMetrics();
   }
 
-  private async updateInternalBenchmarks(): Promise<void> {
+  private async updateInternalBenchmarks(): Promise<any> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - 90); // Last 90 days
 
@@ -1352,7 +1352,7 @@ export class MeetingAnalyticsService extends EventEmitter {
     console.log('Internal benchmarks updated');
   }
 
-  private async cleanupOldMetrics(): Promise<void> {
+  private async cleanupOldMetrics(): Promise<any> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - this.config.retentionDays);
 
@@ -1490,7 +1490,7 @@ export class MeetingAnalyticsService extends EventEmitter {
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     console.log('Shutting down Meeting Analytics Service...');
     
     // Clear all data

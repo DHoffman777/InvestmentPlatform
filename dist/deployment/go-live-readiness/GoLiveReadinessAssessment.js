@@ -91,7 +91,7 @@ class GoLiveReadinessAssessment extends events_1.EventEmitter {
             return result;
         }
         catch (error) {
-            this.emit('assessmentFailed', { assessmentId: this.assessmentId, error: error.message });
+            this.emit('assessmentFailed', { assessmentId: this.assessmentId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }

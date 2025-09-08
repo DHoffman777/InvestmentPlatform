@@ -14,7 +14,7 @@ export declare class CustodianIntegrationService {
     performReconciliation(connectionId: string, request: ReconciliationRequest): Promise<ReconciliationResponse>;
     submitOrders(connectionId: string, request: OrderSubmissionRequest): Promise<OrderSubmissionResponse>;
     retrieveDocuments(connectionId: string, request: DocumentRetrievalRequest): Promise<DocumentRetrievalResponse>;
-    monitorConnections(): Promise<void>;
+    monitorConnections(): Promise<any>;
     private validateConnectionConfig;
     private testConnection;
     private getIntegrationService;

@@ -224,7 +224,7 @@ export class UpdateRecommendationEngine extends EventEmitter {
           recommendations.push(recommendation);
           this.recommendations.set(recommendation.id, recommendation);
         }
-      } catch (error) {
+      } catch (error: any) {
         this.emit('recommendationError', {
           dependency: dependency.name,
           error: error.message

@@ -18,8 +18,8 @@ export declare class ResourceUtilizationService extends EventEmitter {
     private collections;
     private qualityValidators;
     constructor(config: ResourceCollectionConfig);
-    addDataSource(dataSource: ResourceDataSource): Promise<void>;
-    removeDataSource(dataSourceId: string): Promise<void>;
+    addDataSource(dataSource: ResourceDataSource): Promise<any>;
+    removeDataSource(dataSourceId: string): Promise<any>;
     collectMetrics(resourceIds?: string[]): Promise<ResourceMetric[]>;
     private collectResourceMetrics;
     private collectPrometheusMetrics;
@@ -77,5 +77,5 @@ export declare class ResourceUtilizationService extends EventEmitter {
     private detectMetricAnomaly;
     private calculateEfficiency;
     private generateRecommendations;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

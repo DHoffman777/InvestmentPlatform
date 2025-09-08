@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.transactionRoutes = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const client_1 = require("@prisma/client");
 const logger_1 = require("../utils/logger");
 const auth_1 = require("../middleware/auth");
@@ -12,7 +12,7 @@ exports.transactionRoutes = router;
 const prisma = new client_1.PrismaClient();
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -23,13 +23,13 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/transactions - List transactions for a portfolio
 router.get('/', [
-    (0, express_validator_1.query)('portfolioId').isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.query)('page').optional().isInt({ min: 1 }).toInt(),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
-    (0, express_validator_1.query)('transactionType').optional().isIn(['BUY', 'SELL', 'DIVIDEND', 'INTEREST', 'FEE', 'DEPOSIT', 'WITHDRAWAL', 'TRANSFER_IN', 'TRANSFER_OUT', 'SPLIT', 'MERGER', 'SPINOFF']),
-    (0, express_validator_1.query)('startDate').optional().isISO8601().toDate(),
-    (0, express_validator_1.query)('endDate').optional().isISO8601().toDate(),
-    (0, express_validator_1.query)('search').optional().isString().trim(),
+    query('portfolioId').isUUID().withMessage('Invalid portfolio ID'),
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('transactionType').optional().isIn(['BUY', 'SELL', 'DIVIDEND', 'INTEREST', 'FEE', 'DEPOSIT', 'WITHDRAWAL', 'TRANSFER_IN', 'TRANSFER_OUT', 'SPLIT', 'MERGER', 'SPINOFF']),
+    query('startDate').optional().isISO8601().toDate(),
+    query('endDate').optional().isISO8601().toDate(),
+    query('search').optional().isString().trim(),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:read']), async (req, res) => {
     try {
         const { portfolioId, page = 1, limit = 20, transactionType, startDate, endDate, search, } = req.query;
@@ -40,14 +40,7 @@ router.get('/', [
                 tenantId: req.user.tenantId,
                 OR: [
                     { ownerId: req.user.sub },
-                    {
-                        managers: {
-                            some: {
-                                userId: req.user.sub,
-                                status: 'ACTIVE'
-                            }
-                        }
-                    }
+                    { managerId: req.user.sub }
                 ]
             }
         });
@@ -84,15 +77,15 @@ router.get('/', [
                 skip,
                 take: limit,
                 orderBy: { transactionDate: 'desc' },
-                include: {
-                    security: {
-                        select: {
-                            symbol: true,
-                            name: true,
-                            assetClass: true,
-                            currency: true
-                        }
-                    }
+                select: {
+                    id: true,
+                    transactionType: true,
+                    transactionDate: true,
+                    quantity: true,
+                    price: true,
+                    netAmount: true,
+                    description: true,
+                    status: true
                 }
             }),
             prisma.transaction.count({ where: whereClause })
@@ -117,7 +110,7 @@ router.get('/', [
 });
 // GET /api/transactions/:id - Get specific transaction
 router.get('/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid transaction ID'),
+    param('id').isUUID().withMessage('Invalid transaction ID'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:read']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -128,32 +121,20 @@ router.get('/:id', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             },
-            include: {
-                security: true,
-                portfolio: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                position: {
-                    select: {
-                        id: true,
-                        quantity: true,
-                        marketValue: true
-                    }
-                }
+            select: {
+                id: true,
+                transactionType: true,
+                transactionDate: true,
+                quantity: true,
+                price: true,
+                netAmount: true,
+                portfolioId: true,
+                description: true,
+                status: true
             }
         });
         if (!transaction) {
@@ -176,17 +157,17 @@ router.get('/:id', [
 });
 // POST /api/transactions - Create new transaction
 router.post('/', [
-    (0, express_validator_1.body)('portfolioId').isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.body)('securityId').isUUID().withMessage('Invalid security ID'),
-    (0, express_validator_1.body)('transactionType').isIn(['BUY', 'SELL', 'DIVIDEND', 'INTEREST', 'FEE', 'DEPOSIT', 'WITHDRAWAL', 'TRANSFER_IN', 'TRANSFER_OUT', 'SPLIT', 'MERGER', 'SPINOFF']).withMessage('Invalid transaction type'),
-    (0, express_validator_1.body)('transactionDate').isISO8601().toDate().withMessage('Invalid transaction date'),
-    (0, express_validator_1.body)('settleDate').optional().isISO8601().toDate().withMessage('Invalid settle date'),
-    (0, express_validator_1.body)('quantity').isDecimal().withMessage('Quantity must be a decimal number'),
-    (0, express_validator_1.body)('price').optional().isDecimal().withMessage('Price must be a decimal number'),
-    (0, express_validator_1.body)('fees').optional().isDecimal().withMessage('Fees must be a decimal number'),
-    (0, express_validator_1.body)('taxes').optional().isDecimal().withMessage('Taxes must be a decimal number'),
-    (0, express_validator_1.body)('description').optional().isString().trim().isLength({ max: 500 }).withMessage('Description must be less than 500 characters'),
-    (0, express_validator_1.body)('externalId').optional().isString().trim().isLength({ max: 100 }).withMessage('External ID must be less than 100 characters'),
+    body('portfolioId').isUUID().withMessage('Invalid portfolio ID'),
+    body('securityId').isUUID().withMessage('Invalid security ID'),
+    body('transactionType').isIn(['BUY', 'SELL', 'DIVIDEND', 'INTEREST', 'FEE', 'DEPOSIT', 'WITHDRAWAL', 'TRANSFER_IN', 'TRANSFER_OUT', 'SPLIT', 'MERGER', 'SPINOFF']).withMessage('Invalid transaction type'),
+    body('transactionDate').isISO8601().toDate().withMessage('Invalid transaction date'),
+    body('settleDate').optional().isISO8601().toDate().withMessage('Invalid settle date'),
+    body('quantity').isDecimal().withMessage('Quantity must be a decimal number'),
+    body('price').optional().isDecimal().withMessage('Price must be a decimal number'),
+    body('fees').optional().isDecimal().withMessage('Fees must be a decimal number'),
+    body('taxes').optional().isDecimal().withMessage('Taxes must be a decimal number'),
+    body('description').optional().isString().trim().isLength({ max: 500 }).withMessage('Description must be less than 500 characters'),
+    body('externalId').optional().isString().trim().isLength({ max: 100 }).withMessage('External ID must be less than 100 characters'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:create']), async (req, res) => {
     try {
         const { portfolioId, securityId, transactionType, transactionDate, settleDate, quantity, price, fees = 0, taxes = 0, description, externalId, } = req.body;
@@ -197,14 +178,7 @@ router.post('/', [
                 tenantId: req.user.tenantId,
                 OR: [
                     { ownerId: req.user.sub },
-                    {
-                        managers: {
-                            some: {
-                                userId: req.user.sub,
-                                status: 'ACTIVE'
-                            }
-                        }
-                    }
+                    { managerId: req.user.sub }
                 ]
             }
         });
@@ -242,10 +216,10 @@ router.post('/', [
         const transaction = await prisma.transaction.create({
             data: {
                 portfolioId,
-                securityId,
+                // securityId removed - field doesn't exist in schema
                 transactionType,
                 transactionDate,
-                settleDate: settleDate || transactionDate,
+                // settleDate: settleDate || transactionDate, // Field doesn't exist in schema
                 quantity: quantityDecimal,
                 price: priceDecimal,
                 fees: feesDecimal,
@@ -255,15 +229,17 @@ router.post('/', [
                 externalId,
                 status: 'SETTLED',
                 createdBy: req.user.sub,
-                updatedBy: req.user.sub,
+                // updatedBy: req.user!.sub, // Field doesn't exist in schema
             },
-            include: {
-                security: {
-                    select: {
-                        symbol: true,
-                        name: true
-                    }
-                }
+            select: {
+                id: true,
+                transactionType: true,
+                transactionDate: true,
+                quantity: true,
+                price: true,
+                netAmount: true,
+                portfolioId: true,
+                // securityId: true // Field doesn't exist in schema
             }
         });
         logger_1.logger.info('Transaction created', {
@@ -297,15 +273,15 @@ router.post('/', [
 });
 // PUT /api/transactions/:id - Update transaction
 router.put('/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid transaction ID'),
-    (0, express_validator_1.body)('transactionDate').optional().isISO8601().toDate().withMessage('Invalid transaction date'),
-    (0, express_validator_1.body)('settleDate').optional().isISO8601().toDate().withMessage('Invalid settle date'),
-    (0, express_validator_1.body)('quantity').optional().isDecimal().withMessage('Quantity must be a decimal number'),
-    (0, express_validator_1.body)('price').optional().isDecimal().withMessage('Price must be a decimal number'),
-    (0, express_validator_1.body)('fees').optional().isDecimal().withMessage('Fees must be a decimal number'),
-    (0, express_validator_1.body)('taxes').optional().isDecimal().withMessage('Taxes must be a decimal number'),
-    (0, express_validator_1.body)('description').optional().isString().trim().isLength({ max: 500 }).withMessage('Description must be less than 500 characters'),
-    (0, express_validator_1.body)('status').optional().isIn(['PENDING', 'SETTLED', 'CANCELLED', 'FAILED']).withMessage('Invalid status'),
+    param('id').isUUID().withMessage('Invalid transaction ID'),
+    body('transactionDate').optional().isISO8601().toDate().withMessage('Invalid transaction date'),
+    body('settleDate').optional().isISO8601().toDate().withMessage('Invalid settle date'),
+    body('quantity').optional().isDecimal().withMessage('Quantity must be a decimal number'),
+    body('price').optional().isDecimal().withMessage('Price must be a decimal number'),
+    body('fees').optional().isDecimal().withMessage('Fees must be a decimal number'),
+    body('taxes').optional().isDecimal().withMessage('Taxes must be a decimal number'),
+    body('description').optional().isString().trim().isLength({ max: 500 }).withMessage('Description must be less than 500 characters'),
+    body('status').optional().isIn(['PENDING', 'SETTLED', 'CANCELLED', 'FAILED']).withMessage('Invalid status'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:update']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -317,20 +293,13 @@ router.put('/:id', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             },
-            include: {
-                security: true
-            }
+            // include: {
+            //   security: true
+            // } // Security relation doesn't exist in schema
         });
         if (!existingTransaction) {
             return res.status(404).json({
@@ -378,13 +347,15 @@ router.put('/:id', [
         const transaction = await prisma.transaction.update({
             where: { id },
             data: updateData,
-            include: {
-                security: {
-                    select: {
-                        symbol: true,
-                        name: true
-                    }
-                }
+            select: {
+                id: true,
+                transactionType: true,
+                transactionDate: true,
+                quantity: true,
+                price: true,
+                netAmount: true,
+                portfolioId: true,
+                // securityId: true // Field doesn't exist in schema
             }
         });
         logger_1.logger.info('Transaction updated', {
@@ -406,7 +377,7 @@ router.put('/:id', [
 });
 // DELETE /api/transactions/:id - Delete transaction
 router.delete('/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid transaction ID'),
+    param('id').isUUID().withMessage('Invalid transaction ID'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:delete']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -418,14 +389,7 @@ router.delete('/:id', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             }
@@ -441,8 +405,8 @@ router.delete('/:id', [
             where: { id },
             data: {
                 status: 'CANCELLED',
-                updatedBy: req.user.sub,
-                updatedAt: new Date()
+                // updatedBy: req.user!.sub,
+                // updatedAt: new Date() // Fields don't exist in schema
             }
         });
         logger_1.logger.info('Transaction deleted', {

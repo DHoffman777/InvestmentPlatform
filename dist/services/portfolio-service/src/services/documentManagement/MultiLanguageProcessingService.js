@@ -112,7 +112,7 @@ class MultiLanguageProcessingService {
         catch (error) {
             this.logger.error('Multi-language document processing failed', {
                 documentId: request.documentId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             throw error;
@@ -136,7 +136,7 @@ class MultiLanguageProcessingService {
         }
         catch (error) {
             this.logger.error('Language detection failed', {
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 textLength: text.length
             });
             return {
@@ -215,7 +215,7 @@ class MultiLanguageProcessingService {
             };
         }
         catch (error) {
-            this.logger.warn('Statistical language detection failed', { error: error.message });
+            this.logger.warn('Statistical language detection failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             return {
                 language: DocumentManagement_1.Language.ENGLISH,
                 confidence: 0.1,
@@ -248,7 +248,7 @@ class MultiLanguageProcessingService {
             };
         }
         catch (error) {
-            this.logger.warn('Neural network language detection failed', { error: error.message });
+            this.logger.warn('Neural network language detection failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             return {
                 language: DocumentManagement_1.Language.ENGLISH,
                 confidence: 0.5,
@@ -366,7 +366,7 @@ class MultiLanguageProcessingService {
             };
         }
         catch (error) {
-            this.logger.error('Neural translation failed', { error: error.message });
+            this.logger.error('Neural translation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -396,7 +396,7 @@ class MultiLanguageProcessingService {
             };
         }
         catch (error) {
-            this.logger.error('Statistical translation failed', { error: error.message });
+            this.logger.error('Statistical translation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             return {
                 translatedText: request.text,
                 confidence: 0.1,
@@ -597,7 +597,7 @@ class MultiLanguageProcessingService {
             this.logger.info('Multi-language processing models initialized successfully');
         }
         catch (error) {
-            this.logger.error('Failed to initialize language models', { error: error.message });
+            this.logger.error('Failed to initialize language models', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async initializeLanguageDetectionEngine() {
@@ -611,7 +611,7 @@ class MultiLanguageProcessingService {
             this.logger.info('Language detection engine initialized');
         }
         catch (error) {
-            this.logger.warn('Failed to initialize language detection engine', { error: error.message });
+            this.logger.warn('Failed to initialize language detection engine', { error: error instanceof Error ? error.message : 'Unknown error' });
             this.languageDetectionEngine = null;
         }
     }
@@ -632,7 +632,7 @@ class MultiLanguageProcessingService {
             this.logger.info('Translation models loaded', { count: this.translationModels.size });
         }
         catch (error) {
-            this.logger.warn('Failed to load translation models', { error: error.message });
+            this.logger.warn('Failed to load translation models', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async loadCustomDictionaries() {
@@ -652,7 +652,7 @@ class MultiLanguageProcessingService {
             this.logger.info('Custom dictionaries loaded', { count: this.customDictionaries.size });
         }
         catch (error) {
-            this.logger.warn('Failed to load custom dictionaries', { error: error.message });
+            this.logger.warn('Failed to load custom dictionaries', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async publishLanguageProcessingEvent(documentId, tenantId, result) {

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ErrorTrackingController = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const ErrorTrackingService_1 = require("./ErrorTrackingService");
 const NotificationService_1 = require("./NotificationService");
 const ErrorDashboardService_1 = require("./ErrorDashboardService");
@@ -115,195 +115,195 @@ class ErrorTrackingController {
     // Validation middleware
     validateGetErrors() {
         return [
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 1000 }),
-            (0, express_validator_1.query)('severity').optional().isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)),
-            (0, express_validator_1.query)('category').optional().isIn(Object.values(ErrorTrackingService_1.ErrorCategory)),
-            (0, express_validator_1.query)('resolved').optional().isBoolean(),
-            (0, express_validator_1.query)('timeRange').optional().matches(/^\d+[hdw]$/),
+            query('limit').optional().isInt({ min: 1, max: 1000 }),
+            query('severity').optional().isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)),
+            query('category').optional().isIn(Object.values(ErrorTrackingService_1.ErrorCategory)),
+            query('resolved').optional().isBoolean(),
+            query('timeRange').optional().matches(/^\d+[hdw]$/),
             this.handleValidationErrors
         ];
     }
     validateErrorId() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Error ID is required'),
+            param('id').notEmpty().withMessage('Error ID is required'),
             this.handleValidationErrors
         ];
     }
     validateResolveError() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Error ID is required'),
-            (0, express_validator_1.body)('resolvedBy').notEmpty().withMessage('Resolved by is required'),
-            (0, express_validator_1.body)('resolution').optional().isString(),
+            param('id').notEmpty().withMessage('Error ID is required'),
+            body('resolvedBy').notEmpty().withMessage('Resolved by is required'),
+            body('resolution').optional().isString(),
             this.handleValidationErrors
         ];
     }
     validateDashboardMetrics() {
         return [
-            (0, express_validator_1.query)('timeRange').optional().matches(/^\d+[mhdw]$/),
-            (0, express_validator_1.query)('severity').optional().isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)),
-            (0, express_validator_1.query)('category').optional().isIn(Object.values(ErrorTrackingService_1.ErrorCategory)),
-            (0, express_validator_1.query)('services').optional().isString(),
-            (0, express_validator_1.query)('environments').optional().isString(),
+            query('timeRange').optional().matches(/^\d+[mhdw]$/),
+            query('severity').optional().isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)),
+            query('category').optional().isIn(Object.values(ErrorTrackingService_1.ErrorCategory)),
+            query('services').optional().isString(),
+            query('environments').optional().isString(),
             this.handleValidationErrors
         ];
     }
     validateDashboardSummaries() {
         return [
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }),
-            (0, express_validator_1.query)('timeRange').optional().matches(/^\d+[mhdw]$/),
-            (0, express_validator_1.query)('severity').optional().isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)),
-            (0, express_validator_1.query)('category').optional().isIn(Object.values(ErrorTrackingService_1.ErrorCategory)),
+            query('limit').optional().isInt({ min: 1, max: 100 }),
+            query('timeRange').optional().matches(/^\d+[mhdw]$/),
+            query('severity').optional().isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)),
+            query('category').optional().isIn(Object.values(ErrorTrackingService_1.ErrorCategory)),
             this.handleValidationErrors
         ];
     }
     validateStatistics() {
         return [
-            (0, express_validator_1.query)('timeRange').optional().matches(/^\d+[mhdw]$/),
+            query('timeRange').optional().matches(/^\d+[mhdw]$/),
             this.handleValidationErrors
         ];
     }
     validateCreateReport() {
         return [
-            (0, express_validator_1.body)('name').notEmpty().withMessage('Report name is required'),
-            (0, express_validator_1.body)('description').optional().isString(),
-            (0, express_validator_1.body)('filters').optional().isObject(),
-            (0, express_validator_1.body)('metrics').isArray().withMessage('Metrics array is required'),
-            (0, express_validator_1.body)('visualizations').optional().isArray(),
+            body('name').notEmpty().withMessage('Report name is required'),
+            body('description').optional().isString(),
+            body('filters').optional().isObject(),
+            body('metrics').isArray().withMessage('Metrics array is required'),
+            body('visualizations').optional().isArray(),
             this.handleValidationErrors
         ];
     }
     validateReportId() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Report ID is required'),
+            param('id').notEmpty().withMessage('Report ID is required'),
             this.handleValidationErrors
         ];
     }
     validateCreateAlert() {
         return [
-            (0, express_validator_1.body)('name').notEmpty().withMessage('Alert name is required'),
-            (0, express_validator_1.body)('description').optional().isString(),
-            (0, express_validator_1.body)('condition').isObject().withMessage('Condition is required'),
-            (0, express_validator_1.body)('threshold').isNumeric().withMessage('Threshold must be numeric'),
-            (0, express_validator_1.body)('timeWindow').matches(/^\d+[mhdw]$/).withMessage('Invalid time window format'),
-            (0, express_validator_1.body)('severity').isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)),
-            (0, express_validator_1.body)('notificationChannels').isArray().withMessage('Notification channels array is required'),
+            body('name').notEmpty().withMessage('Alert name is required'),
+            body('description').optional().isString(),
+            body('condition').isObject().withMessage('Condition is required'),
+            body('threshold').isNumeric().withMessage('Threshold must be numeric'),
+            body('timeWindow').matches(/^\d+[mhdw]$/).withMessage('Invalid time window format'),
+            body('severity').isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)),
+            body('notificationChannels').isArray().withMessage('Notification channels array is required'),
             this.handleValidationErrors
         ];
     }
     validateUpdateAlert() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Alert ID is required'),
-            (0, express_validator_1.body)('enabled').optional().isBoolean(),
-            (0, express_validator_1.body)('threshold').optional().isNumeric(),
-            (0, express_validator_1.body)('notificationChannels').optional().isArray(),
+            param('id').notEmpty().withMessage('Alert ID is required'),
+            body('enabled').optional().isBoolean(),
+            body('threshold').optional().isNumeric(),
+            body('notificationChannels').optional().isArray(),
             this.handleValidationErrors
         ];
     }
     validateAlertId() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Alert ID is required'),
+            param('id').notEmpty().withMessage('Alert ID is required'),
             this.handleValidationErrors
         ];
     }
     validateCreateChannel() {
         return [
-            (0, express_validator_1.body)('name').notEmpty().withMessage('Channel name is required'),
-            (0, express_validator_1.body)('type').isIn(Object.values(NotificationService_1.NotificationChannelType)).withMessage('Invalid channel type'),
-            (0, express_validator_1.body)('config').isObject().withMessage('Channel config is required'),
-            (0, express_validator_1.body)('filters').optional().isArray(),
-            (0, express_validator_1.body)('rateLimits').optional().isObject(),
+            body('name').notEmpty().withMessage('Channel name is required'),
+            body('type').isIn(Object.values(NotificationService_1.NotificationChannelType)).withMessage('Invalid channel type'),
+            body('config').isObject().withMessage('Channel config is required'),
+            body('filters').optional().isArray(),
+            body('rateLimits').optional().isObject(),
             this.handleValidationErrors
         ];
     }
     validateUpdateChannel() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Channel ID is required'),
-            (0, express_validator_1.body)('enabled').optional().isBoolean(),
-            (0, express_validator_1.body)('config').optional().isObject(),
-            (0, express_validator_1.body)('filters').optional().isArray(),
+            param('id').notEmpty().withMessage('Channel ID is required'),
+            body('enabled').optional().isBoolean(),
+            body('config').optional().isObject(),
+            body('filters').optional().isArray(),
             this.handleValidationErrors
         ];
     }
     validateChannelId() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Channel ID is required'),
+            param('id').notEmpty().withMessage('Channel ID is required'),
             this.handleValidationErrors
         ];
     }
     validateCreateStrategy() {
         return [
-            (0, express_validator_1.body)('name').notEmpty().withMessage('Strategy name is required'),
-            (0, express_validator_1.body)('description').optional().isString(),
-            (0, express_validator_1.body)('category').isIn(Object.values(ErrorTrackingService_1.ErrorCategory)).withMessage('Invalid category'),
-            (0, express_validator_1.body)('applicableConditions').isArray().withMessage('Applicable conditions array is required'),
-            (0, express_validator_1.body)('steps').isArray().withMessage('Steps array is required'),
-            (0, express_validator_1.body)('automaticExecution').isBoolean().withMessage('Automatic execution flag is required'),
+            body('name').notEmpty().withMessage('Strategy name is required'),
+            body('description').optional().isString(),
+            body('category').isIn(Object.values(ErrorTrackingService_1.ErrorCategory)).withMessage('Invalid category'),
+            body('applicableConditions').isArray().withMessage('Applicable conditions array is required'),
+            body('steps').isArray().withMessage('Steps array is required'),
+            body('automaticExecution').isBoolean().withMessage('Automatic execution flag is required'),
             this.handleValidationErrors
         ];
     }
     validateExecuteRecovery() {
         return [
-            (0, express_validator_1.body)('errorId').notEmpty().withMessage('Error ID is required'),
-            (0, express_validator_1.body)('strategyId').notEmpty().withMessage('Strategy ID is required'),
-            (0, express_validator_1.body)('initiatedBy').notEmpty().withMessage('Initiated by is required'),
-            (0, express_validator_1.body)('autoExecution').optional().isBoolean(),
+            body('errorId').notEmpty().withMessage('Error ID is required'),
+            body('strategyId').notEmpty().withMessage('Strategy ID is required'),
+            body('initiatedBy').notEmpty().withMessage('Initiated by is required'),
+            body('autoExecution').optional().isBoolean(),
             this.handleValidationErrors
         ];
     }
     validateExecutionId() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Execution ID is required'),
+            param('id').notEmpty().withMessage('Execution ID is required'),
             this.handleValidationErrors
         ];
     }
     validateCancelRecovery() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Execution ID is required'),
-            (0, express_validator_1.body)('cancelledBy').notEmpty().withMessage('Cancelled by is required'),
+            param('id').notEmpty().withMessage('Execution ID is required'),
+            body('cancelledBy').notEmpty().withMessage('Cancelled by is required'),
             this.handleValidationErrors
         ];
     }
     validateCreateCorrelationRule() {
         return [
-            (0, express_validator_1.body)('name').notEmpty().withMessage('Rule name is required'),
-            (0, express_validator_1.body)('description').optional().isString(),
-            (0, express_validator_1.body)('type').notEmpty().withMessage('Correlation type is required'),
-            (0, express_validator_1.body)('conditions').isArray().withMessage('Conditions array is required'),
-            (0, express_validator_1.body)('timeWindow').isInt({ min: 1 }).withMessage('Time window must be positive integer'),
-            (0, express_validator_1.body)('confidence').isFloat({ min: 0, max: 1 }).withMessage('Confidence must be between 0 and 1'),
+            body('name').notEmpty().withMessage('Rule name is required'),
+            body('description').optional().isString(),
+            body('type').notEmpty().withMessage('Correlation type is required'),
+            body('conditions').isArray().withMessage('Conditions array is required'),
+            body('timeWindow').isInt({ min: 1 }).withMessage('Time window must be positive integer'),
+            body('confidence').isFloat({ min: 0, max: 1 }).withMessage('Confidence must be between 0 and 1'),
             this.handleValidationErrors
         ];
     }
     validateCreateCorrelationPattern() {
         return [
-            (0, express_validator_1.body)('name').notEmpty().withMessage('Pattern name is required'),
-            (0, express_validator_1.body)('pattern').notEmpty().withMessage('Pattern regex is required'),
-            (0, express_validator_1.body)('category').isIn(Object.values(ErrorTrackingService_1.ErrorCategory)).withMessage('Invalid category'),
-            (0, express_validator_1.body)('indicatedCauses').isArray().withMessage('Indicated causes array is required'),
-            (0, express_validator_1.body)('confidence').isFloat({ min: 0, max: 1 }).withMessage('Confidence must be between 0 and 1'),
+            body('name').notEmpty().withMessage('Pattern name is required'),
+            body('pattern').notEmpty().withMessage('Pattern regex is required'),
+            body('category').isIn(Object.values(ErrorTrackingService_1.ErrorCategory)).withMessage('Invalid category'),
+            body('indicatedCauses').isArray().withMessage('Indicated causes array is required'),
+            body('confidence').isFloat({ min: 0, max: 1 }).withMessage('Confidence must be between 0 and 1'),
             this.handleValidationErrors
         ];
     }
     validateCreateErrorPattern() {
         return [
-            (0, express_validator_1.body)('name').notEmpty().withMessage('Pattern name is required'),
-            (0, express_validator_1.body)('description').optional().isString(),
-            (0, express_validator_1.body)('pattern').notEmpty().withMessage('Pattern regex is required'),
-            (0, express_validator_1.body)('category').isIn(Object.values(ErrorTrackingService_1.ErrorCategory)).withMessage('Invalid category'),
-            (0, express_validator_1.body)('severity').isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)).withMessage('Invalid severity'),
-            (0, express_validator_1.body)('tags').optional().isArray(),
-            (0, express_validator_1.body)('recoveryActions').optional().isArray(),
+            body('name').notEmpty().withMessage('Pattern name is required'),
+            body('description').optional().isString(),
+            body('pattern').notEmpty().withMessage('Pattern regex is required'),
+            body('category').isIn(Object.values(ErrorTrackingService_1.ErrorCategory)).withMessage('Invalid category'),
+            body('severity').isIn(Object.values(ErrorTrackingService_1.ErrorSeverity)).withMessage('Invalid severity'),
+            body('tags').optional().isArray(),
+            body('recoveryActions').optional().isArray(),
             this.handleValidationErrors
         ];
     }
     validatePatternId() {
         return [
-            (0, express_validator_1.param)('id').notEmpty().withMessage('Pattern ID is required'),
+            param('id').notEmpty().withMessage('Pattern ID is required'),
             this.handleValidationErrors
         ];
     }
     handleValidationErrors(req, res, next) {
-        const errors = (0, express_validator_1.validationResult)(req);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(400).json({
                 success: false,
@@ -974,7 +974,7 @@ class ErrorTrackingController {
         console.error('Error tracking API error:', error);
         res.status(error.status || 500).json({
             success: false,
-            message: error.message || 'Internal server error',
+            message: error instanceof Error ? error.message : 'Unknown error' || 'Internal server error',
             ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
         });
     }

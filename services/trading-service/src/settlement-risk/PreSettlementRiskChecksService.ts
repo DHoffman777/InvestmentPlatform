@@ -199,7 +199,7 @@ export class PreSettlementRiskChecksService extends EventEmitter {
               suite.requiresApproval = true;
             }
 
-          } catch (error) {
+          } catch (error: any) {
             // Create failed result for check execution error
             const errorResult: RiskCheckResult = {
               checkId: uuidv4(),
@@ -207,7 +207,7 @@ export class PreSettlementRiskChecksService extends EventEmitter {
               checkType,
               status: 'FAIL',
               severity: 'HIGH',
-              message: `Risk check execution failed: ${error.message}`,
+              message: `Risk check execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
               bypassable: false,
               executedAt: new Date(),
               executionTimeMs: 0
@@ -244,13 +244,13 @@ export class PreSettlementRiskChecksService extends EventEmitter {
 
       return suite;
 
-    } catch (error) {
+    } catch (error: any) {
       suite.overallStatus = 'FAIL';
       suite.canProceed = false;
       suite.completedAt = new Date();
       suite.totalExecutionTimeMs = Date.now() - startTime;
       
-      this.emit('riskCheckSuiteError', { suite, error: error.message });
+      this.emit('riskCheckSuiteError', { suite, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -320,13 +320,13 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         message,
         details: { currentPosition, newPosition, limits: positionLimits.length },
         recommendedAction,
-        bypassable: status !== 'FAIL' || severity !== 'CRITICAL',
+        bypassable: status !== 'FAIL' || severity === 'INFO',
         executedAt: new Date(),
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'POSITION_LIMIT_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'POSITION_LIMIT_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -343,9 +343,10 @@ export class PreSettlementRiskChecksService extends EventEmitter {
       let severity: RiskCheckResult['severity'] = 'INFO';
       let message = 'Counterparty exposure check passed';
       let recommendedAction: string | undefined;
+      let utilizationPercentage = 0;
 
       for (const limit of exposureLimits) {
-        const utilizationPercentage = newExposure / limit.limitValue * 100;
+        utilizationPercentage = newExposure / limit.limitValue * 100;
         
         if (utilizationPercentage > limit.breachThreshold) {
           status = 'FAIL';
@@ -372,13 +373,13 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         actualValue: utilizationPercentage,
         threshold: exposureLimits[0]?.breachThreshold,
         recommendedAction,
-        bypassable: status !== 'FAIL' || severity !== 'CRITICAL',
+        bypassable: status !== 'FAIL' || severity === 'INFO',
         executedAt: new Date(),
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'COUNTERPARTY_EXPOSURE_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'COUNTERPARTY_EXPOSURE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -429,8 +430,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'CONCENTRATION_LIMIT_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'CONCENTRATION_LIMIT_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -479,8 +480,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'CREDIT_LIMIT_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'CREDIT_LIMIT_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -526,8 +527,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'SETTLEMENT_CAPACITY_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'SETTLEMENT_CAPACITY_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -579,8 +580,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'LIQUIDITY_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'LIQUIDITY_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -634,13 +635,13 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         message,
         details: { violations, rulesChecked: regulatoryRules.length },
         recommendedAction,
-        bypassable: status !== 'FAIL' || severity !== 'CRITICAL',
+        bypassable: status !== 'FAIL' || severity === 'INFO',
         executedAt: new Date(),
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'REGULATORY_COMPLIANCE_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'REGULATORY_COMPLIANCE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -699,8 +700,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'INTERNAL_POLICY_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'INTERNAL_POLICY_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -737,8 +738,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'MARKET_HOURS_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'MARKET_HOURS_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -780,8 +781,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'SETTLEMENT_DATE_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'SETTLEMENT_DATE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -830,8 +831,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'PRICE_REASONABLENESS_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'PRICE_REASONABLENESS_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -867,8 +868,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'CROSS_TRADE_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'CROSS_TRADE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -910,8 +911,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'WASH_TRADE_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'WASH_TRADE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -963,8 +964,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'RESTRICTED_SECURITY_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'RESTRICTED_SECURITY_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 
@@ -1011,8 +1012,8 @@ export class PreSettlementRiskChecksService extends EventEmitter {
         executionTimeMs: Date.now() - startTime
       };
 
-    } catch (error) {
-      return this.createErrorResult(order.id, 'KYC_AML_CHECK', error.message, startTime);
+    } catch (error: any) {
+      return this.createErrorResult(order.id, 'KYC_AML_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
     }
   }
 

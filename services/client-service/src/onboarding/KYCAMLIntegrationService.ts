@@ -311,7 +311,7 @@ export class KYCAMLIntegrationService extends EventEmitter {
     return kycProfile;
   }
 
-  private async performIdentityVerification(kycProfileId: string): Promise<void> {
+  private async performIdentityVerification(kycProfileId: string): Promise<any> {
     const profile = this.kycProfiles.get(kycProfileId);
     if (!profile) return;
 
@@ -363,7 +363,7 @@ export class KYCAMLIntegrationService extends EventEmitter {
     this.emit('identityVerificationComplete', { kycProfileId, verificationMethods });
   }
 
-  private async performAddressVerification(kycProfileId: string): Promise<void> {
+  private async performAddressVerification(kycProfileId: string): Promise<any> {
     const profile = this.kycProfiles.get(kycProfileId);
     if (!profile || !profile.addressInfo.currentAddress) return;
 
@@ -382,7 +382,7 @@ export class KYCAMLIntegrationService extends EventEmitter {
     this.emit('addressVerificationComplete', { kycProfileId });
   }
 
-  private async performAMLScreening(kycProfileId: string): Promise<void> {
+  private async performAMLScreening(kycProfileId: string): Promise<any> {
     const profile = this.kycProfiles.get(kycProfileId);
     if (!profile) return;
 
@@ -411,7 +411,7 @@ export class KYCAMLIntegrationService extends EventEmitter {
     await this.performRiskAssessment(kycProfileId);
   }
 
-  private async performRiskAssessment(kycProfileId: string): Promise<void> {
+  private async performRiskAssessment(kycProfileId: string): Promise<any> {
     const profile = this.kycProfiles.get(kycProfileId);
     if (!profile) return;
 

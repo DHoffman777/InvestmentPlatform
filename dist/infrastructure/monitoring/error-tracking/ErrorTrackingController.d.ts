@@ -79,5 +79,5 @@ export declare class ErrorTrackingController {
     private errorHandler;
     private handleError;
     getRouter(): Router;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

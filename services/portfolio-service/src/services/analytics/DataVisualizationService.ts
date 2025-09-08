@@ -59,8 +59,8 @@ export class DataVisualizationService {
     allocation: ['#3F51B5', '#009688', '#FF5722', '#795548', '#607D8B', '#E91E63']
   };
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(eventPublisher?: EventPublisher) {
+    this.eventPublisher = eventPublisher || new EventPublisher('DataVisualizationService');
   }
 
   async createVisualization(request: VisualizationRequest): Promise<AnalyticsVisualization> {
@@ -97,7 +97,7 @@ export class DataVisualizationService {
 
       return visualization;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating visualization:', error);
       throw error;
     }
@@ -125,7 +125,7 @@ export class DataVisualizationService {
 
       return updatedVisualization;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating visualization:', error);
       throw error;
     }
@@ -147,7 +147,7 @@ export class DataVisualizationService {
         tenantId,
         metricType: visualization.metricType,
         visualizationType: visualization.type,
-        dateRange: this.extractDateRangeFromFilters(visualization.filters),
+        dateRange: this.extractDateRangeFromFilters(visualization.filters || []),
         filters: visualization.filters
       };
 
@@ -166,7 +166,7 @@ export class DataVisualizationService {
 
       return updatedVisualization;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error refreshing visualization data:', error);
       throw error;
     }
@@ -209,7 +209,7 @@ export class DataVisualizationService {
         availableLevels
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing drill-down:', error);
       throw error;
     }
@@ -711,7 +711,8 @@ export class DataVisualizationService {
     return null;
   }
 
-  private async saveVisualization(visualization: AnalyticsVisualization): Promise<void> {
+  private async saveVisualization(visualization: AnalyticsVisualization): Promise<any> {
     logger.debug('Saving visualization', { visualizationId: visualization.id });
   }
 }
+

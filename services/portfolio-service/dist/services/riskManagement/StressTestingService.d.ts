@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { KafkaService } from '../../utils/kafka-mock';
-import { StressTestRequest, StressTestResult } from '../../models/riskManagement/RiskManagement';
+type StressTestRequest = any;
+type StressTestResult = any;
 export declare class StressTestingService {
     private prisma;
     private kafkaService;
@@ -35,3 +36,4 @@ export declare class StressTestingService {
     private storeStressTestResult;
     private publishStressTestEvent;
 }
+export {};

@@ -114,7 +114,7 @@ export interface MetricAlert {
   metricId: string;
   kpiTargetId?: string;
   tenantId: string;
-  alertType: 'threshold' | 'anomaly' | 'trend' | 'missing_data';
+  alertType: 'threshold' | 'anomaly' | 'trend' | 'missing_data' | 'composite';
   severity: AlertSeverity;
   status: 'active' | 'resolved' | 'suppressed';
   message: string;
@@ -481,3 +481,12 @@ export const COMPLIANCE_KPIS = {
   AML_ALERTS: 'aml_alerts',
   SUITABILITY_VIOLATIONS: 'suitability_violations'
 } as const;
+export interface AlertRule {
+  id: string;
+  name: string;
+  condition: string;
+  threshold: number;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  enabled: boolean;
+  actions: string[];
+}

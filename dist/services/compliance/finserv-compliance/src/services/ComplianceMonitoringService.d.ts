@@ -87,5 +87,5 @@ export declare class ComplianceMonitoringService extends EventEmitter {
     private getRegulatoryAuthority;
     private scheduleAutomaticSubmission;
     private getViolation;
-    cleanup(): Promise<void>;
+    cleanup(): Promise<any>;
 }

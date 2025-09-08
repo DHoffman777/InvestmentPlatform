@@ -183,8 +183,8 @@ export declare class ExecutiveReportingDashboard extends EventEmitter {
     private benchmarkData;
     private insights;
     private recommendations;
-    private reportingTimer;
-    private cacheCleanupTimer;
+    private reportingTimer?;
+    private cacheCleanupTimer?;
     constructor(config: ExecutiveDashboardConfig);
     generateExecutiveSummary(tenantId: string, period: {
         start: Date;
@@ -250,5 +250,5 @@ export declare class ExecutiveReportingDashboard extends EventEmitter {
     private generateId;
     getExecutiveSummary(summaryId: string): ExecutiveSummary | null;
     getExecutiveMetric(metricId: string): ExecutiveMetric | null;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

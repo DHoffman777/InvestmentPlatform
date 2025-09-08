@@ -792,7 +792,6 @@ export class NotificationPreferencesService extends EventEmitter {
     
     if (isValidToken) {
       channel.verificationStatus.isVerified = true;
-      channel.verificationStatus.verifiedAt = new Date();
       channel.verifiedAt = new Date();
       
       preferences.lastUpdated = new Date();
@@ -932,11 +931,15 @@ export class NotificationPreferencesService extends EventEmitter {
     }
 
     const newSchedule: NotificationSchedule = {
+      ...schedule,
       id: randomUUID(),
       executionCount: 0,
-      nextExecution: this.calculateNextExecution(schedule),
-      ...schedule
+      lastExecution: undefined,
+      nextExecution: new Date(Date.now() + 24 * 60 * 60 * 1000) // Default 24 hours from now
     };
+    
+    // Update with correct next execution time
+    newSchedule.nextExecution = this.calculateNextExecution(newSchedule);
 
     preferences.schedules.push(newSchedule);
     preferences.lastUpdated = new Date();
@@ -1187,7 +1190,7 @@ export class NotificationPreferencesService extends EventEmitter {
     const expectedToken = channel.verificationStatus.verificationToken;
     const expiry = channel.verificationStatus.verificationExpiry;
     
-    return expectedToken === token && expiry && expiry > new Date();
+    return expectedToken === token && (expiry ? expiry > new Date() : false);
   }
 
   private calculateNextExecution(schedule: NotificationSchedule): Date {

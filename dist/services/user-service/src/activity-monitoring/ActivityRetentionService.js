@@ -48,6 +48,12 @@ class ActivityRetentionService extends events_1.EventEmitter {
     compressionProvider; // Would use actual compression library
     encryptionProvider; // Would use actual encryption library
     storageProvider; // Would use actual storage provider
+    getErrorMessage(error) {
+        if (error instanceof Error) {
+            return this.getErrorMessage(error);
+        }
+        return String(error);
+    }
     constructor() {
         super();
         this.initializeComplianceRequirements();
@@ -121,7 +127,7 @@ class ActivityRetentionService extends events_1.EventEmitter {
                 }
             }
             catch (error) {
-                results.errors.push(`Error processing activity ${activity.id}: ${error.message}`);
+                results.errors.push(`Error processing activity ${activity.id}: ${this.getErrorMessage(error)}`);
             }
         }
         this.emit('retentionPoliciesApplied', { tenantId, results });
@@ -190,7 +196,7 @@ class ActivityRetentionService extends events_1.EventEmitter {
             return data;
         }
         catch (error) {
-            this.emit('retrievalError', { archiveId, error: error.message });
+            this.emit('retrievalError', { archiveId, error: this.getErrorMessage(error) });
             return null;
         }
     }
@@ -452,8 +458,8 @@ class ActivityRetentionService extends events_1.EventEmitter {
             request.processedAt = new Date();
         }
         catch (error) {
-            request.status = RequestStatus.FAILED;
-            request.processingNotes.push(`Error: ${error.message}`);
+            request.status = RequestStatus.REJECTED;
+            request.processingNotes.push(`Error: ${this.getErrorMessage(error)}`);
         }
         this.emit('dataSubjectRequestStatusChanged', request);
     }
@@ -515,7 +521,7 @@ class ActivityRetentionService extends events_1.EventEmitter {
                     job.progress = Math.round((i + 1) / activitiesToProcess.length * 100);
                 }
                 catch (error) {
-                    job.errors.push(`Error processing activity ${activity.id}: ${error.message}`);
+                    job.errors.push(`Error processing activity ${activity.id}: ${this.getErrorMessage(error)}`);
                 }
             }
             job.status = JobStatus.COMPLETED;
@@ -524,7 +530,7 @@ class ActivityRetentionService extends events_1.EventEmitter {
         }
         catch (error) {
             job.status = JobStatus.FAILED;
-            job.errors.push(error.message);
+            job.errors.push(this.getErrorMessage(error));
         }
         this.emit('retentionJobCompleted', job);
     }

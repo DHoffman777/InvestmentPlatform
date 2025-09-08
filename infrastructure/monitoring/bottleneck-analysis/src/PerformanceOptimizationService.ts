@@ -740,11 +740,11 @@ export class PerformanceOptimizationService extends EventEmitter {
 
       return filteredRecommendations;
 
-    } catch (error) {
-      console.error(`Failed to generate recommendations for profile ${profile.id}:`, error.message);
+    } catch (error: any) {
+      console.error(`Failed to generate recommendations for profile ${profile.id}:`, error instanceof Error ? error.message : 'Unknown error');
       this.emit('recommendationGenerationError', {
         profileId: profile.id,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       return [];
@@ -1502,7 +1502,7 @@ export class PerformanceOptimizationService extends EventEmitter {
     return `risk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     // Cleanup resources
     this.generatedRecommendations.clear();
     this.optimizationPlans.clear();
@@ -1524,3 +1524,4 @@ interface KnowledgePattern {
   solutions: string[];
   confidence: number;
 }
+

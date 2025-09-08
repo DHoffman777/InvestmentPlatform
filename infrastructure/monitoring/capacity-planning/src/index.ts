@@ -160,12 +160,12 @@ export class CapacityPlanningSystem {
 
   constructor(config: CapacityPlanningSystemConfig) {
     this.predictionService = new ResourceUsagePredictionService(config.prediction);
-    this.thresholdMonitor = new ScalingThresholdMonitor(config.thresholdMonitoring);
+    this.thresholdMonitor = new ScalingThresholdMonitor(config.thresholdMonitoring as any);
     this.trendAnalyzer = new CapacityTrendAnalyzer(config.trendAnalysis);
     this.recommendationEngine = new AutomatedScalingRecommendationEngine(config.recommendations);
-    this.reportGenerator = new CapacityPlanningReportGenerator(config.reporting);
-    this.costOptimizationService = new CostOptimizationService(config.costOptimization);
-    this.workflowManager = new CapacityAlertWorkflowManager(config.workflows);
+    this.reportGenerator = new CapacityPlanningReportGenerator(config.reporting as any);
+    this.costOptimizationService = new CostOptimizationService(config.costOptimization as any);
+    this.workflowManager = new CapacityAlertWorkflowManager(config.workflows as any);
 
     this.apiController = new CapacityPlanningController(config.api, {
       predictionService: this.predictionService,
@@ -183,9 +183,9 @@ export class CapacityPlanningSystem {
   private setupIntegrations(): void {
     // Connect threshold monitor alerts to workflow manager
     this.thresholdMonitor.on('alertCreated', async (event) => {
-      const alert = this.thresholdMonitor.getActiveAlerts(event.resourceId);
-      if (alert.length > 0) {
-        await this.workflowManager.processAlert(alert[0]);
+      const alerts = await this.thresholdMonitor.getActiveAlerts(event.resourceId);
+      if (alerts.length > 0) {
+        await this.workflowManager.processAlert(alerts[0]);
       }
     });
 
@@ -252,13 +252,13 @@ export class CapacityPlanningSystem {
     return this.apiController;
   }
 
-  public async start(): Promise<void> {
+  public async start(): Promise<any> {
     console.log('Starting Capacity Planning System...');
     await this.apiController.start();
     console.log('Capacity Planning System started successfully');
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     console.log('Shutting down Capacity Planning System...');
     
     await this.predictionService.shutdown();

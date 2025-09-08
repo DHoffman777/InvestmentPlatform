@@ -79,7 +79,7 @@ export declare class AutomatedScalingRecommendationEngine extends EventEmitter {
         };
         wouldRecommendAgain: boolean;
         submittedBy: string;
-    }): Promise<void>;
+    }): Promise<any>;
     getRecommendationsByResource(resourceId: string): Promise<ScalingRecommendation[]>;
     getRecommendationsByPriority(priority: 'critical' | 'high' | 'medium' | 'low'): Promise<ScalingRecommendation[]>;
     getActiveRecommendations(): Promise<ScalingRecommendation[]>;
@@ -108,5 +108,5 @@ export declare class AutomatedScalingRecommendationEngine extends EventEmitter {
     private generateBatchId;
     getRecommendation(recommendationId: string): ScalingRecommendation | null;
     getAllRecommendations(): ScalingRecommendation[];
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

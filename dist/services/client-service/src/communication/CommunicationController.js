@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommunicationController = void 0;
 const express_1 = __importDefault(require("express"));
-const express_validator_1 = require("express-validator");
+const { body, query, param, validationResult } = require('express-validator');
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 class CommunicationController {
     app;
@@ -149,8 +149,8 @@ class CommunicationController {
         if (this.config.features.enableRecording && this.recordingService) {
             router.post('/recording/sessions', this.validateStartRecording(), this.handleValidationErrors, this.startRecordingSession);
             router.patch('/recording/sessions/:sessionId/stop', this.validateStopRecording(), this.handleValidationErrors, this.stopRecordingSession);
-            router.patch('/recording/sessions/:sessionId/pause', (0, express_validator_1.param)('sessionId').isUUID(), this.handleValidationErrors, this.pauseRecording);
-            router.patch('/recording/sessions/:sessionId/resume', (0, express_validator_1.param)('sessionId').isUUID(), this.handleValidationErrors, this.resumeRecording);
+            router.patch('/recording/sessions/:sessionId/pause', param('sessionId').isUUID(), this.handleValidationErrors, this.pauseRecording);
+            router.patch('/recording/sessions/:sessionId/resume', param('sessionId').isUUID(), this.handleValidationErrors, this.resumeRecording);
             router.get('/recording/recordings', this.validateSearchRecordings(), this.handleValidationErrors, this.searchRecordings);
             router.post('/recording/policies', this.validateCreatePolicy(), this.handleValidationErrors, this.createCompliancePolicy);
             router.patch('/recording/recordings/:recordingId/retention', this.validateExtendRetention(), this.handleValidationErrors, this.extendRetentionPeriod);
@@ -164,12 +164,12 @@ class CommunicationController {
             router.put('/timeline/entries/:entryId', this.validateUpdateTimelineEntry(), this.handleValidationErrors, this.updateTimelineEntry);
             router.delete('/timeline/entries/:entryId', this.validateDeleteTimelineEntry(), this.handleValidationErrors, this.deleteTimelineEntry);
             router.post('/timeline/views', this.validateCreateTimelineView(), this.handleValidationErrors, this.createTimelineView);
-            router.get('/timeline/views/:viewId', (0, express_validator_1.param)('viewId').isUUID(), this.handleValidationErrors, this.getTimelineView);
+            router.get('/timeline/views/:viewId', param('viewId').isUUID(), this.handleValidationErrors, this.getTimelineView);
             router.post('/timeline/templates', this.validateCreateTimelineTemplate(), this.handleValidationErrors, this.createTimelineTemplate);
             router.post('/timeline/templates/:templateId/apply', this.validateApplyTemplate(), this.handleValidationErrors, this.applyTemplate);
             router.post('/timeline/search', this.validateSearchTimeline(), this.handleValidationErrors, this.searchTimeline);
             router.post('/timeline/views/:viewId/export', this.validateExportTimeline(), this.handleValidationErrors, this.exportTimeline);
-            router.get('/timeline/insights/:clientId', (0, express_validator_1.param)('clientId').isUUID(), this.handleValidationErrors, this.generatePredictiveInsights);
+            router.get('/timeline/insights/:clientId', param('clientId').isUUID(), this.handleValidationErrors, this.generatePredictiveInsights);
         }
         // Health check and system routes
         router.get('/health', this.healthCheck);
@@ -179,245 +179,245 @@ class CommunicationController {
     // Validation middleware methods
     validateCreateCommunication() {
         return [
-            (0, express_validator_1.body)('type').isIn(['email', 'phone', 'sms', 'chat', 'meeting', 'document', 'note']),
-            (0, express_validator_1.body)('channel').isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'portal']),
-            (0, express_validator_1.body)('direction').isIn(['inbound', 'outbound', 'internal']),
-            (0, express_validator_1.body)('subject').isLength({ min: 1, max: 200 }),
-            (0, express_validator_1.body)('content').optional().isLength({ max: this.config.validation.maxContentLength }),
-            (0, express_validator_1.body)('clientId').isUUID(),
-            (0, express_validator_1.body)('employeeId').isUUID(),
-            (0, express_validator_1.body)('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
-            (0, express_validator_1.body)('scheduledFor').optional().isISO8601(),
-            (0, express_validator_1.body)('participants').optional().isArray(),
-            (0, express_validator_1.body)('attachments').optional().isArray(),
-            (0, express_validator_1.body)('tags').optional().isArray(),
-            (0, express_validator_1.body)('categories').optional().isArray()
+            body('type').isIn(['email', 'phone', 'sms', 'chat', 'meeting', 'document', 'note']),
+            body('channel').isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'portal']),
+            body('direction').isIn(['inbound', 'outbound', 'internal']),
+            body('subject').isLength({ min: 1, max: 200 }),
+            body('content').optional().isLength({ max: this.config.validation.maxContentLength }),
+            body('clientId').isUUID(),
+            body('employeeId').isUUID(),
+            body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
+            body('scheduledFor').optional().isISO8601(),
+            body('participants').optional().isArray(),
+            body('attachments').optional().isArray(),
+            body('tags').optional().isArray(),
+            body('categories').optional().isArray()
         ];
     }
     validateGetCommunications() {
         return [
-            (0, express_validator_1.query)('clientId').optional().isUUID(),
-            (0, express_validator_1.query)('employeeId').optional().isUUID(),
-            (0, express_validator_1.query)('type').optional().isIn(['email', 'phone', 'sms', 'chat', 'meeting', 'document', 'note']),
-            (0, express_validator_1.query)('channel').optional().isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'portal']),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 1000 }).toInt(),
-            (0, express_validator_1.query)('offset').optional().isInt({ min: 0 }).toInt(),
-            (0, express_validator_1.query)('sortBy').optional().isIn(['createdAt', 'scheduledFor', 'priority', 'type']),
-            (0, express_validator_1.query)('sortOrder').optional().isIn(['asc', 'desc'])
+            query('clientId').optional().isUUID(),
+            query('employeeId').optional().isUUID(),
+            query('type').optional().isIn(['email', 'phone', 'sms', 'chat', 'meeting', 'document', 'note']),
+            query('channel').optional().isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'portal']),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('limit').optional().isInt({ min: 1, max: 1000 }).toInt(),
+            query('offset').optional().isInt({ min: 0 }).toInt(),
+            query('sortBy').optional().isIn(['createdAt', 'scheduledFor', 'priority', 'type']),
+            query('sortOrder').optional().isIn(['asc', 'desc'])
         ];
     }
     validateGetCommunication() {
         return [
-            (0, express_validator_1.param)('id').isUUID()
+            param('id').isUUID()
         ];
     }
     validateUpdateCommunication() {
         return [
-            (0, express_validator_1.param)('id').isUUID(),
-            (0, express_validator_1.body)('status').optional().isIn(['scheduled', 'sent', 'delivered', 'read', 'replied', 'failed', 'cancelled']),
-            (0, express_validator_1.body)('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
-            (0, express_validator_1.body)('scheduledFor').optional().isISO8601(),
-            (0, express_validator_1.body)('content').optional().isLength({ max: this.config.validation.maxContentLength }),
-            (0, express_validator_1.body)('tags').optional().isArray(),
-            (0, express_validator_1.body)('categories').optional().isArray()
+            param('id').isUUID(),
+            body('status').optional().isIn(['scheduled', 'sent', 'delivered', 'read', 'replied', 'failed', 'cancelled']),
+            body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']),
+            body('scheduledFor').optional().isISO8601(),
+            body('content').optional().isLength({ max: this.config.validation.maxContentLength }),
+            body('tags').optional().isArray(),
+            body('categories').optional().isArray()
         ];
     }
     validateDeleteCommunication() {
         return [
-            (0, express_validator_1.param)('id').isUUID(),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 500 })
+            param('id').isUUID(),
+            body('reason').isLength({ min: 1, max: 500 })
         ];
     }
     validateSearchCommunications() {
         return [
-            (0, express_validator_1.body)('query').optional().isLength({ min: 1, max: 500 }),
-            (0, express_validator_1.body)('filters').optional().isObject(),
-            (0, express_validator_1.body)('dateRange').optional().isObject(),
-            (0, express_validator_1.body)('sortBy').optional().isIn(['relevance', 'date', 'priority']),
-            (0, express_validator_1.body)('limit').optional().isInt({ min: 1, max: 1000 }),
-            (0, express_validator_1.body)('offset').optional().isInt({ min: 0 })
+            body('query').optional().isLength({ min: 1, max: 500 }),
+            body('filters').optional().isObject(),
+            body('dateRange').optional().isObject(),
+            body('sortBy').optional().isIn(['relevance', 'date', 'priority']),
+            body('limit').optional().isInt({ min: 1, max: 1000 }),
+            body('offset').optional().isInt({ min: 0 })
         ];
     }
     validateGetClientCommunications() {
         return [
-            (0, express_validator_1.param)('clientId').isUUID(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 1000 }).toInt(),
-            (0, express_validator_1.query)('offset').optional().isInt({ min: 0 }).toInt()
+            param('clientId').isUUID(),
+            query('limit').optional().isInt({ min: 1, max: 1000 }).toInt(),
+            query('offset').optional().isInt({ min: 0 }).toInt()
         ];
     }
     // Analytics validation methods
     validateGetMetrics() {
         return [
-            (0, express_validator_1.query)('startDate').isISO8601(),
-            (0, express_validator_1.query)('endDate').isISO8601(),
-            (0, express_validator_1.query)('clientIds').optional().isArray(),
-            (0, express_validator_1.query)('channels').optional().isArray(),
-            (0, express_validator_1.query)('types').optional().isArray()
+            query('startDate').isISO8601(),
+            query('endDate').isISO8601(),
+            query('clientIds').optional().isArray(),
+            query('channels').optional().isArray(),
+            query('types').optional().isArray()
         ];
     }
     validateGetTrends() {
         return [
-            (0, express_validator_1.query)('startDate').isISO8601(),
-            (0, express_validator_1.query)('endDate').isISO8601(),
-            (0, express_validator_1.query)('periodType').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly'])
+            query('startDate').isISO8601(),
+            query('endDate').isISO8601(),
+            query('periodType').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly'])
         ];
     }
     validateGetClientProfile() {
         return [
-            (0, express_validator_1.param)('clientId').isUUID()
+            param('clientId').isUUID()
         ];
     }
     validateGenerateReport() {
         return [
-            (0, express_validator_1.body)('reportType').isIn(['summary', 'detailed', 'compliance', 'performance', 'client_analysis']),
-            (0, express_validator_1.body)('startDate').isISO8601(),
-            (0, express_validator_1.body)('endDate').isISO8601(),
-            (0, express_validator_1.body)('options').optional().isObject()
+            body('reportType').isIn(['summary', 'detailed', 'compliance', 'performance', 'client_analysis']),
+            body('startDate').isISO8601(),
+            body('endDate').isISO8601(),
+            body('options').optional().isObject()
         ];
     }
     validateGetSentiment() {
         return [
-            (0, express_validator_1.query)('communicationIds').isArray(),
-            (0, express_validator_1.query)('includeEmotions').optional().isBoolean(),
-            (0, express_validator_1.query)('includeTopics').optional().isBoolean()
+            query('communicationIds').isArray(),
+            query('includeEmotions').optional().isBoolean(),
+            query('includeTopics').optional().isBoolean()
         ];
     }
     validateGetRiskFactors() {
         return [
-            (0, express_validator_1.param)('clientId').isUUID()
+            param('clientId').isUUID()
         ];
     }
     // Recording validation methods
     validateStartRecording() {
         return [
-            (0, express_validator_1.body)('communicationId').isUUID(),
-            (0, express_validator_1.body)('sessionType').isIn(['phone', 'video', 'screen_share', 'meeting', 'webinar']),
-            (0, express_validator_1.body)('participants').isArray({ min: 1 })
+            body('communicationId').isUUID(),
+            body('sessionType').isIn(['phone', 'video', 'screen_share', 'meeting', 'webinar']),
+            body('participants').isArray({ min: 1 })
         ];
     }
     validateStopRecording() {
         return [
-            (0, express_validator_1.param)('sessionId').isUUID(),
-            (0, express_validator_1.body)('reason').optional().isLength({ max: 500 })
+            param('sessionId').isUUID(),
+            body('reason').optional().isLength({ max: 500 })
         ];
     }
     validateSearchRecordings() {
         return [
-            (0, express_validator_1.query)('clientIds').optional().isArray(),
-            (0, express_validator_1.query)('employeeIds').optional().isArray(),
-            (0, express_validator_1.query)('startDate').optional().isISO8601(),
-            (0, express_validator_1.query)('endDate').optional().isISO8601(),
-            (0, express_validator_1.query)('recordingTypes').optional().isArray(),
-            (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 1000 }),
-            (0, express_validator_1.query)('offset').optional().isInt({ min: 0 })
+            query('clientIds').optional().isArray(),
+            query('employeeIds').optional().isArray(),
+            query('startDate').optional().isISO8601(),
+            query('endDate').optional().isISO8601(),
+            query('recordingTypes').optional().isArray(),
+            query('limit').optional().isInt({ min: 1, max: 1000 }),
+            query('offset').optional().isInt({ min: 0 })
         ];
     }
     validateCreatePolicy() {
         return [
-            (0, express_validator_1.body)('name').isLength({ min: 1, max: 200 }),
-            (0, express_validator_1.body)('description').isLength({ min: 1, max: 1000 }),
-            (0, express_validator_1.body)('scope').isObject(),
-            (0, express_validator_1.body)('recordingRules').isObject(),
-            (0, express_validator_1.body)('retentionRules').isObject()
+            body('name').isLength({ min: 1, max: 200 }),
+            body('description').isLength({ min: 1, max: 1000 }),
+            body('scope').isObject(),
+            body('recordingRules').isObject(),
+            body('retentionRules').isObject()
         ];
     }
     validateExtendRetention() {
         return [
-            (0, express_validator_1.param)('recordingId').isUUID(),
-            (0, express_validator_1.body)('additionalDays').isInt({ min: 1, max: 3650 }),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 500 }),
-            (0, express_validator_1.body)('requestedBy').isUUID()
+            param('recordingId').isUUID(),
+            body('additionalDays').isInt({ min: 1, max: 3650 }),
+            body('reason').isLength({ min: 1, max: 500 }),
+            body('requestedBy').isUUID()
         ];
     }
     validateLegalHold() {
         return [
-            (0, express_validator_1.param)('recordingId').isUUID(),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 500 }),
-            (0, express_validator_1.body)('requestedBy').isUUID()
+            param('recordingId').isUUID(),
+            body('reason').isLength({ min: 1, max: 500 }),
+            body('requestedBy').isUUID()
         ];
     }
     validatePerformAudit() {
         return [
-            (0, express_validator_1.body)('auditType').isIn(['scheduled', 'random', 'triggered', 'investigation']),
-            (0, express_validator_1.body)('scope').isObject()
+            body('auditType').isIn(['scheduled', 'random', 'triggered', 'investigation']),
+            body('scope').isObject()
         ];
     }
     validateGenerateComplianceReport() {
         return [
-            (0, express_validator_1.body)('reportType').isIn(['audit', 'retention', 'access', 'quality', 'comprehensive']),
-            (0, express_validator_1.body)('startDate').isISO8601(),
-            (0, express_validator_1.body)('endDate').isISO8601(),
-            (0, express_validator_1.body)('options').optional().isObject()
+            body('reportType').isIn(['audit', 'retention', 'access', 'quality', 'comprehensive']),
+            body('startDate').isISO8601(),
+            body('endDate').isISO8601(),
+            body('options').optional().isObject()
         ];
     }
     // Timeline validation methods
     validateCreateTimelineEntry() {
         return [
-            (0, express_validator_1.body)('communicationId').isUUID(),
-            (0, express_validator_1.body)('clientId').isUUID(),
-            (0, express_validator_1.body)('employeeId').isUUID(),
-            (0, express_validator_1.body)('timestamp').isISO8601(),
-            (0, express_validator_1.body)('entryType').isIn(['communication', 'task', 'milestone', 'note', 'document', 'meeting', 'follow_up', 'system_event']),
-            (0, express_validator_1.body)('channel').isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'system', 'portal']),
-            (0, express_validator_1.body)('subject').isLength({ min: 1, max: 200 }),
-            (0, express_validator_1.body)('summary').isLength({ min: 1, max: 1000 })
+            body('communicationId').isUUID(),
+            body('clientId').isUUID(),
+            body('employeeId').isUUID(),
+            body('timestamp').isISO8601(),
+            body('entryType').isIn(['communication', 'task', 'milestone', 'note', 'document', 'meeting', 'follow_up', 'system_event']),
+            body('channel').isIn(['email', 'phone', 'sms', 'chat', 'video_call', 'in_person', 'document', 'system', 'portal']),
+            body('subject').isLength({ min: 1, max: 200 }),
+            body('summary').isLength({ min: 1, max: 1000 })
         ];
     }
     validateUpdateTimelineEntry() {
         return [
-            (0, express_validator_1.param)('entryId').isUUID(),
-            (0, express_validator_1.body)('status').optional().isIn(['scheduled', 'completed', 'cancelled', 'pending', 'in_progress', 'failed']),
-            (0, express_validator_1.body)('priority').optional().isIn(['low', 'medium', 'high', 'urgent'])
+            param('entryId').isUUID(),
+            body('status').optional().isIn(['scheduled', 'completed', 'cancelled', 'pending', 'in_progress', 'failed']),
+            body('priority').optional().isIn(['low', 'medium', 'high', 'urgent'])
         ];
     }
     validateDeleteTimelineEntry() {
         return [
-            (0, express_validator_1.param)('entryId').isUUID(),
-            (0, express_validator_1.body)('reason').isLength({ min: 1, max: 500 }),
-            (0, express_validator_1.body)('deletedBy').isUUID()
+            param('entryId').isUUID(),
+            body('reason').isLength({ min: 1, max: 500 }),
+            body('deletedBy').isUUID()
         ];
     }
     validateCreateTimelineView() {
         return [
-            (0, express_validator_1.body)('clientId').isUUID(),
-            (0, express_validator_1.body)('viewType').isIn(['chronological', 'grouped', 'filtered', 'summary', 'interactive']),
-            (0, express_validator_1.body)('dateRange').isObject(),
-            (0, express_validator_1.body)('filters').optional().isObject()
+            body('clientId').isUUID(),
+            body('viewType').isIn(['chronological', 'grouped', 'filtered', 'summary', 'interactive']),
+            body('dateRange').isObject(),
+            body('filters').optional().isObject()
         ];
     }
     validateCreateTimelineTemplate() {
         return [
-            (0, express_validator_1.body)('name').isLength({ min: 1, max: 200 }),
-            (0, express_validator_1.body)('description').isLength({ min: 1, max: 1000 }),
-            (0, express_validator_1.body)('templateType').isIn(['client_onboarding', 'project_management', 'issue_resolution', 'compliance_review', 'custom']),
-            (0, express_validator_1.body)('structure').isObject()
+            body('name').isLength({ min: 1, max: 200 }),
+            body('description').isLength({ min: 1, max: 1000 }),
+            body('templateType').isIn(['client_onboarding', 'project_management', 'issue_resolution', 'compliance_review', 'custom']),
+            body('structure').isObject()
         ];
     }
     validateApplyTemplate() {
         return [
-            (0, express_validator_1.param)('templateId').isUUID(),
-            (0, express_validator_1.body)('clientId').isUUID(),
-            (0, express_validator_1.body)('startDate').isISO8601(),
-            (0, express_validator_1.body)('customizations').optional().isObject()
+            param('templateId').isUUID(),
+            body('clientId').isUUID(),
+            body('startDate').isISO8601(),
+            body('customizations').optional().isObject()
         ];
     }
     validateSearchTimeline() {
         return [
-            (0, express_validator_1.body)('searchCriteria').isObject(),
-            (0, express_validator_1.body)('options').optional().isObject()
+            body('searchCriteria').isObject(),
+            body('options').optional().isObject()
         ];
     }
     validateExportTimeline() {
         return [
-            (0, express_validator_1.param)('viewId').isUUID(),
-            (0, express_validator_1.body)('exportFormat').isIn(['pdf', 'excel', 'json', 'csv', 'html']),
-            (0, express_validator_1.body)('options').optional().isObject()
+            param('viewId').isUUID(),
+            body('exportFormat').isIn(['pdf', 'excel', 'json', 'csv', 'html']),
+            body('options').optional().isObject()
         ];
     }
     handleValidationErrors = (req, res, next) => {
-        const errors = (0, express_validator_1.validationResult)(req);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
                 error: 'Validation failed',
@@ -627,7 +627,7 @@ class CommunicationController {
             const trends = await this.analyticsService.generateCommunicationTrends(tenantId, {
                 start: new Date(startDate),
                 end: new Date(endDate),
-                type: periodType
+                type: periodType,
             });
             res.json({
                 success: true,

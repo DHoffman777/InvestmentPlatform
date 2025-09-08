@@ -292,7 +292,7 @@ export interface AdvancedSearchOptions {
   collaborative_filtering: boolean;
 }
 
-export class CommunicationSearchService extends EventEmitter {
+class CommunicationSearchService extends EventEmitter {
   private config: SearchConfiguration;
   private searchIndexes: Map<string, SearchIndex>;
   private savedSearches: Map<string, SavedSearch>;
@@ -311,7 +311,7 @@ export class CommunicationSearchService extends EventEmitter {
     this.suggestionEngine = new SuggestionEngine();
   }
 
-  async initialize(): Promise<void> {
+  async initialize(): Promise<any> {
     if (this.isInitialized) {
       return;
     }
@@ -330,7 +330,7 @@ export class CommunicationSearchService extends EventEmitter {
       this.emit('search_service_initialized');
       console.log('Communication search service initialized successfully');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to initialize communication search service:', error);
       throw error;
     }
@@ -385,7 +385,7 @@ export class CommunicationSearchService extends EventEmitter {
       this.emit('search_completed', { query, result, user_id: userId });
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error);
       this.emit('search_error', { query, error, user_id: userId });
       throw error;
@@ -490,7 +490,7 @@ export class CommunicationSearchService extends EventEmitter {
     return result;
   }
 
-  async deleteSavedSearch(searchId: string, userId: string): Promise<void> {
+  async deleteSavedSearch(searchId: string, userId: string): Promise<any> {
     const savedSearch = this.savedSearches.get(searchId);
     if (!savedSearch) {
       throw new Error(`Saved search ${searchId} not found`);
@@ -504,7 +504,7 @@ export class CommunicationSearchService extends EventEmitter {
     this.emit('search_deleted', { search_id: searchId, user_id: userId });
   }
 
-  async indexMessage(message: CommunicationRecord): Promise<void> {
+  async indexMessage(message: CommunicationRecord): Promise<any> {
     if (!this.config.indexing_enabled) {
       return;
     }
@@ -522,13 +522,13 @@ export class CommunicationSearchService extends EventEmitter {
 
       this.emit('message_indexed', { message_id: message.id });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error indexing message ${message.id}:`, error);
       this.emit('indexing_error', { message_id: message.id, error });
     }
   }
 
-  async reindexAll(): Promise<void> {
+  async reindexAll(): Promise<any> {
     if (!this.config.indexing_enabled) {
       throw new Error('Indexing is not enabled');
     }
@@ -547,20 +547,20 @@ export class CommunicationSearchService extends EventEmitter {
       
       this.emit('reindex_completed');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Reindexing error:', error);
       this.emit('reindex_error', error);
       throw error;
     }
   }
 
-  async optimizeIndexes(): Promise<void> {
+  async optimizeIndexes(): Promise<any> {
     for (const [indexName, index] of this.searchIndexes) {
       try {
         await this.optimizeIndex(indexName);
         index.last_optimized = new Date();
         this.emit('index_optimized', { index_name: indexName });
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error optimizing index ${indexName}:`, error);
       }
     }
@@ -784,7 +784,8 @@ export class CommunicationSearchService extends EventEmitter {
 
     // Get suggestions if enabled
     if (this.config.autocomplete_enabled && query.query) {
-      result.suggestions = await this.getSuggestions(query.query);
+      const suggestions = await this.getSuggestions(query.query);
+      result.suggestions = suggestions.map(s => s.text);
     }
 
     return result;
@@ -1011,17 +1012,17 @@ export class CommunicationSearchService extends EventEmitter {
     }
   }
 
-  private async indexDocument(indexName: string, document: SearchDocument): Promise<void> {
+  private async indexDocument(indexName: string, document: SearchDocument): Promise<any> {
     // Placeholder for actual indexing implementation
     console.log(`Indexing document ${document.id} in index ${indexName}`);
   }
 
-  private async clearIndex(indexName: string): Promise<void> {
+  private async clearIndex(indexName: string): Promise<any> {
     // Placeholder for clearing index
     console.log(`Clearing index ${indexName}`);
   }
 
-  private async optimizeIndex(indexName: string): Promise<void> {
+  private async optimizeIndex(indexName: string): Promise<any> {
     // Placeholder for index optimization
     console.log(`Optimizing index ${indexName}`);
   }
@@ -1112,7 +1113,7 @@ export class CommunicationSearchService extends EventEmitter {
     return `${participantIds}_${subjectKey}`;
   }
 
-  private async initializeIndexes(): Promise<void> {
+  private async initializeIndexes(): Promise<any> {
     // Initialize default search indexes
     const defaultIndexes: SearchIndex[] = [
       {
@@ -1147,7 +1148,7 @@ export class CommunicationSearchService extends EventEmitter {
     defaultIndexes.forEach(index => this.searchIndexes.set(index.name, index));
   }
 
-  private async loadSavedSearches(): Promise<void> {
+  private async loadSavedSearches(): Promise<any> {
     // Load saved searches from storage
     // This is a placeholder implementation
   }
@@ -1198,8 +1199,8 @@ interface SearchDocument {
   participants: any[];
   attachments: any[];
   priority: Priority;
-  urgency: Urgency;
-  sensitivity: SensitivityLevel;
+  urgency: any; // Urgency type not defined
+  sensitivity: any; // SensitivityLevel type not defined
   created_at: Date;
   updated_at: Date;
 }
@@ -1228,7 +1229,7 @@ interface SuggestionContext {
 }
 
 class SuggestionEngine {
-  async initialize(): Promise<void> {
+  async initialize(): Promise<any> {
     // Initialize suggestion engine
   }
 
@@ -1246,3 +1247,4 @@ class SuggestionEngine {
 }
 
 export { CommunicationSearchService };
+

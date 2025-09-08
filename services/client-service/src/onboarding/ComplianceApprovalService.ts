@@ -877,7 +877,7 @@ export class ComplianceApprovalService extends EventEmitter {
     return deadlines;
   }
 
-  private async assignReviewers(workflowId: string): Promise<void> {
+  private async assignReviewers(workflowId: string): Promise<any> {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) return;
 
@@ -956,7 +956,7 @@ export class ComplianceApprovalService extends EventEmitter {
     })[0];
   }
 
-  private async startWorkflow(workflowId: string): Promise<void> {
+  private async startWorkflow(workflowId: string): Promise<any> {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) return;
 
@@ -1058,7 +1058,7 @@ export class ComplianceApprovalService extends EventEmitter {
     return Math.min(100, Math.max(0, avgScore));
   }
 
-  private async checkStepCompletion(workflowId: string, stepId: string): Promise<void> {
+  private async checkStepCompletion(workflowId: string, stepId: string): Promise<any> {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) return;
 
@@ -1083,7 +1083,7 @@ export class ComplianceApprovalService extends EventEmitter {
     }
   }
 
-  private async startNextSteps(workflowId: string): Promise<void> {
+  private async startNextSteps(workflowId: string): Promise<any> {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) return;
 
@@ -1110,7 +1110,7 @@ export class ComplianceApprovalService extends EventEmitter {
     await this.checkWorkflowCompletion(workflowId);
   }
 
-  private async checkWorkflowCompletion(workflowId: string): Promise<void> {
+  private async checkWorkflowCompletion(workflowId: string): Promise<any> {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) return;
 

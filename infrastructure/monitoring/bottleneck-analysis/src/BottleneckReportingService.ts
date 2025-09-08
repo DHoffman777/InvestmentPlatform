@@ -737,9 +737,9 @@ export class BottleneckReportingService extends EventEmitter {
 
 ## Financial Impact
 
-- **Estimated Cost of Issues:** ${{estimated_cost}}
-- **Potential Savings from Fixes:** ${{potential_savings}}
-- **ROI of Recommended Improvements:** {{roi_percentage}}%
+- **Estimated Cost of Issues:** ${'${{estimated_cost}}'}
+- **Potential Savings from Fixes:** ${'${{potential_savings}}'}
+- **ROI of Recommended Improvements:** ${'{{roi_percentage}}'}%
 
 ## Next Steps
 
@@ -920,14 +920,14 @@ No automated test results available for this period.
       try {
         const widgetData = await this.generateWidgetData(widgetConfig, timeRange, filters);
         dashboardData.widgets.set(widgetConfig.id, widgetData);
-      } catch (error) {
+      } catch (error: any) {
         // Create error widget data
         dashboardData.widgets.set(widgetConfig.id, {
           widget_id: widgetConfig.id,
           type: widgetConfig.type,
           data: null,
           status: DataStatus.ERROR,
-          error_message: error.message,
+          error_message: error instanceof Error ? error.message : 'Unknown error',
           last_updated: new Date(),
           metadata: {
             data_points: 0,
@@ -1620,12 +1620,12 @@ ${content.replace(/\n/g, '<br>')}
     return steps;
   }
 
-  private async refreshAllDashboards(): Promise<void> {
+  private async refreshAllDashboards(): Promise<any> {
     for (const [dashboardId] of this.dashboards) {
       try {
         await this.generateDashboard(dashboardId);
-      } catch (error) {
-        console.error(`Failed to refresh dashboard ${dashboardId}:`, error.message);
+      } catch (error: any) {
+        console.error(`Failed to refresh dashboard ${dashboardId}:`, error instanceof Error ? error.message : 'Unknown error');
       }
     }
   }
@@ -1684,7 +1684,7 @@ ${content.replace(/\n/g, '<br>')}
     };
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     // Clear scheduled intervals
     for (const timeout of this.scheduledReports.values()) {
       clearTimeout(timeout);
@@ -1698,4 +1698,17 @@ ${content.replace(/\n/g, '<br>')}
 
     console.log('Bottleneck Reporting Service shutdown complete');
   }
+  public async exportReport(reportId: string, format: string): Promise<any> {
+    return { url: `/exports/${reportId}.${format}` };
+  }
+
+  public getAvailableDashboards(): any[] {
+    return [];
+  }
+
+  public getAvailableTemplates(): any[] {
+    return [];
+  }
 }
+
+

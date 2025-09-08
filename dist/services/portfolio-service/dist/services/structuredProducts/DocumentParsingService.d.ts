@@ -1,0 +1,143 @@
+export const __esModule: boolean;
+export class DocumentParsingService {
+    constructor(prisma: any, kafkaService: any);
+    prisma: any;
+    kafkaService: any;
+    parsingConfig: {
+        ocrEngine: string;
+        confidenceThreshold: number;
+        languageModels: string[];
+        templateMatching: boolean;
+        mlModelVersion: string;
+    };
+    documentTemplates: Map<any, any>;
+    parseDocument(documentId: any, documentPath: any, documentType: any, tenantId: any): Promise<{
+        id: string;
+        documentId: any;
+        documentType: any;
+        parsingStatus: string;
+        parsingEngine: string;
+        extractedTerms: {};
+        structuredData: {};
+        extractionConfidence: {};
+        overallConfidence: number;
+        validationErrors: any[];
+        validationWarnings: any[];
+        processingStartTime: Date;
+        requiresReview: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    performOCR(documentPath: any, documentType: any): Promise<string>;
+    performAzureOCR(documentPath: any): Promise<string>;
+    performAWSTextract(documentPath: any): Promise<string>;
+    performGoogleVisionOCR(documentPath: any): Promise<string>;
+    performTesseractOCR(documentPath: any): Promise<string>;
+    preprocessText(rawText: any): Promise<any>;
+    extractTerms(text: any, documentType: any): Promise<{
+        rawSections: {};
+    }>;
+    extractField(text: any, fieldName: any, pattern: any): Promise<any>;
+    convertDataType(value: any, dataType: any): any;
+    setNestedValue(obj: any, path: any, value: any): void;
+    extractSections(text: any): {};
+    enhanceWithML(extractedTerms: any, fullText: any, documentType: any): Promise<any>;
+    extractRiskFactors(text: any): string[];
+    classifyProductType(text: any): "Barrier" | "Autocallable" | "Reverse Convertible" | "Participation" | "Structured";
+    validateExtractedData(extractedTerms: any): Promise<{
+        confidence: {
+            notionalAmount: number;
+            issueDate: number;
+            maturityDate: number;
+            barriers: number;
+        };
+        errors: {
+            field: string;
+            errorType: string;
+            message: string;
+            severity: string;
+        }[];
+        warnings: {
+            field: string;
+            warningType: string;
+            message: string;
+            impact: string;
+        }[];
+    }>;
+    getNestedValue(obj: any, path: any): any;
+    convertToStructuredProduct(extractedTerms: any, tenantId: any): Promise<{
+        tenantId: any;
+        productName: any;
+        issuer: any;
+        cusip: any;
+        isin: any;
+        notionalAmount: any;
+        currency: any;
+        issueDate: any;
+        maturityDate: any;
+        minInvestment: any;
+        payoffType: string;
+        payoffFormula: string;
+        payoffParameters: {
+            participation: any;
+            leverage: any;
+            cap: any;
+            floor: any;
+        };
+        underlyingType: string;
+        underlyingAssets: any;
+        hasBarrier: boolean;
+        barriers: any;
+        hasCoupon: boolean;
+        isCallable: boolean;
+        isPutable: boolean;
+        hasCapitalProtection: boolean;
+        protectionLevel: any;
+        settlementType: string;
+        settlementDays: number;
+        riskFactors: any;
+        creditRating: any;
+        status: string;
+        isActive: boolean;
+    }>;
+    mapPayoffType(description: any): "FIXED_COUPON" | "PARTICIPATION" | "LEVERAGED" | "CAPPED" | "DIGITAL";
+    generatePayoffFormula(extractedTerms: any): string;
+    extractPayoffParameters(extractedTerms: any): {
+        participation: any;
+        leverage: any;
+        cap: any;
+        floor: any;
+    };
+    determineUnderlyingType(underlyingAssets: any): "BASKET" | "SINGLE_STOCK";
+    mapUnderlyingAssets(underlyingAssets: any): any;
+    mapBarriers(barriers: any): any;
+    mapBarrierType(type: any): "UP_AND_IN" | "UP_AND_OUT" | "DOWN_AND_IN" | "DOWN_AND_OUT";
+    mapObservationFrequency(frequency: any): "MONTHLY" | "QUARTERLY" | "DAILY" | "WEEKLY" | "MATURITY_ONLY";
+    initializeTemplates(): Map<any, any>;
+    storeParsingResult(result: any): Promise<void>;
+    publishParsingEvent(result: any): Promise<void>;
+    batchParseDocuments(documents: any, tenantId: any): Promise<any[]>;
+    getParsingResult(documentId: any): Promise<any>;
+    reviewAndCorrect(parsingResultId: any, corrections: any, reviewerId: any): Promise<{
+        id: any;
+        documentId: string;
+        documentType: string;
+        parsingStatus: string;
+        parsingEngine: string;
+        extractedTerms: any;
+        structuredData: {};
+        extractionConfidence: {};
+        overallConfidence: number;
+        validationErrors: any[];
+        validationWarnings: any[];
+        processingStartTime: Date;
+        processingEndTime: Date;
+        processingDuration: number;
+        requiresReview: boolean;
+        reviewedBy: any;
+        reviewedAt: Date;
+        reviewNotes: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+}

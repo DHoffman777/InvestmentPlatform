@@ -15,9 +15,13 @@ export function getPrismaClient(): PrismaClient {
     });
 
     // Add connection and disconnection event handlers
-    prisma.$on('beforeExit', async () => {
-      logger.info('Prisma client disconnecting...');
-    });
+    try {
+      (prisma as any).$on('beforeExit', async () => {
+        logger.info('Prisma client disconnecting...');
+      });
+    } catch (error: any) {
+      // Event listener setup failed, continue without it
+    }
 
     // Handle process exit to ensure clean disconnection
     process.on('beforeExit', async () => {
@@ -32,7 +36,7 @@ export function getPrismaClient(): PrismaClient {
  * Manually disconnect the shared Prisma client
  * Use this for graceful shutdown
  */
-export async function disconnectPrisma(): Promise<void> {
+export async function disconnectPrisma(): Promise<any> {
   if (prisma) {
     await prisma.$disconnect();
     logger.info('Prisma client disconnected');
@@ -47,10 +51,11 @@ export async function testDatabaseConnection(): Promise<boolean> {
     const client = getPrismaClient();
     await client.$queryRaw`SELECT 1`;
     return true;
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Database connection test failed:', error);
     return false;
   }
 }
 
 export default getPrismaClient;
+

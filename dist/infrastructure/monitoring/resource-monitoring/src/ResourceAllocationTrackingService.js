@@ -75,11 +75,11 @@ class ResourceAllocationTrackingService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            console.error('Allocation request failed:', error.message);
+            console.error('Allocation request failed:', error instanceof Error ? error.message : 'Unknown error');
             return {
                 id: this.generateAllocationId(),
                 status: 'rejected',
-                reason: `Internal error: ${error.message}`
+                reason: `Internal error: ${error instanceof Error ? error.message : 'Unknown error'}`
             };
         }
     }
@@ -110,7 +110,7 @@ class ResourceAllocationTrackingService extends events_1.EventEmitter {
             return true;
         }
         catch (error) {
-            console.error(`Failed to release allocation ${allocationId}:`, error.message);
+            console.error(`Failed to release allocation ${allocationId}:`, error instanceof Error ? error.message : 'Unknown error');
             return false;
         }
     }
@@ -520,7 +520,7 @@ class ResourceAllocationTrackingService extends events_1.EventEmitter {
                 await this.performScheduledTracking();
             }
             catch (error) {
-                console.error('Scheduled allocation tracking failed:', error.message);
+                console.error('Scheduled allocation tracking failed:', error instanceof Error ? error.message : 'Unknown error');
             }
         }, this.config.trackingInterval);
     }

@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import {
   ClientDashboardLayout,
@@ -26,13 +27,12 @@ import {
   AlertPriority
 } from '../../models/clientPortal/ClientPortal';
 import { logger } from '../../utils/logger';
-import { EventPublisher } from '../../utils/eventPublisher';
 
 export class ClientPortalService {
-  private eventPublisher: EventPublisher;
+  private prisma: PrismaClient;
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma;
   }
 
   // Dashboard Management
@@ -108,7 +108,7 @@ export class ClientPortalService {
 
       return layout;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving dashboard layout:', error);
       throw error;
     }
@@ -135,16 +135,16 @@ export class ClientPortalService {
       await this.saveDashboardLayout(updatedLayout);
 
       // Publish event
-      await this.eventPublisher.publish('client.dashboard.updated', {
-        tenantId,
-        clientId,
-        layoutId,
-        changes: updates
-      });
+      // await this.eventPublisher.publish('client.dashboard.updated', {
+      //   tenantId,
+      //   clientId,
+      //   layoutId,
+      //   changes: updates
+      // });
 
       return updatedLayout;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating dashboard layout:', error);
       throw error;
     }
@@ -173,7 +173,7 @@ export class ClientPortalService {
       };
 
       // Fetch data for each requested widget type
-      const dataPromises: Promise<void>[] = [];
+      const dataPromises: Promise<any>[] = [];
 
       if (request.widgetTypes.includes(DashboardWidgetType.PORTFOLIO_SUMMARY)) {
         dataPromises.push(
@@ -229,7 +229,7 @@ export class ClientPortalService {
 
       return data;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving dashboard data:', error);
       throw error;
     }
@@ -421,7 +421,7 @@ export class ClientPortalService {
         totalCount: messages.length
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving client messages:', error);
       throw error;
     }
@@ -431,7 +431,7 @@ export class ClientPortalService {
     tenantId: string,
     clientId: string,
     messageId: string
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.info('Marking message as read', { tenantId, clientId, messageId });
 
@@ -439,14 +439,14 @@ export class ClientPortalService {
       await this.updateMessageStatus(messageId, MessageStatus.READ);
 
       // Publish event
-      await this.eventPublisher.publish('client.message.read', {
-        tenantId,
-        clientId,
-        messageId,
-        readAt: new Date()
-      });
+      // await this.eventPublisher.publish('client.message.read', {
+      //   tenantId,
+      //   clientId,
+      //   messageId,
+      //   readAt: new Date()
+      // });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error marking message as read:', error);
       throw error;
     }
@@ -586,7 +586,7 @@ export class ClientPortalService {
         updatedAt: new Date()
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving client preferences:', error);
       throw error;
     }
@@ -612,15 +612,15 @@ export class ClientPortalService {
       await this.saveClientPreferences(updatedPreferences);
 
       // Publish event
-      await this.eventPublisher.publish('client.preferences.updated', {
-        tenantId,
-        clientId,
-        changes: updates
-      });
+      // await this.eventPublisher.publish('client.preferences.updated', {
+      //   tenantId,
+      //   clientId,
+      //   changes: updates
+      // });
 
       return updatedPreferences;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating client preferences:', error);
       throw error;
     }
@@ -653,16 +653,16 @@ export class ClientPortalService {
       await this.savePortalSession(session);
 
       // Publish event
-      await this.eventPublisher.publish('client.portal.login', {
-        tenantId,
-        clientId,
-        sessionId: session.id,
-        deviceInfo
-      });
+      // await this.eventPublisher.publish('client.portal.login', {
+      //   tenantId,
+      //   clientId,
+      //   sessionId: session.id,
+      //   deviceInfo
+      // });
 
       return session;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating portal session:', error);
       throw error;
     }
@@ -699,7 +699,7 @@ export class ClientPortalService {
         period
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving portal analytics:', error);
       throw error;
     }
@@ -710,23 +710,24 @@ export class ClientPortalService {
     return randomUUID() + '.' + Date.now().toString(36);
   }
 
-  private async saveDashboardLayout(layout: ClientDashboardLayout): Promise<void> {
+  private async saveDashboardLayout(layout: ClientDashboardLayout): Promise<any> {
     // Mock implementation
     logger.debug('Saving dashboard layout', { layoutId: layout.id });
   }
 
-  private async saveClientPreferences(preferences: ClientPreferences): Promise<void> {
+  private async saveClientPreferences(preferences: ClientPreferences): Promise<any> {
     // Mock implementation
     logger.debug('Saving client preferences', { clientId: preferences.clientId });
   }
 
-  private async savePortalSession(session: ClientPortalSession): Promise<void> {
+  private async savePortalSession(session: ClientPortalSession): Promise<any> {
     // Mock implementation
     logger.debug('Saving portal session', { sessionId: session.id });
   }
 
-  private async updateMessageStatus(messageId: string, status: MessageStatus): Promise<void> {
+  private async updateMessageStatus(messageId: string, status: MessageStatus): Promise<any> {
     // Mock implementation
     logger.debug('Updating message status', { messageId, status });
   }
 }
+

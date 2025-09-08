@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query, param, body, validationResult } from 'express-validator';
+const { query, param, body, validationResult } = require('express-validator');
 import { MarketDataService } from '../services/marketDataService';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
@@ -31,7 +31,7 @@ router.get('/:symbol',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
       const { startDate, endDate, actionType } = req.query as any;
@@ -62,7 +62,7 @@ router.get('/:symbol',
           actionType,
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching corporate actions:', { 
         symbol: req.params.symbol, 
         startDate: req.query.startDate,
@@ -95,7 +95,7 @@ router.post('/',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const corporateActionData = {
         ...req.body,
@@ -110,7 +110,7 @@ router.post('/',
           value: corporateAction.value?.toNumber(),
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating corporate action:', { corporateActionData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -131,7 +131,7 @@ router.get('/',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { 
         daysAhead = 30, 
@@ -194,7 +194,7 @@ router.get('/',
           actionType,
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error listing corporate actions:', { query: req.query, error });
       res.status(500).json({
         error: 'Internal server error',

@@ -1,4 +1,5 @@
-import { AnalyticsMetricType, AnalyticsConfiguration } from '../../models/analytics/Analytics';
+import { RealTimeAnalyticsEvent, AnalyticsMetricType, AnalyticsConfiguration } from '../../models/analytics/Analytics';
+import { EventPublisher } from '../../utils/eventPublisher';
 interface MetricThreshold {
     id: string;
     tenantId: string;
@@ -43,7 +44,7 @@ export declare class RealTimeAnalyticsService {
     private thresholds;
     private performanceMetrics;
     private updateIntervals;
-    constructor();
+    constructor(eventPublisher?: EventPublisher);
     startRealTimeStream(tenantId: string, userId: string, config: {
         dashboardId?: string;
         visualizationIds?: string[];
@@ -52,13 +53,13 @@ export declare class RealTimeAnalyticsService {
         endpoint?: string;
         refreshInterval?: number;
     }): Promise<StreamingConnection>;
-    stopRealTimeStream(connectionId: string): Promise<void>;
+    stopRealTimeStream(connectionId: string): Promise<any>;
     createMetricThreshold(threshold: Omit<MetricThreshold, 'id' | 'createdAt'>): Promise<MetricThreshold>;
     updateMetricThreshold(thresholdId: string, updates: Partial<MetricThreshold>): Promise<MetricThreshold>;
-    deleteMetricThreshold(thresholdId: string): Promise<void>;
+    deleteMetricThreshold(thresholdId: string): Promise<any>;
     getActiveConnections(tenantId?: string): Promise<StreamingConnection[]>;
     getThresholds(tenantId: string, entityId?: string): Promise<MetricThreshold[]>;
-    processMetricUpdate(tenantId: string, metricType: AnalyticsMetricType, entityId: string, entityType: string, currentValue: number, previousValue?: number): Promise<void>;
+    processMetricUpdate(tenantId: string, metricType: AnalyticsMetricType, entityId: string, entityType: string, currentValue: number, previousValue?: number): Promise<any>;
     getPerformanceMetrics(): Promise<PerformanceMetrics>;
     configureRealTimeSettings(tenantId: string, config: Partial<AnalyticsConfiguration>): Promise<AnalyticsConfiguration>;
     private processRealtimeUpdates;
@@ -75,5 +76,24 @@ export declare class RealTimeAnalyticsService {
     private getRealTimeConfiguration;
     private saveRealTimeConfiguration;
     private saveAnalyticsEvent;
+    getRecentEvents(tenantId: string, options?: {
+        eventTypes?: string[];
+        limit?: number;
+        startDate?: Date;
+        endDate?: Date;
+    }): Promise<RealTimeAnalyticsEvent[]>;
+    configureAlertThresholds(tenantId: string, thresholds: Array<{
+        metricType: AnalyticsMetricType;
+        entityId: string;
+        entityType: 'portfolio' | 'position' | 'client' | 'tenant';
+        thresholdType: 'absolute' | 'percentage' | 'variance';
+        operator: 'greater_than' | 'less_than' | 'equals' | 'not_equals' | 'between';
+        value: number | {
+            min: number;
+            max: number;
+        };
+        severity: 'low' | 'medium' | 'high' | 'critical';
+        description: string;
+    }>, createdBy: string): Promise<MetricThreshold[]>;
 }
 export {};

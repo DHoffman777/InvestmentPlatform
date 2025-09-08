@@ -310,7 +310,7 @@ export class SecurityAuditFramework extends EventEmitter {
       return result;
 
     } catch (error) {
-      this.emit('auditFailed', { auditId: this.auditId, error: error.message });
+      this.emit('auditFailed', { auditId: this.auditId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }

@@ -1,14 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreditRiskMonitoringService = void 0;
+// import { KafkaProducer } from '../../utils/kafka/producer'; // TODO: Implement Kafka
+const logger_1 = require("../../utils/logger");
 class CreditRiskMonitoringService {
     prisma;
-    kafkaProducer;
+    kafkaProducer; // KafkaProducer not implemented yet
     logger;
-    constructor(prisma, kafkaProducer, logger) {
+    constructor(prisma, kafkaProducer, // KafkaProducer optional since not implemented
+    customLogger) {
         this.prisma = prisma;
         this.kafkaProducer = kafkaProducer;
-        this.logger = logger;
+        this.logger = customLogger || logger_1.logger;
     }
     async assessCreditRisk(request) {
         try {
@@ -55,15 +58,22 @@ class CreditRiskMonitoringService {
             };
             // Store assessment in database
             await this.storeAssessment(assessment);
-            // Publish event
-            await this.kafkaProducer.publish('credit-risk-assessed', {
-                portfolioId: request.portfolioId,
-                tenantId: request.tenantId,
-                assessmentId: assessment.id,
-                riskLevel: assessment.riskLevel,
-                alertCount: alerts.length,
-                timestamp: new Date()
-            });
+            // Publish event (if Kafka is available)
+            if (this.kafkaProducer && this.kafkaProducer.publish) {
+                try {
+                    await this.kafkaProducer.publish('credit-risk-assessed', {
+                        portfolioId: request.portfolioId,
+                        tenantId: request.tenantId,
+                        assessmentId: assessment.id,
+                        riskLevel: assessment.riskLevel,
+                        alertCount: alerts.length,
+                        timestamp: new Date()
+                    });
+                }
+                catch (kafkaError) {
+                    this.logger.warn('Failed to publish to Kafka', { kafkaError });
+                }
+            }
             this.logger.info('Credit risk assessment completed', {
                 portfolioId: request.portfolioId,
                 assessmentId: assessment.id,
@@ -82,15 +92,10 @@ class CreditRiskMonitoringService {
             include: {
                 positions: {
                     include: {
-                        security: {
-                            include: {
-                                fixedIncomeDetails: true,
-                                creditRating: true
-                            }
-                        }
+                        security: true // Simplified include since detailed relations may not exist
                     },
                     where: {
-                        asOfDate: {
+                        createdAt: {
                             lte: asOfDate
                         }
                     }

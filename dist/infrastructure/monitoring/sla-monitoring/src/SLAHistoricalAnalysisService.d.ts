@@ -142,5 +142,5 @@ export declare class SLAHistoricalAnalysisService extends EventEmitter {
     private startPeriodicAnalysis;
     private generateAnomalyId;
     private generateRecommendationId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

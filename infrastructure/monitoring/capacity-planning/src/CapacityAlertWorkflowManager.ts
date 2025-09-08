@@ -157,11 +157,11 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
           workflowId: workflow.id, 
           alertId: alert.id 
         });
-      } catch (error) {
+      } catch (error: any) {
         this.emit('workflowStartFailed', { 
           workflowId: workflow.id, 
           alertId: alert.id, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
     }
@@ -192,15 +192,15 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
     try {
       execution.status = WorkflowExecutionStatus.RUNNING;
       await this.processWorkflowSteps(execution, workflow);
-    } catch (error) {
+    } catch (error: any) {
       execution.status = WorkflowExecutionStatus.FAILED;
-      this.emit('workflowFailed', { executionId, error: error.message });
+      this.emit('workflowFailed', { executionId, error: error instanceof Error ? error.message : 'Unknown error' });
     }
 
     return execution;
   }
 
-  private async processWorkflowSteps(execution: WorkflowExecution, workflow: WorkflowTemplate): Promise<void> {
+  private async processWorkflowSteps(execution: WorkflowExecution, workflow: WorkflowTemplate): Promise<any> {
     for (let i = 0; i < workflow.steps.length; i++) {
       const step = workflow.steps[i];
       execution.currentStep = i;
@@ -245,8 +245,8 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
           output: result 
         });
 
-      } catch (error) {
-        stepExecution.error = error.message;
+      } catch (error: any) {
+        stepExecution.error = error instanceof Error ? error.message : 'Unknown error';
         stepExecution.status = WorkflowExecutionStatus.FAILED;
         stepExecution.completedAt = new Date();
 
@@ -262,7 +262,7 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
         this.emit('stepFailed', { 
           executionId: execution.id, 
           stepId: step.id, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
     }
@@ -298,7 +298,7 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
     });
   }
 
-  private async requestApproval(execution: WorkflowExecution, step: WorkflowStep): Promise<void> {
+  private async requestApproval(execution: WorkflowExecution, step: WorkflowStep): Promise<any> {
     const approval: WorkflowApproval = {
       id: this.generateApprovalId(),
       stepId: step.id,
@@ -315,7 +315,7 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
     approvalId: string, 
     userId: string, 
     comments?: string
-  ): Promise<void> {
+  ): Promise<any> {
     const execution = this.executions.get(executionId);
     if (!execution) {
       throw new Error(`Execution ${executionId} not found`);
@@ -347,7 +347,7 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
     approvalId: string, 
     userId: string, 
     comments?: string
-  ): Promise<void> {
+  ): Promise<any> {
     const execution = this.executions.get(executionId);
     if (!execution) {
       throw new Error(`Execution ${executionId} not found`);
@@ -390,7 +390,7 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
   async scheduleWorkflowMaintenance(
     workflowId: string,
     maintenanceWindow: { start: Date; end: Date }
-  ): Promise<void> {
+  ): Promise<any> {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) {
       throw new Error(`Workflow ${workflowId} not found`);
@@ -585,7 +585,7 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
     }
   }
 
-  private async validateWorkflowTemplate(template: WorkflowTemplate): Promise<void> {
+  private async validateWorkflowTemplate(template: WorkflowTemplate): Promise<any> {
     if (!template.name || template.name.trim().length === 0) {
       throw new Error('Workflow template name is required');
     }
@@ -637,7 +637,7 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
     return Array.from(this.workflows.values());
   }
 
-  async cancelExecution(executionId: string, reason: string): Promise<void> {
+  async cancelExecution(executionId: string, reason: string): Promise<any> {
     const execution = this.executions.get(executionId);
     if (!execution) {
       throw new Error(`Execution ${executionId} not found`);
@@ -649,7 +649,7 @@ export class CapacityAlertWorkflowManager extends EventEmitter {
     this.emit('workflowCancelled', { executionId, reason });
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     this.workflows.clear();
     this.executions.clear();
     this.integrations.clear();
@@ -716,13 +716,13 @@ class WorkflowStepExecutor {
 }
 
 class ApprovalManager {
-  async requestApproval(approval: WorkflowApproval, execution: WorkflowExecution, step: WorkflowStep): Promise<void> {
+  async requestApproval(approval: WorkflowApproval, execution: WorkflowExecution, step: WorkflowStep): Promise<any> {
     console.log(`Requesting approval for step ${step.name} in execution ${execution.id}`);
   }
 }
 
 abstract class Integration {
-  abstract send(message: any): Promise<void>;
+  abstract send(message: any): Promise<any>;
 }
 
 class SlackIntegration extends Integration {
@@ -733,7 +733,7 @@ class SlackIntegration extends Integration {
     this.config = config;
   }
 
-  async send(message: any): Promise<void> {
+  async send(message: any): Promise<any> {
     console.log('Sending Slack notification:', message);
   }
 }
@@ -746,7 +746,7 @@ class EmailIntegration extends Integration {
     this.config = config;
   }
 
-  async send(message: any): Promise<void> {
+  async send(message: any): Promise<any> {
     console.log('Sending email notification:', message);
   }
 }
@@ -759,7 +759,7 @@ class PagerDutyIntegration extends Integration {
     this.config = config;
   }
 
-  async send(message: any): Promise<void> {
+  async send(message: any): Promise<any> {
     console.log('Sending PagerDuty alert:', message);
   }
 }
@@ -772,7 +772,7 @@ class JiraIntegration extends Integration {
     this.config = config;
   }
 
-  async send(message: any): Promise<void> {
+  async send(message: any): Promise<any> {
     console.log('Creating Jira ticket:', message);
   }
 }
@@ -785,7 +785,8 @@ class WebhookIntegration extends Integration {
     this.config = config;
   }
 
-  async send(message: any): Promise<void> {
+  async send(message: any): Promise<any> {
     console.log('Sending webhook:', message);
   }
 }
+

@@ -446,7 +446,7 @@ class RiskMitigationWorkflowsService extends events_1.EventEmitter {
             return execution;
         }
         catch (error) {
-            this.emit('workflowTriggerError', { instructionId, error: error.message, triggeredBy });
+            this.emit('workflowTriggerError', { instructionId, error: error instanceof Error ? error.message : 'Unknown error', triggeredBy });
             throw error;
         }
     }
@@ -573,9 +573,9 @@ class RiskMitigationWorkflowsService extends events_1.EventEmitter {
             stepExecution.status = 'FAILED';
             stepExecution.endTime = new Date();
             stepExecution.duration = (stepExecution.endTime.getTime() - stepExecution.startTime.getTime()) / (60 * 1000);
-            stepExecution.notes = error.message;
-            this.emit('stepFailed', { executionId, stepExecution, error: error.message });
-            await this.handleStepFailure(currentStep, execution, stepExecution, error.message);
+            stepExecution.notes = error instanceof Error ? error.message : 'Unknown error';
+            this.emit('stepFailed', { executionId, stepExecution, error: error instanceof Error ? error.message : 'Unknown error' });
+            await this.handleStepFailure(currentStep, execution, stepExecution, error instanceof Error ? error.message : 'Unknown error');
         }
     }
     checkStepDependencies(step, execution) {

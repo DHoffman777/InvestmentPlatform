@@ -64,7 +64,7 @@ class DocumentVersionControlService {
             this.logger.error('Version control operation failed', {
                 documentId: request.documentId,
                 action: request.action,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             throw error;
@@ -280,7 +280,7 @@ class DocumentVersionControlService {
         }
         catch (error) {
             this.logger.error('Failed to retrieve audit trail', {
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             throw error;
@@ -535,7 +535,7 @@ class DocumentVersionControlService {
             this.logger.info('Document version control service initialized');
         }
         catch (error) {
-            this.logger.error('Failed to initialize version control', { error: error.message });
+            this.logger.error('Failed to initialize version control', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     initializeVersioningStrategies() {

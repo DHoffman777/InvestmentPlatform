@@ -112,7 +112,7 @@ export interface CostForecast {
 
 export class CostOptimizationService extends EventEmitter {
   private optimizations: Map<string, CostOptimization> = new Map();
-  private analysisTimer: NodeJS.Timeout;
+  private analysisTimer!: NodeJS.Timeout;
   private config: CostOptimizationConfig;
   private costAnalyzer: CostAnalyzer;
   private rightsizingOptimizer: RightsizingOptimizer;
@@ -157,8 +157,8 @@ export class CostOptimizationService extends EventEmitter {
       });
 
       return optimization;
-    } catch (error) {
-      this.emit('analysisFailed', { resourceId, error: error.message });
+    } catch (error: any) {
+      this.emit('analysisFailed', { resourceId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -306,8 +306,8 @@ export class CostOptimizationService extends EventEmitter {
         estimatedSavings: optimization.savings.amount,
         actualSavings: totalSavings
       };
-    } catch (error) {
-      this.emit('implementationFailed', { resourceId, optimizationId, error: error.message });
+    } catch (error: any) {
+      this.emit('implementationFailed', { resourceId, optimizationId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -739,13 +739,13 @@ export class CostOptimizationService extends EventEmitter {
     this.analysisTimer = setInterval(async () => {
       try {
         await this.performScheduledAnalysis();
-      } catch (error) {
-        this.emit('scheduledAnalysisError', { error: error.message });
+      } catch (error: any) {
+        this.emit('scheduledAnalysisError', { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }, this.config.analysisInterval);
   }
 
-  private async performScheduledAnalysis(): Promise<void> {
+  private async performScheduledAnalysis(): Promise<any> {
     console.log('Performing scheduled cost optimization analysis...');
   }
 
@@ -765,7 +765,7 @@ export class CostOptimizationService extends EventEmitter {
     return Array.from(this.optimizations.values());
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     if (this.analysisTimer) {
       clearInterval(this.analysisTimer);
     }
@@ -873,3 +873,4 @@ class LicenseOptimizer {
     };
   }
 }
+

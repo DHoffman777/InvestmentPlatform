@@ -382,5 +382,5 @@ export declare class PerformanceTestingService extends EventEmitter {
     getTestingStatistics(): any;
     private generateTestId;
     private generateExecutionId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

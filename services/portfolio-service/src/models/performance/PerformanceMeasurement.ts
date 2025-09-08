@@ -169,7 +169,7 @@ export interface AssetClassAttribution {
 }
 
 export interface SecurityAttribution {
-  instrumentId: string;
+  securityId: string;
   instrumentName: string;
   
   // Position Information

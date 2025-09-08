@@ -1,11 +1,11 @@
 "use strict";
 'use client';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.revalidate = exports.dynamic = void 0;
 exports.default = GlobalError;
 const react_1 = require("react");
-exports.dynamic = 'force-dynamic';
-exports.revalidate = 0;
+// Static export mode - removed dynamic directives
+// export const dynamic = 'force-dynamic';
+// export const revalidate = 0;
 function GlobalError({ error, reset, }) {
     (0, react_1.useEffect)(() => {
         console.error('Global error:', error);

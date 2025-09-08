@@ -1,6 +1,7 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
+// Kafka service will be imported when available
+// import { KafkaService } from '../infrastructure/KafkaService';
 import {
   Document,
   DocumentSearchRequest,
@@ -214,24 +215,24 @@ export interface MatchedSection {
 export class DocumentSearchService {
   private prisma: PrismaClient;
   private logger: Logger;
-  private kafkaService: KafkaService;
+  private kafkaService: any; // KafkaService - type will be restored when module is available
   private searchEngine: any;
   private vectorDatabase: any;
   private queryAnalyzer: QueryAnalyzer;
-  private semanticSearch: SemanticSearchEngine;
+  private semanticSearchEngine: SemanticSearchEngine;
   private indexManager: SearchIndexManager;
   private cacheManager: SearchCacheManager;
 
   constructor(
     prisma: PrismaClient,
     logger: Logger,
-    kafkaService: KafkaService
+    kafkaService: any // KafkaService - type will be restored when module is available
   ) {
     this.prisma = prisma;
     this.logger = logger;
     this.kafkaService = kafkaService;
     this.queryAnalyzer = new QueryAnalyzer();
-    this.semanticSearch = new SemanticSearchEngine();
+    this.semanticSearchEngine = new SemanticSearchEngine();
     this.indexManager = new SearchIndexManager();
     this.cacheManager = new SearchCacheManager();
     this.initializeSearchService();
@@ -305,10 +306,10 @@ export class DocumentSearchService {
 
       return enhancedResult;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Document search failed', {
         query: request.query,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack
       });
       throw error;
@@ -326,7 +327,7 @@ export class DocumentSearchService {
         threshold: query.similarityThreshold
       });
 
-      const embedding = query.embedding || await this.semanticSearch.generateEmbedding(query.text);
+      const embedding = query.embedding || await this.semanticSearchEngine.generateEmbedding(query.text);
       const similarDocuments = await this.vectorDatabase.findSimilar(
         embedding,
         query.similarityThreshold,
@@ -354,16 +355,16 @@ export class DocumentSearchService {
 
       return results;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Semantic search failed', {
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack
       });
       throw error;
     }
   }
 
-  async indexDocument(document: Document, extractedData?: ExtractedData): Promise<void> {
+  async indexDocument(document: Document, extractedData?: ExtractedData): Promise<any> {
     try {
       this.logger.info('Indexing document', { documentId: document.id });
 
@@ -384,7 +385,7 @@ export class DocumentSearchService {
           clientId: document.clientId
         },
         tags: document.tags,
-        vectors: await this.semanticSearch.generateEmbedding(
+        vectors: await this.semanticSearchEngine.generateEmbedding(
           `${document.title || ''} ${extractedData?.fields.map(f => f.value).join(' ') || ''}`
         ),
         lastIndexed: new Date(),
@@ -396,7 +397,7 @@ export class DocumentSearchService {
 
       this.logger.info('Document indexed successfully', { documentId: document.id });
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Document indexing failed', {
         documentId: document.id,
         error: error.message
@@ -405,7 +406,7 @@ export class DocumentSearchService {
     }
   }
 
-  async removeFromIndex(documentId: string): Promise<void> {
+  async removeFromIndex(documentId: string): Promise<any> {
     try {
       this.logger.info('Removing document from index', { documentId });
 
@@ -414,7 +415,7 @@ export class DocumentSearchService {
 
       this.logger.info('Document removed from index', { documentId });
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to remove document from index', {
         documentId,
         error: error.message
@@ -423,7 +424,7 @@ export class DocumentSearchService {
     }
   }
 
-  async rebuildIndex(tenantId: string): Promise<void> {
+  async rebuildIndex(tenantId: string): Promise<any> {
     try {
       this.logger.info('Starting index rebuild', { tenantId });
 
@@ -440,7 +441,7 @@ export class DocumentSearchService {
         documentsIndexed: documents.length
       });
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Index rebuild failed', {
         tenantId,
         error: error.message
@@ -854,7 +855,7 @@ export class DocumentSearchService {
     return [];
   }
 
-  private async initializeSearchService(): Promise<void> {
+  private async initializeSearchService(): Promise<any> {
     try {
       this.searchEngine = {
         index: async (entry: SearchIndexEntry) => {
@@ -884,15 +885,15 @@ export class DocumentSearchService {
       };
 
       this.logger.info('Document search service initialized');
-    } catch (error) {
-      this.logger.error('Failed to initialize search service', { error: error.message });
+    } catch (error: any) {
+      this.logger.error('Failed to initialize search service', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
   private async publishSearchEvent(
     request: DocumentSearchRequest,
     result: EnhancedSearchResult
-  ): Promise<void> {
+  ): Promise<any> {
     const event = {
       eventType: 'DOCUMENT_SEARCH_PERFORMED',
       tenantId: request.tenantId,
@@ -969,7 +970,7 @@ class SemanticSearchEngine {
 }
 
 class SearchIndexManager {
-  async optimizeIndex(tenantId: string): Promise<void> {
+  async optimizeIndex(tenantId: string): Promise<any> {
     console.log(`Optimizing search index for tenant: ${tenantId}`);
   }
 
@@ -989,12 +990,13 @@ class SearchCacheManager {
     return this.cache.get(key);
   }
 
-  async set(key: string, value: any, ttl: number): Promise<void> {
+  async set(key: string, value: any, ttl: number): Promise<any> {
     this.cache.set(key, value);
     setTimeout(() => this.cache.delete(key), ttl * 1000);
   }
 
-  async clear(): Promise<void> {
+  async clear(): Promise<any> {
     this.cache.clear();
   }
 }
+

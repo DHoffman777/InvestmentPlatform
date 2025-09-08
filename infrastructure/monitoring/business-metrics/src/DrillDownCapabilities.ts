@@ -126,7 +126,7 @@ export interface DrillDownQuery {
     granularity: TimeInterval;
   };
   filters: Record<string, any>;
-  aggregation: 'sum' | 'avg' | 'min' | 'max' | 'count';
+  aggregation: 'sum' | 'avg' | 'min' | 'max' | 'count' | 'distinct';
   groupBy: string[];
   orderBy?: {
     field: string;
@@ -185,7 +185,7 @@ export class DrillDownCapabilities extends EventEmitter {
   private queryEngine: DrillDownQueryEngine;
   private aggregationEngine: AggregationEngine;
   private insightEngine: InsightEngine;
-  private cacheCleanupTimer: NodeJS.Timeout;
+  private cacheCleanupTimer?: NodeJS.Timeout;
 
   constructor() {
     super();
@@ -569,7 +569,7 @@ export class DrillDownCapabilities extends EventEmitter {
     return [headers, ...rows].map(row => row.join(',')).join('\n');
   }
 
-  private async validateDrillDownPath(path: DrillDownPath): Promise<void> {
+  private async validateDrillDownPath(path: DrillDownPath): Promise<any> {
     if (!path.name || path.name.trim().length === 0) {
       throw new Error('Drill-down path name is required');
     }
@@ -751,7 +751,7 @@ export class DrillDownCapabilities extends EventEmitter {
     return this.sessions.get(sessionId) || null;
   }
 
-  async endSession(sessionId: string): Promise<void> {
+  async endSession(sessionId: string): Promise<any> {
     const session = this.sessions.get(sessionId);
     if (session) {
       this.sessions.delete(sessionId);
@@ -769,7 +769,7 @@ export class DrillDownCapabilities extends EventEmitter {
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     clearInterval(this.cacheCleanupTimer);
     this.cache.clear();
     this.sessions.clear();

@@ -539,10 +539,10 @@ class PerformanceOptimizationService extends events_1.EventEmitter {
             return filteredRecommendations;
         }
         catch (error) {
-            console.error(`Failed to generate recommendations for profile ${profile.id}:`, error.message);
+            console.error(`Failed to generate recommendations for profile ${profile.id}:`, error instanceof Error ? error.message : 'Unknown error');
             this.emit('recommendationGenerationError', {
                 profileId: profile.id,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             return [];

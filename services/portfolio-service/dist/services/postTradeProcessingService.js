@@ -30,7 +30,7 @@ class PostTradeProcessingService {
             tradeId: request.tradeId,
             orderId: request.orderId,
             executionId: request.executionId,
-            instrumentId: trade.instrumentId,
+            securityId: trade.securityId,
             quantity: execution.executionQuantity,
             price: execution.executionPrice,
             grossAmount: execution.executionPrice * execution.executionQuantity,
@@ -42,10 +42,10 @@ class PostTradeProcessingService {
             counterpartyName: await this.getCounterpartyName(request.counterpartyId, tenantId),
             confirmationStatus: PostTradeProcessing_1.TradeConfirmationStatus.PENDING,
             confirmationMethod: request.confirmationMethod,
-            commission: execution.commission || 0,
-            exchangeFees: execution.exchangeFees || 0,
-            regulatoryFees: execution.regulatoryFees || 0,
-            otherFees: execution.otherFees || 0,
+            commission: execution.commission?.toNumber() || 0,
+            exchangeFees: execution.exchangeFees?.toNumber() || 0,
+            regulatoryFees: execution.regulatoryFees?.toNumber() || 0,
+            otherFees: execution.otherFees?.toNumber() || 0,
             confirmationReference: this.generateConfirmationReference(),
             externalTradeId: trade.externalTradeId,
             notes: request.notes,
@@ -111,8 +111,8 @@ class PostTradeProcessingService {
         if (request.portfolioIds && request.portfolioIds.length > 0) {
             where.trade = { portfolioId: { in: request.portfolioIds } };
         }
-        if (request.instrumentIds && request.instrumentIds.length > 0) {
-            where.instrumentId = { in: request.instrumentIds };
+        if (request.securityIds && request.securityIds.length > 0) {
+            where.securityId = { in: request.securityIds };
         }
         if (request.counterpartyIds && request.counterpartyIds.length > 0) {
             where.counterpartyId = { in: request.counterpartyIds };
@@ -165,7 +165,7 @@ class PostTradeProcessingService {
             instructionType: request.instructionType,
             instructionStatus: PostTradeProcessing_1.SettlementInstructionStatus.PENDING,
             settlementDate: confirmation.settlementDate,
-            instrumentId: confirmation.instrumentId,
+            securityId: confirmation.securityId,
             quantity: confirmation.quantity,
             settlementAmount: confirmation.netAmount,
             settlementCurrency: 'USD', // Default, would get from instrument
@@ -280,7 +280,7 @@ class PostTradeProcessingService {
             throw new Error('Order not found');
         }
         // Get market data for analysis period
-        const marketData = await this.getMarketDataForTCA(order.instrumentId, order.orderDate, tenantId);
+        const marketData = await this.getMarketDataForTCA(order.securityId, order.orderDate, tenantId);
         // Calculate benchmark prices
         const benchmarks = await this.calculateTCABenchmarks(order, marketData);
         // Calculate costs
@@ -296,9 +296,9 @@ class PostTradeProcessingService {
             vwapPrice: benchmarks.vwapPrice,
             twapPrice: benchmarks.twapPrice,
             closingPrice: benchmarks.closingPrice,
-            averageExecutionPrice: order.averageFillPrice || 0,
-            totalExecutedQuantity: order.filledQuantity,
-            totalExecutionValue: (order.averageFillPrice || 0) * order.filledQuantity,
+            averageExecutionPrice: order.averageFillPrice?.toNumber() || 0,
+            totalExecutedQuantity: order.filledQuantity.toNumber(),
+            totalExecutionValue: (order.averageFillPrice?.toNumber() || 0) * order.filledQuantity.toNumber(),
             marketImpactCost: costs.marketImpact,
             timingCost: costs.timing,
             spreadCost: costs.spread,
@@ -540,7 +540,7 @@ class PostTradeProcessingService {
     async sendCriticalBreakNotification(breakId, tenantId) {
         // Implementation would send urgent notifications
     }
-    async getMarketDataForTCA(instrumentId, analysisDate, tenantId) {
+    async getMarketDataForTCA(securityId, analysisDate, tenantId) {
         // Implementation would retrieve market data for TCA
         return {
             volatility: 0.2,

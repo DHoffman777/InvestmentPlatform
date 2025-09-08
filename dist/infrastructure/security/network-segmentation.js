@@ -83,7 +83,7 @@ class NetworkSegmentationManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('segmentError', {
                 operation: 'create',
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -114,7 +114,7 @@ class NetworkSegmentationManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('firewallRuleError', {
                 operation: 'create',
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -147,7 +147,7 @@ class NetworkSegmentationManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('networkPolicyError', {
                 operation: 'create',
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -202,13 +202,13 @@ class NetworkSegmentationManager extends events_1.EventEmitter {
                 destinationIp,
                 port,
                 protocol,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             // Fail closed - deny traffic on evaluation error
             return {
                 action: 'deny',
-                reason: `Evaluation error: ${error.message}`
+                reason: `Evaluation error: ${error instanceof Error ? error.message : 'Unknown error'}`
             };
         }
     }
@@ -390,8 +390,7 @@ class NetworkSegmentationManager extends events_1.EventEmitter {
         const portScans = this.detectPortScanning(traffic);
         anomalies.push(...portScans);
         // Detect unusual traffic volumes
-        const volumeAnomalies = this.detectVolume, Anomalies;
-        (traffic);
+        const volumeAnomalies = this.detectVolumeAnomalies(traffic);
         anomalies.push(...volumeAnomalies);
         // Detect geographic anomalies
         const geoAnomalies = this.detectGeographicAnomalies(traffic);

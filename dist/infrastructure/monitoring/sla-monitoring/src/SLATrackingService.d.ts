@@ -57,10 +57,10 @@ export declare class SLATrackingService extends EventEmitter {
     private calculationQueue;
     private isProcessingQueue;
     constructor(config: SLATrackingConfig);
-    registerSLA(sla: SLADefinition): Promise<void>;
-    unregisterSLA(slaId: string): Promise<void>;
-    startTracking(slaId: string): Promise<void>;
-    stopTracking(slaId: string): Promise<void>;
+    registerSLA(sla: SLADefinition): Promise<any>;
+    unregisterSLA(slaId: string): Promise<any>;
+    startTracking(slaId: string): Promise<any>;
+    stopTracking(slaId: string): Promise<any>;
     collectMeasurement(slaId: string): Promise<SLAMeasurementPoint>;
     calculateSLAMetric(slaId: string, timeWindow?: {
         start: Date;
@@ -77,8 +77,8 @@ export declare class SLATrackingService extends EventEmitter {
         start: Date;
         end: Date;
     }, aggregationInterval?: number): Promise<SLAMetric[]>;
-    recalculate(slaId: string): Promise<void>;
-    recalculateAll(): Promise<void>;
+    recalculate(slaId: string): Promise<any>;
+    recalculateAll(): Promise<any>;
     private queryDataSource;
     private queryPrometheus;
     private queryInfluxDB;
@@ -99,5 +99,5 @@ export declare class SLATrackingService extends EventEmitter {
     private startQueueProcessor;
     private initializeDataSources;
     private generateMeasurementId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

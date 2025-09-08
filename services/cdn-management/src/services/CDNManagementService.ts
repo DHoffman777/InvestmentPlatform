@@ -21,9 +21,9 @@ import { CloudFrontProvider } from '../providers/CloudFrontProvider';
 export class CDNManagementService extends EventEmitter {
   private app: express.Application;
   private providers: Map<string, CDNProvider> = new Map();
-  private primaryProvider: CDNProvider;
-  private redis: Redis;
-  private optimizationService: AssetOptimizationService;
+  private primaryProvider!: CDNProvider;
+  private redis!: Redis;
+  private optimizationService!: AssetOptimizationService;
   private purgeJobs: Map<string, PurgeJob> = new Map();
   private performanceMetrics: PerformanceMetrics[] = [];
   private assetCategories: AssetCategory[] = [];
@@ -200,13 +200,16 @@ export class CDNManagementService extends EventEmitter {
 
     // Provider events
     for (const provider of this.providers.values()) {
-      provider.on('assetUploaded', (data) => {
-        this.emit('assetUploaded', { provider: provider.getName(), ...data });
-      });
+      // Check if provider extends EventEmitter (CloudFrontProvider does)
+      if (provider instanceof EventEmitter) {
+        provider.on('assetUploaded', (data: any) => {
+          this.emit('assetUploaded', { provider: provider.getName(), ...data });
+        });
 
-      provider.on('error', (error) => {
-        this.emit('providerError', { provider: provider.getName(), ...error });
-      });
+        provider.on('error', (error: any) => {
+          this.emit('providerError', { provider: provider.getName(), ...error });
+        });
+      }
     }
   }
 
@@ -215,7 +218,7 @@ export class CDNManagementService extends EventEmitter {
     this.app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
     // Performance monitoring middleware
-    this.app.use((req, res, next) => {
+    this.app.use((req: any, res: any, next: any) => {
       const startTime = Date.now();
       
       res.on('finish', () => {
@@ -250,7 +253,7 @@ export class CDNManagementService extends EventEmitter {
         if (allowedTypes.test(file.originalname)) {
           cb(null, true);
         } else {
-          cb(new Error('Unsupported file type'), false);
+          cb(new Error('Unsupported file type'));
         }
       },
     });
@@ -273,7 +276,7 @@ export class CDNManagementService extends EventEmitter {
 
         const result = await this.uploadAsset(uploadRequest);
         res.json(result);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Upload failed', details: (error as Error).message });
       }
     });
@@ -299,7 +302,7 @@ export class CDNManagementService extends EventEmitter {
 
             const result = await this.uploadAsset(uploadRequest);
             results.push(result);
-          } catch (error) {
+          } catch (error: any) {
             errors.push({
               filename: file.originalname,
               error: (error as Error).message,
@@ -308,7 +311,7 @@ export class CDNManagementService extends EventEmitter {
         }
 
         res.json({ results, errors });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Bulk upload failed', details: (error as Error).message });
       }
     });
@@ -319,7 +322,7 @@ export class CDNManagementService extends EventEmitter {
         const { key } = req.params;
         await this.deleteAsset(key);
         res.json({ message: 'Asset deleted successfully' });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Deletion failed', details: (error as Error).message });
       }
     });
@@ -335,7 +338,7 @@ export class CDNManagementService extends EventEmitter {
 
         const job = await this.invalidateCache(paths, type);
         res.json(job);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Invalidation failed', details: (error as Error).message });
       }
     });
@@ -351,7 +354,7 @@ export class CDNManagementService extends EventEmitter {
         }
 
         res.json(metadata);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get metadata', details: (error as Error).message });
       }
     });
@@ -365,7 +368,7 @@ export class CDNManagementService extends EventEmitter {
           endDate ? new Date(endDate as string) : new Date()
         );
         res.json(analytics);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get analytics', details: (error as Error).message });
       }
     });
@@ -375,7 +378,7 @@ export class CDNManagementService extends EventEmitter {
       try {
         const metrics = await this.getPerformanceMetrics();
         res.json(metrics);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get performance metrics', details: (error as Error).message });
       }
     });
@@ -398,7 +401,7 @@ export class CDNManagementService extends EventEmitter {
         
         await this.setCachePolicy(pattern, policy);
         res.json({ message: 'Cache policy updated successfully' });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to update cache policy', details: (error as Error).message });
       }
     });
@@ -408,7 +411,7 @@ export class CDNManagementService extends EventEmitter {
       try {
         const health = await this.getHealthStatus();
         res.json(health);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Health check failed', details: (error as Error).message });
       }
     });
@@ -421,7 +424,7 @@ export class CDNManagementService extends EventEmitter {
         console.log('Running scheduled cache purge...');
         try {
           await this.runScheduledPurge();
-        } catch (error) {
+        } catch (error: any) {
           console.error('Scheduled purge failed:', error);
         }
       });
@@ -436,7 +439,7 @@ export class CDNManagementService extends EventEmitter {
     cron.schedule('0 * * * *', async () => {
       try {
         await this.updateAssetUsageAnalytics();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Asset usage analytics update failed:', error);
       }
     });
@@ -516,7 +519,7 @@ export class CDNManagementService extends EventEmitter {
       this.emit('assetUploadCompleted', result);
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('assetUploadFailed', { key, error });
       throw error;
     }
@@ -532,7 +535,7 @@ export class CDNManagementService extends EventEmitter {
       }
       
       return deleted;
-    } catch (error) {
+    } catch (error: any) {
       this.emit('assetDeletionFailed', { key, error });
       throw error;
     }
@@ -563,7 +566,7 @@ export class CDNManagementService extends EventEmitter {
 
       this.emit('cacheInvalidated', job);
       
-    } catch (error) {
+    } catch (error: any) {
       job.status = 'FAILED';
       job.error = (error as Error).message;
       this.emit('cacheInvalidationFailed', job);
@@ -609,7 +612,7 @@ export class CDNManagementService extends EventEmitter {
     };
   }
 
-  private async storeAssetMetadata(key: string, metadata: any): Promise<void> {
+  private async storeAssetMetadata(key: string, metadata: any): Promise<any> {
     await this.redis.setex(
       `asset:${key}`,
       86400 * 7, // 7 days
@@ -655,12 +658,12 @@ export class CDNManagementService extends EventEmitter {
     }
   }
 
-  private async updateAssetUsageAnalytics(): Promise<void> {
+  private async updateAssetUsageAnalytics(): Promise<any> {
     // This would typically analyze access logs and update usage statistics
     this.emit('assetUsageAnalyticsUpdated', { timestamp: new Date() });
   }
 
-  private async runScheduledPurge(): Promise<void> {
+  private async runScheduledPurge(): Promise<any> {
     // Implement scheduled purge logic based on usage patterns
     const oldAssets = await this.findOldUnusedAssets();
     
@@ -720,7 +723,7 @@ export class CDNManagementService extends EventEmitter {
     });
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     console.log('Shutting down CDN Management Service...');
     
     await this.redis.quit();
@@ -736,3 +739,4 @@ export class CDNManagementService extends EventEmitter {
     return this.app;
   }
 }
+

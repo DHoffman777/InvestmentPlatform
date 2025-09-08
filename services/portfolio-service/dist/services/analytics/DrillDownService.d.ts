@@ -1,4 +1,5 @@
 import { AnalyticsDataPoint, DrillDownLevel, DrillDownRequest, DrillDownResponse, AnalyticsMetricType } from '../../models/analytics/Analytics';
+import { EventPublisher } from '../../utils/eventPublisher';
 interface DrillDownContext {
     tenantId: string;
     portfolioIds?: string[];
@@ -11,7 +12,7 @@ interface DrillDownContext {
 export declare class DrillDownService {
     private eventPublisher;
     private hierarchies;
-    constructor();
+    constructor(eventPublisher?: EventPublisher);
     performDrillDown(request: DrillDownRequest, context: DrillDownContext): Promise<DrillDownResponse>;
     generateInteractiveDrillDown(metricType: AnalyticsMetricType, currentLevel: DrillDownLevel, parentValue: any, context: DrillDownContext): Promise<AnalyticsDataPoint[]>;
     private generateDrillDownData;
@@ -27,6 +28,7 @@ export declare class DrillDownService {
     private formatMarketCap;
     getVisualization(visualizationId: string): Promise<any>;
     validateDrillDownLevel(metricType: AnalyticsMetricType, level: DrillDownLevel, currentPath: DrillDownLevel[]): boolean;
+    getBreadcrumbNavigation(visualizationId: string, currentLevel: DrillDownLevel, dataPointId: string): Promise<DrillDownResponse['breadcrumb']>;
     getMaxDrillDepth(metricType: AnalyticsMetricType): number;
 }
 export {};

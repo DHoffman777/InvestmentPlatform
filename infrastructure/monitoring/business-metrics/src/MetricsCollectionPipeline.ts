@@ -107,7 +107,7 @@ export class MetricsCollectionPipeline extends EventEmitter {
     this.startScheduler();
   }
 
-  async registerDataSource(dataSource: DataSource): Promise<void> {
+  async registerDataSource(dataSource: DataSource): Promise<any> {
     try {
       await this.validateDataSourceConnection(dataSource);
       this.dataSources.set(dataSource.id, dataSource);
@@ -117,21 +117,21 @@ export class MetricsCollectionPipeline extends EventEmitter {
       }
 
       this.emit('dataSourceRegistered', { dataSourceId: dataSource.id });
-    } catch (error) {
+    } catch (error: any) {
       this.emit('dataSourceRegistrationFailed', { 
         dataSourceId: dataSource.id, 
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       });
       throw error;
     }
   }
 
-  async registerMetricDefinition(metric: MetricDefinition): Promise<void> {
+  async registerMetricDefinition(metric: MetricDefinition): Promise<any> {
     this.metricDefinitions.set(metric.id, metric);
     this.emit('metricDefinitionRegistered', { metricId: metric.id });
   }
 
-  async createCollectionJob(job: CollectionJob): Promise<void> {
+  async createCollectionJob(job: CollectionJob): Promise<any> {
     const dataSource = this.dataSources.get(job.dataSource.id);
     if (!dataSource) {
       throw new Error(`Data source ${job.dataSource.id} not found`);
@@ -199,14 +199,14 @@ export class MetricsCollectionPipeline extends EventEmitter {
 
       this.emit('jobCompleted', { jobId, result });
 
-    } catch (error) {
+    } catch (error: any) {
       job.status = 'failed';
       job.errorCount++;
-      job.lastError = error.message;
+      job.lastError = error instanceof Error ? error.message : 'Unknown error';
       
       result.errors.push({
-        type: 'execution',
-        message: error.message,
+        type: 'validation' as 'storage' | 'query' | 'connection' | 'transformation' | 'validation',
+        message: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date(),
         isRetryable: this.isRetryableError(error)
       });
@@ -218,7 +218,7 @@ export class MetricsCollectionPipeline extends EventEmitter {
         job.isEnabled = false;
       }
 
-      this.emit('jobFailed', { jobId, error: error.message, result });
+      this.emit('jobFailed', { jobId, error: error instanceof Error ? error.message : 'Unknown error', result });
       throw error;
 
     } finally {
@@ -275,8 +275,8 @@ export class MetricsCollectionPipeline extends EventEmitter {
       
       const data = await response.json();
       return Array.isArray(data) ? data : [data];
-    } catch (error) {
-      throw new Error(`Failed to collect from API: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to collect from API: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -317,11 +317,11 @@ export class MetricsCollectionPipeline extends EventEmitter {
           default:
             throw new Error(`Unsupported transformation type: ${transformation.type}`);
         }
-      } catch (error) {
+      } catch (error: any) {
         errors++;
         this.emit('transformationError', { 
           transformation: transformation.type, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
     }
@@ -342,7 +342,7 @@ export class MetricsCollectionPipeline extends EventEmitter {
 
   private filterTransformation(data: any[], config: any): any[] {
     const conditions = config.conditions || [];
-    return data.filter(item => {
+    return data.filter((item: any) => {
       return conditions.every((condition: any) => {
         const value = this.getNestedValue(item, condition.field);
         return this.evaluateCondition(value, condition.operator, condition.value);
@@ -388,7 +388,7 @@ export class MetricsCollectionPipeline extends EventEmitter {
       try {
         const result = this.evaluateFormula(formula, item);
         return { ...item, [resultField]: result };
-      } catch (error) {
+      } catch (error: any) {
         return item;
       }
     });
@@ -399,14 +399,14 @@ export class MetricsCollectionPipeline extends EventEmitter {
       return [];
     }
 
-    return data.data.filter(item => {
+    return data.data.filter((item: any) => {
       return validations.every(validation => {
         try {
           return this.executeValidation(item, validation);
-        } catch (error) {
+        } catch (error: any) {
           this.emit('validationError', { 
             validation: validation.type, 
-            error: error.message, 
+            error: error instanceof Error ? error.message : 'Unknown error', 
             item 
           });
           return validation.errorAction !== 'fail';
@@ -471,8 +471,8 @@ export class MetricsCollectionPipeline extends EventEmitter {
       }
 
       return totalInserted;
-    } catch (error) {
-      this.emit('storageError', { error: error.message, count: values.length });
+    } catch (error: any) {
+      this.emit('storageError', { error: error instanceof Error ? error.message : 'Unknown error', count: values.length });
       throw error;
     }
   }
@@ -590,8 +590,8 @@ export class MetricsCollectionPipeline extends EventEmitter {
     try {
       const func = new Function(...Object.keys(context), `return ${formula}`);
       return func(...Object.values(context));
-    } catch (error) {
-      throw new Error(`Formula evaluation failed: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Formula evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -637,7 +637,7 @@ export class MetricsCollectionPipeline extends EventEmitter {
     return headers;
   }
 
-  private async validateDataSourceConnection(dataSource: DataSource): Promise<void> {
+  private async validateDataSourceConnection(dataSource: DataSource): Promise<any> {
     switch (dataSource.type) {
       case 'api':
         const testUrl = dataSource.connectionConfig.healthCheckUrl || dataSource.connectionConfig.baseUrl;
@@ -661,7 +661,7 @@ export class MetricsCollectionPipeline extends EventEmitter {
 
   private isRetryableError(error: any): boolean {
     const retryableErrors = ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'EAI_AGAIN'];
-    return retryableErrors.some(code => error.code === code || error.message.includes(code));
+    return retryableErrors.some(code => error.code === code || error instanceof Error ? error.message : 'Unknown error'.includes(code));
   }
 
   private storeCollectionResult(result: CollectionResult): void {
@@ -683,7 +683,7 @@ export class MetricsCollectionPipeline extends EventEmitter {
     }, 60000);
   }
 
-  private async processScheduledJobs(): Promise<void> {
+  private async processScheduledJobs(): Promise<any> {
     const now = new Date();
     
     for (const [jobId, job] of this.jobs) {
@@ -694,8 +694,8 @@ export class MetricsCollectionPipeline extends EventEmitter {
         
         try {
           await this.executeJob(jobId);
-        } catch (error) {
-          this.emit('scheduledJobError', { jobId, error: error.message });
+        } catch (error: any) {
+          this.emit('scheduledJobError', { jobId, error: error instanceof Error ? error.message : 'Unknown error' });
         }
       }
     }
@@ -750,3 +750,4 @@ class RateLimiter {
     return true;
   }
 }
+

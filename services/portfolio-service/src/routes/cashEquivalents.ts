@@ -8,19 +8,12 @@ const router = Router();
 const prisma = new PrismaClient();
 const cashEquivalentService = new CashEquivalentService(prisma);
 
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    tenantId: string;
-    roles: string[];
-  };
-}
 
 // Get all cash equivalent positions for a portfolio
-router.get('/portfolios/:portfolioId/cash-equivalents', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/portfolios/:portfolioId/cash-equivalents', authenticateToken as any, async (req: Request, res: Response) => {
   try {
     const { portfolioId } = req.params;
-    const tenantId = req.user!.tenantId;
+    const tenantId = (req as any).user!.tenantId;
 
     const positions = await cashEquivalentService.getCashEquivalentPositions(portfolioId, tenantId);
 
@@ -33,7 +26,7 @@ router.get('/portfolios/:portfolioId/cash-equivalents', authenticateToken, async
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching cash equivalent positions:', error);
     res.status(500).json({
       success: false,
@@ -44,11 +37,11 @@ router.get('/portfolios/:portfolioId/cash-equivalents', authenticateToken, async
 });
 
 // Create a money market fund position
-router.post('/portfolios/:portfolioId/money-market-funds', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/portfolios/:portfolioId/money-market-funds', authenticateToken as any, async (req: Request, res: Response) => {
   try {
     const { portfolioId } = req.params;
-    const tenantId = req.user!.tenantId;
-    const userId = req.user!.id;
+    const tenantId = (req as any).user!.tenantId;
+    const userId = (req as any).user!.id;
 
     const {
       fundId,
@@ -90,7 +83,7 @@ router.post('/portfolios/:portfolioId/money-market-funds', authenticateToken, as
       message: 'Money market fund position created successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating money market fund position:', error);
     res.status(500).json({
       success: false,
@@ -101,11 +94,11 @@ router.post('/portfolios/:portfolioId/money-market-funds', authenticateToken, as
 });
 
 // Create a sweep account
-router.post('/portfolios/:portfolioId/sweep-accounts', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/portfolios/:portfolioId/sweep-accounts', authenticateToken as any, async (req: Request, res: Response) => {
   try {
     const { portfolioId } = req.params;
-    const tenantId = req.user!.tenantId;
-    const userId = req.user!.id;
+    const tenantId = (req as any).user!.tenantId;
+    const userId = (req as any).user!.id;
 
     const {
       accountId,
@@ -149,7 +142,7 @@ router.post('/portfolios/:portfolioId/sweep-accounts', authenticateToken, async 
       message: 'Sweep account created successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating sweep account:', error);
     res.status(500).json({
       success: false,
@@ -160,11 +153,11 @@ router.post('/portfolios/:portfolioId/sweep-accounts', authenticateToken, async 
 });
 
 // Execute a sweep transaction
-router.post('/portfolios/:portfolioId/sweep', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/portfolios/:portfolioId/sweep', authenticateToken as any, async (req: Request, res: Response) => {
   try {
     const { portfolioId } = req.params;
-    const tenantId = req.user!.tenantId;
-    const userId = req.user!.id;
+    const tenantId = (req as any).user!.tenantId;
+    const userId = (req as any).user!.id;
 
     const {
       amount,
@@ -204,7 +197,7 @@ router.post('/portfolios/:portfolioId/sweep', authenticateToken, async (req: Aut
       message: `Sweep ${amount > 0 ? 'in' : 'out'} executed successfully`
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error executing sweep:', error);
     res.status(500).json({
       success: false,
@@ -215,11 +208,11 @@ router.post('/portfolios/:portfolioId/sweep', authenticateToken, async (req: Aut
 });
 
 // Process yield distribution
-router.post('/positions/:positionId/yield-distribution', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/positions/:positionId/yield-distribution', authenticateToken as any, async (req: Request, res: Response) => {
   try {
     const { positionId } = req.params;
-    const tenantId = req.user!.tenantId;
-    const userId = req.user!.id;
+    const tenantId = (req as any).user!.tenantId;
+    const userId = (req as any).user!.id;
 
     const {
       distributionDate,
@@ -269,7 +262,7 @@ router.post('/positions/:positionId/yield-distribution', authenticateToken, asyn
       message: 'Yield distribution processed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error processing yield distribution:', error);
     res.status(500).json({
       success: false,
@@ -280,10 +273,10 @@ router.post('/positions/:positionId/yield-distribution', authenticateToken, asyn
 });
 
 // Calculate current yield for a position
-router.get('/positions/:positionId/yield', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/positions/:positionId/yield', authenticateToken as any, async (req: Request, res: Response) => {
   try {
     const { positionId } = req.params;
-    const tenantId = req.user!.tenantId;
+    const tenantId = (req as any).user!.tenantId;
 
     const yieldCalculation = await cashEquivalentService.calculateCurrentYield(positionId, tenantId);
 
@@ -293,7 +286,7 @@ router.get('/positions/:positionId/yield', authenticateToken, async (req: Authen
       message: 'Yield calculated successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error calculating yield:', error);
     res.status(500).json({
       success: false,
@@ -304,10 +297,10 @@ router.get('/positions/:positionId/yield', authenticateToken, async (req: Authen
 });
 
 // Get cash equivalent position by ID with detailed information
-router.get('/positions/:positionId', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/positions/:positionId', authenticateToken as any, async (req: Request, res: Response) => {
   try {
     const { positionId } = req.params;
-    const tenantId = req.user!.tenantId;
+    const tenantId = (req as any).user!.tenantId;
 
     // Get the position from database
     const position = await prisma.position.findFirst({
@@ -379,7 +372,7 @@ router.get('/positions/:positionId', authenticateToken, async (req: Authenticate
       data: cashEquivalentPosition
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching cash equivalent position:', error);
     res.status(500).json({
       success: false,

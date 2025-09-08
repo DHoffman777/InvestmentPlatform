@@ -438,6 +438,6 @@ export declare class MeetingAnalyticsService extends EventEmitter {
         };
         timestamp: Date;
     }>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 export default MeetingAnalyticsService;

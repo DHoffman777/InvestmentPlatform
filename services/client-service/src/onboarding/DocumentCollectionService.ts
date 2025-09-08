@@ -398,7 +398,7 @@ export class DocumentCollectionService extends EventEmitter {
     return documentSubmission;
   }
 
-  private async startVerification(submissionId: string): Promise<void> {
+  private async startVerification(submissionId: string): Promise<any> {
     const submission = this.submissions.get(submissionId);
     if (!submission) {
       throw new Error('Submission not found');
@@ -669,7 +669,7 @@ export class DocumentCollectionService extends EventEmitter {
     workflowId: string,
     requirementId: string,
     reason: string
-  ): Promise<void> {
+  ): Promise<any> {
     this.emit('additionalDocumentRequested', {
       workflowId,
       requirementId,

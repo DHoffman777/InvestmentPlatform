@@ -19,7 +19,7 @@ export class ReportTemplateService {
   private eventPublisher: EventPublisher;
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('ReportTemplateService');
   }
 
   async createReportTemplate(
@@ -97,7 +97,7 @@ export class ReportTemplateService {
 
       return template;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating report template:', error);
       throw error;
     }
@@ -152,7 +152,7 @@ export class ReportTemplateService {
 
       return updatedTemplate;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating report template:', error);
       throw error;
     }
@@ -165,7 +165,7 @@ export class ReportTemplateService {
       // Mock implementation - replace with actual database query
       return null;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report template:', error);
       throw error;
     }
@@ -192,13 +192,13 @@ export class ReportTemplateService {
 
       return { templates, totalCount };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report templates:', error);
       throw error;
     }
   }
 
-  async deleteReportTemplate(tenantId: string, templateId: string, userId: string): Promise<void> {
+  async deleteReportTemplate(tenantId: string, templateId: string, userId: string): Promise<any> {
     try {
       logger.info('Deleting report template', { tenantId, templateId, userId });
 
@@ -223,7 +223,7 @@ export class ReportTemplateService {
 
       logger.info('Report template deleted successfully', { templateId });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deleting report template:', error);
       throw error;
     }
@@ -277,7 +277,7 @@ export class ReportTemplateService {
 
       return newTemplate;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error duplicating report template:', error);
       throw error;
     }
@@ -288,7 +288,7 @@ export class ReportTemplateService {
     templateId: string,
     shareWith: string[],
     userId: string
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.info('Sharing report template', {
         tenantId,
@@ -320,7 +320,7 @@ export class ReportTemplateService {
 
       logger.info('Report template shared successfully', { templateId });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error sharing report template:', error);
       throw error;
     }
@@ -363,7 +363,7 @@ export class ReportTemplateService {
 
       return library;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating report library:', error);
       throw error;
     }
@@ -386,7 +386,7 @@ export class ReportTemplateService {
 
       return stats;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report usage statistics:', error);
       throw error;
     }
@@ -435,14 +435,14 @@ export class ReportTemplateService {
 
       return { template: createdTemplate, preview };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error building custom report:', error);
       throw error;
     }
   }
 
   // Private helper methods
-  private async validateTemplate(template: ReportTemplate): Promise<void> {
+  private async validateTemplate(template: ReportTemplate): Promise<any> {
     if (!template.name || template.name.trim().length === 0) {
       throw new Error('Template name is required');
     }
@@ -471,7 +471,7 @@ export class ReportTemplateService {
     template: ReportTemplate,
     userId: string,
     action: 'VIEW' | 'EDIT' | 'DELETE' | 'SHARE'
-  ): Promise<void> {
+  ): Promise<any> {
     // Check if user is owner
     if (template.createdBy === userId) {
       return;
@@ -623,12 +623,12 @@ export class ReportTemplateService {
     return `${parts[0]}.${parts[1]}.${patch}`;
   }
 
-  private async saveTemplate(template: ReportTemplate): Promise<void> {
+  private async saveTemplate(template: ReportTemplate): Promise<any> {
     // Mock implementation - replace with actual database save
     logger.debug('Saving report template', { templateId: template.id });
   }
 
-  private async saveLibrary(library: ReportLibrary): Promise<void> {
+  private async saveLibrary(library: ReportLibrary): Promise<any> {
     // Mock implementation - replace with actual database save
     logger.debug('Saving report library', { libraryId: library.id });
   }
@@ -642,12 +642,12 @@ export class ReportTemplateService {
     template: ReportTemplate,
     shareWith: string[],
     sharedBy: string
-  ): Promise<void> {
+  ): Promise<any> {
     // Mock implementation - replace with actual notification service
     logger.debug('Sending share notifications', { templateId: template.id, shareWith });
   }
 
-  private async validateDataSource(dataSource: string): Promise<void> {
+  private async validateDataSource(dataSource: string): Promise<any> {
     const validSources = ['portfolio', 'position', 'transaction', 'performance', 'client'];
     if (!validSources.includes(dataSource)) {
       throw new Error(`Invalid data source: ${dataSource}`);
@@ -701,3 +701,4 @@ export class ReportTemplateService {
     };
   }
 }
+

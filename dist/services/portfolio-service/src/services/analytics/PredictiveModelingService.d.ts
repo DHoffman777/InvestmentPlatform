@@ -1,4 +1,5 @@
 import { PredictiveModel, PredictiveInsight } from '../../models/analytics/Analytics';
+import { EventPublisher } from '../../utils/eventPublisher';
 interface ModelTrainingRequest {
     tenantId: string;
     modelType: PredictiveModel['modelType'];
@@ -47,7 +48,7 @@ export declare class PredictiveModelingService {
     private predictions;
     private modelPerformance;
     private defaultHyperparameters;
-    constructor();
+    constructor(eventPublisher?: EventPublisher);
     trainModel(request: ModelTrainingRequest): Promise<PredictiveModel>;
     generatePrediction(request: PredictionRequest): Promise<PredictiveInsight>;
     retrainModel(modelId: string, newTrainingPeriod?: {

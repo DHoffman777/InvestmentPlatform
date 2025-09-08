@@ -59,7 +59,7 @@ export declare class HouseholdManagementService {
     /**
      * Remove client from household
      */
-    removeClientFromHousehold(householdId: string, clientId: string, tenantId: string, userId: string): Promise<void>;
+    removeClientFromHousehold(householdId: string, clientId: string, tenantId: string, userId: string): Promise<any>;
     /**
      * Get household analytics and insights
      */

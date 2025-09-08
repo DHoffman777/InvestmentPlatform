@@ -798,7 +798,7 @@ class DependencyPolicyService extends events_1.EventEmitter {
                     violationId: violation.id,
                     actionType: action.type,
                     status: 'FAILED',
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     executedAt: new Date(),
                     executionDuration: Date.now() - startTime
                 });

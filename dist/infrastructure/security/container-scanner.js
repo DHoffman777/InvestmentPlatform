@@ -86,7 +86,7 @@ class ContainerSecurityScanner extends events_1.EventEmitter {
             this.emit('scanError', {
                 imageName,
                 tag,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -375,7 +375,7 @@ class ContainerSecurityScanner extends events_1.EventEmitter {
                 this.emit('notificationError', {
                     notificationType: notification.type,
                     endpoint: notification.endpoint,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }

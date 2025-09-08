@@ -66,7 +66,7 @@ class CapacityPlanningReportGenerator extends events_1.EventEmitter {
             return report;
         }
         catch (error) {
-            this.emit('reportGenerationFailed', { reportId, type: reportConfig.type, error: error.message });
+            this.emit('reportGenerationFailed', { reportId, type: reportConfig.type, error: error instanceof Error ? error.message : 'Unknown error' });
             const failedReport = this.reports.get(reportId);
             if (failedReport) {
                 failedReport.status = CapacityPlanningDataModel_1.ReportStatus.FAILED;
@@ -91,7 +91,7 @@ class CapacityPlanningReportGenerator extends events_1.EventEmitter {
                 this.emit('scheduledReportGenerated', { scheduleId, reportId: report.id });
             }
             catch (error) {
-                this.emit('scheduledReportFailed', { scheduleId, error: error.message });
+                this.emit('scheduledReportFailed', { scheduleId, error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }, this.getScheduleInterval(reportConfig.schedule));
         this.scheduledReports.set(scheduleId, timer);
@@ -342,7 +342,7 @@ ${rec.timeline.shortTerm.map(step => `2. ${step.description} (${step.estimatedDu
                 this.emit('reportDistributed', { reportId: report.id, recipient });
             }
             catch (error) {
-                this.emit('reportDistributionFailed', { reportId: report.id, recipient, error: error.message });
+                this.emit('reportDistributionFailed', { reportId: report.id, recipient, error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }
     }

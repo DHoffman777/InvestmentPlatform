@@ -123,7 +123,7 @@ export class MultiJurisdictionComplianceService {
   private monitoringRules: Map<string, ComplianceMonitoringRule> = new Map();
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('MultiJurisdictionCompliance');
     this.initializeJurisdictionProfiles();
     this.initializeMonitoringRules();
   }
@@ -179,7 +179,7 @@ export class MultiJurisdictionComplianceService {
 
       return assessment;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating compliance assessment:', error);
       throw error;
     }
@@ -222,7 +222,7 @@ export class MultiJurisdictionComplianceService {
 
       return conflicts;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error identifying jurisdiction conflicts:', error);
       throw error;
     }
@@ -234,7 +234,7 @@ export class MultiJurisdictionComplianceService {
     status: JurisdictionRequirement['compliance']['status'],
     evidence: string[],
     updatedBy: string
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       const profile = this.jurisdictionProfiles.get(jurisdiction);
       if (!profile) {
@@ -275,7 +275,7 @@ export class MultiJurisdictionComplianceService {
         await this.generateComplianceAlert(requirement, jurisdiction);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating compliance status:', error);
       throw error;
     }
@@ -373,7 +373,7 @@ export class MultiJurisdictionComplianceService {
         conflicts
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating compliance report:', error);
       throw error;
     }
@@ -414,7 +414,7 @@ export class MultiJurisdictionComplianceService {
 
       return alerts;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error monitoring compliance thresholds:', error);
       throw error;
     }
@@ -696,7 +696,7 @@ export class MultiJurisdictionComplianceService {
   private async executeAutomatedResponse(
     rule: ComplianceMonitoringRule,
     alert: any
-  ): Promise<void> {
+  ): Promise<any> {
     logger.info('Executing automated compliance response', {
       ruleName: rule.ruleName,
       actions: rule.automatedResponse.actions
@@ -706,7 +706,7 @@ export class MultiJurisdictionComplianceService {
   private async generateComplianceAlert(
     requirement: JurisdictionRequirement,
     jurisdiction: RegulatoryJurisdiction
-  ): Promise<void> {
+  ): Promise<any> {
     await this.eventPublisher.publish('regulatory.compliance_alert.critical', {
       requirementId: requirement.id,
       requirementName: requirement.requirementName,
@@ -715,3 +715,4 @@ export class MultiJurisdictionComplianceService {
     });
   }
 }
+

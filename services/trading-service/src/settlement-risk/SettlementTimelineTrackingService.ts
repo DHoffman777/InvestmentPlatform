@@ -216,7 +216,7 @@ export class SettlementTimelineTrackingService extends EventEmitter {
     return instruction;
   }
 
-  private async createMilestoneTimeline(instruction: SettlementInstruction): Promise<void> {
+  private async createMilestoneTimeline(instruction: SettlementInstruction): Promise<any> {
     const securityType = await this.getSecurityType(instruction.securityId);
     const template = this.MILESTONE_TEMPLATES.get(securityType) || this.MILESTONE_TEMPLATES.get('EQUITY')!;
     
@@ -241,7 +241,7 @@ export class SettlementTimelineTrackingService extends EventEmitter {
     this.settlementDelays.set(instruction.id, []);
   }
 
-  public async updateMilestoneStatus(instructionId: string, milestoneType: string, status: 'COMPLETED' | 'DELAYED' | 'FAILED' | 'SKIPPED', notes?: string): Promise<void> {
+  public async updateMilestoneStatus(instructionId: string, milestoneType: string, status: 'COMPLETED' | 'DELAYED' | 'FAILED' | 'SKIPPED', notes?: string): Promise<any> {
     const milestones = this.settlementMilestones.get(instructionId);
     if (!milestones) {
       throw new Error(`Settlement instruction not found: ${instructionId}`);
@@ -274,7 +274,7 @@ export class SettlementTimelineTrackingService extends EventEmitter {
     this.emit('milestoneStatusUpdated', { instructionId, milestone, oldStatus });
   }
 
-  private async updateInstructionStatus(instructionId: string): Promise<void> {
+  private async updateInstructionStatus(instructionId: string): Promise<any> {
     const instruction = this.settlementInstructions.get(instructionId);
     const milestones = this.settlementMilestones.get(instructionId);
     

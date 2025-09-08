@@ -187,7 +187,7 @@ class ComplianceReportingService extends events_1.EventEmitter {
             return report;
         }
         catch (error) {
-            this.emit('reportGenerationFailed', { reportId, tenantId, error: error.message });
+            this.emit('reportGenerationFailed', { reportId, tenantId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -755,7 +755,7 @@ class ComplianceReportingService extends events_1.EventEmitter {
             this.emit('reportDistributed', { reportId, channels: report.distribution.channels.length });
         }
         catch (error) {
-            this.emit('reportDistributionFailed', { reportId, error: error.message });
+            this.emit('reportDistributionFailed', { reportId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }

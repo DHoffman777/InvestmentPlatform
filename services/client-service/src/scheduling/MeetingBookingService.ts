@@ -582,7 +582,7 @@ export class MeetingBookingService extends EventEmitter {
     return booking;
   }
 
-  private async validateBookingRequest(request: BookingRequest, workflow: BookingWorkflow): Promise<void> {
+  private async validateBookingRequest(request: BookingRequest, workflow: BookingWorkflow): Promise<any> {
     const errors: string[] = [];
 
     // Check minimum notice
@@ -738,7 +738,7 @@ export class MeetingBookingService extends EventEmitter {
   }
 
   // Workflow processing
-  private async processWorkflowStep(bookingId: string): Promise<void> {
+  private async processWorkflowStep(bookingId: string): Promise<any> {
     const booking = this.bookings.get(bookingId);
     if (!booking) return;
 
@@ -791,7 +791,7 @@ export class MeetingBookingService extends EventEmitter {
         await this.processWorkflowStep(bookingId);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Workflow step ${step.id} failed for booking ${bookingId}:`, error);
       
       if (step.retryAttempts > 0) {
@@ -807,7 +807,7 @@ export class MeetingBookingService extends EventEmitter {
         this.emit('bookingRejected', {
           bookingId,
           tenantId: booking.tenantId,
-          reason: error.message,
+          reason: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
@@ -860,7 +860,7 @@ export class MeetingBookingService extends EventEmitter {
     return value;
   }
 
-  private async executeWorkflowStep(step: BookingWorkflowStep, booking: MeetingBooking): Promise<void> {
+  private async executeWorkflowStep(step: BookingWorkflowStep, booking: MeetingBooking): Promise<any> {
     for (const action of step.actions) {
       switch (action.type) {
         case 'send_notification':
@@ -882,7 +882,7 @@ export class MeetingBookingService extends EventEmitter {
     }
   }
 
-  private async sendNotification(booking: MeetingBooking, config: any): Promise<void> {
+  private async sendNotification(booking: MeetingBooking, config: any): Promise<any> {
     // Mock notification implementation
     console.log(`Sending ${config.template} notification for booking ${booking.id}`);
     
@@ -896,7 +896,7 @@ export class MeetingBookingService extends EventEmitter {
     booking.workflow.notifications.push(notification);
   }
 
-  private async requestApproval(booking: MeetingBooking, config: any): Promise<void> {
+  private async requestApproval(booking: MeetingBooking, config: any): Promise<any> {
     // Update booking status to pending approval
     booking.status = 'pending_approval';
     
@@ -914,7 +914,7 @@ export class MeetingBookingService extends EventEmitter {
     console.log(`Approval requested for booking ${booking.id} from ${approval.approverId}`);
   }
 
-  private async bookResources(booking: MeetingBooking, config: any): Promise<void> {
+  private async bookResources(booking: MeetingBooking, config: any): Promise<any> {
     // Mock resource booking
     if (config.resourceTypes?.includes('room')) {
       booking.resources.push({
@@ -941,13 +941,13 @@ export class MeetingBookingService extends EventEmitter {
     console.log(`Resources booked for booking ${booking.id}`);
   }
 
-  private async createCalendarEvent(booking: MeetingBooking, config: any): Promise<void> {
+  private async createCalendarEvent(booking: MeetingBooking, config: any): Promise<any> {
     // Mock calendar event creation
     booking.integrations.calendarEventId = `cal_${randomUUID()}`;
     console.log(`Calendar event created for booking ${booking.id}`);
   }
 
-  private async executeCustomAction(booking: MeetingBooking, config: any): Promise<void> {
+  private async executeCustomAction(booking: MeetingBooking, config: any): Promise<any> {
     // Handle custom actions based on config
     switch (config.action) {
       case 'validate_business_rules':
@@ -1123,7 +1123,7 @@ export class MeetingBookingService extends EventEmitter {
     return booking;
   }
 
-  private async cancelBookingResources(booking: MeetingBooking): Promise<void> {
+  private async cancelBookingResources(booking: MeetingBooking): Promise<any> {
     // Cancel all confirmed resources
     for (const resource of booking.resources) {
       if (resource.status === 'confirmed') {
@@ -1134,7 +1134,7 @@ export class MeetingBookingService extends EventEmitter {
     console.log(`Resources cancelled for booking ${booking.id}`);
   }
 
-  private async sendCancellationNotifications(booking: MeetingBooking): Promise<void> {
+  private async sendCancellationNotifications(booking: MeetingBooking): Promise<any> {
     // Send cancellation notifications to all attendees
     console.log(`Cancellation notifications sent for booking ${booking.id}`);
   }
@@ -1205,7 +1205,7 @@ export class MeetingBookingService extends EventEmitter {
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     console.log('Shutting down Meeting Booking Service...');
     
     // Cancel all pending workflows
@@ -1224,3 +1224,4 @@ export class MeetingBookingService extends EventEmitter {
 }
 
 export default MeetingBookingService;
+

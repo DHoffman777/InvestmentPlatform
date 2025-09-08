@@ -98,7 +98,7 @@ export class BestExecutionService {
   private filings: Map<string, RegulatoryFiling> = new Map();
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('BestExecution');
   }
 
   async createBestExecutionReport(data: BestExecutionReportData): Promise<BestExecutionReport> {
@@ -182,7 +182,7 @@ export class BestExecutionService {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating best execution report:', error);
       throw error;
     }
@@ -382,8 +382,8 @@ export class BestExecutionService {
       }
 
       // Calculate analysis results
-      const venueConcentration = this.calculateVenueConcentration(report.executionVenues);
-      const averageExecutionQuality = this.calculateAverageExecutionQuality(report.executionVenues);
+      const venueConcentration = this.calculateVenueConcentration(report.executionVenues as ExecutionVenueData[]);
+      const averageExecutionQuality = this.calculateAverageExecutionQuality(report.executionVenues as ExecutionVenueData[]);
       const complianceScore = this.calculateComplianceScore(errors.length, warnings.length);
 
       // Calculate completion percentage
@@ -414,7 +414,7 @@ export class BestExecutionService {
         }
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error validating best execution report:', error);
       throw error;
     }
@@ -497,7 +497,7 @@ export class BestExecutionService {
 
       return filing;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting best execution report:', error);
       throw error;
     }
@@ -601,13 +601,13 @@ export class BestExecutionService {
       };
 
       return {
-        overallMetrics,
+        overallMetrics: overallMetrics as ExecutionQualityMetrics,
         venueComparison,
         recommendations,
         benchmarkComparison
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating execution quality analysis:', error);
       throw error;
     }

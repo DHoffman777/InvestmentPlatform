@@ -54,7 +54,7 @@ export interface TrendComponents {
 
 export class CapacityTrendAnalyzer extends EventEmitter {
   private trends: Map<string, CapacityTrend> = new Map();
-  private analysisTimer: NodeJS.Timeout;
+  private analysisTimer!: NodeJS.Timeout;
   private config: TrendAnalyzerConfig;
   private timeSeriesProcessor: TimeSeriesProcessor;
   private seasonalityDetector: SeasonalityDetector;
@@ -143,12 +143,12 @@ export class CapacityTrendAnalyzer extends EventEmitter {
       });
 
       return trend;
-    } catch (error) {
+    } catch (error: any) {
       this.emit('analysisFailed', { 
         trendId, 
         resourceId: request.resourceId, 
         metric: request.metric, 
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       });
       throw error;
     }
@@ -691,13 +691,13 @@ export class CapacityTrendAnalyzer extends EventEmitter {
     this.analysisTimer = setInterval(async () => {
       try {
         await this.performScheduledAnalysis();
-      } catch (error) {
-        this.emit('scheduledAnalysisError', { error: error.message });
+      } catch (error: any) {
+        this.emit('scheduledAnalysisError', { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }, this.config.analysisInterval);
   }
 
-  private async performScheduledAnalysis(): Promise<void> {
+  private async performScheduledAnalysis(): Promise<any> {
     console.log('Performing scheduled trend analysis...');
   }
 
@@ -717,7 +717,7 @@ export class CapacityTrendAnalyzer extends EventEmitter {
     return Array.from(this.trends.values());
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     if (this.analysisTimer) {
       clearInterval(this.analysisTimer);
     }
@@ -965,3 +965,4 @@ class ForecastEngine {
     return Math.min(1.0, Math.max(0.1, historicalCV));
   }
 }
+

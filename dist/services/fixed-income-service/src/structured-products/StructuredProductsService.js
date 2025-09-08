@@ -3,9 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StructuredProductsService = void 0;
 const events_1 = require("events");
 const crypto_1 = require("crypto");
-negativeCash;
-flows: number;
-optionValue: number; // value of embedded call option
 /**
  * Structured Products Service
  * Handles mortgage-backed securities, asset-backed securities, and callable bonds
@@ -51,7 +48,7 @@ class StructuredProductsService extends events_1.EventEmitter {
         catch (error) {
             this.emit('mbsError', {
                 operation: 'create',
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -88,7 +85,7 @@ class StructuredProductsService extends events_1.EventEmitter {
         catch (error) {
             this.emit('absError', {
                 operation: 'create',
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -130,7 +127,7 @@ class StructuredProductsService extends events_1.EventEmitter {
         catch (error) {
             this.emit('callableBondError', {
                 operation: 'create',
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -164,7 +161,7 @@ class StructuredProductsService extends events_1.EventEmitter {
             this.emit('mbsError', {
                 mbsId,
                 operation: 'update_prepayment',
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -218,7 +215,7 @@ class StructuredProductsService extends events_1.EventEmitter {
         catch (error) {
             this.emit('callAnalysisError', {
                 bondId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;

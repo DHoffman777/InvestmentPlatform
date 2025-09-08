@@ -4,15 +4,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const client_1 = require("@prisma/client");
 const multer_1 = __importDefault(require("multer"));
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const ClientDocumentService_1 = require("../services/clientDocuments/ClientDocumentService");
 const auth_1 = require("../middleware/auth");
 const validation_1 = require("../middleware/validation");
 const ClientDocuments_1 = require("../models/clientDocuments/ClientDocuments");
 const logger_1 = require("../utils/logger");
 const router = express_1.default.Router();
-const clientDocumentService = new ClientDocumentService_1.ClientDocumentService();
+const prisma = new client_1.PrismaClient();
+const clientDocumentService = new ClientDocumentService_1.ClientDocumentService(prisma);
 // Configure multer for file uploads
 const upload = (0, multer_1.default)({
     storage: multer_1.default.memoryStorage(),
@@ -44,41 +46,41 @@ const upload = (0, multer_1.default)({
 });
 // Validation schemas
 const clientDocumentUploadSchema = [
-    (0, express_validator_1.body)('clientId').isUUID().withMessage('Valid client ID required'),
-    (0, express_validator_1.body)('title').isLength({ min: 1, max: 255 }).withMessage('Title is required and must be less than 255 characters'),
-    (0, express_validator_1.body)('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
-    (0, express_validator_1.body)('documentType').optional().isIn(Object.values(ClientDocuments_1.DocumentType)).withMessage('Invalid document type'),
-    (0, express_validator_1.body)('accessLevel').optional().isIn(Object.values(ClientDocuments_1.AccessLevel)).withMessage('Invalid access level'),
-    (0, express_validator_1.body)('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).withMessage('Invalid priority'),
-    (0, express_validator_1.body)('tags').optional().isArray().withMessage('Tags must be an array'),
-    (0, express_validator_1.body)('portfolioId').optional().isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.body)('accountId').optional().isUUID().withMessage('Invalid account ID'),
-    (0, express_validator_1.body)('externalReference').optional().isString().withMessage('External reference must be a string'),
-    (0, express_validator_1.body)('autoClassify').optional().isBoolean().withMessage('Auto classify must be boolean'),
-    (0, express_validator_1.body)('autoExtract').optional().isBoolean().withMessage('Auto extract must be boolean'),
-    (0, express_validator_1.body)('autoValidate').optional().isBoolean().withMessage('Auto validate must be boolean')
+    body('clientId').isUUID().withMessage('Valid client ID required'),
+    body('title').isLength({ min: 1, max: 255 }).withMessage('Title is required and must be less than 255 characters'),
+    body('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
+    body('documentType').optional().isIn(Object.values(ClientDocuments_1.DocumentType)).withMessage('Invalid document type'),
+    body('accessLevel').optional().isIn(Object.values(ClientDocuments_1.AccessLevel)).withMessage('Invalid access level'),
+    body('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).withMessage('Invalid priority'),
+    body('tags').optional().isArray().withMessage('Tags must be an array'),
+    body('portfolioId').optional().isUUID().withMessage('Invalid portfolio ID'),
+    body('accountId').optional().isUUID().withMessage('Invalid account ID'),
+    body('externalReference').optional().isString().withMessage('External reference must be a string'),
+    body('autoClassify').optional().isBoolean().withMessage('Auto classify must be boolean'),
+    body('autoExtract').optional().isBoolean().withMessage('Auto extract must be boolean'),
+    body('autoValidate').optional().isBoolean().withMessage('Auto validate must be boolean')
 ];
 const documentUpdateSchema = [
-    (0, express_validator_1.param)('documentId').isUUID().withMessage('Valid document ID required'),
-    (0, express_validator_1.body)('title').optional().isLength({ min: 1, max: 255 }).withMessage('Title must be less than 255 characters'),
-    (0, express_validator_1.body)('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
-    (0, express_validator_1.body)('tags').optional().isArray().withMessage('Tags must be an array'),
-    (0, express_validator_1.body)('accessLevel').optional().isIn(Object.values(ClientDocuments_1.AccessLevel)).withMessage('Invalid access level'),
-    (0, express_validator_1.body)('status').optional().isIn(Object.values(ClientDocuments_1.DocumentStatus)).withMessage('Invalid status')
+    param('documentId').isUUID().withMessage('Valid document ID required'),
+    body('title').optional().isLength({ min: 1, max: 255 }).withMessage('Title must be less than 255 characters'),
+    body('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
+    body('tags').optional().isArray().withMessage('Tags must be an array'),
+    body('accessLevel').optional().isIn(Object.values(ClientDocuments_1.AccessLevel)).withMessage('Invalid access level'),
+    body('status').optional().isIn(Object.values(ClientDocuments_1.DocumentStatus)).withMessage('Invalid status')
 ];
 const documentShareSchema = [
-    (0, express_validator_1.param)('documentId').isUUID().withMessage('Valid document ID required'),
-    (0, express_validator_1.body)('recipientClientId').isUUID().withMessage('Valid recipient client ID required'),
-    (0, express_validator_1.body)('permissions').isArray().withMessage('Permissions array required'),
-    (0, express_validator_1.body)('permissions.*').isIn(Object.values(ClientDocuments_1.DocumentPermission)).withMessage('Invalid permission'),
-    (0, express_validator_1.body)('expirationDate').optional().isISO8601().withMessage('Invalid expiration date')
+    param('documentId').isUUID().withMessage('Valid document ID required'),
+    body('recipientClientId').isUUID().withMessage('Valid recipient client ID required'),
+    body('permissions').isArray().withMessage('Permissions array required'),
+    body('permissions.*').isIn(Object.values(ClientDocuments_1.DocumentPermission)).withMessage('Invalid permission'),
+    body('expirationDate').optional().isISO8601().withMessage('Invalid expiration date')
 ];
 const bulkOperationSchema = [
-    (0, express_validator_1.body)('operationType').isIn(['DELETE', 'ARCHIVE', 'APPROVE', 'REJECT', 'CHANGE_ACCESS']).withMessage('Invalid operation type'),
-    (0, express_validator_1.body)('documentIds').isArray({ min: 1 }).withMessage('Document IDs array required'),
-    (0, express_validator_1.body)('documentIds.*').isUUID().withMessage('All document IDs must be valid UUIDs'),
-    (0, express_validator_1.body)('reason').optional().isString().withMessage('Reason must be a string'),
-    (0, express_validator_1.body)('parameters').optional().isObject().withMessage('Parameters must be an object')
+    body('operationType').isIn(['DELETE', 'ARCHIVE', 'APPROVE', 'REJECT', 'CHANGE_ACCESS']).withMessage('Invalid operation type'),
+    body('documentIds').isArray({ min: 1 }).withMessage('Document IDs array required'),
+    body('documentIds.*').isUUID().withMessage('All document IDs must be valid UUIDs'),
+    body('reason').optional().isString().withMessage('Reason must be a string'),
+    body('parameters').optional().isObject().withMessage('Parameters must be an object')
 ];
 // Upload client document
 router.post('/upload', auth_1.authMiddleware, upload.single('file'), clientDocumentUploadSchema, validation_1.validateRequest, async (req, res) => {
@@ -147,13 +149,13 @@ router.post('/upload', auth_1.authMiddleware, upload.single('file'), clientDocum
 });
 // Get client documents
 router.get('/client/:clientId', auth_1.authMiddleware, [
-    (0, express_validator_1.param)('clientId').isUUID().withMessage('Valid client ID required'),
-    (0, express_validator_1.query)('documentType').optional().isIn(Object.values(ClientDocuments_1.DocumentType)).withMessage('Invalid document type'),
-    (0, express_validator_1.query)('status').optional().isIn(Object.values(ClientDocuments_1.DocumentStatus)).withMessage('Invalid status'),
-    (0, express_validator_1.query)('dateFrom').optional().isISO8601().withMessage('Invalid date format'),
-    (0, express_validator_1.query)('dateTo').optional().isISO8601().withMessage('Invalid date format'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 1000 }).withMessage('Limit must be between 1 and 1000'),
-    (0, express_validator_1.query)('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
+    param('clientId').isUUID().withMessage('Valid client ID required'),
+    query('documentType').optional().isIn(Object.values(ClientDocuments_1.DocumentType)).withMessage('Invalid document type'),
+    query('status').optional().isIn(Object.values(ClientDocuments_1.DocumentStatus)).withMessage('Invalid status'),
+    query('dateFrom').optional().isISO8601().withMessage('Invalid date format'),
+    query('dateTo').optional().isISO8601().withMessage('Invalid date format'),
+    query('limit').optional().isInt({ min: 1, max: 1000 }).withMessage('Limit must be between 1 and 1000'),
+    query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
@@ -195,7 +197,7 @@ router.get('/client/:clientId', auth_1.authMiddleware, [
     }
 });
 // Get document by ID
-router.get('/:documentId', auth_1.authMiddleware, [(0, express_validator_1.param)('documentId').isUUID().withMessage('Valid document ID required')], validation_1.validateRequest, async (req, res) => {
+router.get('/:documentId', auth_1.authMiddleware, [param('documentId').isUUID().withMessage('Valid document ID required')], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         const userId = req.user?.id;
@@ -271,8 +273,8 @@ router.put('/:documentId', auth_1.authMiddleware, documentUpdateSchema, validati
 });
 // Delete document
 router.delete('/:documentId', auth_1.authMiddleware, [
-    (0, express_validator_1.param)('documentId').isUUID().withMessage('Valid document ID required'),
-    (0, express_validator_1.body)('reason').optional().isString().withMessage('Reason must be a string')
+    param('documentId').isUUID().withMessage('Valid document ID required'),
+    body('reason').optional().isString().withMessage('Reason must be a string')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
@@ -346,7 +348,7 @@ router.post('/:documentId/share', auth_1.authMiddleware, documentShareSchema, va
     }
 });
 // Get document templates
-router.get('/templates', auth_1.authMiddleware, [(0, express_validator_1.query)('documentType').optional().isIn(Object.values(ClientDocuments_1.DocumentType)).withMessage('Invalid document type')], validation_1.validateRequest, async (req, res) => {
+router.get('/templates', auth_1.authMiddleware, [query('documentType').optional().isIn(Object.values(ClientDocuments_1.DocumentType)).withMessage('Invalid document type')], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         if (!tenantId) {
@@ -415,7 +417,7 @@ router.post('/bulk-operation', auth_1.authMiddleware, bulkOperationSchema, valid
     }
 });
 // Get client document statistics
-router.get('/client/:clientId/stats', auth_1.authMiddleware, [(0, express_validator_1.param)('clientId').isUUID().withMessage('Valid client ID required')], validation_1.validateRequest, async (req, res) => {
+router.get('/client/:clientId/stats', auth_1.authMiddleware, [param('clientId').isUUID().withMessage('Valid client ID required')], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         const { clientId } = req.params;

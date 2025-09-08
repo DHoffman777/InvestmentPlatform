@@ -42,8 +42,8 @@ class ResourceUtilizationService extends events_1.EventEmitter {
                 }
             }
             catch (error) {
-                console.error(`Failed to collect metrics for resource ${resourceId}:`, error.message);
-                this.emit('collectionError', { resourceId, error: error.message, timestamp: new Date() });
+                console.error(`Failed to collect metrics for resource ${resourceId}:`, error instanceof Error ? error.message : 'Unknown error');
+                this.emit('collectionError', { resourceId, error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date() });
             }
         }
         return allMetrics;
@@ -525,7 +525,7 @@ class ResourceUtilizationService extends events_1.EventEmitter {
                 await this.collectMetrics();
             }
             catch (error) {
-                console.error('Scheduled metric collection failed:', error.message);
+                console.error('Scheduled metric collection failed:', error instanceof Error ? error.message : 'Unknown error');
             }
         }, this.config.refreshInterval);
     }

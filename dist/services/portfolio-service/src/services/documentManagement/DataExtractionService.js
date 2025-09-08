@@ -100,7 +100,7 @@ class DataExtractionService {
         catch (error) {
             this.logger.error('Data extraction failed', {
                 documentId: request.documentId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             throw error;
@@ -258,7 +258,7 @@ class DataExtractionService {
             }
         }
         catch (error) {
-            this.logger.warn('NLP extraction failed', { error: error.message });
+            this.logger.warn('NLP extraction failed', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
         return null;
     }
@@ -282,7 +282,7 @@ class DataExtractionService {
         catch (error) {
             this.logger.warn('ML model extraction failed', {
                 fieldName: rule.fieldName,
-                error: error.message
+                error: error instanceof Error ? error.message : 'Unknown error'
             });
         }
         return null;
@@ -327,7 +327,7 @@ class DataExtractionService {
             }
         }
         catch (error) {
-            this.logger.warn('NLP extraction failed', { error: error.message });
+            this.logger.warn('NLP extraction failed', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
         return extractedFields;
     }
@@ -355,7 +355,7 @@ class DataExtractionService {
             }
         }
         catch (error) {
-            this.logger.warn('ML-based extraction failed', { error: error.message });
+            this.logger.warn('ML-based extraction failed', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
         return extractedFields;
     }
@@ -379,7 +379,7 @@ class DataExtractionService {
                 catch (error) {
                     this.logger.warn('Post-processing failed', {
                         fieldName: field.fieldName,
-                        error: error.message
+                        error: error instanceof Error ? error.message : 'Unknown error'
                     });
                 }
             }
@@ -430,7 +430,7 @@ class DataExtractionService {
             this.logger.warn('Validation failed', {
                 fieldName: field.fieldName,
                 rule: rule.ruleType,
-                error: error.message
+                error: error instanceof Error ? error.message : 'Unknown error'
             });
             return false;
         }
@@ -522,7 +522,7 @@ class DataExtractionService {
             this.logger.warn('Field value processing failed', {
                 value,
                 fieldType,
-                error: error.message
+                error: error instanceof Error ? error.message : 'Unknown error'
             });
             return value;
         }
@@ -617,7 +617,7 @@ class DataExtractionService {
             };
         }
         catch (error) {
-            this.logger.error('ML prediction failed', { error: error.message });
+            this.logger.error('ML prediction failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             return null;
         }
     }
@@ -627,7 +627,7 @@ class DataExtractionService {
             return validationFunction(field, field.value);
         }
         catch (error) {
-            this.logger.warn('Custom validation failed', { error: error.message });
+            this.logger.warn('Custom validation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             return false;
         }
     }
@@ -683,7 +683,7 @@ class DataExtractionService {
             this.logger.info('Data extraction service initialized');
         }
         catch (error) {
-            this.logger.error('Failed to initialize data extraction', { error: error.message });
+            this.logger.error('Failed to initialize data extraction', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async initializeNLPEngine() {
@@ -699,7 +699,7 @@ class DataExtractionService {
             this.logger.info('NLP engine initialized');
         }
         catch (error) {
-            this.logger.warn('Failed to initialize NLP engine', { error: error.message });
+            this.logger.warn('Failed to initialize NLP engine', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     mockNLPEntities(text) {
@@ -739,7 +739,7 @@ class DataExtractionService {
             this.logger.info('ML models loaded for data extraction');
         }
         catch (error) {
-            this.logger.warn('Failed to load ML models', { error: error.message });
+            this.logger.warn('Failed to load ML models', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async initializeFieldProcessors() {

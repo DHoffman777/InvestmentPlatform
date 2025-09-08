@@ -308,6 +308,6 @@ export declare class MeetingBookingService extends EventEmitter {
         };
         timestamp: Date;
     }>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 export default MeetingBookingService;

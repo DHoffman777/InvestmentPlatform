@@ -11,8 +11,8 @@ class RealTimeAnalyticsService {
     thresholds = new Map();
     performanceMetrics;
     updateIntervals = new Map();
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    constructor(eventPublisher) {
+        this.eventPublisher = eventPublisher || new eventPublisher_1.EventPublisher('RealTimeAnalyticsService');
         this.performanceMetrics = {
             updateFrequency: 0,
             averageLatency: 0,
@@ -357,6 +357,8 @@ class RealTimeAnalyticsService {
                     description: threshold.description
                 },
                 severity: threshold.severity,
+                processed: false,
+                createdAt: new Date(),
                 acknowledged: false
             };
             await this.saveAnalyticsEvent(event);
@@ -487,6 +489,70 @@ class RealTimeAnalyticsService {
     }
     async saveAnalyticsEvent(event) {
         logger_1.logger.debug('Saving analytics event', { eventId: event.id, eventType: event.eventType });
+    }
+    async getRecentEvents(tenantId, options) {
+        try {
+            logger_1.logger.info('Retrieving recent analytics events', {
+                tenantId,
+                options
+            });
+            // Mock implementation - replace with actual database query
+            const mockEvents = [
+                {
+                    id: (0, crypto_1.randomUUID)(),
+                    tenantId,
+                    eventType: 'metric_update',
+                    metricType: Analytics_1.AnalyticsMetricType.PORTFOLIO_PERFORMANCE,
+                    entityId: 'portfolio-1',
+                    entityType: 'portfolio',
+                    severity: 'low',
+                    timestamp: new Date(),
+                    data: {
+                        performance: 0.125,
+                        benchmark: 0.118,
+                        source: 'real_time_analytics'
+                    },
+                    processed: false,
+                    createdAt: new Date()
+                }
+            ];
+            return mockEvents;
+        }
+        catch (error) {
+            logger_1.logger.error('Error retrieving recent events:', error);
+            throw error;
+        }
+    }
+    async configureAlertThresholds(tenantId, thresholds, createdBy) {
+        try {
+            logger_1.logger.info('Configuring alert thresholds', {
+                tenantId,
+                thresholdCount: thresholds.length,
+                createdBy
+            });
+            const configuredThresholds = thresholds.map(threshold => ({
+                id: (0, crypto_1.randomUUID)(),
+                tenantId,
+                ...threshold,
+                isActive: true,
+                createdBy,
+                createdAt: new Date()
+            }));
+            // Store thresholds
+            configuredThresholds.forEach(threshold => {
+                this.thresholds.set(threshold.id, threshold);
+            });
+            await this.eventPublisher.publish('analytics.thresholds.configured', {
+                tenantId,
+                thresholdCount: configuredThresholds.length,
+                createdBy
+            });
+            return configuredThresholds;
+        }
+        catch (error) {
+            logger_1.logger.error('Error configuring alert thresholds:', error);
+            throw error;
+        }
     }
 }
 exports.RealTimeAnalyticsService = RealTimeAnalyticsService;

@@ -410,7 +410,7 @@ export class SLACustomerNotificationService extends EventEmitter {
   async updateCustomerPreferences(
     customerId: string, 
     preferences: Partial<NotificationPreferences>
-  ): Promise<void> {
+  ): Promise<any> {
     const customer = this.customers.get(customerId);
     if (!customer) {
       throw new Error(`Customer ${customerId} not found`);
@@ -470,7 +470,7 @@ export class SLACustomerNotificationService extends EventEmitter {
     return notifications;
   }
 
-  async acknowledgeNotification(customerId: string, notificationId: string): Promise<void> {
+  async acknowledgeNotification(customerId: string, notificationId: string): Promise<any> {
     const history = this.notificationHistory.get(customerId);
     if (!history) {
       throw new Error(`Customer ${customerId} not found`);
@@ -494,7 +494,7 @@ export class SLACustomerNotificationService extends EventEmitter {
     }
   }
 
-  async unsubscribeCustomer(customerId: string, category?: NotificationType[]): Promise<void> {
+  async unsubscribeCustomer(customerId: string, category?: NotificationType[]): Promise<any> {
     const customer = this.customers.get(customerId);
     if (!customer) {
       throw new Error(`Customer ${customerId} not found`);
@@ -523,23 +523,23 @@ export class SLACustomerNotificationService extends EventEmitter {
     this.emit('customerUnsubscribed', { customerId, categories: category });
   }
 
-  private async processDeliveryQueue(): Promise<void> {
+  private async processDeliveryQueue(): Promise<any> {
     while (this.deliveryQueue.length > 0) {
       const request = this.deliveryQueue.shift()!;
       
       try {
         await this.deliverNotification(request);
-      } catch (error) {
+      } catch (error: any) {
         this.emit('deliveryFailed', { 
           customerId: request.customerId, 
           type: request.type, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
     }
   }
 
-  private async deliverNotification(request: CustomerNotificationRequest): Promise<void> {
+  private async deliverNotification(request: CustomerNotificationRequest): Promise<any> {
     const customer = this.customers.get(request.customerId);
     if (!customer) return;
 
@@ -553,10 +553,10 @@ export class SLACustomerNotificationService extends EventEmitter {
       try {
         const result = await this.sendViaChannel(channel, customer, content, request);
         this.recordDeliveryResult(request.customerId, request, channel, result);
-      } catch (error) {
+      } catch (error: any) {
         this.recordDeliveryResult(request.customerId, request, channel, {
           success: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           deliveryTime: 0
         });
       }
@@ -825,7 +825,7 @@ export class SLACustomerNotificationService extends EventEmitter {
     }
   }
 
-  private async startEscalation(incidentId: string, customerId: string, severity: SLASeverity): Promise<void> {
+  private async startEscalation(incidentId: string, customerId: string, severity: SLASeverity): Promise<any> {
     const escalationMatrix = this.config.escalationMatrix;
     const timeout = escalationMatrix.escalationTimeouts[severity];
 
@@ -915,7 +915,7 @@ export class SLACustomerNotificationService extends EventEmitter {
     }, 30000); // Check every 30 seconds
   }
 
-  private async escalateIncident(incidentId: string, escalation: EscalationExecution): Promise<void> {
+  private async escalateIncident(incidentId: string, escalation: EscalationExecution): Promise<any> {
     const matrix = this.config.escalationMatrix;
     const nextLevel = escalation.currentLevel + 1;
 
@@ -1000,7 +1000,7 @@ export class SLACustomerNotificationService extends EventEmitter {
     return `escalation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     this.customers.clear();
     this.notificationHistory.clear();
     this.deliveryQueue = [];
@@ -1080,3 +1080,4 @@ class RateLimiter {
     }
   }
 }
+

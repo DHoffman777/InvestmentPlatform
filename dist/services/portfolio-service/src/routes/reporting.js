@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const ReportingEngineService_1 = require("../services/reporting/ReportingEngineService");
 const auth_1 = require("../middleware/auth");
 const validation_1 = require("../middleware/validation");
@@ -14,58 +14,58 @@ const router = express_1.default.Router();
 const reportingService = new ReportingEngineService_1.ReportingEngineService();
 // Validation schemas
 const createTemplateSchema = [
-    (0, express_validator_1.body)('name').isLength({ min: 1, max: 255 }).withMessage('Template name is required and must be less than 255 characters'),
-    (0, express_validator_1.body)('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
-    (0, express_validator_1.body)('reportType').isIn(Object.values(ReportingEngine_1.ReportType)).withMessage('Invalid report type'),
-    (0, express_validator_1.body)('category').optional().isString().withMessage('Category must be a string'),
-    (0, express_validator_1.body)('tags').optional().isArray().withMessage('Tags must be an array'),
-    (0, express_validator_1.body)('dataSource').isObject().withMessage('Data source configuration is required'),
-    (0, express_validator_1.body)('dataSource.baseEntity').isString().withMessage('Base entity is required'),
-    (0, express_validator_1.body)('columns').isArray({ min: 1 }).withMessage('At least one column is required'),
-    (0, express_validator_1.body)('sections').isArray({ min: 1 }).withMessage('At least one section is required'),
-    (0, express_validator_1.body)('isPublic').optional().isBoolean().withMessage('isPublic must be boolean'),
-    (0, express_validator_1.body)('allowedRoles').optional().isArray().withMessage('allowedRoles must be an array')
+    body('name').isLength({ min: 1, max: 255 }).withMessage('Template name is required and must be less than 255 characters'),
+    body('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
+    body('reportType').isIn(Object.values(ReportingEngine_1.ReportType)).withMessage('Invalid report type'),
+    body('category').optional().isString().withMessage('Category must be a string'),
+    body('tags').optional().isArray().withMessage('Tags must be an array'),
+    body('dataSource').isObject().withMessage('Data source configuration is required'),
+    body('dataSource.baseEntity').isString().withMessage('Base entity is required'),
+    body('columns').isArray({ min: 1 }).withMessage('At least one column is required'),
+    body('sections').isArray({ min: 1 }).withMessage('At least one section is required'),
+    body('isPublic').optional().isBoolean().withMessage('isPublic must be boolean'),
+    body('allowedRoles').optional().isArray().withMessage('allowedRoles must be an array')
 ];
 const updateTemplateSchema = [
-    (0, express_validator_1.param)('templateId').isUUID().withMessage('Valid template ID required'),
-    (0, express_validator_1.body)('name').optional().isLength({ min: 1, max: 255 }).withMessage('Template name must be less than 255 characters'),
-    (0, express_validator_1.body)('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
-    (0, express_validator_1.body)('tags').optional().isArray().withMessage('Tags must be an array'),
-    (0, express_validator_1.body)('isPublic').optional().isBoolean().withMessage('isPublic must be boolean'),
-    (0, express_validator_1.body)('allowedRoles').optional().isArray().withMessage('allowedRoles must be an array')
+    param('templateId').isUUID().withMessage('Valid template ID required'),
+    body('name').optional().isLength({ min: 1, max: 255 }).withMessage('Template name must be less than 255 characters'),
+    body('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
+    body('tags').optional().isArray().withMessage('Tags must be an array'),
+    body('isPublic').optional().isBoolean().withMessage('isPublic must be boolean'),
+    body('allowedRoles').optional().isArray().withMessage('allowedRoles must be an array')
 ];
 const generateReportSchema = [
-    (0, express_validator_1.body)('templateId').isUUID().withMessage('Valid template ID required'),
-    (0, express_validator_1.body)('name').optional().isString().withMessage('Name must be a string'),
-    (0, express_validator_1.body)('format').isIn(Object.values(ReportingEngine_1.ReportFormat)).withMessage('Invalid report format'),
-    (0, express_validator_1.body)('deliveryMethod').isIn(['DOWNLOAD', 'EMAIL', 'SAVE', 'PRINT']).withMessage('Invalid delivery method'),
-    (0, express_validator_1.body)('emailRecipients').optional().isArray().withMessage('Email recipients must be an array'),
-    (0, express_validator_1.body)('clientIds').optional().isArray().withMessage('Client IDs must be an array'),
-    (0, express_validator_1.body)('portfolioIds').optional().isArray().withMessage('Portfolio IDs must be an array'),
-    (0, express_validator_1.body)('accountIds').optional().isArray().withMessage('Account IDs must be an array'),
-    (0, express_validator_1.body)('dateRange').optional().isObject().withMessage('Date range must be an object'),
-    (0, express_validator_1.body)('dateRange.startDate').optional().isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.body)('dateRange.endDate').optional().isISO8601().withMessage('Invalid end date'),
-    (0, express_validator_1.body)('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).withMessage('Invalid priority'),
-    (0, express_validator_1.body)('aggregationLevel').optional().isIn(Object.values(ReportingEngine_1.AggregationLevel)).withMessage('Invalid aggregation level')
+    body('templateId').isUUID().withMessage('Valid template ID required'),
+    body('name').optional().isString().withMessage('Name must be a string'),
+    body('format').isIn(Object.values(ReportingEngine_1.ReportFormat)).withMessage('Invalid report format'),
+    body('deliveryMethod').isIn(['DOWNLOAD', 'EMAIL', 'SAVE', 'PRINT']).withMessage('Invalid delivery method'),
+    body('emailRecipients').optional().isArray().withMessage('Email recipients must be an array'),
+    body('clientIds').optional().isArray().withMessage('Client IDs must be an array'),
+    body('portfolioIds').optional().isArray().withMessage('Portfolio IDs must be an array'),
+    body('accountIds').optional().isArray().withMessage('Account IDs must be an array'),
+    body('dateRange').optional().isObject().withMessage('Date range must be an object'),
+    body('dateRange.startDate').optional().isISO8601().withMessage('Invalid start date'),
+    body('dateRange.endDate').optional().isISO8601().withMessage('Invalid end date'),
+    body('priority').optional().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).withMessage('Invalid priority'),
+    body('aggregationLevel').optional().isIn(Object.values(ReportingEngine_1.AggregationLevel)).withMessage('Invalid aggregation level')
 ];
 const scheduleReportSchema = [
-    (0, express_validator_1.body)('templateId').isUUID().withMessage('Valid template ID required'),
-    (0, express_validator_1.body)('name').isLength({ min: 1, max: 255 }).withMessage('Schedule name is required'),
-    (0, express_validator_1.body)('frequency').isIn(Object.values(ReportingEngine_1.ReportFrequency)).withMessage('Invalid frequency'),
-    (0, express_validator_1.body)('schedule').isObject().withMessage('Schedule configuration is required'),
-    (0, express_validator_1.body)('schedule.hour').isInt({ min: 0, max: 23 }).withMessage('Hour must be between 0 and 23'),
-    (0, express_validator_1.body)('schedule.minute').isInt({ min: 0, max: 59 }).withMessage('Minute must be between 0 and 59'),
-    (0, express_validator_1.body)('schedule.timezone').isString().withMessage('Timezone is required'),
-    (0, express_validator_1.body)('recipients').isArray({ min: 1 }).withMessage('At least one recipient is required'),
-    (0, express_validator_1.body)('format').isIn(Object.values(ReportingEngine_1.ReportFormat)).withMessage('Invalid report format')
+    body('templateId').isUUID().withMessage('Valid template ID required'),
+    body('name').isLength({ min: 1, max: 255 }).withMessage('Schedule name is required'),
+    body('frequency').isIn(Object.values(ReportingEngine_1.ReportFrequency)).withMessage('Invalid frequency'),
+    body('schedule').isObject().withMessage('Schedule configuration is required'),
+    body('schedule.hour').isInt({ min: 0, max: 23 }).withMessage('Hour must be between 0 and 23'),
+    body('schedule.minute').isInt({ min: 0, max: 59 }).withMessage('Minute must be between 0 and 59'),
+    body('schedule.timezone').isString().withMessage('Timezone is required'),
+    body('recipients').isArray({ min: 1 }).withMessage('At least one recipient is required'),
+    body('format').isIn(Object.values(ReportingEngine_1.ReportFormat)).withMessage('Invalid report format')
 ];
 const customReportSchema = [
-    (0, express_validator_1.body)('dataSource').isString().withMessage('Data source is required'),
-    (0, express_validator_1.body)('selectedColumns').isArray({ min: 1 }).withMessage('At least one column must be selected'),
-    (0, express_validator_1.body)('filters').optional().isArray().withMessage('Filters must be an array'),
-    (0, express_validator_1.body)('sorting').optional().isArray().withMessage('Sorting must be an array'),
-    (0, express_validator_1.body)('grouping').optional().isArray().withMessage('Grouping must be an array')
+    body('dataSource').isString().withMessage('Data source is required'),
+    body('selectedColumns').isArray({ min: 1 }).withMessage('At least one column must be selected'),
+    body('filters').optional().isArray().withMessage('Filters must be an array'),
+    body('sorting').optional().isArray().withMessage('Sorting must be an array'),
+    body('grouping').optional().isArray().withMessage('Grouping must be an array')
 ];
 // Template Management Routes
 // Create report template
@@ -102,11 +102,11 @@ router.post('/templates', auth_1.authMiddleware, createTemplateSchema, validatio
 });
 // Get report templates
 router.get('/templates', auth_1.authMiddleware, [
-    (0, express_validator_1.query)('reportType').optional().isIn(Object.values(ReportingEngine_1.ReportType)).withMessage('Invalid report type'),
-    (0, express_validator_1.query)('category').optional().isString().withMessage('Category must be a string'),
-    (0, express_validator_1.query)('isPublic').optional().isBoolean().withMessage('isPublic must be boolean'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-    (0, express_validator_1.query)('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
+    query('reportType').optional().isIn(Object.values(ReportingEngine_1.ReportType)).withMessage('Invalid report type'),
+    query('category').optional().isString().withMessage('Category must be a string'),
+    query('isPublic').optional().isBoolean().withMessage('isPublic must be boolean'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+    query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
@@ -140,7 +140,7 @@ router.get('/templates', auth_1.authMiddleware, [
     }
 });
 // Get report template by ID
-router.get('/templates/:templateId', auth_1.authMiddleware, [(0, express_validator_1.param)('templateId').isUUID().withMessage('Valid template ID required')], validation_1.validateRequest, async (req, res) => {
+router.get('/templates/:templateId', auth_1.authMiddleware, [param('templateId').isUUID().withMessage('Valid template ID required')], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         const { templateId } = req.params;
@@ -202,7 +202,7 @@ router.put('/templates/:templateId', auth_1.authMiddleware, updateTemplateSchema
     }
 });
 // Delete report template
-router.delete('/templates/:templateId', auth_1.authMiddleware, [(0, express_validator_1.param)('templateId').isUUID().withMessage('Valid template ID required')], validation_1.validateRequest, async (req, res) => {
+router.delete('/templates/:templateId', auth_1.authMiddleware, [param('templateId').isUUID().withMessage('Valid template ID required')], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         const userId = req.user?.id;
@@ -231,8 +231,8 @@ router.delete('/templates/:templateId', auth_1.authMiddleware, [(0, express_vali
 });
 // Duplicate report template
 router.post('/templates/:templateId/duplicate', auth_1.authMiddleware, [
-    (0, express_validator_1.param)('templateId').isUUID().withMessage('Valid template ID required'),
-    (0, express_validator_1.body)('name').isLength({ min: 1, max: 255 }).withMessage('New template name is required')
+    param('templateId').isUUID().withMessage('Valid template ID required'),
+    body('name').isLength({ min: 1, max: 255 }).withMessage('New template name is required')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
@@ -305,12 +305,12 @@ router.post('/generate', auth_1.authMiddleware, generateReportSchema, validation
 });
 // Get report jobs
 router.get('/jobs', auth_1.authMiddleware, [
-    (0, express_validator_1.query)('templateId').optional().isUUID().withMessage('Invalid template ID'),
-    (0, express_validator_1.query)('status').optional().isIn(Object.values(ReportingEngine_1.ReportStatus)).withMessage('Invalid status'),
-    (0, express_validator_1.query)('dateFrom').optional().isISO8601().withMessage('Invalid date format'),
-    (0, express_validator_1.query)('dateTo').optional().isISO8601().withMessage('Invalid date format'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-    (0, express_validator_1.query)('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
+    query('templateId').optional().isUUID().withMessage('Invalid template ID'),
+    query('status').optional().isIn(Object.values(ReportingEngine_1.ReportStatus)).withMessage('Invalid status'),
+    query('dateFrom').optional().isISO8601().withMessage('Invalid date format'),
+    query('dateTo').optional().isISO8601().withMessage('Invalid date format'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+    query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
@@ -345,7 +345,7 @@ router.get('/jobs', auth_1.authMiddleware, [
     }
 });
 // Get report job by ID
-router.get('/jobs/:jobId', auth_1.authMiddleware, [(0, express_validator_1.param)('jobId').isUUID().withMessage('Valid job ID required')], validation_1.validateRequest, async (req, res) => {
+router.get('/jobs/:jobId', auth_1.authMiddleware, [param('jobId').isUUID().withMessage('Valid job ID required')], validation_1.validateRequest, async (req, res) => {
     try {
         const { jobId } = req.params;
         logger_1.logger.info('Retrieving report job', { jobId });
@@ -371,7 +371,7 @@ router.get('/jobs/:jobId', auth_1.authMiddleware, [(0, express_validator_1.param
     }
 });
 // Cancel report job
-router.post('/jobs/:jobId/cancel', auth_1.authMiddleware, [(0, express_validator_1.param)('jobId').isUUID().withMessage('Valid job ID required')], validation_1.validateRequest, async (req, res) => {
+router.post('/jobs/:jobId/cancel', auth_1.authMiddleware, [param('jobId').isUUID().withMessage('Valid job ID required')], validation_1.validateRequest, async (req, res) => {
     try {
         const userId = req.user?.id;
         const { jobId } = req.params;
@@ -399,11 +399,11 @@ router.post('/jobs/:jobId/cancel', auth_1.authMiddleware, [(0, express_validator
 // Pre-built Report Generation Routes
 // Generate performance report
 router.post('/performance', auth_1.authMiddleware, [
-    (0, express_validator_1.body)('portfolioIds').isArray({ min: 1 }).withMessage('At least one portfolio ID required'),
-    (0, express_validator_1.body)('dateRange').isObject().withMessage('Date range is required'),
-    (0, express_validator_1.body)('dateRange.startDate').isISO8601().withMessage('Valid start date required'),
-    (0, express_validator_1.body)('dateRange.endDate').isISO8601().withMessage('Valid end date required'),
-    (0, express_validator_1.body)('format').optional().isIn(Object.values(ReportingEngine_1.ReportFormat)).withMessage('Invalid format')
+    body('portfolioIds').isArray({ min: 1 }).withMessage('At least one portfolio ID required'),
+    body('dateRange').isObject().withMessage('Date range is required'),
+    body('dateRange.startDate').isISO8601().withMessage('Valid start date required'),
+    body('dateRange.endDate').isISO8601().withMessage('Valid end date required'),
+    body('format').optional().isIn(Object.values(ReportingEngine_1.ReportFormat)).withMessage('Invalid format')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
@@ -442,9 +442,9 @@ router.post('/performance', auth_1.authMiddleware, [
 });
 // Generate holdings report
 router.post('/holdings', auth_1.authMiddleware, [
-    (0, express_validator_1.body)('portfolioIds').isArray({ min: 1 }).withMessage('At least one portfolio ID required'),
-    (0, express_validator_1.body)('asOfDate').isISO8601().withMessage('Valid as-of date required'),
-    (0, express_validator_1.body)('format').optional().isIn(Object.values(ReportingEngine_1.ReportFormat)).withMessage('Invalid format')
+    body('portfolioIds').isArray({ min: 1 }).withMessage('At least one portfolio ID required'),
+    body('asOfDate').isISO8601().withMessage('Valid as-of date required'),
+    body('format').optional().isIn(Object.values(ReportingEngine_1.ReportFormat)).withMessage('Invalid format')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;

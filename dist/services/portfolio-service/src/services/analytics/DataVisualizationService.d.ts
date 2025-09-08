@@ -1,4 +1,5 @@
 import { AnalyticsVisualization, VisualizationType, AnalyticsMetricType, AggregationPeriod, DrillDownLevel, AnalyticsFilter, DrillDownRequest, DrillDownResponse } from '../../models/analytics/Analytics';
+import { EventPublisher } from '../../utils/eventPublisher';
 interface VisualizationRequest {
     tenantId: string;
     metricType: AnalyticsMetricType;
@@ -16,7 +17,7 @@ interface VisualizationRequest {
 export declare class DataVisualizationService {
     private eventPublisher;
     private colorSchemes;
-    constructor();
+    constructor(eventPublisher?: EventPublisher);
     createVisualization(request: VisualizationRequest): Promise<AnalyticsVisualization>;
     updateVisualization(visualizationId: string, updates: Partial<AnalyticsVisualization>): Promise<AnalyticsVisualization>;
     refreshVisualizationData(visualizationId: string, tenantId: string): Promise<AnalyticsVisualization>;

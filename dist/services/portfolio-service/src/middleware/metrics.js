@@ -105,7 +105,7 @@ const metricsMiddleware = (req, res, next) => {
             });
         }
         // Call original end method
-        originalEnd.call(this, chunk, encoding);
+        return originalEnd.call(this, chunk, encoding);
     };
     next();
 };

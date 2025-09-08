@@ -1,11 +1,11 @@
-import { Router } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+import { Router, Request, Response } from 'express';
+const { body, param, query, validationResult } = require('express-validator');
 import { PrismaClient, Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { TransactionService, TradeCapture } from '../services/transactionService';
 import { logger } from '../utils/logger';
 import { requirePermission, requireTenantAccess } from '../middleware/auth';
 import { trackPortfolioOperation } from '../middleware/metrics';
-import { Decimal } from 'decimal.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -46,7 +46,7 @@ router.post('/capture',
   validateRequest,
   requireTenantAccess,
   requirePermission(['transaction:create']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const {
         source,
@@ -75,14 +75,7 @@ router.post('/capture',
           tenantId: req.user!.tenantId,
           OR: [
             { ownerId: req.user!.sub },
-            { 
-              managers: {
-                some: {
-                  userId: req.user!.sub,
-                  status: 'ACTIVE'
-                }
-              }
-            }
+            { managerId: req.user!.sub }
           ]
         }
       });
@@ -124,7 +117,7 @@ router.post('/capture',
         captured: true,
         message: 'Trade captured successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error capturing trade:', { 
         portfolioId: req.body.portfolioId,
         externalTradeId: req.body.externalTradeId,
@@ -155,26 +148,19 @@ router.post('/bulk-capture',
   validateRequest,
   requireTenantAccess,
   requirePermission(['transaction:create', 'transaction:bulk']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { trades } = req.body;
 
       // Validate all portfolios belong to the tenant
-      const portfolioIds = [...new Set(trades.map((t: any) => t.portfolioId))];
+      const portfolioIds: string[] = [...new Set(trades.map((t: any) => t.portfolioId).filter(Boolean))] as string[];
       const portfolios = await prisma.portfolio.findMany({
         where: {
           id: { in: portfolioIds },
           tenantId: req.user!.tenantId,
           OR: [
             { ownerId: req.user!.sub },
-            { 
-              managers: {
-                some: {
-                  userId: req.user!.sub,
-                  status: 'ACTIVE'
-                }
-              }
-            }
+            { managerId: req.user!.sub }
           ]
         }
       });
@@ -215,7 +201,7 @@ router.post('/bulk-capture',
         ...result,
         message: 'Bulk trade capture completed',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing bulk trades:', { 
         tradeCount: req.body.trades?.length,
         error 
@@ -245,7 +231,7 @@ router.post('/portfolios/:id/match',
   validateRequest,
   requireTenantAccess,
   requirePermission(['transaction:reconcile']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const { externalTransactions, startDate, endDate } = req.body;
@@ -257,14 +243,7 @@ router.post('/portfolios/:id/match',
           tenantId: req.user!.tenantId,
           OR: [
             { ownerId: req.user!.sub },
-            { 
-              managers: {
-                some: {
-                  userId: req.user!.sub,
-                  status: 'ACTIVE'
-                }
-              }
-            }
+            { managerId: req.user!.sub }
           ]
         }
       });
@@ -290,7 +269,7 @@ router.post('/portfolios/:id/match',
         ...matchingResults,
         timestamp: new Date().toISOString(),
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error matching transactions:', { portfolioId: req.params.id, error });
       trackPortfolioOperation('transaction:match', 'error');
       res.status(500).json({
@@ -317,7 +296,7 @@ router.post('/settlement-instructions',
   validateRequest,
   requireTenantAccess,
   requirePermission(['transaction:settle']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const {
         transactionId,
@@ -339,14 +318,7 @@ router.post('/settlement-instructions',
             tenantId: req.user!.tenantId,
             OR: [
               { ownerId: req.user!.sub },
-              { 
-                managers: {
-                  some: {
-                    userId: req.user!.sub,
-                    status: 'ACTIVE'
-                  }
-                }
-              }
+              { managerId: req.user!.sub }
             ]
           }
         }
@@ -378,7 +350,7 @@ router.post('/settlement-instructions',
         instruction,
         message: 'Settlement instruction created successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating settlement instruction:', { 
         transactionId: req.body.transactionId,
         error 
@@ -402,7 +374,7 @@ router.put('/settlement-instructions/:id/status',
   validateRequest,
   requireTenantAccess,
   requirePermission(['transaction:settle']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const { status, notes } = req.body;
@@ -416,14 +388,7 @@ router.put('/settlement-instructions/:id/status',
               tenantId: req.user!.tenantId,
               OR: [
                 { ownerId: req.user!.sub },
-                { 
-                  managers: {
-                    some: {
-                      userId: req.user!.sub,
-                      status: 'ACTIVE'
-                    }
-                  }
-                }
+                { managerId: req.user!.sub }
               ]
             }
           }
@@ -445,7 +410,7 @@ router.put('/settlement-instructions/:id/status',
         instruction: updated,
         message: 'Settlement status updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating settlement status:', { instructionId: req.params.id, error });
       trackPortfolioOperation('settlement:update-status', 'error');
       res.status(500).json({
@@ -473,7 +438,7 @@ router.post('/failed-trades',
   validateRequest,
   requireTenantAccess,
   requirePermission(['transaction:manage-failures']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const {
         transactionId,
@@ -493,14 +458,7 @@ router.post('/failed-trades',
             tenantId: req.user!.tenantId,
             OR: [
               { ownerId: req.user!.sub },
-              { 
-                managers: {
-                  some: {
-                    userId: req.user!.sub,
-                    status: 'ACTIVE'
-                  }
-                }
-              }
+              { managerId: req.user!.sub }
             ]
           }
         }
@@ -530,7 +488,7 @@ router.post('/failed-trades',
         failedTrade,
         message: 'Failed trade record created successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating failed trade record:', { 
         transactionId: req.body.transactionId,
         error 
@@ -554,7 +512,7 @@ router.get('/portfolios/:id/cash-impact',
   validateRequest,
   requireTenantAccess,
   requirePermission(['transaction:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const { startDate, endDate } = req.query as any;
@@ -566,14 +524,7 @@ router.get('/portfolios/:id/cash-impact',
           tenantId: req.user!.tenantId,
           OR: [
             { ownerId: req.user!.sub },
-            { 
-              managers: {
-                some: {
-                  userId: req.user!.sub,
-                  status: 'ACTIVE'
-                }
-              }
-            }
+            { managerId: req.user!.sub }
           ]
         }
       });
@@ -610,7 +561,7 @@ router.get('/portfolios/:id/cash-impact',
           flowDirection: cashImpact.netCashFlow.gte(0) ? 'INFLOW' : 'OUTFLOW',
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating cash impact:', { portfolioId: req.params.id, error });
       trackPortfolioOperation('transaction:cash-impact', 'error');
       res.status(500).json({
@@ -632,7 +583,7 @@ router.get('/settlement-instructions',
   validateRequest,
   requireTenantAccess,
   requirePermission(['transaction:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { portfolioId, status, page = 1, limit = 20 } = req.query as any;
       const skip = (page - 1) * limit;
@@ -643,14 +594,7 @@ router.get('/settlement-instructions',
             tenantId: req.user!.tenantId,
             OR: [
               { ownerId: req.user!.sub },
-              { 
-                managers: {
-                  some: {
-                    userId: req.user!.sub,
-                    status: 'ACTIVE'
-                  }
-                }
-              }
+              { managerId: req.user!.sub }
             ]
           }
         }
@@ -672,13 +616,15 @@ router.get('/settlement-instructions',
           orderBy: { deliveryDate: 'desc' },
           include: {
             transaction: {
-              include: {
-                security: {
-                  select: { symbol: true, name: true }
-                },
-                portfolio: {
-                  select: { id: true, name: true }
-                }
+              select: {
+                id: true,
+                transactionType: true,
+                transactionDate: true,
+                quantity: true,
+                price: true,
+                netAmount: true,
+                portfolioId: true,
+                // securityId: true // Field doesn't exist in schema
               }
             }
           }
@@ -695,7 +641,7 @@ router.get('/settlement-instructions',
         limit,
         totalPages: Math.ceil(total / limit)
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching settlement instructions:', error);
       trackPortfolioOperation('settlement:list', 'error');
       res.status(500).json({
@@ -707,3 +653,4 @@ router.get('/settlement-instructions',
 );
 
 export { router as transactionManagementRouter };
+

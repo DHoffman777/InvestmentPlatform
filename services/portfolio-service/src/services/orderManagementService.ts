@@ -17,6 +17,7 @@ import {
   OrderSide,
   OrderStatus,
   OrderState,
+  TradingSession,
   PreTradeCheckStatus,
   AllocationStatus,
   AllocationMethod,
@@ -55,7 +56,7 @@ export class OrderManagementService {
     const order: Omit<Order, 'id'> = {
       tenantId,
       portfolioId: request.portfolioId,
-      instrumentId: request.instrumentId,
+      securityId: request.securityId,
       clientOrderId,
       orderType: request.orderType,
       orderSide: request.orderSide,
@@ -71,11 +72,11 @@ export class OrderManagementService {
       executionInstructions: request.executionInstructions,
       routingInstructions: request.routingInstructions,
       orderDate: new Date(),
-      expirationDate: request.expirationDate,
+      expirationDate: request.expirationDate ?? undefined,
       tradingSession: request.tradingSession || this.getCurrentTradingSession(),
       preTradeCheckStatus: PreTradeCheckStatus.PENDING,
       allocationMethod: request.allocations ? AllocationMethod.MANUAL : undefined,
-      settlementCurrency: await this.getInstrumentCurrency(request.instrumentId, tenantId),
+      settlementCurrency: await this.getInstrumentCurrency(request.securityId, tenantId),
       tags: request.tags,
       customFields: request.customFields,
       createdBy: userId,
@@ -85,7 +86,7 @@ export class OrderManagementService {
     };
 
     // Create order in database
-    const createdOrder = await this.prisma.order.create({
+    const createdOrder = await (this.prisma as any).order.create({
       data: order
     });
 
@@ -108,7 +109,7 @@ export class OrderManagementService {
       clientOrderId: createdOrder.clientOrderId,
       tenantId,
       portfolioId: request.portfolioId,
-      instrumentId: request.instrumentId,
+      securityId: request.securityId,
       orderType: request.orderType,
       orderSide: request.orderSide,
       quantity: request.quantity,
@@ -120,7 +121,7 @@ export class OrderManagementService {
   }
 
   async modifyOrder(request: ModifyOrderRequest, tenantId: string, userId: string): Promise<Order> {
-    const existingOrder = await this.prisma.order.findFirst({
+    const existingOrder = await (this.prisma as any).order.findFirst({
       where: {
         id: request.orderId,
         tenantId
@@ -143,7 +144,7 @@ export class OrderManagementService {
       stopPrice: request.stopPrice,
       limitPrice: request.limitPrice,
       timeInForce: request.timeInForce,
-      expirationDate: request.expirationDate,
+      expirationDate: request.expirationDate ?? undefined,
       executionInstructions: request.executionInstructions,
       routingInstructions: request.routingInstructions,
       modifiedBy: userId,
@@ -156,7 +157,7 @@ export class OrderManagementService {
       updates.remainingQuantity = request.quantity - existingOrder.filledQuantity;
     }
 
-    const updatedOrder = await this.prisma.order.update({
+    const updatedOrder = await (this.prisma as any).order.update({
       where: { id: request.orderId },
       data: updates
     });
@@ -175,7 +176,7 @@ export class OrderManagementService {
   }
 
   async cancelOrder(request: CancelOrderRequest, tenantId: string, userId: string): Promise<Order> {
-    const existingOrder = await this.prisma.order.findFirst({
+    const existingOrder = await (this.prisma as any).order.findFirst({
       where: {
         id: request.orderId,
         tenantId
@@ -191,7 +192,7 @@ export class OrderManagementService {
       throw new Error(`Order cannot be cancelled in current status: ${existingOrder.orderStatus}`);
     }
 
-    const cancelledOrder = await this.prisma.order.update({
+    const cancelledOrder = await (this.prisma as any).order.update({
       where: { id: request.orderId },
       data: {
         orderStatus: OrderStatus.PENDING_CANCEL,
@@ -227,7 +228,7 @@ export class OrderManagementService {
     tenantId: string,
     reportedBy: string
   ): Promise<OrderExecution> {
-    const order = await this.prisma.order.findFirst({
+    const order = await (this.prisma as any).order.findFirst({
       where: { id: orderId, tenantId }
     });
 
@@ -253,7 +254,7 @@ export class OrderManagementService {
       createdAt: new Date()
     };
 
-    const createdExecution = await this.prisma.orderExecution.create({
+    const createdExecution = await (this.prisma as any).orderExecution.create({
       data: execution
     });
 
@@ -277,7 +278,7 @@ export class OrderManagementService {
                             executionPrice * executionQuantity;
     const averageFillPrice = totalFilledValue / newFilledQuantity;
 
-    await this.prisma.order.update({
+    await (this.prisma as any).order.update({
       where: { id: orderId },
       data: {
         filledQuantity: newFilledQuantity,
@@ -323,8 +324,8 @@ export class OrderManagementService {
       where.portfolioId = { in: request.portfolioIds };
     }
 
-    if (request.instrumentIds && request.instrumentIds.length > 0) {
-      where.instrumentId = { in: request.instrumentIds };
+    if ((request as any).securityIds && (request as any).securityIds.length > 0) {
+      where.securityId = { in: (request as any).securityIds };
     }
 
     if (request.orderTypes && request.orderTypes.length > 0) {
@@ -354,7 +355,7 @@ export class OrderManagementService {
     }
 
     const [orders, total] = await Promise.all([
-      this.prisma.order.findMany({
+      (this.prisma as any).order.findMany({
         where,
         include: {
           executions: true,
@@ -366,8 +367,8 @@ export class OrderManagementService {
         ],
         take: request.limit || 50,
         skip: request.offset || 0
-      }),
-      this.prisma.order.count({ where })
+      }) as any,
+      (this.prisma as any).order.count({ where })
     ]);
 
     return {
@@ -379,7 +380,7 @@ export class OrderManagementService {
   }
 
   async getOrderById(orderId: string, tenantId: string): Promise<Order | null> {
-    return await this.prisma.order.findFirst({
+    return await (this.prisma as any).order.findFirst({
       where: { id: orderId, tenantId },
       include: {
         executions: true,
@@ -398,7 +399,7 @@ export class OrderManagementService {
 
     // Basic validation
     if (!request.portfolioId) errors.push('Portfolio ID is required');
-    if (!request.instrumentId) errors.push('Instrument ID is required');
+    if (!request.securityId) errors.push('Instrument ID is required');
     if (request.quantity <= 0) errors.push('Order quantity must be positive');
 
     // Price validation for limit orders
@@ -415,7 +416,7 @@ export class OrderManagementService {
     }
 
     // Portfolio validation
-    const portfolio = await this.prisma.portfolio.findFirst({
+    const portfolio = await (this.prisma as any).portfolio.findFirst({
       where: { id: request.portfolioId, tenantId }
     });
 
@@ -424,8 +425,8 @@ export class OrderManagementService {
     }
 
     // Instrument validation
-    const instrument = await this.prisma.instrumentMaster.findFirst({
-      where: { instrumentId: request.instrumentId, tenantId }
+    const instrument = await (this.prisma as any).instrumentMaster.findFirst({
+      where: { instrumentId: request.securityId, tenantId }
     });
 
     if (!instrument) {
@@ -446,7 +447,7 @@ export class OrderManagementService {
       estimatedCosts = await this.estimateOrderCosts(request, instrument, tenantId);
 
       // Position limits
-      const currentPosition = await this.getCurrentPosition(request.portfolioId, request.instrumentId, tenantId);
+      const currentPosition = await this.getCurrentPosition(request.portfolioId, request.securityId, tenantId);
       const newPosition = request.orderSide === OrderSide.BUY ? 
         currentPosition + request.quantity : currentPosition - request.quantity;
 
@@ -474,8 +475,8 @@ export class OrderManagementService {
     };
   }
 
-  async performPreTradeChecks(orderId: string, tenantId: string): Promise<void> {
-    const order = await this.prisma.order.findFirst({
+  async performPreTradeChecks(orderId: string, tenantId: string): Promise<any> {
+    const order = await (this.prisma as any).order.findFirst({
       where: { id: orderId, tenantId }
     });
 
@@ -488,7 +489,7 @@ export class OrderManagementService {
 
     // Restricted list check
     const restrictedInstruments = await this.getRestrictedInstruments(tenantId);
-    if (restrictedInstruments.includes(order.instrumentId)) {
+    if (restrictedInstruments.includes(order.securityId)) {
       complianceFlags.push({
         type: ComplianceFlagType.RESTRICTED_LIST,
         severity: ComplianceSeverity.BLOCKING,
@@ -513,7 +514,7 @@ export class OrderManagementService {
     }
 
     // Update order with compliance results
-    await this.prisma.order.update({
+    await (this.prisma as any).order.update({
       where: { id: orderId },
       data: {
         preTradeCheckStatus: checksPassed ? PreTradeCheckStatus.PASSED : PreTradeCheckStatus.FAILED,
@@ -538,7 +539,7 @@ export class OrderManagementService {
   // Best Execution Analysis
 
   async generateBestExecutionReport(orderId: string, tenantId: string): Promise<BestExecutionReport> {
-    const order = await this.prisma.order.findFirst({
+    const order = await (this.prisma as any).order.findFirst({
       where: { id: orderId, tenantId },
       include: { executions: true }
     });
@@ -549,7 +550,7 @@ export class OrderManagementService {
 
     // Get market data for the instrument at order time
     const marketData = await this.getHistoricalMarketData(
-      order.instrumentId,
+      order.securityId,
       order.orderDate,
       tenantId
     );
@@ -600,22 +601,22 @@ export class OrderManagementService {
     return `TRD-${timestamp}-${random}`.toUpperCase();
   }
 
-  private getCurrentTradingSession(): string {
+  private getCurrentTradingSession(): TradingSession {
     const now = new Date();
     const hour = now.getHours();
     
     if (hour < 9 || (hour === 9 && now.getMinutes() < 30)) {
-      return 'PRE_MARKET';
+      return TradingSession.PRE_MARKET;
     } else if (hour >= 16) {
-      return 'POST_MARKET';
+      return TradingSession.POST_MARKET;
     } else {
-      return 'REGULAR';
+      return TradingSession.REGULAR;
     }
   }
 
-  private async getInstrumentCurrency(instrumentId: string, tenantId: string): Promise<string> {
-    const instrument = await this.prisma.instrumentMaster.findFirst({
-      where: { instrumentId, tenantId }
+  private async getInstrumentCurrency(securityId: string, tenantId: string): Promise<string> {
+    const instrument = await (this.prisma as any).instrumentMaster.findFirst({
+      where: { instrumentId: securityId, tenantId }
     });
     return instrument?.tradingCurrency || 'USD';
   }
@@ -695,18 +696,18 @@ export class OrderManagementService {
     };
   }
 
-  private async getCurrentPosition(portfolioId: string, instrumentId: string, tenantId: string): Promise<number> {
-    const position = await this.prisma.position.findFirst({
-      where: { portfolioId, instrumentId, tenantId }
+  private async getCurrentPosition(portfolioId: string, securityId: string, tenantId: string): Promise<number> {
+    const position = await (this.prisma as any).position.findFirst({
+      where: { portfolioId, securityId, tenantId }
     });
-    return position?.quantity || 0;
+    return position?.quantity?.toNumber() || 0; // convert Decimal to number
   }
 
   private async getPortfolioValue(portfolioId: string, tenantId: string): Promise<number> {
-    const portfolio = await this.prisma.portfolio.findFirst({
+    const portfolio = await (this.prisma as any).portfolio.findFirst({
       where: { id: portfolioId, tenantId }
     });
-    return portfolio?.totalValue || 0;
+    return portfolio?.totalValue?.toNumber() || 0; // convert Decimal to number
   }
 
   private async getRestrictedInstruments(tenantId: string): Promise<string[]> {
@@ -731,9 +732,9 @@ export class OrderManagementService {
     orderId: string,
     allocations: any[],
     tenantId: string
-  ): Promise<void> {
+  ): Promise<any> {
     for (const allocation of allocations) {
-      await this.prisma.orderAllocation.create({
+      await (this.prisma as any).orderAllocation.create({
         data: {
           orderId,
           tenantId,
@@ -748,7 +749,7 @@ export class OrderManagementService {
     orderId: string,
     routingInstructions: any,
     tenantId: string
-  ): Promise<void> {
+  ): Promise<any> {
     // Implementation would create smart order routing record
   }
 
@@ -756,12 +757,12 @@ export class OrderManagementService {
     orderId: string,
     execution: OrderExecution,
     tenantId: string
-  ): Promise<void> {
+  ): Promise<any> {
     // Implementation would allocate execution to different portfolios/accounts
   }
 
   private async getHistoricalMarketData(
-    instrumentId: string,
+    securityId: string,
     date: Date,
     tenantId: string
   ): Promise<any> {
@@ -806,3 +807,4 @@ export class OrderManagementService {
     return ['Order executed within acceptable parameters'];
   }
 }
+

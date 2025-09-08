@@ -455,7 +455,7 @@ class SelfServiceController {
             res.json(updatedProfile);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to update profile' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to update profile' });
         }
     }
     async handleAddDocument(req, res) {
@@ -474,7 +474,8 @@ class SelfServiceController {
                 checksum: req.body.checksum || 'mock-checksum',
                 status: 'pending',
                 tags: req.body.tags || [],
-                metadata: req.body.metadata || {}
+                metadata: req.body.metadata || {},
+                uploadedBy: req.user?.id || 'system'
             }, req.user.id);
             res.status(201).json(document);
         }
@@ -533,7 +534,7 @@ class SelfServiceController {
             });
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to create password reset request' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to create password reset request' });
         }
     }
     async handlePasswordReset(req, res) {
@@ -547,7 +548,7 @@ class SelfServiceController {
             res.json({ message: 'Password reset successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to reset password' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to reset password' });
         }
     }
     async handlePasswordChange(req, res) {
@@ -566,7 +567,7 @@ class SelfServiceController {
             res.json({ message: 'Password changed successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to change password' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to change password' });
         }
     }
     async handlePasswordValidation(req, res) {
@@ -618,17 +619,17 @@ class SelfServiceController {
                     country: req.body.country || 'US',
                     region: req.body.region || 'CA',
                     city: req.body.city || 'San Francisco',
-                    timezone: req.body.timezone || 'America/Los_Angeles',
-                    isp: req.body.isp,
+                    // timezone: req.body.timezone || 'America/Los_Angeles',
                     organization: req.body.organization
                 },
                 trustLevel: 'medium',
-                metadata: req.body.metadata || {}
+                metadata: req.body.metadata || {},
+                uploadedBy: req.user?.id || 'system'
             });
             res.status(201).json(device);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to add trusted device' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to add trusted device' });
         }
     }
     async handleRevokeTrustedDevice(req, res) {
@@ -690,7 +691,7 @@ class SelfServiceController {
             res.status(201).json(result);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to setup MFA method' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to setup MFA method' });
         }
     }
     async handleVerifyMFASetup(req, res) {
@@ -704,7 +705,7 @@ class SelfServiceController {
             res.json({ message: 'MFA method verified successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to verify MFA method' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to verify MFA method' });
         }
     }
     async handleRemoveMFAMethod(req, res) {
@@ -718,7 +719,7 @@ class SelfServiceController {
             res.status(204).send();
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to remove MFA method' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to remove MFA method' });
         }
     }
     async handleCreateMFAChallenge(req, res) {
@@ -735,7 +736,7 @@ class SelfServiceController {
             });
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to create MFA challenge' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to create MFA challenge' });
         }
     }
     async handleVerifyMFAChallenge(req, res) {
@@ -754,7 +755,7 @@ class SelfServiceController {
             res.json(result);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to verify MFA challenge' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to verify MFA challenge' });
         }
     }
     async handleGenerateBackupCodes(req, res) {
@@ -763,7 +764,7 @@ class SelfServiceController {
             res.json(result);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to generate backup codes' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to generate backup codes' });
         }
     }
     async handleUpdateMFASettings(req, res) {
@@ -837,7 +838,7 @@ class SelfServiceController {
             res.status(201).json(request);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to submit data request' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to submit data request' });
         }
     }
     // Account Closure Handlers (abbreviated)
@@ -848,7 +849,7 @@ class SelfServiceController {
             res.status(201).json(request);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'Failed to request account closure' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to request account closure' });
         }
     }
     // Placeholder handlers for remaining endpoints

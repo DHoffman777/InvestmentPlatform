@@ -116,7 +116,7 @@ export declare class MultiCurrencyService extends EventEmitter {
     /**
      * Update exchange rates from providers
      */
-    updateExchangeRates(): Promise<void>;
+    updateExchangeRates(): Promise<any>;
     /**
      * Get historical exchange rates
      */
@@ -124,7 +124,7 @@ export declare class MultiCurrencyService extends EventEmitter {
     /**
      * Mark-to-market all currency hedges
      */
-    markToMarketHedges(): Promise<void>;
+    markToMarketHedges(): Promise<any>;
     /**
      * Get supported currencies
      */

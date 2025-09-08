@@ -103,7 +103,7 @@ app.get('/health', async (req, res) => {
       database: 'connected',
       kafka: kafkaConnected ? 'connected' : 'disconnected',
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Health check failed:', error);
     res.status(503).json({
       status: 'unhealthy',
@@ -119,7 +119,7 @@ app.get('/ready', async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     res.status(200).json({ status: 'ready' });
-  } catch (error) {
+  } catch (error: any) {
     res.status(503).json({ status: 'not ready' });
   }
 });
@@ -131,7 +131,7 @@ app.get('/metrics', async (req, res) => {
     res.set('Content-Type', register.contentType);
     const metrics = await register.metrics();
     res.end(metrics);
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error serving metrics:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -187,7 +187,7 @@ const gracefulShutdown = async (signal: string) => {
     
     logger.info('Graceful shutdown completed');
     process.exit(0);
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error during graceful shutdown:', error);
     process.exit(1);
   }
@@ -225,7 +225,7 @@ const startServer = async () => {
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`Health check available at http://localhost:${port}/health`);
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Failed to start server:', error);
     process.exit(1);
   }

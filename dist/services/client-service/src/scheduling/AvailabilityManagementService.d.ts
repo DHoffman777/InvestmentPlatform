@@ -214,7 +214,7 @@ export declare class AvailabilityManagementService extends EventEmitter {
     getProfile(profileId: string): Promise<AvailabilityProfile | null>;
     getDefaultProfile(tenantId: string, userId: string): Promise<AvailabilityProfile | null>;
     updateProfile(profileId: string, updates: Partial<AvailabilityProfile>): Promise<AvailabilityProfile>;
-    deleteProfile(profileId: string): Promise<void>;
+    deleteProfile(profileId: string): Promise<any>;
     private generateSlotsForProfile;
     private generateSlotsFromPattern;
     private generateDaySlotsFromPattern;
@@ -260,6 +260,6 @@ export declare class AvailabilityManagementService extends EventEmitter {
         };
         timestamp: Date;
     }>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 export default AvailabilityManagementService;

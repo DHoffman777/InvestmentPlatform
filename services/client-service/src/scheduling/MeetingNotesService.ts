@@ -725,7 +725,7 @@ export class MeetingNotesService extends EventEmitter {
     return followUp;
   }
 
-  private async extractAndCreateFollowUps(notes: MeetingNotes): Promise<void> {
+  private async extractAndCreateFollowUps(notes: MeetingNotes): Promise<any> {
     // Find action items section
     const actionItemsSection = notes.sections.find(section => section.type === 'action_items');
     if (!actionItemsSection || !actionItemsSection.content.trim()) return;
@@ -965,7 +965,7 @@ export class MeetingNotesService extends EventEmitter {
     }
   }
 
-  private async sendFollowUpReminder(followUpId: string, daysBefore: number): Promise<void> {
+  private async sendFollowUpReminder(followUpId: string, daysBefore: number): Promise<any> {
     const followUp = this.followUps.get(followUpId);
     if (!followUp || followUp.status === 'completed' || followUp.status === 'cancelled') {
       return;
@@ -981,7 +981,7 @@ export class MeetingNotesService extends EventEmitter {
     });
   }
 
-  private async checkOverdueFollowUps(): Promise<void> {
+  private async checkOverdueFollowUps(): Promise<any> {
     const now = new Date();
     const overdueFollowUps = Array.from(this.followUps.values())
       .filter(item => 
@@ -1007,7 +1007,7 @@ export class MeetingNotesService extends EventEmitter {
   }
 
   // AI-powered features
-  private async analyzeSentiment(notesId: string): Promise<void> {
+  private async analyzeSentiment(notesId: string): Promise<any> {
     const notes = this.notes.get(notesId);
     if (!notes) return;
 
@@ -1054,7 +1054,7 @@ export class MeetingNotesService extends EventEmitter {
     this.notes.set(notesId, notes);
   }
 
-  private async generateSummary(notesId: string): Promise<void> {
+  private async generateSummary(notesId: string): Promise<any> {
     const notes = this.notes.get(notesId);
     if (!notes) return;
 
@@ -1231,7 +1231,7 @@ export class MeetingNotesService extends EventEmitter {
   }
 
   // Utility methods
-  private async archiveOldNotes(): Promise<void> {
+  private async archiveOldNotes(): Promise<any> {
     const archiveDate = new Date();
     archiveDate.setDate(archiveDate.getDate() - this.config.storage.archiveAfterDays);
 
@@ -1325,7 +1325,7 @@ export class MeetingNotesService extends EventEmitter {
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     console.log('Shutting down Meeting Notes Service...');
     
     // Clear auto-save timers

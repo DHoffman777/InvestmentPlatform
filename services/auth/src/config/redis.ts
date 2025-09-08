@@ -33,13 +33,13 @@ export class CacheService {
     return CacheService.instance;
   }
 
-  async connect(): Promise<void> {
+  async connect(): Promise<any> {
     if (!this.client.isOpen) {
       await this.client.connect();
     }
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(): Promise<any> {
     if (this.client.isOpen) {
       await this.client.disconnect();
     }
@@ -48,28 +48,28 @@ export class CacheService {
   async get(key: string): Promise<string | null> {
     try {
       return await this.client.get(key);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Redis GET error:', { key, error });
       return null;
     }
   }
 
-  async set(key: string, value: string, ttl?: number): Promise<void> {
+  async set(key: string, value: string, ttl?: number): Promise<any> {
     try {
       if (ttl) {
         await this.client.setEx(key, ttl, value);
       } else {
         await this.client.set(key, value);
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Redis SET error:', { key, error });
     }
   }
 
-  async del(key: string): Promise<void> {
+  async del(key: string): Promise<any> {
     try {
       await this.client.del(key);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Redis DEL error:', { key, error });
     }
   }
@@ -78,7 +78,7 @@ export class CacheService {
     try {
       const result = await this.client.exists(key);
       return result === 1;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Redis EXISTS error:', { key, error });
       return false;
     }
@@ -87,22 +87,22 @@ export class CacheService {
   async incr(key: string): Promise<number> {
     try {
       return await this.client.incr(key);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Redis INCR error:', { key, error });
       throw error;
     }
   }
 
-  async expire(key: string, ttl: number): Promise<void> {
+  async expire(key: string, ttl: number): Promise<any> {
     try {
       await this.client.expire(key, ttl);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Redis EXPIRE error:', { key, ttl, error });
     }
   }
 
   // Session management helpers
-  async setSession(sessionId: string, data: any, ttl: number = 86400): Promise<void> {
+  async setSession(sessionId: string, data: any, ttl: number = 86400): Promise<any> {
     const key = `session:${sessionId}`;
     await this.set(key, JSON.stringify(data), ttl);
   }
@@ -113,7 +113,7 @@ export class CacheService {
     return data ? JSON.parse(data) : null;
   }
 
-  async deleteSession(sessionId: string): Promise<void> {
+  async deleteSession(sessionId: string): Promise<any> {
     const key = `session:${sessionId}`;
     await this.del(key);
   }
@@ -135,3 +135,4 @@ export class CacheService {
 
 export { redisClient };
 export default CacheService;
+

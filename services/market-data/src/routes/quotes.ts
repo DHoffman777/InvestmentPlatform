@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query, param, validationResult } from 'express-validator';
+const { query, param, validationResult } = require('express-validator');
 import { MarketDataService } from '../services/marketDataService';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
@@ -28,7 +28,7 @@ router.get('/:symbol',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
       const quote = await marketDataService.getRealtimeQuote(symbol.toUpperCase());
@@ -56,7 +56,7 @@ router.get('/:symbol',
           volume: quote.volume?.toString(),
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching quote:', { symbol: req.params.symbol, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -74,7 +74,7 @@ router.get('/',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbols } = req.query as any;
       const symbolList = symbols.split(',').map((s: string) => s.trim().toUpperCase()).slice(0, 50); // Limit to 50 symbols
@@ -108,7 +108,7 @@ router.get('/',
         requestedSymbols: symbolList,
         foundCount: formattedQuotes.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching multiple quotes:', { symbols: req.query.symbols, error });
       res.status(500).json({
         error: 'Internal server error',

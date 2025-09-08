@@ -851,7 +851,7 @@ export class OnboardingProgressService extends EventEmitter {
           timing: 'immediate'
         },
         {
-          type: 'phone',
+          type: 'call',
           message: 'Welcome call from relationship manager',
           timing: 'next_business_day'
         }
@@ -888,7 +888,7 @@ export class OnboardingProgressService extends EventEmitter {
     newStatus: StepStatus,
     progressPercentage?: number,
     metadata?: Record<string, any>
-  ): Promise<void> {
+  ): Promise<any> {
     const progress = this.progressRecords.get(progressId);
     if (!progress) {
       throw new Error('Progress record not found');
@@ -953,7 +953,7 @@ export class OnboardingProgressService extends EventEmitter {
     return null;
   }
 
-  private async updatePhaseProgress(progressId: string): Promise<void> {
+  private async updatePhaseProgress(progressId: string): Promise<any> {
     const progress = this.progressRecords.get(progressId);
     if (!progress) return;
 
@@ -1003,7 +1003,7 @@ export class OnboardingProgressService extends EventEmitter {
     }
   }
 
-  private async updateOverallProgress(progressId: string): Promise<void> {
+  private async updateOverallProgress(progressId: string): Promise<any> {
     const progress = this.progressRecords.get(progressId);
     if (!progress) return;
 
@@ -1036,7 +1036,7 @@ export class OnboardingProgressService extends EventEmitter {
     }
   }
 
-  private async checkMilestoneAchievements(progressId: string): Promise<void> {
+  private async checkMilestoneAchievements(progressId: string): Promise<any> {
     const progress = this.progressRecords.get(progressId);
     if (!progress) return;
 
@@ -1118,7 +1118,7 @@ export class OnboardingProgressService extends EventEmitter {
   private async triggerCelebration(
     progress: OnboardingProgress,
     celebration: CelebrationAction
-  ): Promise<void> {
+  ): Promise<any> {
     const notification: NotificationRecord = {
       id: randomUUID(),
       type: NotificationType.MILESTONE_ACHIEVED,
@@ -1134,7 +1134,7 @@ export class OnboardingProgressService extends EventEmitter {
     this.emit('celebrationTriggered', { progress, celebration, notification });
   }
 
-  private async updateTimelineEstimate(progressId: string): Promise<void> {
+  private async updateTimelineEstimate(progressId: string): Promise<any> {
     const progress = this.progressRecords.get(progressId);
     if (!progress) return;
 
@@ -1225,7 +1225,7 @@ export class OnboardingProgressService extends EventEmitter {
     blockerId: string,
     resolution: string,
     resolvedBy: string
-  ): Promise<void> {
+  ): Promise<any> {
     const progress = this.progressRecords.get(progressId);
     if (!progress) {
       throw new Error('Progress record not found');

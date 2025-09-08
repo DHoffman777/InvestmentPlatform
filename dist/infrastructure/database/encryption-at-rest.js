@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PostgreSQLEncryptionManager = exports.ENCRYPTION_FIELD_MAPPING = exports.SensitiveFieldType = exports.DatabaseEncryptionService = void 0;
+exports.ExpressEncryptionMiddleware = exports.PostgreSQLEncryptionManager = exports.ENCRYPTION_FIELD_MAPPING = exports.SensitiveFieldType = exports.DatabaseEncryptionService = void 0;
 exports.EncryptedField = EncryptedField;
 const crypto = __importStar(require("crypto"));
 const util_1 = require("util");
@@ -68,13 +68,15 @@ class DatabaseEncryptionService {
             // Derive encryption key from master key using PBKDF2
             const key = await this.deriveKey(this.masterKey, salt);
             // Create cipher
-            const cipher = crypto.createCipher(this.config.algorithm, key);
-            cipher.setAAD(Buffer.from(associatedData || '', 'utf8'));
+            const cipher = crypto.createCipheriv(this.config.algorithm, key, iv);
+            if (cipher.setAAD) {
+                cipher.setAAD(Buffer.from(associatedData || '', 'utf8'));
+            }
             // Encrypt data
             let encrypted = cipher.update(plaintext, 'utf8', 'hex');
             encrypted += cipher.final('hex');
             // Get authentication tag
-            const tag = cipher.getAuthTag();
+            const tag = cipher.getAuthTag ? cipher.getAuthTag() : Buffer.alloc(0);
             return {
                 encryptedData: encrypted,
                 iv: iv.toString('hex'),
@@ -83,7 +85,7 @@ class DatabaseEncryptionService {
             };
         }
         catch (error) {
-            throw new Error(`Encryption failed: ${error.message}`);
+            throw new Error(`Encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     /**
@@ -98,16 +100,20 @@ class DatabaseEncryptionService {
             // Derive the same encryption key
             const key = await this.deriveKey(this.masterKey, salt);
             // Create decipher
-            const decipher = crypto.createDecipher(this.config.algorithm, key);
-            decipher.setAuthTag(tag);
-            decipher.setAAD(Buffer.from(associatedData || '', 'utf8'));
+            const decipher = crypto.createDecipheriv(this.config.algorithm, key, iv);
+            if (decipher.setAuthTag) {
+                decipher.setAuthTag(tag);
+            }
+            if (decipher.setAAD) {
+                decipher.setAAD(Buffer.from(associatedData || '', 'utf8'));
+            }
             // Decrypt data
             let decrypted = decipher.update(encrypted.encryptedData, 'hex', 'utf8');
             decrypted += decipher.final('utf8');
             return decrypted;
         }
         catch (error) {
-            throw new Error(`Decryption failed: ${error.message}`);
+            throw new Error(`Decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     /**
@@ -252,161 +258,123 @@ archive_command = 'encrypt_backup %p %f'
 
 set -e
 
-PGUSER="${POSTGRES_USER;
-        -postgres;
+PGUSER="\${POSTGRES_USER:-postgres}"
+PGDB="\${POSTGRES_DB:-investment_platform}"
+KEY_BACKUP_PATH="\${TDE_KEY_BACKUP_PATH:-/var/lib/postgresql/keys}"
+
+echo "Starting TDE key rotation for database: \$PGDB"
+
+# Create key backup directory
+mkdir -p \$KEY_BACKUP_PATH
+
+# Backup current key
+psql -U \$PGUSER -d \$PGDB -c "SELECT tde_backup_master_key('\$KEY_BACKUP_PATH/master_key_\$(date +%Y%m%d_%H%M%S).backup');"
+
+# Generate new master key
+NEW_KEY=\$(openssl rand -hex 32)
+
+# Rotate master key
+psql -U \$PGUSER -d \$PGDB -c "SELECT tde_rotate_master_key('\$NEW_KEY');"
+
+echo "TDE key rotation completed successfully"
+
+# Log rotation event
+logger "PostgreSQL TDE key rotated for database \$PGDB"
+    `.trim();
     }
-    ";
-    PGDB = "${POSTGRES_DB:-investment_platform}";
-    KEY_BACKUP_PATH = "${TDE_KEY_BACKUP_PATH:-/var/lib/postgresql/keys}";
-    echo;
-    "Starting TDE key rotation for database: $PGDB";
-    #;
-    Create;
-    key;
-    backup;
-    directory;
-    mkdir;
 }
 exports.PostgreSQLEncryptionManager = PostgreSQLEncryptionManager;
--p;
-$KEY_BACKUP_PATH;
-#;
-Backup;
-current;
-key;
-psql - U;
-$PGUSER - d;
-$PGDB - c;
-"SELECT tde_backup_master_key('$KEY_BACKUP_PATH/master_key_$(date +%Y%m%d_%H%M%S).backup');";
-#;
-Generate;
-new master;
-key;
-NEW_KEY = $(openssl, rand - hex, 32);
-#;
-Rotate;
-master;
-key;
-psql - U;
-$PGUSER - d;
-$PGDB - c;
-"SELECT tde_rotate_master_key('$NEW_KEY');";
-echo;
-"TDE key rotation completed successfully";
-#;
-Log;
-rotation;
-event;
-logger;
-"PostgreSQL TDE key rotated for database $PGDB" `.trim();
-  }
-}
-
 /**
  * Application-level encryption middleware for Express.js
  */
-export class ExpressEncryptionMiddleware {
-  private encryptionService: DatabaseEncryptionService;
-  
-  constructor(encryptionService: DatabaseEncryptionService) {
-    this.encryptionService = encryptionService;
-  }
-
-  /**
-   * Middleware to encrypt request data
-   */
-  public encryptRequest() {
-    return async (req: any, res: any, next: any) => {
-      try {
-        if (req.body && this.containsSensitiveData(req.body)) {
-          req.body = await this.encryptSensitiveFields(req.body);
-        }
-        next();
-      } catch (error) {
-        res.status(500).json({
-          error: 'Encryption error',
-          message: 'Failed to encrypt sensitive data'
-        });
-      }
-    };
-  }
-
-  /**
-   * Middleware to decrypt response data
-   */
-  public decryptResponse() {
-    return async (req: any, res: any, next: any) => {
-      const originalSend = res.send;
-      
-      res.send = async function(data: any) {
-        try {
-          if (data && typeof data === 'object') {
-            data = await this.decryptSensitiveFields(data);
-          }
-          originalSend.call(this, data);
-        } catch (error) {
-          originalSend.call(this, {
-            error: 'Decryption error',
-            message: 'Failed to decrypt sensitive data'
-          });
-        }
-      }.bind(this);
-      
-      next();
-    };
-  }
-
-  private containsSensitiveData(obj: any): boolean {
-    if (!obj || typeof obj !== 'object') return false;
-    
-    const sensitiveFields = ['ssn', 'tax_id', 'account_number', 'routing_number'];
-    return sensitiveFields.some(field => obj.hasOwnProperty(field));
-  }
-
-  private async encryptSensitiveFields(obj: any): Promise<any> {
-    if (!obj || typeof obj !== 'object') return obj;
-    
-    const result = { ...obj };
-    const sensitiveFields = ['ssn', 'tax_id', 'account_number', 'routing_number', 'notes'];
-    
-    for (const field of sensitiveFields) {
-      if (result[field] && typeof result[field] === 'string') {
-        result[`;
-$;
-{
-    field;
-}
-_encrypted `] = await this.encryptionService.encryptField(result[field]);
-        delete result[field]; // Remove plaintext
-      }
+class ExpressEncryptionMiddleware {
+    encryptionService;
+    constructor(encryptionService) {
+        this.encryptionService = encryptionService;
     }
-    
-    return result;
-  }
-
-  private async decryptSensitiveFields(obj: any): Promise<any> {
-    if (!obj || typeof obj !== 'object') return obj;
-    
-    const result = { ...obj };
-    const encryptedFields = Object.keys(result).filter(key => key.endsWith('_encrypted'));
-    
-    for (const encryptedField of encryptedFields) {
-      const originalField = encryptedField.replace('_encrypted', '');
-      if (result[encryptedField]) {
-        result[originalField] = await this.encryptionService.decryptField(result[encryptedField]);
-        delete result[encryptedField]; // Remove encrypted version from response
-      }
+    /**
+     * Middleware to encrypt request data
+     */
+    encryptRequest() {
+        return async (req, res, next) => {
+            try {
+                if (req.body && this.containsSensitiveData(req.body)) {
+                    req.body = await this.encryptSensitiveFields(req.body);
+                }
+                next();
+            }
+            catch (error) {
+                res.status(500).json({
+                    error: 'Encryption error',
+                    message: 'Failed to encrypt sensitive data'
+                });
+            }
+        };
     }
-    
-    return result;
-  }
+    /**
+     * Middleware to decrypt response data
+     */
+    decryptResponse() {
+        const self = this;
+        return async (req, res, next) => {
+            const originalSend = res.send;
+            res.send = async function (data) {
+                try {
+                    if (data && typeof data === 'object') {
+                        data = await self.decryptSensitiveFields(data);
+                    }
+                    originalSend.call(res, data);
+                }
+                catch (error) {
+                    originalSend.call(res, {
+                        error: 'Decryption error',
+                        message: 'Failed to decrypt sensitive data'
+                    });
+                }
+            }.bind(this);
+            next();
+        };
+    }
+    containsSensitiveData(obj) {
+        if (!obj || typeof obj !== 'object')
+            return false;
+        const sensitiveFields = ['ssn', 'tax_id', 'account_number', 'routing_number'];
+        return sensitiveFields.some(field => obj.hasOwnProperty(field));
+    }
+    async encryptSensitiveFields(obj) {
+        if (!obj || typeof obj !== 'object')
+            return obj;
+        const result = { ...obj };
+        const sensitiveFields = ['ssn', 'tax_id', 'account_number', 'routing_number', 'notes'];
+        for (const field of sensitiveFields) {
+            if (result[field] && typeof result[field] === 'string') {
+                result[`${field}_encrypted`] = await this.encryptionService.encryptField(result[field]);
+                delete result[field]; // Remove plaintext
+            }
+        }
+        return result;
+    }
+    async decryptSensitiveFields(obj) {
+        if (!obj || typeof obj !== 'object')
+            return obj;
+        const result = { ...obj };
+        const encryptedFields = Object.keys(result).filter(key => key.endsWith('_encrypted'));
+        for (const encryptedField of encryptedFields) {
+            const originalField = encryptedField.replace('_encrypted', '');
+            if (result[encryptedField]) {
+                result[originalField] = await this.encryptionService.decryptField(result[encryptedField]);
+                delete result[encryptedField]; // Remove encrypted version from response
+            }
+        }
+        return result;
+    }
 }
-
+exports.ExpressEncryptionMiddleware = ExpressEncryptionMiddleware;
 // Export configuration and utilities
-export default {
-  DatabaseEncryptionService,
-  PostgreSQLEncryptionManager,
-  ExpressEncryptionMiddleware,
-  SensitiveFieldType,
-  ENCRYPTION_FIELD_MAPPING
-};;
+exports.default = {
+    DatabaseEncryptionService,
+    PostgreSQLEncryptionManager,
+    ExpressEncryptionMiddleware,
+    SensitiveFieldType,
+    ENCRYPTION_FIELD_MAPPING: exports.ENCRYPTION_FIELD_MAPPING
+};

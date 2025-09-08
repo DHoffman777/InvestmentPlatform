@@ -214,13 +214,13 @@ class PerformanceCorrelationService extends events_1.EventEmitter {
             const job = this.activeAnalyses.get(analysisId);
             if (job) {
                 job.status = 'failed';
-                job.error = error.message;
+                job.error = error instanceof Error ? error.message : 'Unknown error';
                 job.end_time = new Date();
             }
             this.emit('correlationAnalysisError', {
                 analysisId,
                 profileId: profile.id,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -269,7 +269,7 @@ class PerformanceCorrelationService extends events_1.EventEmitter {
                 }
             }
             catch (error) {
-                console.warn(`Failed to analyze correlation pattern ${patternId}:`, error.message);
+                console.warn(`Failed to analyze correlation pattern ${patternId}:`, error instanceof Error ? error.message : 'Unknown error');
             }
         }
         return correlations;

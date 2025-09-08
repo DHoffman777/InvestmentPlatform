@@ -1,10 +1,11 @@
 // Alternative Investments API Routes
 // Phase 4.2 - RESTful API endpoints for alternative investments management
 
-import express, { Response } from 'express';
+import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { AuthenticatedRequest, requireAuth } from '../middleware/auth';
+import { requireAuth } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
+const { body, param, query } = require('express-validator');
 import { getKafkaService } from '../utils/kafka-mock';
 import { logger } from '../utils/logger';
 import { AlternativeInvestmentsService } from '../services/alternatives/AlternativeInvestmentsService';
@@ -23,10 +24,15 @@ const kafkaService = getKafkaService();
 const alternativeInvestmentsService = new AlternativeInvestmentsService(prisma, kafkaService);
 
 // Apply authentication to all routes
-router.use(requireAuth);
+router.use(requireAuth as any);
 
-// Create alternative investment
-router.post('/', async (req: AuthenticatedRequest, res: Response) => {
+// Create alternative investment  
+router.post('/', [
+  body('investmentData').exists().withMessage('investmentData is required'),
+  body('investmentData.investmentName').notEmpty().withMessage('investmentName is required'),
+  body('investmentData.investmentType').isIn(Object.values(AlternativeInvestmentType)).withMessage('Invalid investment type'),
+  validateRequest
+], async (req: any, res: any) => {
   try {
     const request: CreateAlternativeInvestmentRequest = req.body;
     
@@ -78,7 +84,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
       message: 'Alternative investment created successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating alternative investment:', error);
     res.status(500).json({
       success: false,
@@ -88,7 +94,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Get alternative investment by ID
-router.get('/:investmentId', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:investmentId', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
 
@@ -109,7 +115,7 @@ router.get('/:investmentId', async (req: AuthenticatedRequest, res: Response) =>
       data: investment
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving alternative investment:', error);
     res.status(500).json({
       success: false,
@@ -119,7 +125,7 @@ router.get('/:investmentId', async (req: AuthenticatedRequest, res: Response) =>
 });
 
 // Update alternative investment
-router.put('/:investmentId', async (req: AuthenticatedRequest, res: Response) => {
+router.put('/:investmentId', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const updates = req.body;
@@ -142,7 +148,7 @@ router.put('/:investmentId', async (req: AuthenticatedRequest, res: Response) =>
       message: 'Alternative investment updated successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error updating alternative investment:', error);
     res.status(500).json({
       success: false,
@@ -152,7 +158,7 @@ router.put('/:investmentId', async (req: AuthenticatedRequest, res: Response) =>
 });
 
 // Search alternative investments
-router.get('/', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', async (req: any, res: any) => {
   try {
     const searchRequest: AlternativeInvestmentSearchRequest = {
       tenantId: req.user!.tenantId,
@@ -160,10 +166,10 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
         (Array.isArray(req.query.investmentTypes) ? req.query.investmentTypes : [req.query.investmentTypes]) as AlternativeInvestmentType[] :
         undefined,
       generalPartners: req.query.generalPartners ?
-        (Array.isArray(req.query.generalPartners) ? req.query.generalPartners : [req.query.generalPartners]) :
+        (Array.isArray(req.query.generalPartners) ? req.query.generalPartners as string[] : [req.query.generalPartners as string]) :
         undefined,
       vintages: req.query.vintages ?
-        (Array.isArray(req.query.vintages) ? req.query.vintages : [req.query.vintages]).map(v => parseInt(v as string)) :
+        (Array.isArray(req.query.vintages) ? req.query.vintages : [req.query.vintages]).map((v: any) => parseInt(v as string)) :
         undefined,
       sectorFocus: req.query.sectorFocus ?
         (Array.isArray(req.query.sectorFocus) ? req.query.sectorFocus : [req.query.sectorFocus]) as SectorFocus[] :
@@ -195,7 +201,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
       data: searchResults
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error searching alternative investments:', error);
     res.status(500).json({
       success: false,
@@ -205,7 +211,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Process capital call
-router.post('/:investmentId/capital-calls', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:investmentId/capital-calls', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const {
@@ -258,7 +264,7 @@ router.post('/:investmentId/capital-calls', async (req: AuthenticatedRequest, re
       message: 'Capital call processed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error processing capital call:', error);
     res.status(500).json({
       success: false,
@@ -268,7 +274,7 @@ router.post('/:investmentId/capital-calls', async (req: AuthenticatedRequest, re
 });
 
 // Fund capital call
-router.post('/capital-calls/:callId/fund', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/capital-calls/:callId/fund', async (req: any, res: any) => {
   try {
     const { callId } = req.params;
     const { fundedAmount } = req.body;
@@ -299,7 +305,7 @@ router.post('/capital-calls/:callId/fund', async (req: AuthenticatedRequest, res
       message: 'Capital call funded successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error funding capital call:', error);
     res.status(500).json({
       success: false,
@@ -309,7 +315,7 @@ router.post('/capital-calls/:callId/fund', async (req: AuthenticatedRequest, res
 });
 
 // Process distribution
-router.post('/:investmentId/distributions', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:investmentId/distributions', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const {
@@ -362,7 +368,7 @@ router.post('/:investmentId/distributions', async (req: AuthenticatedRequest, re
       message: 'Distribution processed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error processing distribution:', error);
     res.status(500).json({
       success: false,
@@ -372,7 +378,7 @@ router.post('/:investmentId/distributions', async (req: AuthenticatedRequest, re
 });
 
 // Update NAV
-router.post('/:investmentId/nav', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:investmentId/nav', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const {
@@ -429,7 +435,7 @@ router.post('/:investmentId/nav', async (req: AuthenticatedRequest, res: Respons
       message: 'NAV updated successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error updating NAV:', error);
     res.status(500).json({
       success: false,
@@ -439,7 +445,7 @@ router.post('/:investmentId/nav', async (req: AuthenticatedRequest, res: Respons
 });
 
 // Generate J-curve analysis
-router.post('/:investmentId/j-curve-analysis', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:investmentId/j-curve-analysis', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const {
@@ -485,7 +491,7 @@ router.post('/:investmentId/j-curve-analysis', async (req: AuthenticatedRequest,
       message: 'J-curve analysis generated successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error generating J-curve analysis:', error);
     res.status(500).json({
       success: false,
@@ -495,7 +501,7 @@ router.post('/:investmentId/j-curve-analysis', async (req: AuthenticatedRequest,
 });
 
 // Add portfolio company
-router.post('/:investmentId/portfolio-companies', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:investmentId/portfolio-companies', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const companyData = req.body;
@@ -534,7 +540,7 @@ router.post('/:investmentId/portfolio-companies', async (req: AuthenticatedReque
       message: 'Portfolio company added successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error adding portfolio company:', error);
     res.status(500).json({
       success: false,
@@ -544,7 +550,7 @@ router.post('/:investmentId/portfolio-companies', async (req: AuthenticatedReque
 });
 
 // Create position in alternative investment
-router.post('/:investmentId/positions', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:investmentId/positions', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const {
@@ -588,7 +594,7 @@ router.post('/:investmentId/positions', async (req: AuthenticatedRequest, res: R
       message: 'Position created successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating position:', error);
     res.status(500).json({
       success: false,
@@ -598,7 +604,7 @@ router.post('/:investmentId/positions', async (req: AuthenticatedRequest, res: R
 });
 
 // Generate fund analytics
-router.get('/:investmentId/analytics', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:investmentId/analytics', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const { asOfDate } = req.query;
@@ -614,7 +620,7 @@ router.get('/:investmentId/analytics', async (req: AuthenticatedRequest, res: Re
       data: analytics
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error generating fund analytics:', error);
     res.status(500).json({
       success: false,
@@ -624,7 +630,7 @@ router.get('/:investmentId/analytics', async (req: AuthenticatedRequest, res: Re
 });
 
 // Generate portfolio analytics
-router.get('/portfolios/:portfolioId/analytics', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/portfolios/:portfolioId/analytics', async (req: any, res: any) => {
   try {
     const { portfolioId } = req.params;
     const { asOfDate } = req.query;
@@ -640,7 +646,7 @@ router.get('/portfolios/:portfolioId/analytics', async (req: AuthenticatedReques
       data: analytics
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error generating portfolio analytics:', error);
     res.status(500).json({
       success: false,
@@ -650,7 +656,7 @@ router.get('/portfolios/:portfolioId/analytics', async (req: AuthenticatedReques
 });
 
 // Update ESG metrics
-router.post('/:investmentId/esg', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:investmentId/esg', async (req: any, res: any) => {
   try {
     const { investmentId } = req.params;
     const esgData = req.body;
@@ -690,7 +696,7 @@ router.post('/:investmentId/esg', async (req: AuthenticatedRequest, res: Respons
       message: 'ESG metrics updated successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error updating ESG metrics:', error);
     res.status(500).json({
       success: false,
@@ -700,7 +706,7 @@ router.post('/:investmentId/esg', async (req: AuthenticatedRequest, res: Respons
 });
 
 // Get investment types enum
-router.get('/enums/investment-types', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/enums/investment-types', async (req: any, res: any) => {
   try {
     const investmentTypes = Object.values(AlternativeInvestmentType);
     
@@ -708,7 +714,7 @@ router.get('/enums/investment-types', async (req: AuthenticatedRequest, res: Res
       success: true,
       data: investmentTypes
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving investment types:', error);
     res.status(500).json({
       success: false,
@@ -718,7 +724,7 @@ router.get('/enums/investment-types', async (req: AuthenticatedRequest, res: Res
 });
 
 // Get fund statuses enum
-router.get('/enums/fund-statuses', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/enums/fund-statuses', async (req: any, res: any) => {
   try {
     const fundStatuses = Object.values(FundStatus);
     
@@ -726,7 +732,7 @@ router.get('/enums/fund-statuses', async (req: AuthenticatedRequest, res: Respon
       success: true,
       data: fundStatuses
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving fund statuses:', error);
     res.status(500).json({
       success: false,
@@ -736,7 +742,7 @@ router.get('/enums/fund-statuses', async (req: AuthenticatedRequest, res: Respon
 });
 
 // Get sector focus enum
-router.get('/enums/sector-focus', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/enums/sector-focus', async (req: any, res: any) => {
   try {
     const sectorFocus = Object.values(SectorFocus);
     
@@ -744,7 +750,7 @@ router.get('/enums/sector-focus', async (req: AuthenticatedRequest, res: Respons
       success: true,
       data: sectorFocus
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving sector focus:', error);
     res.status(500).json({
       success: false,
@@ -754,7 +760,7 @@ router.get('/enums/sector-focus', async (req: AuthenticatedRequest, res: Respons
 });
 
 // Get geographic focus enum
-router.get('/enums/geographic-focus', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/enums/geographic-focus', async (req: any, res: any) => {
   try {
     const geographicFocus = Object.values(GeographicFocus);
     
@@ -762,7 +768,7 @@ router.get('/enums/geographic-focus', async (req: AuthenticatedRequest, res: Res
       success: true,
       data: geographicFocus
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving geographic focus:', error);
     res.status(500).json({
       success: false,
@@ -772,7 +778,7 @@ router.get('/enums/geographic-focus', async (req: AuthenticatedRequest, res: Res
 });
 
 // Health check endpoint
-router.get('/health', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/health', async (req: any, res: any) => {
   try {
     res.json({
       success: true,
@@ -780,7 +786,7 @@ router.get('/health', async (req: AuthenticatedRequest, res: Response) => {
       timestamp: new Date().toISOString(),
       version: '4.2.0'
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({
       success: false,
       error: 'Health check failed'

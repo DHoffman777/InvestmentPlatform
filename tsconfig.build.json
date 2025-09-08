@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strict": false,
+    "noEmitOnError": false,
+    "allowJs": true,
+    "checkJs": false
+  }
+}

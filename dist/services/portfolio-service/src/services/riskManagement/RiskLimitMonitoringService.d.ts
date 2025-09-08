@@ -1,12 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { KafkaProducer } from '../../utils/kafka/producer';
-import { Logger } from '../../utils/logger';
-import { RiskLimitAssessment, RiskLimitRequest } from '../../models/riskManagement/RiskManagement';
+type RiskLimitRequest = any;
+type RiskLimitAssessment = any;
 export declare class RiskLimitMonitoringService {
     private prisma;
     private kafkaProducer;
     private logger;
-    constructor(prisma: PrismaClient, kafkaProducer: KafkaProducer, logger: Logger);
+    constructor(prisma: PrismaClient, kafkaProducer?: any, // TODO: Implement Kafka integration
+    customLogger?: any);
     monitorRiskLimits(request: RiskLimitRequest): Promise<RiskLimitAssessment>;
     monitorAllPortfolioLimits(request: Omit<RiskLimitRequest, 'portfolioId'>): Promise<RiskLimitAssessment[]>;
     private getPortfolioData;
@@ -50,3 +50,4 @@ export declare class RiskLimitMonitoringService {
     private sendImmediateAlert;
     private storeAssessment;
 }
+export {};

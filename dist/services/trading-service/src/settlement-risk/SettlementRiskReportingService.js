@@ -214,7 +214,7 @@ class SettlementRiskReportingService extends events_1.EventEmitter {
                     await this.generateScheduledReport(schedule);
                 }
                 catch (error) {
-                    this.emit('scheduledReportError', { scheduleId: schedule.scheduleId, error: error.message });
+                    this.emit('scheduledReportError', { scheduleId: schedule.scheduleId, error: error instanceof Error ? error.message : 'Unknown error' });
                 }
             }
         }
@@ -324,7 +324,7 @@ class SettlementRiskReportingService extends events_1.EventEmitter {
         }
         catch (error) {
             report.status = 'FAILED';
-            this.emit('reportGenerationFailed', { report, error: error.message });
+            this.emit('reportGenerationFailed', { report, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }

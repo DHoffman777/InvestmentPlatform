@@ -118,13 +118,13 @@ export declare class CapacityAlertWorkflowManager extends EventEmitter {
     private executeStep;
     private canExecuteStep;
     private requestApproval;
-    approveWorkflowStep(executionId: string, approvalId: string, userId: string, comments?: string): Promise<void>;
-    rejectWorkflowStep(executionId: string, approvalId: string, userId: string, comments?: string): Promise<void>;
+    approveWorkflowStep(executionId: string, approvalId: string, userId: string, comments?: string): Promise<any>;
+    rejectWorkflowStep(executionId: string, approvalId: string, userId: string, comments?: string): Promise<any>;
     createWorkflowTemplate(template: Partial<WorkflowTemplate>): Promise<WorkflowTemplate>;
     scheduleWorkflowMaintenance(workflowId: string, maintenanceWindow: {
         start: Date;
         end: Date;
-    }): Promise<void>;
+    }): Promise<any>;
     getWorkflowMetrics(workflowId?: string): Promise<WorkflowMetrics>;
     private findMatchingWorkflows;
     private matchesTriggerCondition;
@@ -139,6 +139,6 @@ export declare class CapacityAlertWorkflowManager extends EventEmitter {
     getAllExecutions(): WorkflowExecution[];
     getWorkflowTemplate(workflowId: string): WorkflowTemplate | null;
     getAllWorkflowTemplates(): WorkflowTemplate[];
-    cancelExecution(executionId: string, reason: string): Promise<void>;
-    shutdown(): Promise<void>;
+    cancelExecution(executionId: string, reason: string): Promise<any>;
+    shutdown(): Promise<any>;
 }

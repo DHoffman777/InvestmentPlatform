@@ -1,0 +1,238 @@
+// Error Tracking Service Database Schema
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  output        = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Error model - Main error tracking entity
+model Error {
+  id            String   @id @default(cuid())
+  fingerprint   String   
+  message       String
+  category      String   // DATABASE, AUTHENTICATION, TRADING, etc.
+  severity      String   // LOW, MEDIUM, HIGH, CRITICAL
+  errorType     String
+  stack         String?  @db.Text
+  
+  // Context (stored as JSON for flexibility)
+  context       Json?    // Contains service, version, environment, etc.
+  service       String
+  version       String
+  environment   String
+  timestamp     DateTime @default(now())
+  traceId       String?
+  spanId        String?
+  parentSpanId  String?
+  
+  // Metadata (stored as JSON for flexibility)
+  metadata      Json?    // Contains userId, sessionId, requestId, etc.
+  userId        String?
+  sessionId     String?
+  requestId     String?
+  userAgent     String?
+  ipAddress     String?
+  endpoint      String?
+  method        String?
+  statusCode    Int?
+  responseTime  Int?
+  memoryUsage   Json?
+  customData    Json?
+  
+  // Tracking
+  count         Int      @default(1)
+  firstSeen     DateTime @default(now())
+  lastSeen      DateTime @default(now())
+  resolved      Boolean  @default(false)
+  resolvedAt    DateTime?
+  resolvedBy    String?
+  resolution    String?  // Resolution notes
+  tags          String[]
+  affectedUsers String[]
+  
+  // Relationships
+  correlations  ErrorCorrelation[] @relation("ErrorCorrelations")
+  relatedErrors ErrorCorrelation[] @relation("RelatedErrors")
+  recoveryExecutions RecoveryExecution[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([fingerprint])
+  @@index([timestamp])
+  @@index([service, environment])
+  @@index([severity, resolved])
+  @@map("errors")
+}
+
+// Error correlation tracking
+model ErrorCorrelation {
+  id            String   @id @default(cuid())
+  errorId       String
+  error         Error    @relation("ErrorCorrelations", fields: [errorId], references: [id], onDelete: Cascade)
+  relatedErrorId String
+  relatedError  Error    @relation("RelatedErrors", fields: [relatedErrorId], references: [id], onDelete: Cascade)
+  
+  correlationType String // CAUSE, EFFECT, RELATED, DUPLICATE
+  confidence    Float    @default(0.0)
+  metadata      Json?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([errorId, relatedErrorId])
+  @@index([errorId])
+  @@index([relatedErrorId])
+  @@map("error_correlations")
+}
+
+// Recovery execution tracking
+model RecoveryExecution {
+  id            String   @id @default(cuid())
+  errorId       String
+  error         Error    @relation(fields: [errorId], references: [id], onDelete: Cascade)
+  
+  strategy      String   // RETRY, CIRCUIT_BREAKER, FALLBACK, etc.
+  action        String
+  status        String   @default("PENDING") // PENDING, IN_PROGRESS, SUCCESS, FAILED
+  attempts      Int      @default(0)
+  maxAttempts   Int      @default(3)
+  
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  nextRetryAt   DateTime?
+  
+  result        Json?
+  errorMessage  String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([errorId])
+  @@index([status])
+  @@map("recovery_executions")
+}
+
+// Error patterns for detection
+model ErrorPattern {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  description   String
+  pattern       String   // Regex pattern
+  category      String
+  severity      String
+  tags          String[]
+  
+  // Recovery actions
+  recoveryActions String[]
+  
+  // Tracking
+  matchCount    Int      @default(0)
+  lastMatched   DateTime?
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([category])
+  @@index([isActive])
+  @@map("error_patterns")
+}
+
+// Error aggregation for analytics
+model ErrorAggregation {
+  id            String   @id @default(cuid())
+  fingerprint   String   @unique
+  timeWindow    DateTime? // Hour/Day bucket
+  
+  // Metrics
+  count         Int      @default(0)
+  errorCount    Int      @default(0)
+  affectedUsers Int      @default(0)
+  avgResponseTime Float?
+  
+  // Tracking
+  firstSeen     DateTime @default(now())
+  lastSeen      DateTime @default(now())
+  trend         String   @default("stable") // increasing, decreasing, stable
+  
+  // Distribution
+  hourlyDistribution Int[]    @default([])
+  topAffectedEndpoints Json?   // [{ endpoint: string, count: number }]
+  topAffectedUsers Json?       // [{ userId: string, count: number }]
+  byService     Json?    // { "service1": 10, "service2": 5 }
+  bySeverity    Json?    // { "HIGH": 3, "MEDIUM": 7 }
+  byEndpoint    Json?    // { "/api/v1/...": 5 }
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([timeWindow])
+  @@index([fingerprint])
+  @@map("error_aggregations")
+}
+
+// Alert configurations
+model AlertConfiguration {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  description   String?
+  
+  // Conditions
+  condition     String   // THRESHOLD, RATE_CHANGE, PATTERN_MATCH
+  threshold     Float?
+  timeWindow    Int?     // in minutes
+  
+  // Targets
+  severity      String[] // Which severities to monitor
+  services      String[] // Which services to monitor
+  categories    String[] // Which categories to monitor
+  
+  // Actions
+  actions       Json     // Email, Slack, PagerDuty configs
+  
+  // Status
+  isActive      Boolean  @default(true)
+  lastTriggered DateTime?
+  triggerCount  Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([isActive])
+  @@map("alert_configurations")
+}
+
+// Alert history
+model AlertHistory {
+  id            String   @id @default(cuid())
+  configId      String
+  
+  triggeredAt   DateTime @default(now())
+  resolvedAt    DateTime?
+  
+  // Alert details
+  alertType     String
+  severity      String
+  message       String
+  details       Json?
+  
+  // Actions taken
+  actionsTaken  Json?
+  acknowledged  Boolean  @default(false)
+  acknowledgedBy String?
+  acknowledgedAt DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([configId])
+  @@index([triggeredAt])
+  @@index([severity])
+  @@map("alert_history")
+}

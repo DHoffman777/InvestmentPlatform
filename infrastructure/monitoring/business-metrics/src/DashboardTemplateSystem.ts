@@ -238,7 +238,7 @@ export class DashboardTemplateSystem extends EventEmitter {
     return updatedTemplate;
   }
 
-  async deleteTemplate(templateId: string): Promise<void> {
+  async deleteTemplate(templateId: string): Promise<any> {
     const template = this.templates.get(templateId);
     if (!template) {
       throw new Error(`Template ${templateId} not found`);
@@ -470,8 +470,8 @@ export class DashboardTemplateSystem extends EventEmitter {
       }
       
       return await response.json();
-    } catch (error) {
-      this.emit('widgetDataError', { endpoint, error: error.message });
+    } catch (error: any) {
+      this.emit('widgetDataError', { endpoint, error: error instanceof Error ? error.message : 'Unknown error' });
       return null;
     }
   }
@@ -888,3 +888,4 @@ export interface RenderedFilter {
   isVisible: boolean;
   dependsOn: string[];
 }
+

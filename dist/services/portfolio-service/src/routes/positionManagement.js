@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.positionManagementRouter = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const client_1 = require("@prisma/client");
 const positionService_1 = require("../services/positionService");
 const logger_1 = require("../utils/logger");
@@ -14,7 +14,7 @@ const prisma = new client_1.PrismaClient();
 const positionService = new positionService_1.PositionService(prisma);
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -25,8 +25,8 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/position-management/aggregated - Get aggregated positions across portfolios
 router.get('/aggregated', [
-    (0, express_validator_1.query)('portfolioIds').optional().isString().withMessage('Portfolio IDs must be comma-separated string'),
-    (0, express_validator_1.query)('assetClasses').optional().isString().withMessage('Asset classes must be comma-separated string'),
+    query('portfolioIds').optional().isString().withMessage('Portfolio IDs must be comma-separated string'),
+    query('assetClasses').optional().isString().withMessage('Asset classes must be comma-separated string'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:read']), async (req, res) => {
     try {
         const { portfolioIds, assetClasses } = req.query;
@@ -71,9 +71,9 @@ router.get('/aggregated', [
 });
 // POST /api/position-management/:id/tax-lots - Calculate tax lots for sale
 router.post('/:id/tax-lots', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid position ID'),
-    (0, express_validator_1.body)('sellQuantity').isNumeric().withMessage('Sell quantity must be numeric'),
-    (0, express_validator_1.body)('method').isIn(['FIFO', 'LIFO', 'HIFO', 'SPECIFIC_ID', 'AVERAGE_COST']).withMessage('Invalid tax lot method'),
+    param('id').isUUID().withMessage('Invalid position ID'),
+    body('sellQuantity').isNumeric().withMessage('Sell quantity must be numeric'),
+    body('method').isIn(['FIFO', 'LIFO', 'HIFO', 'SPECIFIC_ID', 'AVERAGE_COST']).withMessage('Invalid tax lot method'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:read']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -86,14 +86,7 @@ router.post('/:id/tax-lots', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             }
@@ -132,12 +125,12 @@ router.post('/:id/tax-lots', [
 });
 // POST /api/position-management/portfolios/:id/reconcile - Reconcile positions with custodian
 router.post('/portfolios/:id/reconcile', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.body)('custodianPositions').isArray().withMessage('Custodian positions must be an array'),
-    (0, express_validator_1.body)('custodianPositions.*.symbol').isString().withMessage('Symbol is required'),
-    (0, express_validator_1.body)('custodianPositions.*.quantity').isNumeric().withMessage('Quantity must be numeric'),
-    (0, express_validator_1.body)('custodianPositions.*.marketValue').isNumeric().withMessage('Market value must be numeric'),
-    (0, express_validator_1.body)('custodianPositions.*.costBasis').optional().isNumeric().withMessage('Cost basis must be numeric'),
+    param('id').isUUID().withMessage('Invalid portfolio ID'),
+    body('custodianPositions').isArray().withMessage('Custodian positions must be an array'),
+    body('custodianPositions.*.symbol').isString().withMessage('Symbol is required'),
+    body('custodianPositions.*.quantity').isNumeric().withMessage('Quantity must be numeric'),
+    body('custodianPositions.*.marketValue').isNumeric().withMessage('Market value must be numeric'),
+    body('custodianPositions.*.costBasis').optional().isNumeric().withMessage('Cost basis must be numeric'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:reconcile']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -149,14 +142,7 @@ router.post('/portfolios/:id/reconcile', [
                 tenantId: req.user.tenantId,
                 OR: [
                     { ownerId: req.user.sub },
-                    {
-                        managers: {
-                            some: {
-                                userId: req.user.sub,
-                                status: 'ACTIVE'
-                            }
-                        }
-                    }
+                    { managerId: req.user.sub }
                 ]
             }
         });
@@ -194,9 +180,9 @@ router.post('/portfolios/:id/reconcile', [
 });
 // GET /api/position-management/:id/pnl - Get position P&L analysis
 router.get('/:id/pnl', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid position ID'),
-    (0, express_validator_1.query)('startDate').isISO8601().toDate().withMessage('Invalid start date'),
-    (0, express_validator_1.query)('endDate').isISO8601().toDate().withMessage('Invalid end date'),
+    param('id').isUUID().withMessage('Invalid position ID'),
+    query('startDate').isISO8601().toDate().withMessage('Invalid start date'),
+    query('endDate').isISO8601().toDate().withMessage('Invalid end date'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:read']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -209,24 +195,17 @@ router.get('/:id/pnl', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             },
-            include: {
-                security: {
-                    select: {
-                        symbol: true,
-                        name: true,
-                    }
-                }
+            select: {
+                id: true,
+                symbol: true,
+                portfolioId: true,
+                securityId: true,
+                quantity: true,
+                marketValue: true
             }
         });
         if (!position) {
@@ -239,7 +218,12 @@ router.get('/:id/pnl', [
         (0, metrics_1.trackPortfolioOperation)('position:pnl');
         res.json({
             positionId: id,
-            security: position.security,
+            security: { symbol: position.symbol },
+            position: {
+                id: position.id,
+                symbol: position.symbol,
+                portfolioId: position.portfolioId
+            },
             period: {
                 startDate,
                 endDate,
@@ -272,8 +256,8 @@ router.get('/:id/pnl', [
 });
 // PUT /api/position-management/:id/market-value - Update position market value
 router.put('/:id/market-value', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid position ID'),
-    (0, express_validator_1.body)('marketPrice').isNumeric().withMessage('Market price must be numeric'),
+    param('id').isUUID().withMessage('Invalid position ID'),
+    body('marketPrice').isNumeric().withMessage('Market price must be numeric'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:update']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -286,14 +270,7 @@ router.put('/:id/market-value', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             }

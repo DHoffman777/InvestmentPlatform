@@ -83,6 +83,6 @@ export declare class ResourceUsagePredictionService extends EventEmitter {
     getAllModels(): PredictionModel[];
     getPrediction(predictionId: string): CapacityPrediction | null;
     getModelPerformance(modelId: string): number[];
-    deactivateModel(modelId: string): Promise<void>;
-    shutdown(): Promise<void>;
+    deactivateModel(modelId: string): Promise<any>;
+    shutdown(): Promise<any>;
 }

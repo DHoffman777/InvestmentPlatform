@@ -1,6 +1,23 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
 import client from 'prom-client';
 import { logger } from '../utils/logger';
+
+// Extend Express Request type to include user property
+interface Request extends ExpressRequest {
+  user?: {
+    sub: string;
+    id: string;
+    userId: string;
+    clientId?: string;
+    email: string;
+    tenantId: string;
+    roles: string[];
+    permissions: string[];
+    iat: number;
+    exp: number;
+    sessionId?: string;
+  };
+}
 
 // Initialize Prometheus metrics
 const register = new client.Registry();
@@ -121,7 +138,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
     }
     
     // Call original end method
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
   
   next();
@@ -175,7 +192,7 @@ export const collectPortfolioMetrics = async () => {
     register.registerMetric(avgPortfolioValue);
     
     logger.debug('Custom portfolio metrics collected');
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error collecting portfolio metrics:', error);
   }
 };

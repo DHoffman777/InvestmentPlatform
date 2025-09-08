@@ -11,7 +11,7 @@ const AnomalyDetectionService_1 = require("../services/analytics/AnomalyDetectio
 const BusinessIntelligenceService_1 = require("../services/analytics/BusinessIntelligenceService");
 const auth_1 = require("../middleware/auth");
 const validation_1 = require("../middleware/validation");
-const express_validator_1 = require("express-validator");
+const { body, param, query } = require('express-validator');
 const Analytics_1 = require("../models/analytics/Analytics");
 const router = (0, express_1.Router)();
 // Initialize services
@@ -31,12 +31,12 @@ router.use(auth_1.authenticateToken);
  * @desc Create a new data visualization
  */
 router.post('/visualizations', [
-    (0, express_validator_1.body)('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
-    (0, express_validator_1.body)('visualizationType').isIn(Object.values(Analytics_1.VisualizationType)).withMessage('Invalid visualization type'),
-    (0, express_validator_1.body)('dateRange.startDate').isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.body)('dateRange.endDate').isISO8601().withMessage('Invalid end date'),
-    (0, express_validator_1.body)('portfolioIds').optional().isArray().withMessage('Portfolio IDs must be an array'),
-    (0, express_validator_1.body)('clientIds').optional().isArray().withMessage('Client IDs must be an array'),
+    body('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
+    body('visualizationType').isIn(Object.values(Analytics_1.VisualizationType)).withMessage('Invalid visualization type'),
+    body('dateRange.startDate').isISO8601().withMessage('Invalid start date'),
+    body('dateRange.endDate').isISO8601().withMessage('Invalid end date'),
+    body('portfolioIds').optional().isArray().withMessage('Portfolio IDs must be an array'),
+    body('clientIds').optional().isArray().withMessage('Client IDs must be an array'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -63,7 +63,7 @@ router.post('/visualizations', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -72,7 +72,7 @@ router.post('/visualizations', [
  * @desc Update an existing visualization
  */
 router.put('/visualizations/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid visualization ID'),
+    param('id').isUUID().withMessage('Invalid visualization ID'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -85,7 +85,7 @@ router.put('/visualizations/:id', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -94,7 +94,7 @@ router.put('/visualizations/:id', [
  * @desc Refresh visualization data
  */
 router.post('/visualizations/:id/refresh', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid visualization ID'),
+    param('id').isUUID().withMessage('Invalid visualization ID'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -107,7 +107,7 @@ router.post('/visualizations/:id/refresh', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -117,9 +117,9 @@ router.post('/visualizations/:id/refresh', [
  * @desc Perform drill-down analysis on a data point
  */
 router.post('/drill-down', [
-    (0, express_validator_1.body)('visualizationId').isUUID().withMessage('Invalid visualization ID'),
-    (0, express_validator_1.body)('level').isIn(Object.values(Analytics_1.DrillDownLevel)).withMessage('Invalid drill-down level'),
-    (0, express_validator_1.body)('dataPointId').notEmpty().withMessage('Data point ID is required'),
+    body('visualizationId').isUUID().withMessage('Invalid visualization ID'),
+    body('level').isIn(Object.values(Analytics_1.DrillDownLevel)).withMessage('Invalid drill-down level'),
+    body('dataPointId').notEmpty().withMessage('Data point ID is required'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -136,7 +136,7 @@ router.post('/drill-down', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -145,8 +145,8 @@ router.post('/drill-down', [
  * @desc Get breadcrumb navigation for drill-down
  */
 router.get('/drill-down/breadcrumb/:visualizationId', [
-    (0, express_validator_1.param)('visualizationId').isUUID().withMessage('Invalid visualization ID'),
-    (0, express_validator_1.query)('level').isIn(Object.values(Analytics_1.DrillDownLevel)).withMessage('Invalid drill-down level'),
+    param('visualizationId').isUUID().withMessage('Invalid visualization ID'),
+    query('level').isIn(Object.values(Analytics_1.DrillDownLevel)).withMessage('Invalid drill-down level'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -159,7 +159,7 @@ router.get('/drill-down/breadcrumb/:visualizationId', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -169,10 +169,10 @@ router.get('/drill-down/breadcrumb/:visualizationId', [
  * @desc Create a new custom dashboard
  */
 router.post('/dashboards', [
-    (0, express_validator_1.body)('name').notEmpty().withMessage('Dashboard name is required'),
-    (0, express_validator_1.body)('description').optional().isString(),
-    (0, express_validator_1.body)('templateId').optional().isUUID().withMessage('Invalid template ID'),
-    (0, express_validator_1.body)('layout').optional().isObject(),
+    body('name').notEmpty().withMessage('Dashboard name is required'),
+    body('description').optional().isString(),
+    body('templateId').optional().isUUID().withMessage('Invalid template ID'),
+    body('layout').optional().isObject(),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -196,7 +196,7 @@ router.post('/dashboards', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -206,7 +206,7 @@ router.post('/dashboards', [
  */
 router.get('/dashboards', async (req, res) => {
     try {
-        const dashboards = await dashboardService.getUserDashboards(req.user.tenantId, req.user.userId, req.query.includeShared === 'true');
+        const dashboards = await dashboardService.getUserDashboards(req.user.tenantId, req.user.userId);
         res.json({
             success: true,
             data: dashboards
@@ -215,7 +215,7 @@ router.get('/dashboards', async (req, res) => {
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -234,7 +234,7 @@ router.get('/dashboards/templates', async (req, res) => {
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -243,7 +243,7 @@ router.get('/dashboards/templates', async (req, res) => {
  * @desc Update dashboard configuration
  */
 router.put('/dashboards/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid dashboard ID'),
+    param('id').isUUID().withMessage('Invalid dashboard ID'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -256,7 +256,7 @@ router.put('/dashboards/:id', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -265,9 +265,9 @@ router.put('/dashboards/:id', [
  * @desc Share dashboard with other users
  */
 router.post('/dashboards/:id/share', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid dashboard ID'),
-    (0, express_validator_1.body)('userIds').isArray().withMessage('User IDs must be an array'),
-    (0, express_validator_1.body)('permissions').isObject().withMessage('Permissions must be an object'),
+    param('id').isUUID().withMessage('Invalid dashboard ID'),
+    body('userIds').isArray().withMessage('User IDs must be an array'),
+    body('permissions').isObject().withMessage('Permissions must be an object'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -280,7 +280,7 @@ router.post('/dashboards/:id/share', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -290,10 +290,10 @@ router.post('/dashboards/:id/share', [
  * @desc Start real-time analytics stream
  */
 router.post('/real-time/stream', [
-    (0, express_validator_1.body)('connectionType').isIn(['websocket', 'sse', 'webhook']).withMessage('Invalid connection type'),
-    (0, express_validator_1.body)('dashboardId').optional().isUUID().withMessage('Invalid dashboard ID'),
-    (0, express_validator_1.body)('visualizationIds').optional().isArray().withMessage('Visualization IDs must be an array'),
-    (0, express_validator_1.body)('metricTypes').optional().isArray().withMessage('Metric types must be an array'),
+    body('connectionType').isIn(['websocket', 'sse', 'webhook']).withMessage('Invalid connection type'),
+    body('dashboardId').optional().isUUID().withMessage('Invalid dashboard ID'),
+    body('visualizationIds').optional().isArray().withMessage('Visualization IDs must be an array'),
+    body('metricTypes').optional().isArray().withMessage('Metric types must be an array'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -306,7 +306,7 @@ router.post('/real-time/stream', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -315,11 +315,11 @@ router.post('/real-time/stream', [
  * @desc Stop real-time analytics stream
  */
 router.delete('/real-time/stream/:connectionId', [
-    (0, express_validator_1.param)('connectionId').isUUID().withMessage('Invalid connection ID'),
+    param('connectionId').isUUID().withMessage('Invalid connection ID'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
-        await realTimeService.stopRealTimeStream(req.params.connectionId, req.user.userId);
+        await realTimeService.stopRealTimeStream(req.params.connectionId);
         res.json({
             success: true,
             message: 'Real-time stream stopped successfully'
@@ -328,7 +328,7 @@ router.delete('/real-time/stream/:connectionId', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -337,12 +337,16 @@ router.delete('/real-time/stream/:connectionId', [
  * @desc Get recent real-time events
  */
 router.get('/real-time/events', [
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-    (0, express_validator_1.query)('since').optional().isISO8601().withMessage('Invalid since date'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+    query('since').optional().isISO8601().withMessage('Invalid since date'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
-        const events = await realTimeService.getRecentEvents(req.user.tenantId, parseInt(req.query.limit) || 50, req.query.since ? new Date(req.query.since) : undefined);
+        const events = await realTimeService.getRecentEvents(req.user.tenantId, {
+            limit: parseInt(req.query.limit) || 50,
+            eventTypes: req.query.eventTypes,
+            startDate: req.query.since ? new Date(req.query.since) : undefined
+        });
         res.json({
             success: true,
             data: events
@@ -351,7 +355,7 @@ router.get('/real-time/events', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -360,11 +364,11 @@ router.get('/real-time/events', [
  * @desc Configure alert thresholds
  */
 router.put('/real-time/thresholds', [
-    (0, express_validator_1.body)('thresholds').isArray().withMessage('Thresholds must be an array'),
+    body('thresholds').isArray().withMessage('Thresholds must be an array'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
-        const result = await realTimeService.configureAlertThresholds(req.user.tenantId, req.body.thresholds);
+        const result = await realTimeService.configureAlertThresholds(req.user.tenantId, req.body.thresholds, req.user.sub);
         res.json({
             success: true,
             data: result
@@ -373,7 +377,7 @@ router.put('/real-time/thresholds', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -383,12 +387,12 @@ router.put('/real-time/thresholds', [
  * @desc Train a new predictive model
  */
 router.post('/models/train', [
-    (0, express_validator_1.body)('modelType').isIn(['regression', 'time_series', 'classification', 'clustering', 'deep_learning'])
+    body('modelType').isIn(['regression', 'time_series', 'classification', 'clustering', 'deep_learning'])
         .withMessage('Invalid model type'),
-    (0, express_validator_1.body)('targetVariable').notEmpty().withMessage('Target variable is required'),
-    (0, express_validator_1.body)('features').isArray().withMessage('Features must be an array'),
-    (0, express_validator_1.body)('trainingPeriod.startDate').isISO8601().withMessage('Invalid training start date'),
-    (0, express_validator_1.body)('trainingPeriod.endDate').isISO8601().withMessage('Invalid training end date'),
+    body('targetVariable').notEmpty().withMessage('Target variable is required'),
+    body('features').isArray().withMessage('Features must be an array'),
+    body('trainingPeriod.startDate').isISO8601().withMessage('Invalid training start date'),
+    body('trainingPeriod.endDate').isISO8601().withMessage('Invalid training end date'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -413,7 +417,7 @@ router.post('/models/train', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -422,13 +426,13 @@ router.post('/models/train', [
  * @desc Generate prediction using trained model
  */
 router.post('/models/:modelId/predict', [
-    (0, express_validator_1.param)('modelId').isUUID().withMessage('Invalid model ID'),
-    (0, express_validator_1.body)('entityId').notEmpty().withMessage('Entity ID is required'),
-    (0, express_validator_1.body)('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
-    (0, express_validator_1.body)('predictionType').notEmpty().withMessage('Prediction type is required'),
-    (0, express_validator_1.body)('horizon').isInt({ min: 1 }).withMessage('Horizon must be a positive integer'),
-    (0, express_validator_1.body)('unit').isIn(['days', 'weeks', 'months', 'years']).withMessage('Invalid time unit'),
-    (0, express_validator_1.body)('features').isObject().withMessage('Features must be an object'),
+    param('modelId').isUUID().withMessage('Invalid model ID'),
+    body('entityId').notEmpty().withMessage('Entity ID is required'),
+    body('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
+    body('predictionType').notEmpty().withMessage('Prediction type is required'),
+    body('horizon').isInt({ min: 1 }).withMessage('Horizon must be a positive integer'),
+    body('unit').isIn(['days', 'weeks', 'months', 'years']).withMessage('Invalid time unit'),
+    body('features').isObject().withMessage('Features must be an object'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -441,7 +445,7 @@ router.post('/models/:modelId/predict', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -450,7 +454,7 @@ router.post('/models/:modelId/predict', [
  * @desc Get available predictive models
  */
 router.get('/models', [
-    (0, express_validator_1.query)('modelType').optional().isIn(['regression', 'time_series', 'classification', 'clustering', 'deep_learning'])
+    query('modelType').optional().isIn(['regression', 'time_series', 'classification', 'clustering', 'deep_learning'])
         .withMessage('Invalid model type'),
     validation_1.validateRequest
 ], async (req, res) => {
@@ -464,7 +468,7 @@ router.get('/models', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -473,8 +477,8 @@ router.get('/models', [
  * @desc Retrain an existing model
  */
 router.post('/models/:modelId/retrain', [
-    (0, express_validator_1.param)('modelId').isUUID().withMessage('Invalid model ID'),
-    (0, express_validator_1.body)('trainingPeriod').optional().isObject(),
+    param('modelId').isUUID().withMessage('Invalid model ID'),
+    body('trainingPeriod').optional().isObject(),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -487,7 +491,7 @@ router.post('/models/:modelId/retrain', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -496,7 +500,7 @@ router.post('/models/:modelId/retrain', [
  * @desc Get model performance metrics
  */
 router.get('/models/:modelId/performance', [
-    (0, express_validator_1.param)('modelId').isUUID().withMessage('Invalid model ID'),
+    param('modelId').isUUID().withMessage('Invalid model ID'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -509,7 +513,7 @@ router.get('/models/:modelId/performance', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -518,9 +522,9 @@ router.get('/models/:modelId/performance', [
  * @desc Run model backtest
  */
 router.post('/models/:modelId/backtest', [
-    (0, express_validator_1.param)('modelId').isUUID().withMessage('Invalid model ID'),
-    (0, express_validator_1.body)('backtestPeriod.startDate').isISO8601().withMessage('Invalid backtest start date'),
-    (0, express_validator_1.body)('backtestPeriod.endDate').isISO8601().withMessage('Invalid backtest end date'),
+    param('modelId').isUUID().withMessage('Invalid model ID'),
+    body('backtestPeriod.startDate').isISO8601().withMessage('Invalid backtest start date'),
+    body('backtestPeriod.endDate').isISO8601().withMessage('Invalid backtest end date'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -537,7 +541,7 @@ router.post('/models/:modelId/backtest', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -546,9 +550,9 @@ router.post('/models/:modelId/backtest', [
  * @desc Get predictions for specific entity
  */
 router.get('/predictions/:entityId', [
-    (0, express_validator_1.param)('entityId').notEmpty().withMessage('Entity ID is required'),
-    (0, express_validator_1.query)('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
-    (0, express_validator_1.query)('validOnly').optional().isBoolean().withMessage('Valid only must be boolean'),
+    param('entityId').notEmpty().withMessage('Entity ID is required'),
+    query('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
+    query('validOnly').optional().isBoolean().withMessage('Valid only must be boolean'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -561,7 +565,7 @@ router.get('/predictions/:entityId', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -571,12 +575,12 @@ router.get('/predictions/:entityId', [
  * @desc Generate ML insights for entities
  */
 router.post('/insights/generate', [
-    (0, express_validator_1.body)('analysisType').isIn(['cluster_analysis', 'pattern_recognition', 'optimization_suggestion', 'risk_attribution', 'performance_driver'])
+    body('analysisType').isIn(['cluster_analysis', 'pattern_recognition', 'optimization_suggestion', 'risk_attribution', 'performance_driver'])
         .withMessage('Invalid analysis type'),
-    (0, express_validator_1.body)('entities').isObject().withMessage('Entities must be an object'),
-    (0, express_validator_1.body)('timeRange.startDate').isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.body)('timeRange.endDate').isISO8601().withMessage('Invalid end date'),
-    (0, express_validator_1.body)('minConfidence').optional().isFloat({ min: 0, max: 1 }).withMessage('Min confidence must be between 0 and 1'),
+    body('entities').isObject().withMessage('Entities must be an object'),
+    body('timeRange.startDate').isISO8601().withMessage('Invalid start date'),
+    body('timeRange.endDate').isISO8601().withMessage('Invalid end date'),
+    body('minConfidence').optional().isFloat({ min: 0, max: 1 }).withMessage('Min confidence must be between 0 and 1'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -600,7 +604,7 @@ router.post('/insights/generate', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -609,9 +613,9 @@ router.post('/insights/generate', [
  * @desc Perform cluster analysis on data
  */
 router.post('/insights/cluster-analysis', [
-    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
-    (0, express_validator_1.body)('features').isArray().withMessage('Features must be an array'),
-    (0, express_validator_1.body)('numClusters').optional().isInt({ min: 2 }).withMessage('Number of clusters must be at least 2'),
+    body('data').isArray().withMessage('Data must be an array'),
+    body('features').isArray().withMessage('Features must be an array'),
+    body('numClusters').optional().isInt({ min: 2 }).withMessage('Number of clusters must be at least 2'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -624,7 +628,7 @@ router.post('/insights/cluster-analysis', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -633,8 +637,8 @@ router.post('/insights/cluster-analysis', [
  * @desc Recognize patterns in data
  */
 router.post('/insights/pattern-recognition', [
-    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
-    (0, express_validator_1.body)('patternTypes').optional().isArray().withMessage('Pattern types must be an array'),
+    body('data').isArray().withMessage('Data must be an array'),
+    body('patternTypes').optional().isArray().withMessage('Pattern types must be an array'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -647,7 +651,7 @@ router.post('/insights/pattern-recognition', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -656,9 +660,9 @@ router.post('/insights/pattern-recognition', [
  * @desc Generate optimization suggestions
  */
 router.post('/insights/optimization', [
-    (0, express_validator_1.body)('portfolioData').isObject().withMessage('Portfolio data must be an object'),
-    (0, express_validator_1.body)('constraints').optional().isArray().withMessage('Constraints must be an array'),
-    (0, express_validator_1.body)('objective').optional().isIn(['return', 'risk', 'sharpe']).withMessage('Invalid objective'),
+    body('portfolioData').isObject().withMessage('Portfolio data must be an object'),
+    body('constraints').optional().isArray().withMessage('Constraints must be an array'),
+    body('objective').optional().isIn(['return', 'risk', 'sharpe']).withMessage('Invalid objective'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -671,7 +675,7 @@ router.post('/insights/optimization', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -680,10 +684,10 @@ router.post('/insights/optimization', [
  * @desc Analyze performance drivers
  */
 router.post('/insights/performance-drivers', [
-    (0, express_validator_1.body)('portfolioData').isObject().withMessage('Portfolio data must be an object'),
-    (0, express_validator_1.body)('benchmarkData').isObject().withMessage('Benchmark data must be an object'),
-    (0, express_validator_1.body)('timeRange.startDate').isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.body)('timeRange.endDate').isISO8601().withMessage('Invalid end date'),
+    body('portfolioData').isObject().withMessage('Portfolio data must be an object'),
+    body('benchmarkData').isObject().withMessage('Benchmark data must be an object'),
+    body('timeRange.startDate').isISO8601().withMessage('Invalid start date'),
+    body('timeRange.endDate').isISO8601().withMessage('Invalid end date'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -700,7 +704,7 @@ router.post('/insights/performance-drivers', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -709,10 +713,10 @@ router.post('/insights/performance-drivers', [
  * @desc Get insights for specific entity
  */
 router.get('/insights/:entityId', [
-    (0, express_validator_1.param)('entityId').notEmpty().withMessage('Entity ID is required'),
-    (0, express_validator_1.query)('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
-    (0, express_validator_1.query)('categories').optional().isString().withMessage('Categories must be a string'),
-    (0, express_validator_1.query)('minConfidence').optional().isFloat({ min: 0, max: 1 }).withMessage('Min confidence must be between 0 and 1'),
+    param('entityId').notEmpty().withMessage('Entity ID is required'),
+    query('entityType').isIn(['portfolio', 'position', 'client']).withMessage('Invalid entity type'),
+    query('categories').optional().isString().withMessage('Categories must be a string'),
+    query('minConfidence').optional().isFloat({ min: 0, max: 1 }).withMessage('Min confidence must be between 0 and 1'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -726,7 +730,7 @@ router.get('/insights/:entityId', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -735,9 +739,9 @@ router.get('/insights/:entityId', [
  * @desc Mark insight action as taken
  */
 router.put('/insights/:insightId/action', [
-    (0, express_validator_1.param)('insightId').isUUID().withMessage('Invalid insight ID'),
-    (0, express_validator_1.body)('action').notEmpty().withMessage('Action is required'),
-    (0, express_validator_1.body)('outcome').optional().isString(),
+    param('insightId').isUUID().withMessage('Invalid insight ID'),
+    body('action').notEmpty().withMessage('Action is required'),
+    body('outcome').optional().isString(),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -750,7 +754,7 @@ router.put('/insights/:insightId/action', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -760,12 +764,12 @@ router.put('/insights/:insightId/action', [
  * @desc Detect anomalies in data
  */
 router.post('/anomalies/detect', [
-    (0, express_validator_1.body)('entityId').notEmpty().withMessage('Entity ID is required'),
-    (0, express_validator_1.body)('entityType').isIn(['portfolio', 'position', 'market']).withMessage('Invalid entity type'),
-    (0, express_validator_1.body)('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
-    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
-    (0, express_validator_1.body)('detectionMethods').optional().isArray().withMessage('Detection methods must be an array'),
-    (0, express_validator_1.body)('sensitivity').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid sensitivity level'),
+    body('entityId').notEmpty().withMessage('Entity ID is required'),
+    body('entityType').isIn(['portfolio', 'position', 'market']).withMessage('Invalid entity type'),
+    body('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
+    body('data').isArray().withMessage('Data must be an array'),
+    body('detectionMethods').optional().isArray().withMessage('Detection methods must be an array'),
+    body('sensitivity').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid sensitivity level'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -788,7 +792,7 @@ router.post('/anomalies/detect', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -797,8 +801,8 @@ router.post('/anomalies/detect', [
  * @desc Run statistical anomaly detection
  */
 router.post('/anomalies/statistical', [
-    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
-    (0, express_validator_1.body)('sensitivity').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid sensitivity level'),
+    body('data').isArray().withMessage('Data must be an array'),
+    body('sensitivity').optional().isIn(['low', 'medium', 'high']).withMessage('Invalid sensitivity level'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -811,7 +815,7 @@ router.post('/anomalies/statistical', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -820,9 +824,9 @@ router.post('/anomalies/statistical', [
  * @desc Run isolation forest anomaly detection
  */
 router.post('/anomalies/isolation-forest', [
-    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
-    (0, express_validator_1.body)('features').optional().isArray().withMessage('Features must be an array'),
-    (0, express_validator_1.body)('contamination').optional().isFloat({ min: 0, max: 1 }).withMessage('Contamination must be between 0 and 1'),
+    body('data').isArray().withMessage('Data must be an array'),
+    body('features').optional().isArray().withMessage('Features must be an array'),
+    body('contamination').optional().isFloat({ min: 0, max: 1 }).withMessage('Contamination must be between 0 and 1'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -835,7 +839,7 @@ router.post('/anomalies/isolation-forest', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -844,9 +848,9 @@ router.post('/anomalies/isolation-forest', [
  * @desc Run LSTM autoencoder anomaly detection
  */
 router.post('/anomalies/lstm-autoencoder', [
-    (0, express_validator_1.body)('data').isArray().withMessage('Data must be an array'),
-    (0, express_validator_1.body)('sequenceLength').optional().isInt({ min: 2 }).withMessage('Sequence length must be at least 2'),
-    (0, express_validator_1.body)('threshold').optional().isFloat({ min: 0 }).withMessage('Threshold must be positive'),
+    body('data').isArray().withMessage('Data must be an array'),
+    body('sequenceLength').optional().isInt({ min: 2 }).withMessage('Sequence length must be at least 2'),
+    body('threshold').optional().isFloat({ min: 0 }).withMessage('Threshold must be positive'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -859,7 +863,7 @@ router.post('/anomalies/lstm-autoencoder', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -868,10 +872,10 @@ router.post('/anomalies/lstm-autoencoder', [
  * @desc Monitor real-time anomalies
  */
 router.post('/anomalies/real-time-monitor', [
-    (0, express_validator_1.body)('entityId').notEmpty().withMessage('Entity ID is required'),
-    (0, express_validator_1.body)('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
-    (0, express_validator_1.body)('newDataPoint').isObject().withMessage('New data point must be an object'),
-    (0, express_validator_1.body)('historicalData').isArray().withMessage('Historical data must be an array'),
+    body('entityId').notEmpty().withMessage('Entity ID is required'),
+    body('metricType').isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
+    body('newDataPoint').isObject().withMessage('New data point must be an object'),
+    body('historicalData').isArray().withMessage('Historical data must be an array'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -884,7 +888,7 @@ router.post('/anomalies/real-time-monitor', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -893,11 +897,11 @@ router.post('/anomalies/real-time-monitor', [
  * @desc Get anomalies for specific entity
  */
 router.get('/anomalies/:entityId', [
-    (0, express_validator_1.param)('entityId').notEmpty().withMessage('Entity ID is required'),
-    (0, express_validator_1.query)('entityType').isIn(['portfolio', 'position', 'market']).withMessage('Invalid entity type'),
-    (0, express_validator_1.query)('metricType').optional().isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
-    (0, express_validator_1.query)('severity').optional().isIn(['low', 'medium', 'high', 'critical']).withMessage('Invalid severity'),
-    (0, express_validator_1.query)('resolved').optional().isBoolean().withMessage('Resolved must be boolean'),
+    param('entityId').notEmpty().withMessage('Entity ID is required'),
+    query('entityType').isIn(['portfolio', 'position', 'market']).withMessage('Invalid entity type'),
+    query('metricType').optional().isIn(Object.values(Analytics_1.AnalyticsMetricType)).withMessage('Invalid metric type'),
+    query('severity').optional().isIn(['low', 'medium', 'high', 'critical']).withMessage('Invalid severity'),
+    query('resolved').optional().isBoolean().withMessage('Resolved must be boolean'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -910,7 +914,7 @@ router.get('/anomalies/:entityId', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -919,9 +923,9 @@ router.get('/anomalies/:entityId', [
  * @desc Resolve an anomaly
  */
 router.put('/anomalies/:anomalyId/resolve', [
-    (0, express_validator_1.param)('anomalyId').isUUID().withMessage('Invalid anomaly ID'),
-    (0, express_validator_1.body)('resolution').notEmpty().withMessage('Resolution is required'),
-    (0, express_validator_1.body)('falsePositive').optional().isBoolean().withMessage('False positive must be boolean'),
+    param('anomalyId').isUUID().withMessage('Invalid anomaly ID'),
+    body('resolution').notEmpty().withMessage('Resolution is required'),
+    body('falsePositive').optional().isBoolean().withMessage('False positive must be boolean'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -934,7 +938,7 @@ router.put('/anomalies/:anomalyId/resolve', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -943,11 +947,11 @@ router.put('/anomalies/:anomalyId/resolve', [
  * @desc Update anomaly detection configuration
  */
 router.put('/anomalies/config', [
-    (0, express_validator_1.body)('enabled').optional().isBoolean(),
-    (0, express_validator_1.body)('sensitivity').optional().isIn(['low', 'medium', 'high']),
-    (0, express_validator_1.body)('methods').optional().isArray(),
-    (0, express_validator_1.body)('thresholds').optional().isObject(),
-    (0, express_validator_1.body)('alertThreshold').optional().isFloat({ min: 0, max: 1 }),
+    body('enabled').optional().isBoolean(),
+    body('sensitivity').optional().isIn(['low', 'medium', 'high']),
+    body('methods').optional().isArray(),
+    body('thresholds').optional().isObject(),
+    body('alertThreshold').optional().isFloat({ min: 0, max: 1 }),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -960,7 +964,7 @@ router.put('/anomalies/config', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -970,14 +974,14 @@ router.put('/anomalies/config', [
  * @desc Generate BI report
  */
 router.post('/reports/generate', [
-    (0, express_validator_1.body)('reportType').isIn(['on_demand', 'scheduled', 'recurring']).withMessage('Invalid report type'),
-    (0, express_validator_1.body)('category').isIn(['executive_summary', 'performance_analysis', 'risk_assessment', 'client_analysis', 'market_intelligence'])
+    body('reportType').isIn(['on_demand', 'scheduled', 'recurring']).withMessage('Invalid report type'),
+    body('category').isIn(['executive_summary', 'performance_analysis', 'risk_assessment', 'client_analysis', 'market_intelligence'])
         .withMessage('Invalid report category'),
-    (0, express_validator_1.body)('name').notEmpty().withMessage('Report name is required'),
-    (0, express_validator_1.body)('periodCovered.startDate').isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.body)('periodCovered.endDate').isISO8601().withMessage('Invalid end date'),
-    (0, express_validator_1.body)('includeInsights').optional().isBoolean(),
-    (0, express_validator_1.body)('format').optional().isIn(['html', 'pdf', 'excel', 'json']).withMessage('Invalid format'),
+    body('name').notEmpty().withMessage('Report name is required'),
+    body('periodCovered.startDate').isISO8601().withMessage('Invalid start date'),
+    body('periodCovered.endDate').isISO8601().withMessage('Invalid end date'),
+    body('includeInsights').optional().isBoolean(),
+    body('format').optional().isIn(['html', 'pdf', 'excel', 'json']).withMessage('Invalid format'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -1005,7 +1009,7 @@ router.post('/reports/generate', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -1014,8 +1018,8 @@ router.post('/reports/generate', [
  * @desc Generate executive summary
  */
 router.get('/reports/executive-summary', [
-    (0, express_validator_1.query)('startDate').isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.query)('endDate').isISO8601().withMessage('Invalid end date'),
+    query('startDate').isISO8601().withMessage('Invalid start date'),
+    query('endDate').isISO8601().withMessage('Invalid end date'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -1032,7 +1036,7 @@ router.get('/reports/executive-summary', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -1051,7 +1055,7 @@ router.get('/reports/market-intelligence', async (req, res) => {
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -1060,8 +1064,8 @@ router.get('/reports/market-intelligence', async (req, res) => {
  * @desc Generate client analysis report
  */
 router.get('/reports/client-analysis', [
-    (0, express_validator_1.query)('startDate').isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.query)('endDate').isISO8601().withMessage('Invalid end date'),
+    query('startDate').isISO8601().withMessage('Invalid start date'),
+    query('endDate').isISO8601().withMessage('Invalid end date'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -1078,7 +1082,7 @@ router.get('/reports/client-analysis', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -1087,11 +1091,11 @@ router.get('/reports/client-analysis', [
  * @desc Configure BI integration
  */
 router.post('/bi/configure', [
-    (0, express_validator_1.body)('provider').isIn(['power_bi', 'tableau', 'qlik', 'looker', 'custom']).withMessage('Invalid BI provider'),
-    (0, express_validator_1.body)('connectionString').notEmpty().withMessage('Connection string is required'),
-    (0, express_validator_1.body)('refreshSchedule').notEmpty().withMessage('Refresh schedule is required'),
-    (0, express_validator_1.body)('dataSetIds').isArray().withMessage('Data set IDs must be an array'),
-    (0, express_validator_1.body)('enabled').isBoolean().withMessage('Enabled must be boolean'),
+    body('provider').isIn(['power_bi', 'tableau', 'qlik', 'looker', 'custom']).withMessage('Invalid BI provider'),
+    body('connectionString').notEmpty().withMessage('Connection string is required'),
+    body('refreshSchedule').notEmpty().withMessage('Refresh schedule is required'),
+    body('dataSetIds').isArray().withMessage('Data set IDs must be an array'),
+    body('enabled').isBoolean().withMessage('Enabled must be boolean'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -1104,7 +1108,7 @@ router.post('/bi/configure', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -1123,7 +1127,7 @@ router.post('/bi/sync', async (req, res) => {
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -1132,7 +1136,7 @@ router.post('/bi/sync', async (req, res) => {
  * @desc Schedule automated reports
  */
 router.post('/reports/schedule', [
-    (0, express_validator_1.body)('reportConfigs').isArray().withMessage('Report configs must be an array'),
+    body('reportConfigs').isArray().withMessage('Report configs must be an array'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -1145,7 +1149,7 @@ router.post('/reports/schedule', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -1154,9 +1158,9 @@ router.post('/reports/schedule', [
  * @desc Get report history
  */
 router.get('/reports/history', [
-    (0, express_validator_1.query)('category').optional().isIn(['executive_summary', 'performance_analysis', 'risk_assessment', 'client_analysis', 'market_intelligence'])
+    query('category').optional().isIn(['executive_summary', 'performance_analysis', 'risk_assessment', 'client_analysis', 'market_intelligence'])
         .withMessage('Invalid report category'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -1169,7 +1173,7 @@ router.get('/reports/history', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -1178,8 +1182,8 @@ router.get('/reports/history', [
  * @desc Export report in specified format
  */
 router.get('/reports/:reportId/export', [
-    (0, express_validator_1.param)('reportId').isUUID().withMessage('Invalid report ID'),
-    (0, express_validator_1.query)('format').isIn(['pdf', 'excel', 'json', 'html']).withMessage('Invalid export format'),
+    param('reportId').isUUID().withMessage('Invalid report ID'),
+    query('format').isIn(['pdf', 'excel', 'json', 'html']).withMessage('Invalid export format'),
     validation_1.validateRequest
 ], async (req, res) => {
     try {
@@ -1191,7 +1195,7 @@ router.get('/reports/:reportId/export', [
     catch (error) {
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
         });
     }
 });

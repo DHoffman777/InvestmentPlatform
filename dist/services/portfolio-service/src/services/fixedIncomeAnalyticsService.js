@@ -14,7 +14,7 @@ class FixedIncomeAnalyticsService {
         const startTime = Date.now();
         const warnings = [];
         try {
-            const security = await this.getFixedIncomeSecurity(request.instrumentId, tenantId);
+            const security = await this.getFixedIncomeSecurity(request.securityId, tenantId);
             if (!security) {
                 throw new Error('Fixed income security not found');
             }
@@ -41,7 +41,7 @@ class FixedIncomeAnalyticsService {
                         break;
                     case FixedIncomeAnalytics_1.YieldType.TAX_EQUIVALENT_YIELD:
                         if (request.taxRate && security.bondType === FixedIncomeAnalytics_1.BondType.MUNICIPAL) {
-                            yields[yieldType] = this.calculateTaxEquivalentYield(security, request.price, request.taxRate);
+                            yields[yieldType] = await this.calculateTaxEquivalentYield(security, request.price, request.taxRate);
                         }
                         else {
                             warnings.push('Tax rate required for tax-equivalent yield calculation');
@@ -62,14 +62,14 @@ class FixedIncomeAnalyticsService {
             const calculationTime = Date.now() - startTime;
             // Publish calculation event
             await this.kafkaService.publishEvent('fixed-income-yield-calculated', {
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 yieldTypes: request.yieldTypes,
                 results: yields,
                 tenantId,
                 timestamp: new Date().toISOString()
             });
             return {
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 calculationDate: new Date(),
                 yields,
                 warnings,
@@ -85,7 +85,7 @@ class FixedIncomeAnalyticsService {
         const startTime = Date.now();
         const warnings = [];
         try {
-            const security = await this.getFixedIncomeSecurity(request.instrumentId, tenantId);
+            const security = await this.getFixedIncomeSecurity(request.securityId, tenantId);
             if (!security) {
                 throw new Error('Fixed income security not found');
             }
@@ -97,14 +97,14 @@ class FixedIncomeAnalyticsService {
             const calculationTime = Date.now() - startTime;
             // Publish calculation event
             await this.kafkaService.publishEvent('fixed-income-duration-calculated', {
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 durationMetrics,
                 convexityMetrics,
                 tenantId,
                 timestamp: new Date().toISOString()
             });
             return {
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 calculationDate: new Date(),
                 durationMetrics,
                 convexityMetrics,
@@ -121,7 +121,7 @@ class FixedIncomeAnalyticsService {
         const startTime = Date.now();
         const warnings = [];
         try {
-            const security = await this.getFixedIncomeSecurity(request.instrumentId, tenantId);
+            const security = await this.getFixedIncomeSecurity(request.securityId, tenantId);
             if (!security) {
                 throw new Error('Fixed income security not found');
             }
@@ -131,13 +131,13 @@ class FixedIncomeAnalyticsService {
             const calculationTime = Date.now() - startTime;
             // Publish calculation event
             await this.kafkaService.publishEvent('fixed-income-credit-analyzed', {
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 creditMetrics,
                 tenantId,
                 timestamp: new Date().toISOString()
             });
             return {
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 calculationDate: new Date(),
                 creditMetrics,
                 warnings,
@@ -209,8 +209,8 @@ class FixedIncomeAnalyticsService {
         const tolerance = 1e-6;
         const maxIterations = 100;
         for (let i = 0; i < maxIterations; i++) {
-            const pv = this.calculatePresentValue(security, yield_guess, settlementDate);
-            const duration = this.calculateNumericalDuration(security, yield_guess, settlementDate);
+            const pv = this.calculatePresentValue(security, bondYield_guess, settlementDate);
+            const duration = this.calculateNumericalDuration(security, bondYield_guess, settlementDate);
             const f = pv - price;
             const df = -duration * pv; // derivative
             if (Math.abs(f) < tolerance) {
@@ -281,25 +281,25 @@ class FixedIncomeAnalyticsService {
         return this.calculateYieldToMaturity(security, optionAdjustedPrice, settlementDate);
     }
     // Duration Calculation Methods
-    async calculateDurationMetrics(security, price, yield, settlementDate, yieldShock, durationTypes) {
-        const dv01 = this.calculateDV01(security, yield, settlementDate);
-        const pv01 = this.calculatePV01(security, yield, settlementDate);
+    async calculateDurationMetrics(security, price, bondYield, settlementDate, yieldShock, durationTypes) {
+        const dv01 = this.calculateDV01(security, bondYield, settlementDate);
+        const pv01 = this.calculatePV01(security, bondYield, settlementDate);
         let modifiedDuration = 0;
         let macaulayDuration = 0;
         let effectiveDuration = 0;
         let optionAdjustedDuration = 0;
         let dollarDuration = 0;
         if (durationTypes.includes(FixedIncomeAnalytics_1.DurationType.MODIFIED_DURATION)) {
-            modifiedDuration = this.calculateModifiedDuration(security, yield, settlementDate);
+            modifiedDuration = this.calculateModifiedDuration(security, bondYield, settlementDate);
         }
         if (durationTypes.includes(FixedIncomeAnalytics_1.DurationType.MACAULAY_DURATION)) {
-            macaulayDuration = this.calculateMacaulayDuration(security, yield, settlementDate);
+            macaulayDuration = this.calculateMacaulayDuration(security, bondYield, settlementDate);
         }
         if (durationTypes.includes(FixedIncomeAnalytics_1.DurationType.EFFECTIVE_DURATION)) {
-            effectiveDuration = await this.calculateEffectiveDuration(security, price, yield, settlementDate, yieldShock);
+            effectiveDuration = await this.calculateEffectiveDuration(security, price, bondYield, settlementDate, yieldShock);
         }
         if (durationTypes.includes(FixedIncomeAnalytics_1.DurationType.OPTION_ADJUSTED_DURATION)) {
-            optionAdjustedDuration = await this.calculateOptionAdjustedDuration(security, price, yield, settlementDate);
+            optionAdjustedDuration = await this.calculateOptionAdjustedDuration(security, price, bondYield, settlementDate);
         }
         if (durationTypes.includes(FixedIncomeAnalytics_1.DurationType.DOLLAR_DURATION)) {
             dollarDuration = modifiedDuration * price / 100;
@@ -316,12 +316,12 @@ class FixedIncomeAnalyticsService {
             yieldShock
         };
     }
-    calculateModifiedDuration(security, yield, settlementDate) {
-        const macaulay = this.calculateMacaulayDuration(security, yield, settlementDate);
+    calculateModifiedDuration(security, bondYield, settlementDate) {
+        const macaulay = this.calculateMacaulayDuration(security, bondYield, settlementDate);
         const frequency = this.getPaymentFrequency(security.paymentFrequency);
         return macaulay / (1 + yield / frequency);
     }
-    calculateMacaulayDuration(security, yield, settlementDate) {
+    calculateMacaulayDuration(security, bondYield, settlementDate) {
         const cashFlows = this.generateCashFlows(security, settlementDate);
         const frequency = this.getPaymentFrequency(security.paymentFrequency);
         const periodicYield = yield / frequency;
@@ -335,28 +335,28 @@ class FixedIncomeAnalyticsService {
         }
         return (weightedTime / presentValue) / frequency;
     }
-    async calculateEffectiveDuration(security, price, yield, settlementDate, yieldShock) {
+    async calculateEffectiveDuration(security, price, bondYield, settlementDate, yieldShock) {
         const shockDecimal = yieldShock / 10000; // Convert basis points to decimal
-        const priceUp = this.calculatePresentValue(security, yield - shockDecimal, settlementDate);
-        const priceDown = this.calculatePresentValue(security, yield + shockDecimal, settlementDate);
+        const priceUp = this.calculatePresentValue(security, bondYield - shockDecimal, settlementDate);
+        const priceDown = this.calculatePresentValue(security, bondYield + shockDecimal, settlementDate);
         return (priceUp - priceDown) / (2 * price * shockDecimal);
     }
-    async calculateOptionAdjustedDuration(security, price, yield, settlementDate) {
+    async calculateOptionAdjustedDuration(security, price, bondYield, settlementDate) {
         // Simplified OAD calculation - would use binomial/trinomial tree in production
         if (!security.isCallable && !security.isPutable) {
-            return this.calculateModifiedDuration(security, yield, settlementDate);
+            return this.calculateModifiedDuration(security, bondYield, settlementDate);
         }
         // Apply option adjustment factor
         const optionAdjustmentFactor = 0.85; // Simplified - would be model-derived
-        const modifiedDuration = this.calculateModifiedDuration(security, yield, settlementDate);
+        const modifiedDuration = this.calculateModifiedDuration(security, bondYield, settlementDate);
         return modifiedDuration * optionAdjustmentFactor;
     }
     // Convexity Calculation Methods
-    async calculateConvexityMetrics(security, price, yield, settlementDate, yieldShock) {
-        const convexity = this.calculateConvexity(security, yield, settlementDate, yieldShock);
-        const effectiveConvexity = await this.calculateEffectiveConvexity(security, price, yield, settlementDate, yieldShock);
+    async calculateConvexityMetrics(security, price, bondYield, settlementDate, yieldShock) {
+        const convexity = this.calculateConvexity(security, bondYield, settlementDate, yieldShock);
+        const effectiveConvexity = await this.calculateEffectiveConvexity(security, price, bondYield, settlementDate, yieldShock);
         const dollarConvexity = convexity * price / 10000;
-        const gamma = this.calculateGamma(security, yield, settlementDate);
+        const gamma = this.calculateGamma(security, bondYield, settlementDate);
         return {
             convexity,
             effectiveConvexity,
@@ -366,25 +366,25 @@ class FixedIncomeAnalyticsService {
             yieldShock
         };
     }
-    calculateConvexity(security, yield, settlementDate, yieldShock) {
+    calculateConvexity(security, bondYield, settlementDate, yieldShock) {
         const shockDecimal = yieldShock / 10000;
-        const p0 = this.calculatePresentValue(security, yield, settlementDate);
-        const pUp = this.calculatePresentValue(security, yield + shockDecimal, settlementDate);
-        const pDown = this.calculatePresentValue(security, yield - shockDecimal, settlementDate);
+        const p0 = this.calculatePresentValue(security, bondYield, settlementDate);
+        const pUp = this.calculatePresentValue(security, bondYield + shockDecimal, settlementDate);
+        const pDown = this.calculatePresentValue(security, bondYield - shockDecimal, settlementDate);
         return (pUp + pDown - 2 * p0) / (p0 * Math.pow(shockDecimal, 2));
     }
-    async calculateEffectiveConvexity(security, price, yield, settlementDate, yieldShock) {
+    async calculateEffectiveConvexity(security, price, bondYield, settlementDate, yieldShock) {
         // Similar to effective duration but for second-order price sensitivity
         const shockDecimal = yieldShock / 10000;
-        const priceUp = this.calculatePresentValue(security, yield - shockDecimal, settlementDate);
-        const priceDown = this.calculatePresentValue(security, yield + shockDecimal, settlementDate);
+        const priceUp = this.calculatePresentValue(security, bondYield - shockDecimal, settlementDate);
+        const priceDown = this.calculatePresentValue(security, bondYield + shockDecimal, settlementDate);
         return (priceUp + priceDown - 2 * price) / (price * Math.pow(shockDecimal, 2));
     }
-    calculateGamma(security, yield, settlementDate) {
+    calculateGamma(security, bondYield, settlementDate) {
         // Second derivative of price with respect to yield
         const epsilon = 0.0001; // Small change in yield
-        const duration1 = this.calculateNumericalDuration(security, yield - epsilon, settlementDate);
-        const duration2 = this.calculateNumericalDuration(security, yield + epsilon, settlementDate);
+        const duration1 = this.calculateNumericalDuration(security, bondYield - epsilon, settlementDate);
+        const duration2 = this.calculateNumericalDuration(security, bondYield + epsilon, settlementDate);
         return (duration2 - duration1) / (2 * epsilon);
     }
     // Credit Analysis Methods
@@ -417,7 +417,7 @@ class FixedIncomeAnalyticsService {
         };
     }
     // Helper Methods
-    calculatePresentValue(security, yield, settlementDate) {
+    calculatePresentValue(security, bondYield, settlementDate) {
         const cashFlows = this.generateCashFlows(security, settlementDate);
         const frequency = this.getPaymentFrequency(security.paymentFrequency);
         const periodicYield = yield / frequency;
@@ -467,11 +467,11 @@ class FixedIncomeAnalyticsService {
         next.setMonth(next.getMonth() + monthsToAdd);
         return next;
     }
-    calculateNumericalDuration(security, yield, settlementDate) {
+    calculateNumericalDuration(security, bondYield, settlementDate) {
         const epsilon = 0.0001;
-        const p1 = this.calculatePresentValue(security, yield - epsilon, settlementDate);
-        const p2 = this.calculatePresentValue(security, yield + epsilon, settlementDate);
-        const p0 = this.calculatePresentValue(security, yield, settlementDate);
+        const p1 = this.calculatePresentValue(security, bondYield - epsilon, settlementDate);
+        const p2 = this.calculatePresentValue(security, bondYield + epsilon, settlementDate);
+        const p0 = this.calculatePresentValue(security, bondYield, settlementDate);
         return -(p2 - p1) / (2 * epsilon * p0);
     }
     calculateYieldToDate(security, price, settlementDate, targetDate, targetPrice) {
@@ -494,7 +494,7 @@ class FixedIncomeAnalyticsService {
         }
         return yield_guess;
     }
-    calculatePresentValueToDate(security, yield, settlementDate, targetDate, targetPrice) {
+    calculatePresentValueToDate(security, bondYield, settlementDate, targetDate, targetPrice) {
         const cashFlows = this.generateCashFlows(security, settlementDate)
             .filter(cf => cf.date <= targetDate);
         // Replace final cash flow with target price
@@ -516,25 +516,25 @@ class FixedIncomeAnalyticsService {
         }
         return pv;
     }
-    calculateDurationToDate(security, yield, settlementDate, targetDate) {
+    calculateDurationToDate(security, bondYield, settlementDate, targetDate) {
         const epsilon = 0.0001;
-        const p1 = this.calculatePresentValueToDate(security, yield - epsilon, settlementDate, targetDate, 100);
-        const p2 = this.calculatePresentValueToDate(security, yield + epsilon, settlementDate, targetDate, 100);
-        const p0 = this.calculatePresentValueToDate(security, yield, settlementDate, targetDate, 100);
+        const p1 = this.calculatePresentValueToDate(security, bondYield - epsilon, settlementDate, targetDate, 100);
+        const p2 = this.calculatePresentValueToDate(security, bondYield + epsilon, settlementDate, targetDate, 100);
+        const p0 = this.calculatePresentValueToDate(security, bondYield, settlementDate, targetDate, 100);
         return -(p2 - p1) / (2 * epsilon * p0);
     }
-    calculateDV01(security, yield, settlementDate) {
-        const p0 = this.calculatePresentValue(security, yield, settlementDate);
-        const p1 = this.calculatePresentValue(security, yield + 0.0001, settlementDate);
+    calculateDV01(security, bondYield, settlementDate) {
+        const p0 = this.calculatePresentValue(security, bondYield, settlementDate);
+        const p1 = this.calculatePresentValue(security, bondYield + 0.0001, settlementDate);
         return p0 - p1;
     }
-    calculatePV01(security, yield, settlementDate) {
-        const p0 = this.calculatePresentValue(security, yield, settlementDate);
-        const p1 = this.calculatePresentValue(security, yield + 0.0001, settlementDate);
+    calculatePV01(security, bondYield, settlementDate) {
+        const p0 = this.calculatePresentValue(security, bondYield, settlementDate);
+        const p1 = this.calculatePresentValue(security, bondYield + 0.0001, settlementDate);
         return Math.abs(p0 - p1);
     }
     // Data Access Methods
-    async getFixedIncomeSecurity(instrumentId, tenantId) {
+    async getFixedIncomeSecurity(securityId, tenantId) {
         return await this.prisma.fixedIncomeSecurity.findFirst({
             where: { instrumentId, tenantId },
             include: {

@@ -512,21 +512,21 @@ export class SettlementRiskReportingService extends EventEmitter {
     }, 60 * 60 * 1000);
   }
 
-  private async processScheduledReports(): Promise<void> {
+  private async processScheduledReports(): Promise<any> {
     const now = new Date();
 
     for (const schedule of this.reportSchedules.values()) {
       if (schedule.isActive && schedule.nextRun <= now) {
         try {
           await this.generateScheduledReport(schedule);
-        } catch (error) {
-          this.emit('scheduledReportError', { scheduleId: schedule.scheduleId, error: error.message });
+        } catch (error: any) {
+          this.emit('scheduledReportError', { scheduleId: schedule.scheduleId, error: error instanceof Error ? error.message : 'Unknown error' });
         }
       }
     }
   }
 
-  private async generateScheduledReport(schedule: ReportSchedule): Promise<void> {
+  private async generateScheduledReport(schedule: ReportSchedule): Promise<any> {
     const template = this.reportTemplates.get(schedule.reportTemplate);
     if (!template) return;
 
@@ -656,9 +656,9 @@ export class SettlementRiskReportingService extends EventEmitter {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       report.status = 'FAILED';
-      this.emit('reportGenerationFailed', { report, error: error.message });
+      this.emit('reportGenerationFailed', { report, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -1089,7 +1089,7 @@ export class SettlementRiskReportingService extends EventEmitter {
   }
 
   private generateHeatmapData(): any[] {
-    const data = [];
+    const data: any[] = [];
     const volumeQuintiles = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5'];
     const riskLevels = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
     
@@ -1123,7 +1123,7 @@ export class SettlementRiskReportingService extends EventEmitter {
     return Math.floor(Math.random() * 5000000) + 1000000; // 1-6MB
   }
 
-  private async distributeReport(report: RiskReport): Promise<void> {
+  private async distributeReport(report: RiskReport): Promise<any> {
     // Mock report distribution
     for (const recipient of report.recipients) {
       this.emit('reportDistributed', {
@@ -1290,3 +1290,4 @@ export class SettlementRiskReportingService extends EventEmitter {
     };
   }
 }
+

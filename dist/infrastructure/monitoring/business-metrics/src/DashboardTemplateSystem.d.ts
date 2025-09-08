@@ -151,7 +151,7 @@ export declare class DashboardTemplateSystem extends EventEmitter {
     constructor();
     createTemplate(template: Partial<DashboardTemplate>): Promise<DashboardTemplate>;
     updateTemplate(templateId: string, updates: Partial<DashboardTemplate>): Promise<DashboardTemplate>;
-    deleteTemplate(templateId: string): Promise<void>;
+    deleteTemplate(templateId: string): Promise<any>;
     cloneTemplate(templateId: string, newName: string, tenantId: string, userId: string): Promise<DashboardTemplate>;
     createDashboardInstance(templateId: string, tenantId: string, userId: string, name: string, customizations?: Record<string, any>): Promise<DashboardInstance>;
     renderDashboard(instanceId: string, userId: string): Promise<RenderedDashboard>;

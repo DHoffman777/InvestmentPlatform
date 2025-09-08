@@ -1,7 +1,7 @@
 import { RedisClientType } from 'redis';
 export declare const initializeRedis: () => Promise<RedisClientType>;
 export declare const getRedisClient: () => RedisClientType;
-export declare const closeRedis: () => Promise<void>;
+export declare const closeRedis: () => Promise<any>;
 export declare const cacheGet: (key: string) => Promise<string | null>;
 export declare const cacheSet: (key: string, value: string, ttlSeconds?: number) => Promise<boolean>;
 export declare const cacheDelete: (key: string) => Promise<boolean>;

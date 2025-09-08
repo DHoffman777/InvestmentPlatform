@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
-import { body, param, query, validationResult } from 'express-validator';
+const { body, param, query, validationResult } = require('express-validator');
 import { ClientDocumentService } from '../services/clientDocuments/ClientDocumentService';
 import { authMiddleware } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
@@ -15,7 +16,8 @@ import {
 import { logger } from '../utils/logger';
 
 const router = express.Router();
-const clientDocumentService = new ClientDocumentService();
+const prisma = new PrismaClient();
+const clientDocumentService = new ClientDocumentService(prisma);
 
 // Configure multer for file uploads
 const upload = multer({
@@ -95,7 +97,7 @@ router.post('/upload',
   upload.single('file'),
   clientDocumentUploadSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -157,7 +159,7 @@ router.post('/upload',
         message: 'Document uploaded successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error uploading client document:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -180,7 +182,7 @@ router.get('/client/:clientId',
     query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -222,7 +224,7 @@ router.get('/client/:clientId',
         message: 'Client documents retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving client documents:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -235,9 +237,9 @@ router.get('/client/:clientId',
 // Get document by ID
 router.get('/:documentId',
   authMiddleware,
-  [param('documentId').isUUID().withMessage('Valid document ID required')],
+  [param('documentId').isUUID().withMessage('Valid document ID required') as any],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -275,7 +277,7 @@ router.get('/:documentId',
         message: 'Document retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving document:', error);
       const statusCode = error instanceof Error && error.message === 'Access denied' ? 403 : 500;
       res.status(statusCode).json({
@@ -291,7 +293,7 @@ router.put('/:documentId',
   authMiddleware,
   documentUpdateSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -324,7 +326,7 @@ router.put('/:documentId',
         message: 'Document updated successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating document:', error);
       const statusCode = error instanceof Error && error.message.includes('permission') ? 403 : 
                         error instanceof Error && error.message.includes('not found') ? 404 : 500;
@@ -345,7 +347,7 @@ router.delete('/:documentId',
     body('reason').optional().isString().withMessage('Reason must be a string')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -378,7 +380,7 @@ router.delete('/:documentId',
         message: 'Document deleted successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deleting document:', error);
       const statusCode = error instanceof Error && error.message.includes('permission') ? 403 : 
                         error instanceof Error && error.message.includes('not found') ? 404 : 500;
@@ -396,7 +398,7 @@ router.post('/:documentId/share',
   authMiddleware,
   documentShareSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -432,7 +434,7 @@ router.post('/:documentId/share',
         message: 'Document shared successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error sharing document:', error);
       const statusCode = error instanceof Error && error.message.includes('permission') ? 403 : 
                         error instanceof Error && error.message.includes('not found') ? 404 : 500;
@@ -450,7 +452,7 @@ router.get('/templates',
   authMiddleware,
   [query('documentType').optional().isIn(Object.values(DocumentType)).withMessage('Invalid document type')],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
 
@@ -479,7 +481,7 @@ router.get('/templates',
         message: 'Document templates retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving document templates:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -494,7 +496,7 @@ router.post('/bulk-operation',
   authMiddleware,
   bulkOperationSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -533,7 +535,7 @@ router.post('/bulk-operation',
         message: 'Bulk operation completed'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing bulk operation:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -546,9 +548,9 @@ router.post('/bulk-operation',
 // Get client document statistics
 router.get('/client/:clientId/stats',
   authMiddleware,
-  [param('clientId').isUUID().withMessage('Valid client ID required')],
+  [param('clientId').isUUID().withMessage('Valid client ID required') as any],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const { clientId } = req.params;
@@ -576,7 +578,7 @@ router.get('/client/:clientId/stats',
         message: 'Document statistics retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving document statistics:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',

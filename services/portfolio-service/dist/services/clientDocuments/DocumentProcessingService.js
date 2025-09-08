@@ -4,11 +4,10 @@ exports.DocumentProcessingService = void 0;
 const crypto_1 = require("crypto");
 const ClientDocuments_1 = require("../../models/clientDocuments/ClientDocuments");
 const logger_1 = require("../../utils/logger");
-const eventPublisher_1 = require("../../utils/eventPublisher");
 class DocumentProcessingService {
-    eventPublisher;
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    prisma;
+    constructor(prisma) {
+        this.prisma = prisma;
     }
     async uploadDocument(request) {
         try {
@@ -102,13 +101,13 @@ class DocumentProcessingService {
                 }
             });
             // Publish event
-            await this.eventPublisher.publish('document.uploaded', {
-                tenantId: request.tenantId,
-                documentId,
-                clientId: request.clientId,
-                documentType: classification.type,
-                fileName: request.file.name
-            });
+            // await this.eventPublisher.publish('document.uploaded', {
+            //   tenantId: request.tenantId,
+            //   documentId,
+            //   clientId: request.clientId,
+            //   documentType: classification.type,
+            //   fileName: request.file.name
+            // });
             logger_1.logger.info('Document upload completed', {
                 documentId,
                 fileName: request.file.name,
@@ -206,11 +205,11 @@ class DocumentProcessingService {
                 performedDate: new Date()
             });
             // Publish event
-            await this.eventPublisher.publish('document.deleted', {
-                tenantId,
-                documentId,
-                deletedBy: userId
-            });
+            // await this.eventPublisher.publish('document.deleted', {
+            //   tenantId,
+            //   documentId,
+            //   deletedBy: userId
+            // });
             logger_1.logger.info('Document deleted successfully', { documentId });
         }
         catch (error) {

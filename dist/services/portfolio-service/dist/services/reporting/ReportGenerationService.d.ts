@@ -1,0 +1,83 @@
+export const __esModule: boolean;
+export class ReportGenerationService {
+    reportTemplateService: ReportTemplateService_1.ReportTemplateService;
+    eventPublisher: eventPublisher_1.EventPublisher;
+    generateReport(tenantId: any, request: any, userId: any): Promise<{
+        id: `${string}-${string}-${string}-${string}-${string}`;
+        tenantId: any;
+        templateId: any;
+        request: any;
+        status: ReportingEngine_1.ReportStatus;
+        progress: number;
+        retryCount: number;
+        maxRetries: number;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    processReportJob(jobId: any): Promise<void>;
+    scheduleReport(tenantId: any, scheduleData: any, userId: any): Promise<{
+        id: `${string}-${string}-${string}-${string}-${string}`;
+        tenantId: any;
+        templateId: any;
+        name: any;
+        description: any;
+        frequency: any;
+        schedule: any;
+        nextExecution: Date;
+        parameters: any;
+        recipients: any;
+        format: any;
+        isActive: boolean;
+        failureCount: number;
+        maxFailures: number;
+        createdAt: Date;
+        updatedAt: Date;
+        createdBy: any;
+        updatedBy: any;
+    }>;
+    executeScheduledReport(scheduleId: any): Promise<void>;
+    getReportJob(jobId: any): Promise<any>;
+    getReportJobs(tenantId: any, options?: {}): Promise<{
+        jobs: any[];
+        totalCount: number;
+    }>;
+    cancelReportJob(jobId: any, userId: any): Promise<void>;
+    retryReportJob(jobId: any, userId: any): Promise<void>;
+    extractReportData(template: any, request: any): Promise<{
+        headers: any;
+        rows: string[][];
+        metadata: {
+            totalRows: number;
+            generatedAt: Date;
+            executionTime: number;
+            filters: any;
+            dateRange: any;
+        };
+    }>;
+    processReportData(data: any, template: any, request: any): Promise<any>;
+    generateReportOutput(data: any, template: any, format: any): Promise<string>;
+    generatePDF(data: any, template: any): Promise<string>;
+    generateExcel(data: any, template: any): Promise<string>;
+    generateCSV(data: any, template: any): Promise<string>;
+    generateHTML(data: any, template: any): Promise<string>;
+    applyFilters(data: any, filters: any): Promise<any>;
+    applyAggregation(data: any, aggregationLevel: any): Promise<any>;
+    deliverReport(job: any, outputUrl: any): Promise<void>;
+    sendEmailReport(delivery: any, fileUrl: any): Promise<void>;
+    saveReportToLibrary(job: any, fileUrl: any): Promise<void>;
+    calculateNextExecution(frequency: any, schedule: any): Date;
+    saveReportJob(job: any): Promise<void>;
+    saveReportSchedule(schedule: any): Promise<void>;
+    queueReportJob(job: any): Promise<void>;
+    updateJobStatus(jobId: any, status: any, progress: any): Promise<void>;
+    completeReportJob(jobId: any, result: any): Promise<void>;
+    failReportJob(jobId: any, errorMessage: any): Promise<void>;
+    updateJobForRetry(jobId: any): Promise<void>;
+    getReportSchedule(scheduleId: any): Promise<any>;
+    registerSchedule(schedule: any): Promise<void>;
+    updateScheduleExecution(scheduleId: any, success: any): Promise<void>;
+    getFileSize(fileUrl: any): Promise<number>;
+}
+import ReportTemplateService_1 = require("./ReportTemplateService");
+import eventPublisher_1 = require("../../utils/eventPublisher");
+import ReportingEngine_1 = require("../../models/reporting/ReportingEngine");

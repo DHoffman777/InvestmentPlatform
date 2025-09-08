@@ -209,7 +209,7 @@ export class DatabaseMonitor extends EventEmitter {
 
         this.emit('healthUpdate', health);
         this.checkAlertRules(health);
-      } catch (error) {
+      } catch (error: any) {
         this.emit('monitoringError', error);
       }
     }, intervalMs);
@@ -301,8 +301,8 @@ export class DatabaseMonitor extends EventEmitter {
       }
 
       return stats;
-    } catch (error) {
-      throw new Error(`Failed to get connection pool stats: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to get connection pool stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -352,8 +352,8 @@ export class DatabaseMonitor extends EventEmitter {
         queriesPerSecond: queryResult.calls / 60, // Approximate QPS over last minute
         cacheHitRatio: cacheHitRatio,
       };
-    } catch (error) {
-      throw new Error(`Failed to get performance stats: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to get performance stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -375,8 +375,8 @@ export class DatabaseMonitor extends EventEmitter {
         diskUsage: Math.min(dbSize[0].size / (1024 * 1024 * 1024 * 10) * 100, 100), // Estimate
         ioWait: Math.random() * 10, // Would come from system metrics
       };
-    } catch (error) {
-      throw new Error(`Failed to get resource stats: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to get resource stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -406,8 +406,8 @@ export class DatabaseMonitor extends EventEmitter {
         waitingQueries: waitingQueries[0]?.count || 0,
         deadlocks: 0, // Would be tracked separately
       };
-    } catch (error) {
-      throw new Error(`Failed to get lock stats: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to get lock stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -442,8 +442,8 @@ export class DatabaseMonitor extends EventEmitter {
         lagBehindMaster: 0,
         replicationHealth: 'HEALTHY',
       };
-    } catch (error) {
-      throw new Error(`Failed to get replication stats: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to get replication stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -640,8 +640,8 @@ export class DatabaseMonitor extends EventEmitter {
       tuplesInserted: row.n_tup_ins,
       tuplesUpdated: row.n_tup_upd,
       tuplesDeleted: row.n_tup_del,
-      lastVacuum: row.last_vacuum,
-      lastAnalyze: row.last_analyze,
+      lastVacuum: row.last_vacuum ?? undefined,
+      lastAnalyze: row.last_analyze ?? undefined,
     }));
   }
 
@@ -754,7 +754,7 @@ export class DatabaseMonitor extends EventEmitter {
           avgTime: row.mean_time,
         })),
       };
-    } catch (error) {
+    } catch (error: any) {
       // pg_stat_statements might not be enabled
       return {
         totalQueries: 0,
@@ -797,8 +797,9 @@ export class DatabaseMonitor extends EventEmitter {
     return deleted;
   }
 
-  public async disconnect(): Promise<void> {
+  public async disconnect(): Promise<any> {
     this.stopMonitoring();
     await this.prisma.$disconnect();
   }
 }
+

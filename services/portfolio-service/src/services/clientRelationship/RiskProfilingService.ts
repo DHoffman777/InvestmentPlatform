@@ -265,7 +265,7 @@ export class RiskProfilingService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error completing risk assessment:', error);
       throw error;
     }
@@ -288,18 +288,7 @@ export class RiskProfilingService {
 
       // Get client and portfolio information
       const client = await this.prisma.clientProfile.findFirst({
-        where: { id: request.clientId, tenantId },
-        include: {
-          portfolios: {
-            include: {
-              positions: {
-                include: {
-                  instrument: true
-                }
-              }
-            }
-          }
-        }
+        where: { id: request.clientId, tenantId }
       });
 
       if (!client) {
@@ -308,7 +297,7 @@ export class RiskProfilingService {
 
       // Calculate suitability scores
       const overallScore = this.calculateSuitabilityScore(request, client);
-      const riskScore = this.calculateRiskAlignment(request.riskTolerance, client.riskTolerance);
+      const riskScore = this.calculateRiskAlignment(request.riskTolerance, client.riskTolerance as RiskTolerance);
       const objectiveAlignment = this.calculateObjectiveAlignment(request.investmentObjectives, client);
 
       // Generate asset allocation recommendations
@@ -364,7 +353,7 @@ export class RiskProfilingService {
           assessmentType: assessment.assessmentType,
           riskTolerance: assessment.riskTolerance,
           riskCapacity: assessment.riskCapacity,
-          investmentObjectives: JSON.stringify(assessment.investmentObjectives),
+          investmentObjectives: assessment.investmentObjectives,
           timeHorizon: assessment.timeHorizon,
           liquidityNeeds: assessment.liquidityNeeds,
           netWorth: assessment.netWorth,
@@ -374,7 +363,7 @@ export class RiskProfilingService {
           riskScore: assessment.riskScore,
           objectiveAlignment: assessment.objectiveAlignment,
           recommendedAllocation: JSON.stringify(assessment.recommendedAllocation),
-          unsuitableInvestments: JSON.stringify(assessment.unsuitableInvestments),
+          unsuitableInvestments: assessment.unsuitableInvestments,
           reviewedBy: assessment.reviewedBy,
           reviewDate: assessment.reviewDate,
           nextReviewDate: assessment.nextReviewDate,
@@ -408,7 +397,7 @@ export class RiskProfilingService {
 
       return assessment;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing suitability assessment:', error);
       throw error;
     }
@@ -428,18 +417,7 @@ export class RiskProfilingService {
 
       // Get client and portfolio data
       const client = await this.prisma.clientProfile.findFirst({
-        where: { id: clientId, tenantId },
-        include: {
-          portfolios: {
-            include: {
-              positions: {
-                include: {
-                  instrument: true
-                }
-              }
-            }
-          }
-        }
+        where: { id: clientId, tenantId }
       });
 
       if (!client) {
@@ -469,11 +447,11 @@ export class RiskProfilingService {
             title: alert.title,
             description: alert.description,
             triggeredDate: alert.triggeredDate,
-            portfolioId: alert.portfolioId,
-            holdingSymbol: alert.holdingSymbol,
-            currentValue: alert.currentValue,
-            thresholdValue: alert.thresholdValue,
-            recommendedAction: alert.recommendedAction,
+            portfolioId: alert.portfolioId || undefined,
+            holdingSymbol: alert.holdingSymbol || undefined,
+            currentValue: alert.currentValue || undefined,
+            thresholdValue: alert.thresholdValue || undefined,
+            recommendedAction: alert.recommendedAction || 'No action specified',
             isAcknowledged: alert.isAcknowledged,
             isResolved: alert.isResolved
           }
@@ -497,7 +475,7 @@ export class RiskProfilingService {
 
       return alerts;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error monitoring suitability:', error);
       throw error;
     }
@@ -522,14 +500,14 @@ export class RiskProfilingService {
         questionnaireVersion: q.questionnaireVersion,
         completedDate: q.completedDate,
         responses: JSON.parse(q.responses as string),
-        calculatedRiskScore: q.calculatedRiskScore,
+        calculatedRiskScore: q.calculatedRiskScore.toNumber(),
         recommendedRiskTolerance: q.recommendedRiskTolerance as RiskTolerance,
         isValid: q.isValid,
         expirationDate: q.expirationDate,
         completedBy: q.completedBy
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving risk profile history:', error);
       throw error;
     }
@@ -562,20 +540,20 @@ export class RiskProfilingService {
         title: alert.title,
         description: alert.description,
         triggeredDate: alert.triggeredDate,
-        portfolioId: alert.portfolioId,
-        holdingSymbol: alert.holdingSymbol,
-        currentValue: alert.currentValue,
-        thresholdValue: alert.thresholdValue,
-        recommendedAction: alert.recommendedAction,
+        portfolioId: alert.portfolioId || undefined,
+        holdingSymbol: alert.holdingSymbol || undefined,
+        currentValue: alert.currentValue || undefined,
+        thresholdValue: alert.thresholdValue || undefined,
+        recommendedAction: alert.recommendedAction || 'No action specified',
         isAcknowledged: alert.isAcknowledged,
-        acknowledgedBy: alert.acknowledgedBy,
-        acknowledgedDate: alert.acknowledgedDate,
+        acknowledgedBy: alert.acknowledgedBy || undefined,
+        acknowledgedDate: alert.acknowledgedDate || undefined,
         isResolved: alert.isResolved,
-        resolvedDate: alert.resolvedDate,
-        resolution: alert.resolution
+        resolvedDate: alert.resolvedDate || undefined,
+        resolution: alert.resolution || undefined
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving suitability alerts:', error);
       throw error;
     }
@@ -607,17 +585,17 @@ export class RiskProfilingService {
     };
 
     responses.forEach(response => {
-      const category = response.category.toLowerCase() as keyof typeof scores;
-      if (category === 'risk_capacity') {
+      const category = response.category.toLowerCase();
+      if (category === 'riskcapacity') {
         scores.riskCapacity += response.answerValue * response.weight;
         weights.riskCapacity += response.weight;
-      } else if (category === 'risk_tolerance') {
+      } else if (category === 'risktolerance') {
         scores.riskTolerance += response.answerValue * response.weight;
         weights.riskTolerance += response.weight;
-      } else if (category === 'investment_knowledge') {
+      } else if (category === 'investmentknowledge') {
         scores.investmentKnowledge += response.answerValue * response.weight;
         weights.investmentKnowledge += response.weight;
-      } else if (category === 'time_horizon') {
+      } else if (category === 'timehorizon') {
         scores.timeHorizon += response.answerValue * response.weight;
         weights.timeHorizon += response.weight;
       } else if (category === 'liquidity') {
@@ -808,32 +786,32 @@ export class RiskProfilingService {
     // Standard asset allocation models based on risk tolerance
     const allocations: Record<RiskTolerance, AssetAllocation[]> = {
       [RiskTolerance.CONSERVATIVE]: [
-        { assetClass: 'Fixed Income', targetPercentage: new Decimal(60), minPercentage: new Decimal(50), maxPercentage: new Decimal(70), rationale: 'Capital preservation focus' },
-        { assetClass: 'Equities', targetPercentage: new Decimal(30), minPercentage: new Decimal(20), maxPercentage: new Decimal(40), rationale: 'Limited growth exposure' },
-        { assetClass: 'Cash', targetPercentage: new Decimal(10), minPercentage: new Decimal(5), maxPercentage: new Decimal(15), rationale: 'Liquidity buffer' }
+        { assetClass: 'Fixed Income', targetPercentage: new (Decimal as any)(60), minPercentage: new (Decimal as any)(50), maxPercentage: new (Decimal as any)(70), rationale: 'Capital preservation focus' },
+        { assetClass: 'Equities', targetPercentage: new (Decimal as any)(30), minPercentage: new (Decimal as any)(20), maxPercentage: new (Decimal as any)(40), rationale: 'Limited growth exposure' },
+        { assetClass: 'Cash', targetPercentage: new (Decimal as any)(10), minPercentage: new (Decimal as any)(5), maxPercentage: new (Decimal as any)(15), rationale: 'Liquidity buffer' }
       ],
       [RiskTolerance.MODERATE_CONSERVATIVE]: [
-        { assetClass: 'Fixed Income', targetPercentage: new Decimal(50), minPercentage: new Decimal(40), maxPercentage: new Decimal(60), rationale: 'Stability with modest growth' },
-        { assetClass: 'Equities', targetPercentage: new Decimal(40), minPercentage: new Decimal(30), maxPercentage: new Decimal(50), rationale: 'Moderate growth exposure' },
-        { assetClass: 'Cash', targetPercentage: new Decimal(10), minPercentage: new Decimal(5), maxPercentage: new Decimal(15), rationale: 'Liquidity needs' }
+        { assetClass: 'Fixed Income', targetPercentage: new (Decimal as any)(50), minPercentage: new (Decimal as any)(40), maxPercentage: new (Decimal as any)(60), rationale: 'Stability with modest growth' },
+        { assetClass: 'Equities', targetPercentage: new (Decimal as any)(40), minPercentage: new (Decimal as any)(30), maxPercentage: new (Decimal as any)(50), rationale: 'Moderate growth exposure' },
+        { assetClass: 'Cash', targetPercentage: new (Decimal as any)(10), minPercentage: new (Decimal as any)(5), maxPercentage: new (Decimal as any)(15), rationale: 'Liquidity needs' }
       ],
       [RiskTolerance.MODERATE]: [
-        { assetClass: 'Fixed Income', targetPercentage: new Decimal(40), minPercentage: new Decimal(30), maxPercentage: new Decimal(50), rationale: 'Balanced approach' },
-        { assetClass: 'Equities', targetPercentage: new Decimal(50), minPercentage: new Decimal(40), maxPercentage: new Decimal(60), rationale: 'Growth with stability' },
-        { assetClass: 'Alternatives', targetPercentage: new Decimal(5), minPercentage: new Decimal(0), maxPercentage: new Decimal(10), rationale: 'Diversification' },
-        { assetClass: 'Cash', targetPercentage: new Decimal(5), minPercentage: new Decimal(2), maxPercentage: new Decimal(10), rationale: 'Tactical opportunities' }
+        { assetClass: 'Fixed Income', targetPercentage: new (Decimal as any)(40), minPercentage: new (Decimal as any)(30), maxPercentage: new (Decimal as any)(50), rationale: 'Balanced approach' },
+        { assetClass: 'Equities', targetPercentage: new (Decimal as any)(50), minPercentage: new (Decimal as any)(40), maxPercentage: new (Decimal as any)(60), rationale: 'Growth with stability' },
+        { assetClass: 'Alternatives', targetPercentage: new (Decimal as any)(5), minPercentage: new (Decimal as any)(0), maxPercentage: new (Decimal as any)(10), rationale: 'Diversification' },
+        { assetClass: 'Cash', targetPercentage: new (Decimal as any)(5), minPercentage: new (Decimal as any)(2), maxPercentage: new (Decimal as any)(10), rationale: 'Tactical opportunities' }
       ],
       [RiskTolerance.MODERATE_AGGRESSIVE]: [
-        { assetClass: 'Equities', targetPercentage: new Decimal(65), minPercentage: new Decimal(55), maxPercentage: new Decimal(75), rationale: 'Growth focus' },
-        { assetClass: 'Fixed Income', targetPercentage: new Decimal(25), minPercentage: new Decimal(15), maxPercentage: new Decimal(35), rationale: 'Risk mitigation' },
-        { assetClass: 'Alternatives', targetPercentage: new Decimal(7), minPercentage: new Decimal(2), maxPercentage: new Decimal(12), rationale: 'Enhanced returns' },
-        { assetClass: 'Cash', targetPercentage: new Decimal(3), minPercentage: new Decimal(1), maxPercentage: new Decimal(8), rationale: 'Opportunity fund' }
+        { assetClass: 'Equities', targetPercentage: new (Decimal as any)(65), minPercentage: new (Decimal as any)(55), maxPercentage: new (Decimal as any)(75), rationale: 'Growth focus' },
+        { assetClass: 'Fixed Income', targetPercentage: new (Decimal as any)(25), minPercentage: new (Decimal as any)(15), maxPercentage: new (Decimal as any)(35), rationale: 'Risk mitigation' },
+        { assetClass: 'Alternatives', targetPercentage: new (Decimal as any)(7), minPercentage: new (Decimal as any)(2), maxPercentage: new (Decimal as any)(12), rationale: 'Enhanced returns' },
+        { assetClass: 'Cash', targetPercentage: new (Decimal as any)(3), minPercentage: new (Decimal as any)(1), maxPercentage: new (Decimal as any)(8), rationale: 'Opportunity fund' }
       ],
       [RiskTolerance.AGGRESSIVE]: [
-        { assetClass: 'Equities', targetPercentage: new Decimal(75), minPercentage: new Decimal(65), maxPercentage: new Decimal(85), rationale: 'Maximum growth potential' },
-        { assetClass: 'Alternatives', targetPercentage: new Decimal(15), minPercentage: new Decimal(5), maxPercentage: new Decimal(25), rationale: 'Alpha generation' },
-        { assetClass: 'Fixed Income', targetPercentage: new Decimal(8), minPercentage: new Decimal(3), maxPercentage: new Decimal(15), rationale: 'Minimal stability' },
-        { assetClass: 'Cash', targetPercentage: new Decimal(2), minPercentage: new Decimal(0), maxPercentage: new Decimal(7), rationale: 'Tactical positioning' }
+        { assetClass: 'Equities', targetPercentage: new (Decimal as any)(75), minPercentage: new (Decimal as any)(65), maxPercentage: new (Decimal as any)(85), rationale: 'Maximum growth potential' },
+        { assetClass: 'Alternatives', targetPercentage: new (Decimal as any)(15), minPercentage: new (Decimal as any)(5), maxPercentage: new (Decimal as any)(25), rationale: 'Alpha generation' },
+        { assetClass: 'Fixed Income', targetPercentage: new (Decimal as any)(8), minPercentage: new (Decimal as any)(3), maxPercentage: new (Decimal as any)(15), rationale: 'Minimal stability' },
+        { assetClass: 'Cash', targetPercentage: new (Decimal as any)(2), minPercentage: new (Decimal as any)(0), maxPercentage: new (Decimal as any)(7), rationale: 'Tactical positioning' }
       ]
     };
 
@@ -880,7 +858,7 @@ export class RiskProfilingService {
     }
   }
 
-  private async triggerPortfolioReview(clientId: string, assessmentId: string, tenantId: string): Promise<void> {
+  private async triggerPortfolioReview(clientId: string, assessmentId: string, tenantId: string): Promise<any> {
     await this.kafkaService.publish('portfolio.review.triggered', {
       clientId,
       assessmentId,
@@ -957,3 +935,5 @@ export class RiskProfilingService {
     return [];
   }
 }
+
+

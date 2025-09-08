@@ -5,13 +5,12 @@ const crypto_1 = require("crypto");
 const ClientDocuments_1 = require("../../models/clientDocuments/ClientDocuments");
 const DocumentProcessingService_1 = require("./DocumentProcessingService");
 const logger_1 = require("../../utils/logger");
-const eventPublisher_1 = require("../../utils/eventPublisher");
 class ClientDocumentService {
+    prisma;
     documentProcessingService;
-    eventPublisher;
-    constructor() {
-        this.documentProcessingService = new DocumentProcessingService_1.DocumentProcessingService();
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    constructor(prisma) {
+        this.prisma = prisma;
+        this.documentProcessingService = new DocumentProcessingService_1.DocumentProcessingService(prisma);
     }
     async uploadClientDocument(request) {
         try {
@@ -125,13 +124,13 @@ class ClientDocumentService {
                 newValues: updates
             });
             // Publish event
-            await this.eventPublisher.publish('client.document.updated', {
-                tenantId,
-                clientId: existingDocument.clientId,
-                documentId,
-                updatedBy: userId,
-                changes: updates
-            });
+            // await this.eventPublisher.publish('client.document.updated', {
+            //   tenantId,
+            //   clientId: existingDocument.clientId,
+            //   documentId,
+            //   updatedBy: userId,
+            //   changes: updates
+            // });
             logger_1.logger.info('Client document updated successfully', { documentId });
             return updatedDocument;
         }
@@ -154,13 +153,13 @@ class ClientDocumentService {
             // Update client document index
             await this.updateClientDocumentIndex(document.clientId, documentId, 'REMOVED');
             // Publish event
-            await this.eventPublisher.publish('client.document.deleted', {
-                tenantId,
-                clientId: document.clientId,
-                documentId,
-                deletedBy: userId,
-                reason
-            });
+            // await this.eventPublisher.publish('client.document.deleted', {
+            //   tenantId,
+            //   clientId: document.clientId,
+            //   documentId,
+            //   deletedBy: userId,
+            //   reason
+            // });
             logger_1.logger.info('Client document deleted successfully', { documentId });
         }
         catch (error) {
@@ -293,13 +292,13 @@ class ClientDocumentService {
                 });
             }
             // Publish event
-            await this.eventPublisher.publish('client.documents.bulk_operation', {
-                tenantId,
-                operationType: operation.operationType,
-                documentIds: operation.documentIds,
-                performedBy: userId,
-                result
-            });
+            // await this.eventPublisher.publish('client.documents.bulk_operation', {
+            //   tenantId,
+            //   operationType: operation.operationType,
+            //   documentIds: operation.documentIds,
+            //   performedBy: userId,
+            //   result
+            // });
             logger_1.logger.info('Bulk document operation completed', {
                 operationType: operation.operationType,
                 successful: result.successful,

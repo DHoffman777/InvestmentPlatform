@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { Logger } from 'winston';
 import { createLogger, format, transports } from 'winston';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 import { StructuredError, ErrorCategory, ErrorSeverity } from './ErrorTrackingService';
 
 export interface CorrelationRule {
@@ -430,7 +430,7 @@ export class ErrorCorrelationService extends EventEmitter {
 
       return correlations;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to correlate error', {
         errorId: error.id,
         error: error.message
@@ -509,7 +509,7 @@ export class ErrorCorrelationService extends EventEmitter {
       take: 20 // Limit to prevent excessive correlations
     });
 
-    return relatedErrors as StructuredError[];
+    return relatedErrors as unknown as StructuredError[];
   }
 
   private buildConditionClause(condition: CorrelationCondition, error: StructuredError): any {
@@ -819,7 +819,7 @@ export class ErrorCorrelationService extends EventEmitter {
     }
 
     // Fallback to category-based suggestions
-    const categoryMap = {
+    const categoryMap: Partial<Record<ErrorCategory, string>> = {
       [ErrorCategory.DATABASE]: 'Database connectivity or performance issues',
       [ErrorCategory.AUTHENTICATION]: 'Authentication service or token management problems',
       [ErrorCategory.TRADING]: 'Trading system configuration or market connectivity issues',
@@ -827,7 +827,7 @@ export class ErrorCorrelationService extends EventEmitter {
       [ErrorCategory.PERFORMANCE]: 'System resource constraints or optimization needs'
     };
 
-    return categoryMap[error.category] || 'Unknown root cause - further investigation required';
+    return categoryMap[error.category as ErrorCategory] || 'Unknown root cause - further investigation required';
   }
 
   private assessImpact(error: StructuredError, relatedErrors: StructuredError[]): string {
@@ -849,7 +849,7 @@ export class ErrorCorrelationService extends EventEmitter {
     try {
       const error = await this.prisma.error.findUnique({
         where: { id: errorId }
-      }) as StructuredError;
+      }) as unknown as StructuredError;
 
       if (!error) {
         throw new Error(`Error not found: ${errorId}`);
@@ -883,7 +883,7 @@ export class ErrorCorrelationService extends EventEmitter {
       this.emit('rootCauseAnalysisCompleted', rootCauseAnalysis);
       return rootCauseAnalysis;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to perform root cause analysis', {
         errorId,
         error: error.message
@@ -906,7 +906,7 @@ export class ErrorCorrelationService extends EventEmitter {
       }
     });
 
-    return relatedErrors as StructuredError[];
+    return relatedErrors as unknown as StructuredError[];
   }
 
   private async analyzePossibleCauses(
@@ -1126,22 +1126,27 @@ export class ErrorCorrelationService extends EventEmitter {
     };
   }
 
-  private async storeCorrelation(correlation: ErrorCorrelation): Promise<void> {
+  private async storeCorrelation(correlation: ErrorCorrelation): Promise<any> {
     try {
-      await this.prisma.errorCorrelation.create({
-        data: {
-          id: correlation.id,
-          primaryErrorId: correlation.primaryErrorId,
-          relatedErrorIds: correlation.relatedErrorIds,
-          correlationType: correlation.correlationType,
-          confidence: correlation.confidence,
-          strength: correlation.strength,
-          metadata: correlation.metadata as any,
-          createdAt: correlation.createdAt,
-          updatedAt: correlation.updatedAt
-        }
-      });
-    } catch (error) {
+      // Store each correlation relationship separately
+      for (const relatedErrorId of correlation.relatedErrorIds) {
+        await this.prisma.errorCorrelation.create({
+          data: {
+            id: `${correlation.id}_${relatedErrorId}`,
+            errorId: correlation.primaryErrorId,
+            relatedErrorId: relatedErrorId,
+            correlationType: correlation.correlationType,
+            confidence: correlation.confidence,
+            metadata: {
+              strength: correlation.strength,
+              ...correlation.metadata
+            } as any,
+            createdAt: correlation.createdAt,
+            updatedAt: correlation.updatedAt
+          }
+        });
+      }
+    } catch (error: any) {
       this.logger.error('Failed to store correlation', {
         correlationId: correlation.id,
         error: error.message
@@ -1161,7 +1166,7 @@ export class ErrorCorrelationService extends EventEmitter {
     }, 60 * 60 * 1000);
   }
 
-  private async processRecentErrors(): Promise<void> {
+  private async processRecentErrors(): Promise<any> {
     try {
       const recentErrors = await this.prisma.error.findMany({
         where: {
@@ -1174,9 +1179,9 @@ export class ErrorCorrelationService extends EventEmitter {
       });
 
       for (const error of recentErrors) {
-        await this.correlateError(error as StructuredError);
+        await this.correlateError(error as unknown as StructuredError);
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to process recent errors for correlation', {
         error: error.message
       });
@@ -1224,15 +1229,42 @@ export class ErrorCorrelationService extends EventEmitter {
       const correlations = await this.prisma.errorCorrelation.findMany({
         where: {
           OR: [
-            { primaryErrorId: errorId },
-            { relatedErrorIds: { has: errorId } }
+            { errorId: errorId },
+            { relatedErrorId: errorId }
           ]
         },
         orderBy: { confidence: 'desc' }
       });
 
-      return correlations as ErrorCorrelation[];
-    } catch (error) {
+      // Group correlations by primary error
+      const groupedCorrelations = new Map<string, ErrorCorrelation>();
+      
+      for (const corr of correlations) {
+        const primaryId = corr.errorId === errorId ? corr.relatedErrorId : corr.errorId;
+        const relatedId = corr.errorId === errorId ? corr.errorId : corr.relatedErrorId;
+        
+        if (!groupedCorrelations.has(primaryId)) {
+          groupedCorrelations.set(primaryId, {
+            id: corr.id,
+            primaryErrorId: primaryId,
+            relatedErrorIds: [relatedId],
+            correlationType: corr.correlationType as CorrelationType,
+            confidence: corr.confidence,
+            strength: (corr.metadata as any)?.strength || 0,
+            createdAt: corr.createdAt,
+            updatedAt: corr.updatedAt,
+            metadata: corr.metadata as any || {}
+          });
+        } else {
+          const existing = groupedCorrelations.get(primaryId)!;
+          if (!existing.relatedErrorIds.includes(relatedId)) {
+            existing.relatedErrorIds.push(relatedId);
+          }
+        }
+      }
+
+      return Array.from(groupedCorrelations.values()) as unknown as ErrorCorrelation[];
+    } catch (error: any) {
       this.logger.error('Failed to get correlations for error', {
         errorId,
         error: error.message
@@ -1241,9 +1273,10 @@ export class ErrorCorrelationService extends EventEmitter {
     }
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     this.logger.info('Shutting down error correlation service');
     this.correlationCache.clear();
     this.removeAllListeners();
   }
 }
+

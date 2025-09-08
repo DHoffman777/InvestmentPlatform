@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getKafkaService } from '../utils/kafka-mock';
 import { OrderManagementService } from '../services/orderManagementService';
-import { AuthenticatedRequest } from '../middleware/auth';
+import { } from '../middleware/auth';
 import { logger } from '../utils/logger';
 import {
   OrderType,
@@ -22,11 +22,11 @@ const orderService = new OrderManagementService(prisma, kafkaService);
 // Order Creation and Management Routes
 
 // Create new order
-router.post('/orders', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/orders', async (req: any, res: any) => {
   try {
     const {
       portfolioId,
-      instrumentId,
+      securityId,
       orderType,
       orderSide,
       quantity,
@@ -44,10 +44,10 @@ router.post('/orders', async (req: AuthenticatedRequest, res: Response) => {
     } = req.body;
 
     // Validation
-    if (!portfolioId || !instrumentId || !orderType || !orderSide || !quantity || !timeInForce) {
+    if (!portfolioId || !securityId || !orderType || !orderSide || !quantity || !timeInForce) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: portfolioId, instrumentId, orderType, orderSide, quantity, timeInForce'
+        error: 'Missing required fields: portfolioId, securityId, orderType, orderSide, quantity, timeInForce'
       });
     }
 
@@ -85,7 +85,7 @@ router.post('/orders', async (req: AuthenticatedRequest, res: Response) => {
 
     const order = await orderService.createOrder({
       portfolioId,
-      instrumentId,
+      securityId,
       orderType,
       orderSide,
       quantity,
@@ -107,7 +107,7 @@ router.post('/orders', async (req: AuthenticatedRequest, res: Response) => {
       data: order,
       message: 'Order created successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating order:', error);
     const statusCode = error instanceof Error && error.message.includes('validation failed') ? 400 : 500;
     res.status(statusCode).json({
@@ -119,7 +119,7 @@ router.post('/orders', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Modify existing order
-router.put('/orders/:orderId', async (req: AuthenticatedRequest, res: Response) => {
+router.put('/orders/:orderId', async (req: any, res: any) => {
   try {
     const { orderId } = req.params;
     const {
@@ -150,12 +150,12 @@ router.put('/orders/:orderId', async (req: AuthenticatedRequest, res: Response) 
       data: order,
       message: 'Order modified successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error modifying order:', error);
     const statusCode = error instanceof Error && 
       (error.message.includes('not found') ? 404 : 
-       error.message.includes('cannot be modified') ? 409 : 500);
-    res.status(statusCode).json({
+       error.message.includes('cannot be modified') ? 409 : 500) || 500;
+    res.status(statusCode as number).json({
       success: false,
       error: 'Failed to modify order',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -164,7 +164,7 @@ router.put('/orders/:orderId', async (req: AuthenticatedRequest, res: Response) 
 });
 
 // Cancel order
-router.delete('/orders/:orderId', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/orders/:orderId', async (req: any, res: any) => {
   try {
     const { orderId } = req.params;
     const { cancelReason } = req.body;
@@ -179,12 +179,12 @@ router.delete('/orders/:orderId', async (req: AuthenticatedRequest, res: Respons
       data: order,
       message: 'Order cancellation requested'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error cancelling order:', error);
     const statusCode = error instanceof Error && 
       (error.message.includes('not found') ? 404 : 
-       error.message.includes('cannot be cancelled') ? 409 : 500);
-    res.status(statusCode).json({
+       error.message.includes('cannot be cancelled') ? 409 : 500) || 500;
+    res.status(statusCode as number).json({
       success: false,
       error: 'Failed to cancel order',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -193,7 +193,7 @@ router.delete('/orders/:orderId', async (req: AuthenticatedRequest, res: Respons
 });
 
 // Get order by ID
-router.get('/orders/:orderId', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/orders/:orderId', async (req: any, res: any) => {
   try {
     const { orderId } = req.params;
 
@@ -210,7 +210,7 @@ router.get('/orders/:orderId', async (req: AuthenticatedRequest, res: Response) 
       success: true,
       data: order
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching order:', error);
     res.status(500).json({
       success: false,
@@ -221,11 +221,11 @@ router.get('/orders/:orderId', async (req: AuthenticatedRequest, res: Response) 
 });
 
 // Search orders
-router.get('/orders', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/orders', async (req: any, res: any) => {
   try {
     const {
       portfolioIds,
-      instrumentIds,
+      securityIds,
       orderTypes,
       orderStatuses,
       orderStates,
@@ -239,7 +239,7 @@ router.get('/orders', async (req: AuthenticatedRequest, res: Response) => {
 
     const searchRequest = {
       portfolioIds: portfolioIds ? (portfolioIds as string).split(',') : undefined,
-      instrumentIds: instrumentIds ? (instrumentIds as string).split(',') : undefined,
+      securityIds: securityIds ? (securityIds as string).split(',') : undefined,
       orderTypes: orderTypes ? (orderTypes as string).split(',') as OrderType[] : undefined,
       orderStatuses: orderStatuses ? (orderStatuses as string).split(',') as OrderStatus[] : undefined,
       orderStates: orderStates ? (orderStates as string).split(',') as OrderState[] : undefined,
@@ -264,7 +264,7 @@ router.get('/orders', async (req: AuthenticatedRequest, res: Response) => {
       },
       searchCriteria: result.searchCriteria
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error searching orders:', error);
     res.status(500).json({
       success: false,
@@ -277,7 +277,7 @@ router.get('/orders', async (req: AuthenticatedRequest, res: Response) => {
 // Order Execution Routes
 
 // Record order execution
-router.post('/orders/:orderId/executions', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/orders/:orderId/executions', async (req: any, res: any) => {
   try {
     const { orderId } = req.params;
     const {
@@ -330,7 +330,7 @@ router.post('/orders/:orderId/executions', async (req: AuthenticatedRequest, res
       data: execution,
       message: 'Execution recorded successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error recording execution:', error);
     const statusCode = error instanceof Error && error.message.includes('not found') ? 404 : 500;
     res.status(statusCode).json({
@@ -342,7 +342,7 @@ router.post('/orders/:orderId/executions', async (req: AuthenticatedRequest, res
 });
 
 // Get order executions
-router.get('/orders/:orderId/executions', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/orders/:orderId/executions', async (req: any, res: any) => {
   try {
     const { orderId } = req.params;
 
@@ -359,7 +359,7 @@ router.get('/orders/:orderId/executions', async (req: AuthenticatedRequest, res:
       data: executions,
       total: executions.length
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching executions:', error);
     res.status(500).json({
       success: false,
@@ -372,11 +372,11 @@ router.get('/orders/:orderId/executions', async (req: AuthenticatedRequest, res:
 // Order Validation and Risk Management Routes
 
 // Validate order before submission
-router.post('/orders/validate', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/orders/validate', async (req: any, res: any) => {
   try {
     const {
       portfolioId,
-      instrumentId,
+      securityId,
       orderType,
       orderSide,
       quantity,
@@ -387,7 +387,7 @@ router.post('/orders/validate', async (req: AuthenticatedRequest, res: Response)
     } = req.body;
 
     // Same validation as order creation
-    if (!portfolioId || !instrumentId || !orderType || !orderSide || !quantity || !timeInForce) {
+    if (!portfolioId || !securityId || !orderType || !orderSide || !quantity || !timeInForce) {
       return res.status(400).json({
         success: false,
         error: 'Missing required validation fields'
@@ -396,7 +396,7 @@ router.post('/orders/validate', async (req: AuthenticatedRequest, res: Response)
 
     const validation = await orderService.validateOrder({
       portfolioId,
-      instrumentId,
+      securityId,
       orderType,
       orderSide,
       quantity,
@@ -410,7 +410,7 @@ router.post('/orders/validate', async (req: AuthenticatedRequest, res: Response)
       success: true,
       data: validation
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error validating order:', error);
     res.status(500).json({
       success: false,
@@ -421,7 +421,7 @@ router.post('/orders/validate', async (req: AuthenticatedRequest, res: Response)
 });
 
 // Generate best execution report
-router.get('/orders/:orderId/best-execution-report', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/orders/:orderId/best-execution-report', async (req: any, res: any) => {
   try {
     const { orderId } = req.params;
 
@@ -431,7 +431,7 @@ router.get('/orders/:orderId/best-execution-report', async (req: AuthenticatedRe
       success: true,
       data: report
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error generating best execution report:', error);
     const statusCode = error instanceof Error && error.message.includes('not found') ? 404 : 500;
     res.status(statusCode).json({
@@ -445,7 +445,7 @@ router.get('/orders/:orderId/best-execution-report', async (req: AuthenticatedRe
 // Order Management Dashboard Routes
 
 // Get order statistics
-router.get('/orders/statistics', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/orders/statistics', async (req: any, res: any) => {
   try {
     const { portfolioId, fromDate, toDate } = req.query;
 
@@ -470,7 +470,7 @@ router.get('/orders/statistics', async (req: AuthenticatedRequest, res: Response
     ] = await Promise.all([
       prisma.order.count({ where }),
       prisma.order.groupBy({
-        by: ['orderStatus'],
+        by: ['status' as any], // using status field name
         where,
         _count: { id: true }
       }),
@@ -493,19 +493,19 @@ router.get('/orders/statistics', async (req: AuthenticatedRequest, res: Response
       success: true,
       data: {
         totalOrders,
-        ordersByStatus: ordersByStatus.map(group => ({
-          status: group.orderStatus,
-          count: group._count.id
+        ordersByStatus: ordersByStatus.map((group: any) => ({
+          status: group.status,
+          count: group._count?.id || 0
         })),
-        ordersByType: ordersByType.map(group => ({
+        ordersByType: ordersByType.map((group: any) => ({
           type: group.orderType,
-          count: group._count.id
+          count: group._count?.id || 0
         })),
-        totalOrderValue: totalOrderValue._sum.quantity || 0,
-        avgOrderSize: avgOrderSize._avg.quantity || 0
+        totalOrderValue: totalOrderValue._sum.quantity?.toNumber() || 0,
+        avgOrderSize: avgOrderSize._avg.quantity?.toNumber() || 0
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching order statistics:', error);
     res.status(500).json({
       success: false,
@@ -516,7 +516,7 @@ router.get('/orders/statistics', async (req: AuthenticatedRequest, res: Response
 });
 
 // Get recent orders for dashboard
-router.get('/orders/recent', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/orders/recent', async (req: any, res: any) => {
   try {
     const { limit } = req.query;
     const orderLimit = limit ? parseInt(limit as string) : 10;
@@ -540,7 +540,7 @@ router.get('/orders/recent', async (req: AuthenticatedRequest, res: Response) =>
       success: true,
       data: recentOrders
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching recent orders:', error);
     res.status(500).json({
       success: false,
@@ -553,7 +553,7 @@ router.get('/orders/recent', async (req: AuthenticatedRequest, res: Response) =>
 // Reference Data Routes
 
 // Get order management reference data
-router.get('/reference-data', async (req: Request, res: Response) => {
+router.get('/reference-data', async (req: any, res: any) => {
   try {
     res.json({
       success: true,
@@ -567,7 +567,7 @@ router.get('/reference-data', async (req: Request, res: Response) => {
         executionVenueTypes: Object.values(ExecutionVenueType)
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching reference data:', error);
     res.status(500).json({
       success: false,
@@ -578,7 +578,7 @@ router.get('/reference-data', async (req: Request, res: Response) => {
 });
 
 // Health check for order management
-router.get('/health', async (req: Request, res: Response) => {
+router.get('/health', async (req: any, res: any) => {
   try {
     // Basic health check - verify database connectivity
     const orderCount = await prisma.order.count();
@@ -591,7 +591,7 @@ router.get('/health', async (req: Request, res: Response) => {
         timestamp: new Date().toISOString()
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Order management health check failed:', error);
     res.status(503).json({
       success: false,

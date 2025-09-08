@@ -60,9 +60,9 @@ class LoadTestRunner {
       process.exit(result.summary.passed ? 0 : 1);
       
     } catch (error) {
-      console.error('❌ Load test execution failed:', error.message);
+      console.error('❌ Load test execution failed:', error instanceof Error ? error.message : 'Unknown error');
       if (this.options.verbose) {
-        console.error(error.stack);
+        console.error(error instanceof Error ? error.stack : String(error));
       }
       process.exit(1);
     }
@@ -245,7 +245,7 @@ class LoadTestRunner {
     
     // Scenario results
     console.log('📋 Scenario Results:');
-    result.scenarios.forEach(scenario => {
+    result.scenarios.forEach((scenario: any) => {
       console.log(`   ${scenario.name}:`);
       console.log(`     Requests: ${scenario.requests.toLocaleString()}`);
       console.log(`     Avg Response: ${scenario.avgResponseTime.toFixed(2)}ms`);
@@ -255,7 +255,7 @@ class LoadTestRunner {
     // Threshold violations
     if (result.summary.thresholdViolations.length > 0) {
       console.log('\n⚠️  Threshold Violations:');
-      result.summary.thresholdViolations.forEach(violation => {
+      result.summary.thresholdViolations.forEach((violation: any) => {
         console.log(`   ${violation.metric}: Expected ${violation.expected}, Got ${violation.actual} (${violation.severity})`);
       });
     }
@@ -263,7 +263,7 @@ class LoadTestRunner {
     // Recommendations
     if (result.summary.recommendations.length > 0) {
       console.log('\n💡 Recommendations:');
-      result.summary.recommendations.forEach(rec => {
+      result.summary.recommendations.forEach((rec: any) => {
         console.log(`   • ${rec}`);
       });
     }
@@ -271,7 +271,7 @@ class LoadTestRunner {
     // Bottlenecks
     if (result.summary.bottlenecks.length > 0) {
       console.log('\n🚨 Identified Bottlenecks:');
-      result.summary.bottlenecks.forEach(bottleneck => {
+      result.summary.bottlenecks.forEach((bottleneck: any) => {
         console.log(`   ${bottleneck.component}: ${bottleneck.description}`);
         console.log(`     Impact: ${bottleneck.impact}`);
         console.log(`     Recommendation: ${bottleneck.recommendation}`);
@@ -474,7 +474,7 @@ class LoadTestRunner {
       prod: 'https://app.investmentplatform.com'
     };
     
-    return envUrls[env] || env; // Treat as URL if not found in predefined
+    return (envUrls as any)[env] || env; // Treat as URL if not found in predefined
   }
 
   private combineSpikeResults(results: any[]): any {

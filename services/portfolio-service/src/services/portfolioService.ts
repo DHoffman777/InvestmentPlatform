@@ -135,7 +135,7 @@ export class PortfolioService {
         limit,
         totalPages: Math.ceil(total / limit)
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching portfolios:', error);
       throw error;
     }
@@ -168,7 +168,7 @@ export class PortfolioService {
       });
 
       return portfolio;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching portfolio by ID:', error);
       throw error;
     }
@@ -198,7 +198,7 @@ export class PortfolioService {
       await this.publishPortfolioEvent('portfolio.created', portfolio);
 
       return portfolio;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating portfolio:', error);
       throw error;
     }
@@ -242,7 +242,7 @@ export class PortfolioService {
       await this.publishPortfolioEvent('portfolio.updated', portfolio);
 
       return portfolio;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating portfolio:', error);
       throw error;
     }
@@ -282,7 +282,7 @@ export class PortfolioService {
       await this.publishPortfolioEvent('portfolio.deleted', { id, tenantId, deletedBy: userId });
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deleting portfolio:', error);
       throw error;
     }
@@ -331,7 +331,7 @@ export class PortfolioService {
         positionCount: positions.length,
         lastUpdated: portfolio.updatedAt
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching portfolio summary:', error);
       throw error;
     }
@@ -403,7 +403,7 @@ export class PortfolioService {
       }
 
       return allocationArray.sort((a, b) => b.value - a.value);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching portfolio allocations:', error);
       throw error;
     }
@@ -418,9 +418,10 @@ export class PortfolioService {
           timestamp: new Date().toISOString()
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing portfolio event:', error);
       // Don't throw error as this is not critical for the operation
     }
   }
 }
+

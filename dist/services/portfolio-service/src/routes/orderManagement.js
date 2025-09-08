@@ -17,12 +17,12 @@ const orderService = new orderManagementService_1.OrderManagementService(prisma,
 // Create new order
 router.post('/orders', async (req, res) => {
     try {
-        const { portfolioId, instrumentId, orderType, orderSide, quantity, timeInForce, orderPrice, stopPrice, limitPrice, tradingSession, executionInstructions, routingInstructions, expirationDate, allocations, tags, customFields } = req.body;
+        const { portfolioId, securityId, orderType, orderSide, quantity, timeInForce, orderPrice, stopPrice, limitPrice, tradingSession, executionInstructions, routingInstructions, expirationDate, allocations, tags, customFields } = req.body;
         // Validation
-        if (!portfolioId || !instrumentId || !orderType || !orderSide || !quantity || !timeInForce) {
+        if (!portfolioId || !securityId || !orderType || !orderSide || !quantity || !timeInForce) {
             return res.status(400).json({
                 success: false,
-                error: 'Missing required fields: portfolioId, instrumentId, orderType, orderSide, quantity, timeInForce'
+                error: 'Missing required fields: portfolioId, securityId, orderType, orderSide, quantity, timeInForce'
             });
         }
         // Validate enum values
@@ -55,7 +55,7 @@ router.post('/orders', async (req, res) => {
         }
         const order = await orderService.createOrder({
             portfolioId,
-            instrumentId,
+            securityId,
             orderType,
             orderSide,
             quantity,
@@ -113,7 +113,7 @@ router.put('/orders/:orderId', async (req, res) => {
         logger_1.logger.error('Error modifying order:', error);
         const statusCode = error instanceof Error &&
             (error.message.includes('not found') ? 404 :
-                error.message.includes('cannot be modified') ? 409 : 500);
+                error.message.includes('cannot be modified') ? 409 : 500) || 500;
         res.status(statusCode).json({
             success: false,
             error: 'Failed to modify order',
@@ -140,7 +140,7 @@ router.delete('/orders/:orderId', async (req, res) => {
         logger_1.logger.error('Error cancelling order:', error);
         const statusCode = error instanceof Error &&
             (error.message.includes('not found') ? 404 :
-                error.message.includes('cannot be cancelled') ? 409 : 500);
+                error.message.includes('cannot be cancelled') ? 409 : 500) || 500;
         res.status(statusCode).json({
             success: false,
             error: 'Failed to cancel order',
@@ -176,10 +176,10 @@ router.get('/orders/:orderId', async (req, res) => {
 // Search orders
 router.get('/orders', async (req, res) => {
     try {
-        const { portfolioIds, instrumentIds, orderTypes, orderStatuses, orderStates, fromDate, toDate, createdBy, tags, limit, offset } = req.query;
+        const { portfolioIds, securityIds, orderTypes, orderStatuses, orderStates, fromDate, toDate, createdBy, tags, limit, offset } = req.query;
         const searchRequest = {
             portfolioIds: portfolioIds ? portfolioIds.split(',') : undefined,
-            instrumentIds: instrumentIds ? instrumentIds.split(',') : undefined,
+            securityIds: securityIds ? securityIds.split(',') : undefined,
             orderTypes: orderTypes ? orderTypes.split(',') : undefined,
             orderStatuses: orderStatuses ? orderStatuses.split(',') : undefined,
             orderStates: orderStates ? orderStates.split(',') : undefined,
@@ -285,9 +285,9 @@ router.get('/orders/:orderId/executions', async (req, res) => {
 // Validate order before submission
 router.post('/orders/validate', async (req, res) => {
     try {
-        const { portfolioId, instrumentId, orderType, orderSide, quantity, timeInForce, orderPrice, stopPrice, limitPrice } = req.body;
+        const { portfolioId, securityId, orderType, orderSide, quantity, timeInForce, orderPrice, stopPrice, limitPrice } = req.body;
         // Same validation as order creation
-        if (!portfolioId || !instrumentId || !orderType || !orderSide || !quantity || !timeInForce) {
+        if (!portfolioId || !securityId || !orderType || !orderSide || !quantity || !timeInForce) {
             return res.status(400).json({
                 success: false,
                 error: 'Missing required validation fields'
@@ -295,7 +295,7 @@ router.post('/orders/validate', async (req, res) => {
         }
         const validation = await orderService.validateOrder({
             portfolioId,
-            instrumentId,
+            securityId,
             orderType,
             orderSide,
             quantity,
@@ -357,7 +357,7 @@ router.get('/orders/statistics', async (req, res) => {
         const [totalOrders, ordersByStatus, ordersByType, totalOrderValue, avgOrderSize] = await Promise.all([
             prisma.order.count({ where }),
             prisma.order.groupBy({
-                by: ['orderStatus'],
+                by: ['status'], // using status field name
                 where,
                 _count: { id: true }
             }),
@@ -379,16 +379,16 @@ router.get('/orders/statistics', async (req, res) => {
             success: true,
             data: {
                 totalOrders,
-                ordersByStatus: ordersByStatus.map(group => ({
-                    status: group.orderStatus,
-                    count: group._count.id
+                ordersByStatus: ordersByStatus.map((group) => ({
+                    status: group.status,
+                    count: group._count?.id || 0
                 })),
-                ordersByType: ordersByType.map(group => ({
+                ordersByType: ordersByType.map((group) => ({
                     type: group.orderType,
-                    count: group._count.id
+                    count: group._count?.id || 0
                 })),
-                totalOrderValue: totalOrderValue._sum.quantity || 0,
-                avgOrderSize: avgOrderSize._avg.quantity || 0
+                totalOrderValue: totalOrderValue._sum.quantity?.toNumber() || 0,
+                avgOrderSize: avgOrderSize._avg.quantity?.toNumber() || 0
             }
         });
     }

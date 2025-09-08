@@ -87,12 +87,12 @@ export class DatabaseOptimizer extends EventEmitter {
   }
 
   private setupQueryMonitoring(): void {
-    this.prisma.$on('query', (e) => {
+    this.prisma.$on('query' as never, (e: any) => {
       this.captureQueryMetrics(e);
     });
   }
 
-  private async captureQueryMetrics(queryEvent: any): Promise<void> {
+  private async captureQueryMetrics(queryEvent: any): Promise<any> {
     try {
       const startTime = Date.now();
       const queryId = this.generateQueryId(queryEvent.query);
@@ -123,7 +123,7 @@ export class DatabaseOptimizer extends EventEmitter {
           metrics.queryPlan = explainPlan;
           metrics.rowsExamined = this.extractRowsExamined(explainPlan);
           metrics.indexesUsed = this.extractIndexesUsed(explainPlan);
-        } catch (error) {
+        } catch (error: any) {
           console.warn('Failed to get explain plan:', error);
         }
       }
@@ -142,7 +142,7 @@ export class DatabaseOptimizer extends EventEmitter {
         this.analyzeSlowQuery(metrics);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', error);
     }
   }
@@ -176,7 +176,7 @@ export class DatabaseOptimizer extends EventEmitter {
         activeConnections: 5,
         idleConnections: 5,
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         poolSize: 0,
         activeConnections: 0,
@@ -190,8 +190,8 @@ export class DatabaseOptimizer extends EventEmitter {
       const explainQuery = `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${query}`;
       const result = await this.prisma.$queryRawUnsafe(explainQuery);
       return result;
-    } catch (error) {
-      throw new Error(`Failed to get explain plan: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to get explain plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -202,7 +202,7 @@ export class DatabaseOptimizer extends EventEmitter {
         return explainPlan[0]['QUERY PLAN'][0]?.['Actual Rows'] || 0;
       }
       return 0;
-    } catch (error) {
+    } catch (error: any) {
       return 0;
     }
   }
@@ -221,7 +221,7 @@ export class DatabaseOptimizer extends EventEmitter {
       }
       
       return indexes;
-    } catch (error) {
+    } catch (error: any) {
       return [];
     }
   }
@@ -349,7 +349,7 @@ export class DatabaseOptimizer extends EventEmitter {
     return hasSeqScan;
   }
 
-  private async analyzeSlowQuery(metrics: QueryPerformanceMetrics): Promise<void> {
+  private async analyzeSlowQuery(metrics: QueryPerformanceMetrics): Promise<any> {
     const recommendations = await this.generateRecommendations(metrics);
     for (const recommendation of recommendations) {
       this.optimizationHistory.push(recommendation);
@@ -482,7 +482,7 @@ export class DatabaseOptimizer extends EventEmitter {
         });
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error analyzing index usage:', error);
     }
 
@@ -559,7 +559,8 @@ export class DatabaseOptimizer extends EventEmitter {
     };
   }
 
-  public async disconnect(): Promise<void> {
+  public async disconnect(): Promise<any> {
     await this.prisma.$disconnect();
   }
 }
+

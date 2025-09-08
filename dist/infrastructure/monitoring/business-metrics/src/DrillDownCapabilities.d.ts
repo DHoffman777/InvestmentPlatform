@@ -164,7 +164,7 @@ export declare class DrillDownCapabilities extends EventEmitter {
     private queryEngine;
     private aggregationEngine;
     private insightEngine;
-    private cacheCleanupTimer;
+    private cacheCleanupTimer?;
     constructor();
     createDrillDownPath(path: Partial<DrillDownPath>): Promise<DrillDownPath>;
     startDrillDownSession(userId: string, tenantId: string, pathId: string, initialContext?: Partial<DrillDownContext>): Promise<DrillDownSession>;
@@ -198,9 +198,9 @@ export declare class DrillDownCapabilities extends EventEmitter {
     getDrillDownPath(pathId: string): DrillDownPath | null;
     getDrillDownPaths(): DrillDownPath[];
     getSession(sessionId: string): DrillDownSession | null;
-    endSession(sessionId: string): Promise<void>;
+    endSession(sessionId: string): Promise<any>;
     getCacheStats(): any;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 interface ExportResult {
     id: string;

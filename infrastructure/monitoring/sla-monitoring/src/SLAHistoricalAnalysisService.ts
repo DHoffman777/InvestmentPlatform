@@ -130,8 +130,8 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
         this.analysisCache.set(`${slaId}_${request.timeRange.start.getTime()}_${request.timeRange.end.getTime()}`, analysis);
         
         this.emit('analysisCompleted', { slaId, analysis });
-      } catch (error) {
-        this.emit('analysisError', { slaId, error: error.message });
+      } catch (error: any) {
+        this.emit('analysisError', { slaId, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
     
@@ -199,12 +199,11 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
       patterns.push({
         type: 'seasonal',
         description: `Seasonal pattern detected with period of ${seasonalityAnalysis.period} ${this.getTimeUnit(seasonalityAnalysis.period)}`,
-        frequency: seasonalityAnalysis.period,
+        frequency: String(seasonalityAnalysis.period),
         timeWindow: {
           start: data[0].timestamp,
           end: data[data.length - 1].timestamp
         },
-        affectedSLAs: [slaId],
         strength: seasonalityAnalysis.strength,
         impact: this.determinePatternImpact(seasonalityAnalysis.strength)
       });
@@ -216,12 +215,11 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
       patterns.push({
         type: 'trending',
         description: `${trendAnalysis.direction} trend detected with slope ${trendAnalysis.slope.toFixed(4)}`,
-        frequency: 0,
+        frequency: '0',
         timeWindow: {
           start: data[0].timestamp,
           end: data[data.length - 1].timestamp
         },
-        affectedSLAs: [slaId],
         strength: Math.abs(trendAnalysis.slope),
         impact: trendAnalysis.direction === 'improving' ? 'positive' : 'negative'
       });
@@ -232,12 +230,11 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
     patterns.push(...cyclicalPatterns.map(cp => ({
       type: 'cyclical' as const,
       description: `Cyclical pattern with period ${cp.period}`,
-      frequency: cp.period,
+      frequency: String(cp.period),
       timeWindow: {
         start: data[0].timestamp,
         end: data[data.length - 1].timestamp
       },
-      affectedSLAs: [slaId],
       strength: cp.strength,
       impact: 'neutral' as const
     })));
@@ -334,8 +331,8 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
           if (prediction.probability >= this.config.prediction.confidenceThreshold) {
             predictions.push(prediction);
           }
-        } catch (error) {
-          console.warn(`Failed to generate ${model} prediction for ${horizon}h horizon:`, error.message);
+        } catch (error: any) {
+          console.warn(`Failed to generate ${model} prediction for ${horizon}h horizon:`, error instanceof Error ? error.message : 'Unknown error');
         }
       }
     }
@@ -612,12 +609,11 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
         patterns.push({
           type: 'recurring',
           description: `Recurring breach pattern every ${Math.round(avgInterval / (60 * 60 * 1000))} hours`,
-          frequency: avgInterval,
+          frequency: String(avgInterval),
           timeWindow: {
             start: breaches[0].timestamp,
             end: breaches[breaches.length - 1].timestamp
           },
-          affectedSLAs: [slaId],
           strength: 1 - (stdDev / avgInterval),
           impact: 'negative'
         });
@@ -1007,7 +1003,7 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
           if (item) {
             await this.performHistoricalAnalysis(item.request);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Analysis queue processing error:', error);
         } finally {
           this.isProcessingQueue = false;
@@ -1031,7 +1027,7 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
     return `recommendation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     this.analysisCache.clear();
     this.timeSeriesData.clear();
     this.analysisQueue = [];
@@ -1039,3 +1035,4 @@ export class SLAHistoricalAnalysisService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

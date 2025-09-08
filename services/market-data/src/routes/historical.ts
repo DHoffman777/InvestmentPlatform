@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query, param, validationResult } from 'express-validator';
+const { query, param, validationResult } = require('express-validator');
 import { MarketDataService } from '../services/marketDataService';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
@@ -33,7 +33,7 @@ router.get('/:symbol',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
       const { startDate, endDate, period, source } = req.query as any;
@@ -109,7 +109,7 @@ router.get('/:symbol',
         count: formattedData.length,
         source: source || 'all',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching historical data:', { 
         symbol: req.params.symbol, 
         startDate: req.query.startDate,
@@ -134,7 +134,7 @@ router.get('/:symbol/ohlc',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
       const { period = '1Y', interval = '1d' } = req.query as any;
@@ -192,7 +192,7 @@ router.get('/:symbol/ohlc',
         interval,
         count: ohlcData.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching OHLC data:', { 
         symbol: req.params.symbol, 
         period: req.query.period,

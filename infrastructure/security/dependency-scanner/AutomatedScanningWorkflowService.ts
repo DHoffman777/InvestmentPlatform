@@ -223,10 +223,12 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
 
     const job = new CronJob(
       schedule.cronExpression,
-      () => this.executeSchedule(scheduleId, 'SCHEDULE'),
+      () => { this.executeSchedule(scheduleId, 'SCHEDULE'); },
       null,
       true,
-      schedule.timezone || 'UTC'
+      schedule.timezone || 'UTC',
+      null,
+      false
     );
 
     this.cronJobs.set(scheduleId, job);
@@ -320,13 +322,13 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
         criticalCount: execution.criticalVulnerabilities
       });
 
-    } catch (error) {
+    } catch (error: any) {
       execution.status = 'FAILED';
       execution.endTime = new Date();
       execution.duration = execution.endTime.getTime() - execution.startTime.getTime();
-      execution.errors.push(error.message);
+      execution.errors.push(error instanceof Error ? error.message : 'Unknown error');
 
-      await this.sendFailureNotifications(schedule, execution, error.message);
+      await this.sendFailureNotifications(schedule, execution, error instanceof Error ? error.message : 'Unknown error');
 
       this.emit('executionFailed', { 
         executionId: execution.id, 
@@ -357,7 +359,7 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
         const inventory = await this.dependencyService.scanProject(
           projectPath,
           schedule.tenantId,
-          this.extractProjectName(projectPath),
+          await this.extractProjectName(projectPath),
           schedule.scanOptions
         );
 
@@ -376,7 +378,7 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
           dependencyCount: inventory.totalDependencies
         });
 
-      } catch (error) {
+      } catch (error: any) {
         results.push({
           projectPath,
           inventoryId: '',
@@ -387,7 +389,7 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
           error: error.message
         });
 
-        execution.errors.push(`Inventory scan failed for ${projectPath}: ${error.message}`);
+        execution.errors.push(`Inventory scan failed for ${projectPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
 
         this.emit('projectScanFailed', { 
           executionId: execution.id, 
@@ -442,7 +444,7 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
           vulnerabilities: scanReport.totalVulnerabilities
         });
 
-      } catch (error) {
+      } catch (error: any) {
         results.push({
           inventoryId: inventoryResult.inventoryId,
           scanId: '',
@@ -453,7 +455,7 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
           error: error.message
         });
 
-        execution.errors.push(`Vulnerability scan failed for ${inventoryResult.inventoryId}: ${error.message}`);
+        execution.errors.push(`Vulnerability scan failed for ${inventoryResult.inventoryId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
 
         this.emit('vulnerabilityScanFailed', { 
           executionId: execution.id, 
@@ -469,7 +471,7 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
   private async sendNotifications(
     schedule: ScanSchedule,
     execution: WorkflowExecution
-  ): Promise<void> {
+  ): Promise<any> {
     for (const notification of schedule.notifications) {
       if (!notification.enabled) continue;
 
@@ -482,7 +484,7 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
               executionId: execution.id,
               type: notification.type
             });
-          } catch (error) {
+          } catch (error: any) {
             this.emit('notificationFailed', { 
               scheduleId: schedule.id,
               executionId: execution.id,
@@ -523,7 +525,7 @@ export class AutomatedScanningWorkflowService extends EventEmitter {
     notification: NotificationConfig,
     schedule: ScanSchedule,
     execution: WorkflowExecution
-  ): Promise<void> {
+  ): Promise<any> {
     const message = this.formatNotificationMessage(notification, schedule, execution);
 
     switch (notification.type) {
@@ -583,12 +585,12 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
     });
   }
 
-  private async sendEmailNotification(config: any, message: string): Promise<void> {
+  private async sendEmailNotification(config: any, message: string): Promise<any> {
     // Email implementation would go here
     console.log('Email notification sent:', { recipients: config.recipients, message });
   }
 
-  private async sendSlackNotification(config: any, message: string): Promise<void> {
+  private async sendSlackNotification(config: any, message: string): Promise<any> {
     if (!config.webhookUrl) return;
 
     const payload = {
@@ -608,7 +610,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
     }
   }
 
-  private async sendWebhookNotification(config: any, message: string, execution: WorkflowExecution): Promise<void> {
+  private async sendWebhookNotification(config: any, message: string, execution: WorkflowExecution): Promise<any> {
     if (!config.url) return;
 
     const payload = {
@@ -635,7 +637,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
     }
   }
 
-  private async sendTeamsNotification(config: any, message: string): Promise<void> {
+  private async sendTeamsNotification(config: any, message: string): Promise<any> {
     if (!config.teamsWebhook) return;
 
     const payload = {
@@ -661,7 +663,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
     }
   }
 
-  private async createJiraIssue(config: any, message: string, execution: WorkflowExecution): Promise<void> {
+  private async createJiraIssue(config: any, message: string, execution: WorkflowExecution): Promise<any> {
     if (!config.jiraConfig) return;
 
     const { url, username, token, project, issueType } = config.jiraConfig;
@@ -694,7 +696,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
     schedule: ScanSchedule,
     execution: WorkflowExecution,
     error: string
-  ): Promise<void> {
+  ): Promise<any> {
     for (const notification of schedule.notifications) {
       if (!notification.enabled) continue;
 
@@ -703,7 +705,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
         try {
           await this.sendNotification(notification, schedule, execution);
         } catch (notifError) {
-          console.error('Failed to send failure notification:', notifError.message);
+          console.error('Failed to send failure notification:', (notifError as Error).message);
         }
       }
     }
@@ -728,7 +730,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
     }
   }
 
-  private extractProjectName(projectPath: string): string {
+  private async extractProjectName(projectPath: string): Promise<string> {
     const path = await import('path');
     return path.basename(projectPath);
   }
@@ -762,7 +764,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
       .slice(0, limit);
   }
 
-  async enableSchedule(scheduleId: string): Promise<void> {
+  async enableSchedule(scheduleId: string): Promise<any> {
     const schedule = this.schedules.get(scheduleId);
     if (!schedule) {
       throw new Error(`Schedule not found: ${scheduleId}`);
@@ -775,7 +777,7 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
     this.startSchedule(scheduleId);
   }
 
-  async disableSchedule(scheduleId: string): Promise<void> {
+  async disableSchedule(scheduleId: string): Promise<any> {
     const schedule = this.schedules.get(scheduleId);
     if (!schedule) {
       throw new Error(`Schedule not found: ${scheduleId}`);
@@ -868,3 +870,4 @@ ${execution.errors.length > 0 ? `Errors:\n${execution.errors.join('\n')}` : ''}
     });
   }
 }
+

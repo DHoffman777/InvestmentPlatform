@@ -494,7 +494,7 @@ export declare class OnboardingProgressService extends EventEmitter {
     private createPhases;
     private createMilestones;
     private calculateInitialTimeline;
-    updateStepProgress(progressId: string, stepId: string, newStatus: StepStatus, progressPercentage?: number, metadata?: Record<string, any>): Promise<void>;
+    updateStepProgress(progressId: string, stepId: string, newStatus: StepStatus, progressPercentage?: number, metadata?: Record<string, any>): Promise<any>;
     private findStepById;
     private updatePhaseProgress;
     private updateOverallProgress;
@@ -503,7 +503,7 @@ export declare class OnboardingProgressService extends EventEmitter {
     private triggerCelebration;
     private updateTimelineEstimate;
     reportBlocker(progressId: string, blocker: Omit<Blocker, 'id' | 'reportedAt' | 'escalated'>): Promise<Blocker>;
-    resolveBlocker(progressId: string, blockerId: string, resolution: string, resolvedBy: string): Promise<void>;
+    resolveBlocker(progressId: string, blockerId: string, resolution: string, resolvedBy: string): Promise<any>;
     private addProgressEvent;
     getProgress(progressId: string): OnboardingProgress | undefined;
     getProgressByWorkflow(workflowId: string): OnboardingProgress | undefined;

@@ -9,18 +9,18 @@ export declare class InstrumentReferenceDataService {
     searchInstruments(request: SearchInstrumentRequest): Promise<InstrumentSearchResult>;
     lookupInstrument(request: InstrumentLookupRequest): Promise<InstrumentMaster | null>;
     processCorporateAction(request: ProcessCorporateActionRequest): Promise<CorporateAction>;
-    getCorporateActions(instrumentId: string, tenantId: string): Promise<CorporateAction[]>;
-    updateMarketData(instrumentId: string, marketData: Partial<MarketDataSnapshot>, tenantId: string): Promise<void>;
-    getMarketData(instrumentId: string, tenantId: string): Promise<MarketDataSnapshot | null>;
+    getCorporateActions(securityId: string, tenantId: string): Promise<CorporateAction[]>;
+    updateMarketData(securityId: string, marketData: Partial<MarketDataSnapshot>, tenantId: string): Promise<any>;
+    getMarketData(securityId: string, tenantId: string): Promise<MarketDataSnapshot | null>;
     bulkUpdateInstruments(request: BulkInstrumentUpdateRequest): Promise<{
         successful: string[];
         failed: Array<{
-            instrumentId: string;
+            securityId: string;
             error: string;
         }>;
     }>;
-    validateInstrumentData(instrumentId: string, tenantId: string): Promise<InstrumentValidationResult>;
-    generateDataQualityReport(instrumentId: string, tenantId: string): Promise<DataQualityReport>;
+    validateInstrumentData(securityId: string, tenantId: string): Promise<InstrumentValidationResult>;
+    generateDataQualityReport(securityId: string, tenantId: string): Promise<DataQualityReport>;
     private findInstrumentByIdentifiers;
     private validateInstrumentRequest;
     private validateInstrumentUpdate;

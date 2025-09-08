@@ -38,7 +38,7 @@ export class DatabaseService {
     try {
       const result = await client.query(text, params);
       return result.rows;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Database query error:', { query: text, params, error });
       throw error;
     } finally {
@@ -58,7 +58,7 @@ export class DatabaseService {
       const result = await callback(client);
       await client.query('COMMIT');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       await client.query('ROLLBACK');
       throw error;
     } finally {
@@ -66,7 +66,7 @@ export class DatabaseService {
     }
   }
 
-  async close(): Promise<void> {
+  async close(): Promise<any> {
     await this.pool.end();
   }
 
@@ -75,7 +75,7 @@ export class DatabaseService {
     return `tenant_${tenantId.replace(/-/g, '')}`;
   }
 
-  async setTenantContext(tenantId: string): Promise<void> {
+  async setTenantContext(tenantId: string): Promise<any> {
     const schema = this.getTenantSchema(tenantId);
     await this.query(`SET search_path TO ${schema}, public`);
   }
@@ -88,3 +88,4 @@ export class DatabaseService {
     return result ? result.id : null;
   }
 }
+

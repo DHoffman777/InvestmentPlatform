@@ -45,7 +45,7 @@ class CashManagementService extends events_1.EventEmitter {
             this.emit('cashManagementError', {
                 operation: 'create_account',
                 portfolioId: account.portfolioId,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
             throw error;
@@ -80,7 +80,7 @@ class CashManagementService extends events_1.EventEmitter {
             this.emit('sweepError', {
                 operation: 'create_program',
                 portfolioId,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
             throw error;
@@ -119,7 +119,7 @@ class CashManagementService extends events_1.EventEmitter {
             this.emit('sweepError', {
                 operation: 'execute_sweep',
                 portfolioId,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
             throw error;
@@ -166,7 +166,7 @@ class CashManagementService extends events_1.EventEmitter {
             this.emit('transactionError', {
                 portfolioId: transaction.portfolioId,
                 accountId: transaction.accountId,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
             throw error;
@@ -218,7 +218,7 @@ class CashManagementService extends events_1.EventEmitter {
         catch (error) {
             this.emit('forecastError', {
                 portfolioId,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
             throw error;

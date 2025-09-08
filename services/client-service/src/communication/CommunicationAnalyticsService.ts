@@ -438,7 +438,7 @@ export class CommunicationAnalyticsService extends EventEmitter {
     return riskFactors;
   }
 
-  private async performRealTimeAnalysis(): Promise<void> {
+  private async performRealTimeAnalysis(): Promise<any> {
     try {
       const recentCommunications = await this.getRecentCommunications(
         new Date(Date.now() - this.config.analysisIntervals.realTime)
@@ -451,12 +451,12 @@ export class CommunicationAnalyticsService extends EventEmitter {
           timestamp: new Date()
         });
       }
-    } catch (error) {
-      this.emit('analyticsError', { type: 'realTime', error: error.message });
+    } catch (error: any) {
+      this.emit('analyticsError', { type: 'realTime', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async performHourlyAnalysis(): Promise<void> {
+  private async performHourlyAnalysis(): Promise<any> {
     try {
       const tenants = await this.getActiveTenants();
       
@@ -473,12 +473,12 @@ export class CommunicationAnalyticsService extends EventEmitter {
       }
 
       this.emit('hourlyAnalysisCompleted', { timestamp: new Date() });
-    } catch (error) {
-      this.emit('analyticsError', { type: 'hourly', error: error.message });
+    } catch (error: any) {
+      this.emit('analyticsError', { type: 'hourly', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async performDailyAnalysis(): Promise<void> {
+  private async performDailyAnalysis(): Promise<any> {
     try {
       const tenants = await this.getActiveTenants();
       
@@ -493,12 +493,12 @@ export class CommunicationAnalyticsService extends EventEmitter {
       }
 
       this.emit('dailyAnalysisCompleted', { timestamp: new Date() });
-    } catch (error) {
-      this.emit('analyticsError', { type: 'daily', error: error.message });
+    } catch (error: any) {
+      this.emit('analyticsError', { type: 'daily', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async performWeeklyAnalysis(): Promise<void> {
+  private async performWeeklyAnalysis(): Promise<any> {
     try {
       const tenants = await this.getActiveTenants();
       
@@ -516,8 +516,8 @@ export class CommunicationAnalyticsService extends EventEmitter {
       }
 
       this.emit('weeklyAnalysisCompleted', { timestamp: new Date() });
-    } catch (error) {
-      this.emit('analyticsError', { type: 'weekly', error: error.message });
+    } catch (error: any) {
+      this.emit('analyticsError', { type: 'weekly', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -858,7 +858,7 @@ export class CommunicationAnalyticsService extends EventEmitter {
     };
   }
 
-  private async distributeReport(report: CommunicationReport, recipients: string[]): Promise<void> {
+  private async distributeReport(report: CommunicationReport, recipients: string[]): Promise<any> {
     // Mock implementation
   }
 
@@ -872,19 +872,19 @@ export class CommunicationAnalyticsService extends EventEmitter {
     };
   }
 
-  private async processRealTimeAlerts(communications: any[]): Promise<void> {
+  private async processRealTimeAlerts(communications: any[]): Promise<any> {
     // Mock implementation
   }
 
-  private async checkMetricThresholds(tenantId: string, metrics: CommunicationMetrics): Promise<void> {
+  private async checkMetricThresholds(tenantId: string, metrics: CommunicationMetrics): Promise<any> {
     // Mock implementation
   }
 
-  private async updateClientProfiles(tenantId: string): Promise<void> {
+  private async updateClientProfiles(tenantId: string): Promise<any> {
     // Mock implementation
   }
 
-  private async performMaintenanceTasks(): Promise<void> {
+  private async performMaintenanceTasks(): Promise<any> {
     // Mock implementation
   }
 
@@ -893,7 +893,7 @@ export class CommunicationAnalyticsService extends EventEmitter {
     return 4.0;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     // Clear all intervals
     this.activeAnalytics.forEach((interval, key) => {
       clearInterval(interval);
@@ -909,3 +909,4 @@ export class CommunicationAnalyticsService extends EventEmitter {
     this.emit('analyticsShutdown');
   }
 }
+

@@ -55,7 +55,7 @@ export class ComplianceAuditService extends EventEmitter {
       userAgent?: string;
       sessionId?: string;
     }
-  ): Promise<void> {
+  ): Promise<any> {
     const auditTrail: ComplianceAuditTrail = {
       id: this.generateAuditId(),
       timestamp: new Date(),
@@ -85,7 +85,7 @@ export class ComplianceAuditService extends EventEmitter {
       userAgent?: string;
       sessionId?: string;
     }
-  ): Promise<void> {
+  ): Promise<any> {
     await this.recordAuditEvent(
       result.entityType,
       result.entityId,
@@ -380,7 +380,7 @@ export class ComplianceAuditService extends EventEmitter {
       .slice(0, limit);
   }
 
-  private async flushAuditBuffer(): Promise<void> {
+  private async flushAuditBuffer(): Promise<any> {
     if (this.auditBuffer.length === 0) return;
 
     const batchSize = 100;
@@ -405,14 +405,14 @@ export class ComplianceAuditService extends EventEmitter {
       await pipeline.exec();
       console.log(`Flushed ${batch.length} audit records to storage`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to flush audit buffer:', error);
       // Re-add failed records to buffer for retry
       this.auditBuffer.unshift(...batch);
     }
   }
 
-  private async flushAlertBuffer(): Promise<void> {
+  private async flushAlertBuffer(): Promise<any> {
     if (this.alertBuffer.length === 0) return;
 
     const batch = this.alertBuffer.splice(0, 50);
@@ -439,13 +439,13 @@ export class ComplianceAuditService extends EventEmitter {
       await pipeline.exec();
       console.log(`Flushed ${batch.length} alerts to storage`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to flush alert buffer:', error);
       this.alertBuffer.unshift(...batch);
     }
   }
 
-  private async sendAlertNotifications(alert: RegulatoryAlert): Promise<void> {
+  private async sendAlertNotifications(alert: RegulatoryAlert): Promise<any> {
     try {
       for (const channel of alert.notificationChannels) {
         switch (channel) {
@@ -471,7 +471,7 @@ export class ComplianceAuditService extends EventEmitter {
             break;
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to send notifications for alert ${alert.id}:`, error);
     }
   }
@@ -545,7 +545,7 @@ export class ComplianceAuditService extends EventEmitter {
     };
   }
 
-  public async cleanup(): Promise<void> {
+  public async cleanup(): Promise<any> {
     if (this.flushInterval) {
       clearInterval(this.flushInterval);
     }
@@ -555,3 +555,4 @@ export class ComplianceAuditService extends EventEmitter {
     await this.redis.quit();
   }
 }
+

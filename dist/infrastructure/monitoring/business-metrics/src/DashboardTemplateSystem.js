@@ -249,7 +249,7 @@ class DashboardTemplateSystem extends events_1.EventEmitter {
             return await response.json();
         }
         catch (error) {
-            this.emit('widgetDataError', { endpoint, error: error.message });
+            this.emit('widgetDataError', { endpoint, error: error instanceof Error ? error.message : 'Unknown error' });
             return null;
         }
     }

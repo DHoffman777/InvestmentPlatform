@@ -1,4 +1,5 @@
 import { MachineLearningInsight, AnalyticsDataPoint } from '../../models/analytics/Analytics';
+import { EventPublisher } from '../../utils/eventPublisher';
 interface InsightGenerationRequest {
     tenantId: string;
     analysisType: MachineLearningInsight['type'];
@@ -88,7 +89,7 @@ export declare class MachineLearningInsightsService {
     private eventPublisher;
     private insights;
     private insightTemplates;
-    constructor();
+    constructor(eventPublisher?: EventPublisher);
     generateInsights(request: InsightGenerationRequest): Promise<MachineLearningInsight[]>;
     performClusterAnalysis(data: AnalyticsDataPoint[], features: string[], numClusters?: number): Promise<ClusterAnalysisResult>;
     recognizePatterns(data: AnalyticsDataPoint[], patternTypes?: string[]): Promise<PatternRecognitionResult>;

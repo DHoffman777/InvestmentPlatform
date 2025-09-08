@@ -40,13 +40,13 @@ export class ResourceUtilizationService extends EventEmitter {
     this.startCollectionScheduler();
   }
 
-  async addDataSource(dataSource: ResourceDataSource): Promise<void> {
+  async addDataSource(dataSource: ResourceDataSource): Promise<any> {
     this.dataSources.set(dataSource.id, dataSource);
     await this.validateDataSource(dataSource);
     this.emit('dataSourceAdded', { dataSourceId: dataSource.id, type: dataSource.type });
   }
 
-  async removeDataSource(dataSourceId: string): Promise<void> {
+  async removeDataSource(dataSourceId: string): Promise<any> {
     this.dataSources.delete(dataSourceId);
     const intervalId = this.collections.get(dataSourceId);
     if (intervalId) {
@@ -68,9 +68,9 @@ export class ResourceUtilizationService extends EventEmitter {
         if (this.config.enableRealTimeStreaming) {
           this.emit('metricsCollected', { resourceId, metrics: resourceMetrics, timestamp: new Date() });
         }
-      } catch (error) {
-        console.error(`Failed to collect metrics for resource ${resourceId}:`, error.message);
-        this.emit('collectionError', { resourceId, error: error.message, timestamp: new Date() });
+      } catch (error: any) {
+        console.error(`Failed to collect metrics for resource ${resourceId}:`, error instanceof Error ? error.message : 'Unknown error');
+        this.emit('collectionError', { resourceId, error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date() });
       }
     }
 
@@ -115,7 +115,7 @@ export class ResourceUtilizationService extends EventEmitter {
       this.storeMetrics(resourceId, validatedMetrics);
       
       return validatedMetrics;
-    } catch (error) {
+    } catch (error: any) {
       dataSource.errorCount++;
       dataSource.reliability = Math.max(0, dataSource.reliability - 0.1);
       throw error;
@@ -345,14 +345,14 @@ export class ResourceUtilizationService extends EventEmitter {
         unit: metricConfig.unit || 'count',
         timestamp,
         metadata: {
-          collectionMethod: 'custom',
+          collectionMethod: 'calculated' as const,  // 'custom' is not a valid value, using 'calculated' for custom metrics
           accuracy: metricConfig.accuracy || 0.85,
           confidence: metricConfig.confidence || 0.8,
           dataSource: dataSource.id,
           collector: 'custom',
           version: '1.0.0'
         },
-        tags: { ...dataSource.configuration.tags, ...metricConfig.tags } || {},
+        tags: { ...dataSource.configuration.tags, ...metricConfig.tags },  // Object spread always returns an object, no need for || {}
         dimensions: this.extractDimensions(dataSource),
         source: dataSource,
         quality: { completeness: 0.8, accuracy: 0.85, timeliness: 0.9, consistency: 0.75, validity: 0.9, overall: 0.84, issues: [] }
@@ -626,8 +626,8 @@ export class ResourceUtilizationService extends EventEmitter {
     setInterval(async () => {
       try {
         await this.collectMetrics();
-      } catch (error) {
-        console.error('Scheduled metric collection failed:', error.message);
+      } catch (error: any) {
+        console.error('Scheduled metric collection failed:', error instanceof Error ? error.message : 'Unknown error');
       }
     }, this.config.refreshInterval);
   }
@@ -636,7 +636,7 @@ export class ResourceUtilizationService extends EventEmitter {
     // Implementation for metric quality validation
   }
 
-  private async validateDataSource(dataSource: ResourceDataSource): Promise<void> {
+  private async validateDataSource(dataSource: ResourceDataSource): Promise<any> {
     // Implementation for data source validation
   }
 
@@ -702,7 +702,7 @@ export class ResourceUtilizationService extends EventEmitter {
   private async calculateEfficiency(resourceId: string, utilization: ResourceUtilization, metrics: ResourceMetric[]): Promise<any> { return {}; }
   private async generateRecommendations(resourceId: string, context: any): Promise<any[]> { return []; }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     // Clear all intervals
     for (const intervalId of this.collections.values()) {
       clearInterval(intervalId);
@@ -712,3 +712,4 @@ export class ResourceUtilizationService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

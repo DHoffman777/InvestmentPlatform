@@ -140,7 +140,7 @@ class CalendarIntegrationService extends events_1.EventEmitter {
         setInterval(() => {
             this.performScheduledSync().catch(error => {
                 console.error('Scheduled sync error:', error);
-                this.emit('syncError', { error: error.message, timestamp: new Date() });
+                this.emit('syncError', { error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date() });
             });
         }, this.config.syncIntervalMinutes * 60 * 1000);
     }
@@ -291,7 +291,7 @@ class CalendarIntegrationService extends events_1.EventEmitter {
                 this.emit('syncError', {
                     eventId: event.id,
                     connectionId: connection.id,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }
@@ -351,7 +351,7 @@ class CalendarIntegrationService extends events_1.EventEmitter {
                 this.emit('syncError', {
                     eventId: eventId,
                     connectionId: connection.id,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }
@@ -383,7 +383,7 @@ class CalendarIntegrationService extends events_1.EventEmitter {
                 this.emit('syncError', {
                     eventId: eventId,
                     connectionId: connection.id,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }
@@ -549,7 +549,7 @@ class CalendarIntegrationService extends events_1.EventEmitter {
         // Start sync in background
         this.performSync(syncId).catch(error => {
             console.error(`Sync ${syncId} failed:`, error);
-            this.updateSyncStatus(syncId, 'failed', error.message);
+            this.updateSyncStatus(syncId, 'failed', error instanceof Error ? error.message : 'Unknown error');
         });
         return syncId;
     }
@@ -591,7 +591,7 @@ class CalendarIntegrationService extends events_1.EventEmitter {
         catch (error) {
             sync.status = 'failed';
             sync.errors.push({
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
         }

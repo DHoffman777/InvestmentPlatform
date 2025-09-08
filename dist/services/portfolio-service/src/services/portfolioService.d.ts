@@ -56,20 +56,20 @@ export declare class PortfolioService {
     constructor(prisma: PrismaClient);
     getPortfolios(request: GetPortfoliosRequest): Promise<{
         portfolios: {
-            id: string;
-            description: string | null;
-            name: string;
-            totalValue: Prisma.Decimal;
             status: import(".prisma/client").$Enums.PortfolioStatus;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
+            name: string;
+            description: string | null;
             baseCurrency: string;
-            portfolioType: import(".prisma/client").$Enums.PortfolioType;
-            riskProfile: import(".prisma/client").$Enums.RiskProfile;
-            cashBalance: Prisma.Decimal;
             _count: {
                 positions: number;
             };
+            portfolioType: import(".prisma/client").$Enums.PortfolioType;
+            riskProfile: import(".prisma/client").$Enums.RiskProfile;
+            totalValue: Prisma.Decimal;
+            cashBalance: Prisma.Decimal;
         }[];
         total: number;
         page: number;

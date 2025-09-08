@@ -85,7 +85,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
                             checkType,
                             status: 'FAIL',
                             severity: 'HIGH',
-                            message: `Risk check execution failed: ${error.message}`,
+                            message: `Risk check execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
                             bypassable: false,
                             executedAt: new Date(),
                             executionTimeMs: 0
@@ -124,7 +124,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             suite.canProceed = false;
             suite.completedAt = new Date();
             suite.totalExecutionTimeMs = Date.now() - startTime;
-            this.emit('riskCheckSuiteError', { suite, error: error.message });
+            this.emit('riskCheckSuiteError', { suite, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -191,7 +191,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'POSITION_LIMIT_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'POSITION_LIMIT_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkCounterpartyExposure(order) {
@@ -238,7 +238,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'COUNTERPARTY_EXPOSURE_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'COUNTERPARTY_EXPOSURE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkConcentrationLimits(order) {
@@ -286,7 +286,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'CONCENTRATION_LIMIT_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'CONCENTRATION_LIMIT_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkCreditLimits(order) {
@@ -331,7 +331,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'CREDIT_LIMIT_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'CREDIT_LIMIT_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkSettlementCapacity(order) {
@@ -373,7 +373,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'SETTLEMENT_CAPACITY_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'SETTLEMENT_CAPACITY_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkLiquidity(order) {
@@ -421,7 +421,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'LIQUIDITY_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'LIQUIDITY_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkRegulatoryCompliance(order) {
@@ -478,7 +478,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'REGULATORY_COMPLIANCE_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'REGULATORY_COMPLIANCE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkInternalPolicies(order) {
@@ -535,7 +535,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'INTERNAL_POLICY_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'INTERNAL_POLICY_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkMarketHours(order) {
@@ -568,7 +568,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'MARKET_HOURS_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'MARKET_HOURS_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkSettlementDate(order) {
@@ -607,7 +607,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'SETTLEMENT_DATE_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'SETTLEMENT_DATE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkPriceReasonableness(order) {
@@ -654,7 +654,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'PRICE_REASONABLENESS_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'PRICE_REASONABLENESS_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkCrossTrades(order) {
@@ -686,7 +686,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'CROSS_TRADE_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'CROSS_TRADE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkWashTrades(order) {
@@ -725,7 +725,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'WASH_TRADE_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'WASH_TRADE_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkRestrictedSecurities(order) {
@@ -773,7 +773,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'RESTRICTED_SECURITY_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'RESTRICTED_SECURITY_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     async checkKycAml(order) {
@@ -818,7 +818,7 @@ class PreSettlementRiskChecksService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            return this.createErrorResult(order.id, 'KYC_AML_CHECK', error.message, startTime);
+            return this.createErrorResult(order.id, 'KYC_AML_CHECK', error instanceof Error ? error.message : 'Unknown error', startTime);
         }
     }
     createErrorResult(orderId, checkType, errorMessage, startTime) {

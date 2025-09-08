@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EquitiesService = void 0;
 const logger_1 = require("../utils/logger");
-const decimal_js_1 = require("decimal.js");
 class EquitiesService {
     prisma;
     constructor(prisma) {
@@ -205,10 +204,10 @@ class EquitiesService {
             if (minMarketCap !== undefined || maxMarketCap !== undefined) {
                 whereClause.marketCap = {};
                 if (minMarketCap !== undefined) {
-                    whereClause.marketCap.gte = new decimal_js_1.Decimal(minMarketCap);
+                    whereClause.marketCap.gte = new Decimal(minMarketCap);
                 }
                 if (maxMarketCap !== undefined) {
-                    whereClause.marketCap.lte = new decimal_js_1.Decimal(maxMarketCap);
+                    whereClause.marketCap.lte = new Decimal(maxMarketCap);
                 }
             }
             const securities = await this.prisma.security.findMany({

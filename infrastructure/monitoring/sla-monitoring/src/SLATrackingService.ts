@@ -78,7 +78,7 @@ export class SLATrackingService extends EventEmitter {
     this.startQueueProcessor();
   }
 
-  async registerSLA(sla: SLADefinition): Promise<void> {
+  async registerSLA(sla: SLADefinition): Promise<any> {
     await this.validateSLA(sla);
     
     this.slas.set(sla.id, sla);
@@ -91,7 +91,7 @@ export class SLATrackingService extends EventEmitter {
     this.emit('slaRegistered', { slaId: sla.id, sla });
   }
 
-  async unregisterSLA(slaId: string): Promise<void> {
+  async unregisterSLA(slaId: string): Promise<any> {
     const sla = this.slas.get(slaId);
     if (!sla) {
       throw new Error(`SLA ${slaId} not found`);
@@ -105,7 +105,7 @@ export class SLATrackingService extends EventEmitter {
     this.emit('slaUnregistered', { slaId });
   }
 
-  async startTracking(slaId: string): Promise<void> {
+  async startTracking(slaId: string): Promise<any> {
     const sla = this.slas.get(slaId);
     if (!sla) {
       throw new Error(`SLA ${slaId} not found`);
@@ -119,8 +119,8 @@ export class SLATrackingService extends EventEmitter {
       try {
         await this.collectMeasurement(slaId);
         this.queueCalculation(slaId, 1);
-      } catch (error) {
-        this.emit('trackingError', { slaId, error: error.message });
+      } catch (error: any) {
+        this.emit('trackingError', { slaId, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }, sla.measurement.frequency);
 
@@ -128,7 +128,7 @@ export class SLATrackingService extends EventEmitter {
     this.emit('trackingStarted', { slaId });
   }
 
-  async stopTracking(slaId: string): Promise<void> {
+  async stopTracking(slaId: string): Promise<any> {
     const interval = this.trackingIntervals.get(slaId);
     if (interval) {
       clearInterval(interval);
@@ -288,15 +288,15 @@ export class SLATrackingService extends EventEmitter {
           end: intervalEnd
         });
         history.push(metric);
-      } catch (error) {
-        console.warn(`Failed to calculate metric for interval ${i}:`, error.message);
+      } catch (error: any) {
+        console.warn(`Failed to calculate metric for interval ${i}:`, error instanceof Error ? error.message : 'Unknown error');
       }
     }
     
     return history;
   }
 
-  async recalculate(slaId: string): Promise<void> {
+  async recalculate(slaId: string): Promise<any> {
     const sla = this.slas.get(slaId);
     if (!sla) {
       throw new Error(`SLA ${slaId} not found`);
@@ -306,13 +306,13 @@ export class SLATrackingService extends EventEmitter {
     this.emit('recalculationCompleted', { slaId });
   }
 
-  async recalculateAll(): Promise<void> {
+  async recalculateAll(): Promise<any> {
     const slaIds = Array.from(this.slas.keys());
     for (const slaId of slaIds) {
       try {
         await this.recalculate(slaId);
-      } catch (error) {
-        this.emit('recalculationError', { slaId, error: error.message });
+      } catch (error: any) {
+        this.emit('recalculationError', { slaId, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
   }
@@ -577,7 +577,7 @@ export class SLATrackingService extends EventEmitter {
     return excludedPeriods;
   }
 
-  private async validateSLA(sla: SLADefinition): Promise<void> {
+  private async validateSLA(sla: SLADefinition): Promise<any> {
     if (!sla.id || !sla.name || !sla.serviceId) {
       throw new Error('SLA must have id, name, and serviceId');
     }
@@ -641,7 +641,7 @@ export class SLATrackingService extends EventEmitter {
           if (item) {
             await this.calculateSLAMetric(item.slaId);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Queue processing error:', error);
         } finally {
           this.isProcessingQueue = false;
@@ -678,7 +678,7 @@ export class SLATrackingService extends EventEmitter {
     return `measurement_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     // Stop all tracking intervals
     for (const [slaId, interval] of this.trackingIntervals) {
       clearInterval(interval);
@@ -693,3 +693,4 @@ export class SLATrackingService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

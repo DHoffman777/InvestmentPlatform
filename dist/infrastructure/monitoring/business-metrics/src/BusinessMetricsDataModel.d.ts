@@ -442,3 +442,12 @@ export declare const COMPLIANCE_KPIS: {
     readonly AML_ALERTS: "aml_alerts";
     readonly SUITABILITY_VIOLATIONS: "suitability_violations";
 };
+export interface AlertRule {
+    id: string;
+    name: string;
+    condition: string;
+    threshold: number;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    enabled: boolean;
+    actions: string[];
+}

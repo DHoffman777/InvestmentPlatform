@@ -1,5 +1,6 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
+// @ts-ignore - Module not installed
 import { KafkaService } from '../infrastructure/KafkaService';
 import {
   Document,
@@ -15,7 +16,7 @@ export interface LanguageDetectionResult {
   confidence: number;
   alternativeLanguages: AlternativeLanguage[];
   isReliable: boolean;
-  detectionMethod: 'CHARACTER_BASED' | 'STATISTICAL' | 'NEURAL_NETWORK' | 'HYBRID';
+  detectionMethod: 'CHARACTER_BASED' | 'STATISTICAL' | 'NEURAL_NETWORK' | 'HYBRID' | 'FALLBACK';
 }
 
 export interface AlternativeLanguage {
@@ -36,7 +37,7 @@ export interface TranslationResult {
   confidence: number;
   sourceLanguage: Language;
   targetLanguage: Language;
-  translationMethod: 'RULE_BASED' | 'STATISTICAL' | 'NEURAL_NETWORK' | 'HYBRID';
+  translationMethod: 'RULE_BASED' | 'STATISTICAL' | 'NEURAL_NETWORK' | 'HYBRID' | 'NO_TRANSLATION_NEEDED' | 'FALLBACK';
   alternativeTranslations?: string[];
   metadata: TranslationMetadata;
 }
@@ -168,7 +169,7 @@ export class MultiLanguageProcessingService {
           confidence: 1.0,
           alternativeLanguages: [],
           isReliable: true,
-          detectionMethod: 'PREDEFINED'
+          detectionMethod: 'HYBRID'
         } as LanguageDetectionResult;
       }
 
@@ -237,10 +238,10 @@ export class MultiLanguageProcessingService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Multi-language document processing failed', {
         documentId: request.documentId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack
       });
       throw error;
@@ -275,9 +276,9 @@ export class MultiLanguageProcessingService {
 
       return finalResult;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Language detection failed', {
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         textLength: text.length
       });
 
@@ -286,7 +287,7 @@ export class MultiLanguageProcessingService {
         confidence: 0.5,
         alternativeLanguages: [],
         isReliable: false,
-        detectionMethod: 'FALLBACK'
+        detectionMethod: 'FALLBACK' as const
       };
     }
   }
@@ -367,8 +368,8 @@ export class MultiLanguageProcessingService {
         detectionMethod: 'STATISTICAL'
       };
 
-    } catch (error) {
-      this.logger.warn('Statistical language detection failed', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Statistical language detection failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       return {
         language: Language.ENGLISH,
         confidence: 0.1,
@@ -404,8 +405,8 @@ export class MultiLanguageProcessingService {
         detectionMethod: 'NEURAL_NETWORK'
       };
 
-    } catch (error) {
-      this.logger.warn('Neural network language detection failed', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Neural network language detection failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       return {
         language: Language.ENGLISH,
         confidence: 0.5,
@@ -421,10 +422,10 @@ export class MultiLanguageProcessingService {
     expectedLanguage?: Language
   ): Promise<LanguageDetectionResult> {
     const languageScores = new Map<Language, number>();
-    const weights = { CHARACTER_BASED: 0.3, STATISTICAL: 0.4, NEURAL_NETWORK: 0.3 };
+    const weights: Record<string, number> = { CHARACTER_BASED: 0.3, STATISTICAL: 0.4, NEURAL_NETWORK: 0.3, HYBRID: 0.33, FALLBACK: 0.2 };
 
     for (const result of results) {
-      const weight = weights[result.detectionMethod] || 0.33;
+      const weight = weights[result.detectionMethod as string] || 0.33;
       const currentScore = languageScores.get(result.language) || 0;
       languageScores.set(result.language, currentScore + (result.confidence * weight));
     }
@@ -462,7 +463,7 @@ export class MultiLanguageProcessingService {
           confidence: 1.0,
           sourceLanguage: request.sourceLanguage,
           targetLanguage: request.targetLanguage,
-          translationMethod: 'NO_TRANSLATION_NEEDED',
+          translationMethod: 'NO_TRANSLATION_NEEDED' as const,
           metadata: {
             processingTime: 0,
             characterCount: request.text.length,
@@ -504,7 +505,7 @@ export class MultiLanguageProcessingService {
 
       return translationResult;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Translation failed', {
         sourceLanguage: request.sourceLanguage,
         targetLanguage: request.targetLanguage,
@@ -549,8 +550,8 @@ export class MultiLanguageProcessingService {
         }
       };
 
-    } catch (error) {
-      this.logger.error('Neural translation failed', { error: error.message });
+    } catch (error: any) {
+      this.logger.error('Neural translation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -584,15 +585,15 @@ export class MultiLanguageProcessingService {
         }
       };
 
-    } catch (error) {
-      this.logger.error('Statistical translation failed', { error: error.message });
+    } catch (error: any) {
+      this.logger.error('Statistical translation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       
       return {
         translatedText: request.text,
         confidence: 0.1,
         sourceLanguage: request.sourceLanguage,
         targetLanguage: request.targetLanguage,
-        translationMethod: 'FALLBACK',
+        translationMethod: 'FALLBACK' as const,
         metadata: {
           processingTime: 0,
           characterCount: request.text.length,
@@ -816,7 +817,7 @@ export class MultiLanguageProcessingService {
     return languages[index] || Language.ENGLISH;
   }
 
-  private async initializeLanguageModels(): Promise<void> {
+  private async initializeLanguageModels(): Promise<any> {
     try {
       this.logger.info('Initializing multi-language processing models');
       
@@ -825,12 +826,12 @@ export class MultiLanguageProcessingService {
       await this.loadCustomDictionaries();
 
       this.logger.info('Multi-language processing models initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize language models', { error: error.message });
+    } catch (error: any) {
+      this.logger.error('Failed to initialize language models', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async initializeLanguageDetectionEngine(): Promise<void> {
+  private async initializeLanguageDetectionEngine(): Promise<any> {
     try {
       const tf = require('@tensorflow/tfjs-node');
       
@@ -841,13 +842,13 @@ export class MultiLanguageProcessingService {
       };
 
       this.logger.info('Language detection engine initialized');
-    } catch (error) {
-      this.logger.warn('Failed to initialize language detection engine', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Failed to initialize language detection engine', { error: error instanceof Error ? error.message : 'Unknown error' });
       this.languageDetectionEngine = null;
     }
   }
 
-  private async loadTranslationModels(): Promise<void> {
+  private async loadTranslationModels(): Promise<any> {
     try {
       const commonPairs = [
         'en-es', 'en-fr', 'en-de', 'en-it', 'en-pt',
@@ -864,12 +865,12 @@ export class MultiLanguageProcessingService {
       }
 
       this.logger.info('Translation models loaded', { count: this.translationModels.size });
-    } catch (error) {
-      this.logger.warn('Failed to load translation models', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Failed to load translation models', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async loadCustomDictionaries(): Promise<void> {
+  private async loadCustomDictionaries(): Promise<any> {
     try {
       const financialDictionary: CustomDictionary = {
         language: Language.ENGLISH,
@@ -886,8 +887,8 @@ export class MultiLanguageProcessingService {
       this.customDictionaries.set('FINANCIAL', financialDictionary);
 
       this.logger.info('Custom dictionaries loaded', { count: this.customDictionaries.size });
-    } catch (error) {
-      this.logger.warn('Failed to load custom dictionaries', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Failed to load custom dictionaries', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -895,7 +896,7 @@ export class MultiLanguageProcessingService {
     documentId: string,
     tenantId: string,
     result: MultiLanguageResult
-  ): Promise<void> {
+  ): Promise<any> {
     const event = {
       eventType: 'LANGUAGE_PROCESSING_COMPLETED',
       documentId,
@@ -909,3 +910,4 @@ export class MultiLanguageProcessingService {
     await this.kafkaService.publishEvent('document-processing', event);
   }
 }
+

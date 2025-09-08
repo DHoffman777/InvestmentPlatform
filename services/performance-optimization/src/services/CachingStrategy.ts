@@ -81,8 +81,8 @@ export interface CachePerformanceReport {
 }
 
 export class CachingStrategy extends EventEmitter {
-  private redis: Redis;
-  private clusterClient?: Redis.Cluster;
+  private redis!: Redis;
+  private clusterClient?: any;
   private strategies: Map<string, CacheStrategy> = new Map();
   private metrics: Map<string, CacheMetrics> = new Map();
   private config: CacheConfig;
@@ -97,7 +97,7 @@ export class CachingStrategy extends EventEmitter {
 
   private initializeRedis(): void {
     if (this.config.redis.cluster) {
-      this.clusterClient = new Redis.Cluster(
+      this.clusterClient = new (Redis as any).Cluster(
         this.config.redis.cluster.nodes,
         this.config.redis.cluster.options
       );
@@ -109,9 +109,7 @@ export class CachingStrategy extends EventEmitter {
         password: this.config.redis.password,
         db: this.config.redis.db,
         keyPrefix: this.config.redis.keyPrefix,
-        retryDelayOnFailover: 100,
-        maxRetriesPerRequest: 3,
-      });
+      } as any);
     }
 
     this.redis.on('connect', () => {
@@ -258,7 +256,7 @@ export class CachingStrategy extends EventEmitter {
       this.emit('cacheSet', { key, ttl, size: serializedValue.length });
       return true;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'set', key, error });
       return false;
     }
@@ -293,7 +291,7 @@ export class CachingStrategy extends EventEmitter {
       
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'get', key, error });
       return null;
     }
@@ -334,7 +332,7 @@ export class CachingStrategy extends EventEmitter {
       this.emit('cacheMultiGet', { keys, hitCount: results.filter(r => r !== null).length });
       return results;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'mget', keys, error });
       return keys.map(() => null);
     }
@@ -353,7 +351,7 @@ export class CachingStrategy extends EventEmitter {
       this.emit('cacheDeleted', { keys, count: deletedCount });
       return deletedCount;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'del', key, error });
       return 0;
     }
@@ -370,7 +368,7 @@ export class CachingStrategy extends EventEmitter {
       this.emit('cacheInvalidatedByTag', { tag, keys, count: deletedCount });
       return deletedCount;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'invalidateByTag', tag, error });
       return 0;
     }
@@ -394,13 +392,13 @@ export class CachingStrategy extends EventEmitter {
       this.emit('cacheInvalidatedByPattern', { pattern, keys, count: deletedCount });
       return deletedCount;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('error', { operation: 'invalidateByPattern', pattern, error });
       return 0;
     }
   }
 
-  private async addTags(key: string, tags: string[]): Promise<void> {
+  private async addTags(key: string, tags: string[]): Promise<any> {
     const pipeline = this.redis.pipeline();
     
     for (const tag of tags) {
@@ -464,7 +462,7 @@ export class CachingStrategy extends EventEmitter {
     }
   }
 
-  public async warmupCache(): Promise<void> {
+  public async warmupCache(): Promise<any> {
     const warmupStrategies = Array.from(this.strategies.values())
       .filter(s => s.warmupStrategy?.enabled)
       .sort((a, b) => (a.warmupStrategy?.priority || 0) - (b.warmupStrategy?.priority || 0));
@@ -472,7 +470,7 @@ export class CachingStrategy extends EventEmitter {
     for (const strategy of warmupStrategies) {
       try {
         await this.executeWarmupStrategy(strategy);
-      } catch (error) {
+      } catch (error: any) {
         this.emit('warmupError', { strategy: strategy.name, error });
       }
     }
@@ -480,7 +478,7 @@ export class CachingStrategy extends EventEmitter {
     this.emit('warmupCompleted', { strategiesWarmed: warmupStrategies.length });
   }
 
-  private async executeWarmupStrategy(strategy: CacheStrategy): Promise<void> {
+  private async executeWarmupStrategy(strategy: CacheStrategy): Promise<any> {
     // This would be implemented based on specific business logic
     // For now, we'll emit an event that can be handled by the application
     this.emit('executeWarmup', strategy);
@@ -642,7 +640,7 @@ export class CachingStrategy extends EventEmitter {
       try {
         const info = await this.redis.info('stats');
         this.emit('metricsCollected', { timestamp: new Date(), info });
-      } catch (error) {
+      } catch (error: any) {
         this.emit('error', { operation: 'metricsCollection', error });
       }
     }, 60000);
@@ -665,10 +663,11 @@ export class CachingStrategy extends EventEmitter {
     return Array.from(this.strategies.values());
   }
 
-  public async disconnect(): Promise<void> {
+  public async disconnect(): Promise<any> {
     await this.redis.quit();
     if (this.clusterClient) {
       await this.clusterClient.quit();
     }
   }
 }
+

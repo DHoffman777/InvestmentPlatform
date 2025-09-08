@@ -117,7 +117,7 @@ export class CorrelationAnalysisService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing correlation analysis:', error);
       throw error;
     }
@@ -694,12 +694,12 @@ export class CorrelationAnalysisService {
     });
   }
 
-  private async storeCorrelationAnalysis(result: CorrelationAnalysisResult): Promise<void> {
+  private async storeCorrelationAnalysis(result: CorrelationAnalysisResult): Promise<any> {
     logger.debug('Storing correlation analysis result', { correlationId: result.id });
     // Implement database storage
   }
 
-  private async publishCorrelationEvent(eventType: string, result: CorrelationAnalysisResult): Promise<void> {
+  private async publishCorrelationEvent(eventType: string, result: CorrelationAnalysisResult): Promise<any> {
     try {
       await this.kafkaService.publishEvent('risk-management', {
         eventType,
@@ -709,8 +709,9 @@ export class CorrelationAnalysisService {
         timestamp: new Date(),
         data: result
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing correlation analysis event:', error);
     }
   }
 }
+

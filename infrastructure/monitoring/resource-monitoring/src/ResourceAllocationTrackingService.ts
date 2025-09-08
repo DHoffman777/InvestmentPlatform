@@ -256,12 +256,12 @@ export class ResourceAllocationTrackingService extends EventEmitter {
         estimated_cost: allocation.cost.total
       };
 
-    } catch (error) {
-      console.error('Allocation request failed:', error.message);
+    } catch (error: any) {
+      console.error('Allocation request failed:', error instanceof Error ? error.message : 'Unknown error');
       return {
         id: this.generateAllocationId(),
         status: 'rejected',
-        reason: `Internal error: ${error.message}`
+        reason: `Internal error: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   }
@@ -298,13 +298,13 @@ export class ResourceAllocationTrackingService extends EventEmitter {
 
       return true;
 
-    } catch (error) {
-      console.error(`Failed to release allocation ${allocationId}:`, error.message);
+    } catch (error: any) {
+      console.error(`Failed to release allocation ${allocationId}:`, error instanceof Error ? error.message : 'Unknown error');
       return false;
     }
   }
 
-  async trackAllocationUsage(resourceId: string, snapshot: ResourceUtilizationSnapshot): Promise<void> {
+  async trackAllocationUsage(resourceId: string, snapshot: ResourceUtilizationSnapshot): Promise<any> {
     const resourceAllocations = this.allocations.get(resourceId) || [];
     const activeAllocations = resourceAllocations.filter(a => a.status === 'active');
 
@@ -330,7 +330,7 @@ export class ResourceAllocationTrackingService extends EventEmitter {
     }
   }
 
-  private async updateAllocationUsage(allocation: ResourceAllocation, snapshot: ResourceUtilizationSnapshot): Promise<void> {
+  private async updateAllocationUsage(allocation: ResourceAllocation, snapshot: ResourceUtilizationSnapshot): Promise<any> {
     const currentTime = new Date();
     
     // Update CPU allocation usage
@@ -664,7 +664,7 @@ export class ResourceAllocationTrackingService extends EventEmitter {
     return alternatives.sort((a, b) => b.confidence - a.confidence);
   }
 
-  private async updateAllocationMetrics(resourceId: string, snapshot: ResourceUtilizationSnapshot): Promise<void> {
+  private async updateAllocationMetrics(resourceId: string, snapshot: ResourceUtilizationSnapshot): Promise<any> {
     const now = new Date();
     const periodStart = new Date(now.getTime() - 24 * 60 * 60 * 1000); // Last 24 hours
     
@@ -790,13 +790,13 @@ export class ResourceAllocationTrackingService extends EventEmitter {
     this.trackingScheduler = setInterval(async () => {
       try {
         await this.performScheduledTracking();
-      } catch (error) {
-        console.error('Scheduled allocation tracking failed:', error.message);
+      } catch (error: any) {
+        console.error('Scheduled allocation tracking failed:', error instanceof Error ? error.message : 'Unknown error');
       }
     }, this.config.trackingInterval);
   }
 
-  private async performScheduledTracking(): Promise<void> {
+  private async performScheduledTracking(): Promise<any> {
     // Check for expired allocations
     await this.checkExpiredAllocations();
     
@@ -809,7 +809,7 @@ export class ResourceAllocationTrackingService extends EventEmitter {
     this.emit('trackingCompleted', { timestamp: new Date() });
   }
 
-  private async checkExpiredAllocations(): Promise<void> {
+  private async checkExpiredAllocations(): Promise<any> {
     const now = new Date();
     
     for (const [resourceId, allocations] of this.allocations) {
@@ -905,7 +905,7 @@ export class ResourceAllocationTrackingService extends EventEmitter {
     return { efficiency: 0.8 };
   }
 
-  private async updateEfficiencyMetrics(allocation: ResourceAllocation, finalMetrics: any): Promise<void> {
+  private async updateEfficiencyMetrics(allocation: ResourceAllocation, finalMetrics: any): Promise<any> {
     // Implementation for updating efficiency metrics
   }
 
@@ -930,10 +930,10 @@ export class ResourceAllocationTrackingService extends EventEmitter {
   private async identifyConsolidationOpportunity(resourceId: string, allocations: ResourceAllocation[]): Promise<AllocationOptimization | null> { return null; }
   private async identifyRightsizingOpportunities(resourceId: string, allocations: ResourceAllocation[]): Promise<AllocationOptimization[]> { return []; }
   private async identifySchedulingOpportunity(resourceId: string, allocations: ResourceAllocation[]): Promise<AllocationOptimization | null> { return null; }
-  private async updateAllResourceMetrics(): Promise<void> {}
-  private async cleanupOldData(): Promise<void> {}
+  private async updateAllResourceMetrics(): Promise<any> {}
+  private async cleanupOldData(): Promise<any> {}
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     if (this.trackingScheduler) {
       clearInterval(this.trackingScheduler);
     }
@@ -941,3 +941,4 @@ export class ResourceAllocationTrackingService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

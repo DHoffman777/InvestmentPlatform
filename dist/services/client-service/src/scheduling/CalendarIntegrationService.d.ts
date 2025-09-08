@@ -197,12 +197,12 @@ export declare class CalendarIntegrationService extends EventEmitter {
     private startSyncScheduler;
     getProviders(): Promise<CalendarProvider[]>;
     getProvider(providerId: string): Promise<CalendarProvider | null>;
-    updateProviderStatus(providerId: string, status: CalendarProvider['status'], errorDetails?: string): Promise<void>;
+    updateProviderStatus(providerId: string, status: CalendarProvider['status'], errorDetails?: string): Promise<any>;
     createConnection(connectionData: Omit<CalendarConnection, 'id' | 'createdAt' | 'updatedAt'>): Promise<CalendarConnection>;
     getConnections(tenantId: string, userId?: string): Promise<CalendarConnection[]>;
     getConnection(connectionId: string): Promise<CalendarConnection | null>;
     updateConnection(connectionId: string, updates: Partial<CalendarConnection>): Promise<CalendarConnection>;
-    deleteConnection(connectionId: string): Promise<void>;
+    deleteConnection(connectionId: string): Promise<any>;
     createEvent(eventData: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<CalendarEvent>;
     getEvents(connectionId: string, filters?: {
         startDate?: Date;
@@ -212,7 +212,7 @@ export declare class CalendarIntegrationService extends EventEmitter {
         status?: CalendarEvent['status'][];
     }): Promise<CalendarEvent[]>;
     updateEvent(eventId: string, updates: Partial<CalendarEvent>): Promise<CalendarEvent>;
-    deleteEvent(eventId: string): Promise<void>;
+    deleteEvent(eventId: string): Promise<any>;
     getAvailability(userId: string, startDate: Date, endDate: Date, timeZone?: string): Promise<CalendarAvailability[]>;
     findAvailableSlots(userIds: string[], duration: number, // minutes
     startDate: Date, endDate: Date, workingHoursOnly?: boolean): Promise<{
@@ -225,7 +225,7 @@ export declare class CalendarIntegrationService extends EventEmitter {
     private isTimeInRange;
     scheduleSync(connectionId: string, syncType?: CalendarSync['syncType']): Promise<string>;
     getSyncStatus(syncId: string): Promise<CalendarSync | null>;
-    cancelSync(syncId: string): Promise<void>;
+    cancelSync(syncId: string): Promise<any>;
     private performSync;
     private simulateSync;
     private performScheduledSync;
@@ -247,6 +247,6 @@ export declare class CalendarIntegrationService extends EventEmitter {
         };
         timestamp: Date;
     }>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 export default CalendarIntegrationService;

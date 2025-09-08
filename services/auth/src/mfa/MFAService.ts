@@ -117,7 +117,7 @@ export class MFAService extends EventEmitter {
 
       return totpSecret;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mfaError', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -162,7 +162,7 @@ export class MFAService extends EventEmitter {
 
       return false;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mfaError', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -176,7 +176,7 @@ export class MFAService extends EventEmitter {
   /**
    * Set up SMS MFA for user
    */
-  public async setupSMSMFA(userId: string, phoneNumber: string): Promise<void> {
+  public async setupSMSMFA(userId: string, phoneNumber: string): Promise<any> {
     try {
       if (!this.smsConfig) {
         throw new Error('SMS MFA not configured');
@@ -212,7 +212,7 @@ export class MFAService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mfaError', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -252,7 +252,7 @@ export class MFAService extends EventEmitter {
 
       return true;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mfaError', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -356,7 +356,7 @@ export class MFAService extends EventEmitter {
         };
       }
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mfaError', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -370,7 +370,7 @@ export class MFAService extends EventEmitter {
   /**
    * Send SMS verification code
    */
-  public async sendSMSVerificationCode(userId: string): Promise<void> {
+  public async sendSMSVerificationCode(userId: string): Promise<any> {
     try {
       const userMFA = this.userSettings.get(userId);
       if (!userMFA?.smsEnabled || !userMFA.phoneNumber) {
@@ -391,7 +391,7 @@ export class MFAService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mfaError', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -425,7 +425,7 @@ export class MFAService extends EventEmitter {
 
       return newBackupCodes;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mfaError', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -439,7 +439,7 @@ export class MFAService extends EventEmitter {
   /**
    * Disable MFA for user (requires additional verification)
    */
-  public async disableMFA(userId: string, method: 'totp' | 'sms' | 'all'): Promise<void> {
+  public async disableMFA(userId: string, method: 'totp' | 'sms' | 'all'): Promise<any> {
     try {
       const userMFA = this.userSettings.get(userId);
       if (!userMFA) {
@@ -473,7 +473,7 @@ export class MFAService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mfaError', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -560,7 +560,7 @@ export class MFAService extends EventEmitter {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  private async sendSMS(phoneNumber: string, message: string): Promise<void> {
+  private async sendSMS(phoneNumber: string, message: string): Promise<any> {
     if (!this.smsConfig) {
       throw new Error('SMS configuration not provided');
     }
@@ -641,7 +641,7 @@ export class MFAMiddleware {
         }
 
         next();
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({
           error: 'MFA verification error',
           message: error instanceof Error ? error.message : String(error)
@@ -652,3 +652,4 @@ export class MFAMiddleware {
 }
 
 export default MFAService;
+

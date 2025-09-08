@@ -75,11 +75,11 @@ export class CapacityPlanningController extends EventEmitter {
     }
 
     if (this.config.metricsEnabled) {
-      this.app.use(this.metricsMiddleware.bind(this));
+      this.app.use(this.metricsMiddleware.bind(this) as any);
     }
 
     if (this.config.authenticationRequired) {
-      this.app.use(this.authenticationMiddleware.bind(this));
+      this.app.use(this.authenticationMiddleware.bind(this) as any);
     }
   }
 
@@ -96,8 +96,8 @@ export class CapacityPlanningController extends EventEmitter {
     this.setupSystemRoutes(apiRouter);
 
     this.app.use(`/api/${this.config.apiVersion}`, apiRouter);
-    this.app.use('/health', this.healthCheck.bind(this));
-    this.app.use('/metrics', this.systemMetrics.bind(this));
+    this.app.use('/health', this.healthCheck.bind(this) as any);
+    this.app.use('/metrics', this.systemMetrics.bind(this) as any);
     
     if (this.config.enableSwaggerDocs) {
       this.setupSwaggerDocs();
@@ -106,127 +106,127 @@ export class CapacityPlanningController extends EventEmitter {
 
   private setupPredictionRoutes(router: Router): void {
     // Prediction Models
-    router.post('/models', this.createPredictionModel.bind(this));
-    router.get('/models', this.getPredictionModels.bind(this));
-    router.get('/models/:modelId', this.getPredictionModel.bind(this));
-    router.put('/models/:modelId', this.updatePredictionModel.bind(this));
-    router.delete('/models/:modelId', this.deletePredictionModel.bind(this));
-    router.post('/models/:modelId/train', this.trainPredictionModel.bind(this));
-    router.post('/models/:modelId/optimize', this.optimizePredictionModel.bind(this));
-    router.get('/models/:modelId/performance', this.getPredictionModelPerformance.bind(this));
+    router.post('/models', this.createPredictionModel.bind(this) as any);
+    router.get('/models', this.getPredictionModels.bind(this) as any);
+    router.get('/models/:modelId', this.getPredictionModel.bind(this) as any);
+    router.put('/models/:modelId', this.updatePredictionModel.bind(this) as any);
+    router.delete('/models/:modelId', this.deletePredictionModel.bind(this) as any);
+    router.post('/models/:modelId/train', this.trainPredictionModel.bind(this) as any);
+    router.post('/models/:modelId/optimize', this.optimizePredictionModel.bind(this) as any);
+    router.get('/models/:modelId/performance', this.getPredictionModelPerformance.bind(this) as any);
 
     // Predictions
-    router.post('/predictions', this.generatePrediction.bind(this));
-    router.post('/predictions/batch', this.batchGeneratePredictions.bind(this));
-    router.get('/predictions/:predictionId', this.getPrediction.bind(this));
-    router.get('/resources/:resourceId/predictions', this.getResourcePredictions.bind(this));
+    router.post('/predictions', this.generatePrediction.bind(this) as any);
+    router.post('/predictions/batch', this.batchGeneratePredictions.bind(this) as any);
+    router.get('/predictions/:predictionId', this.getPrediction.bind(this) as any);
+    router.get('/resources/:resourceId/predictions', this.getResourcePredictions.bind(this) as any);
   }
 
   private setupThresholdRoutes(router: Router): void {
     // Scaling Thresholds
-    router.post('/thresholds', this.createScalingThreshold.bind(this));
-    router.get('/thresholds', this.getScalingThresholds.bind(this));
-    router.get('/thresholds/:thresholdId', this.getScalingThreshold.bind(this));
-    router.put('/thresholds/:thresholdId', this.updateScalingThreshold.bind(this));
-    router.delete('/thresholds/:thresholdId', this.deleteScalingThreshold.bind(this));
-    router.post('/thresholds/evaluate', this.evaluateThresholds.bind(this));
+    router.post('/thresholds', this.createScalingThreshold.bind(this) as any);
+    router.get('/thresholds', this.getScalingThresholds.bind(this) as any);
+    router.get('/thresholds/:thresholdId', this.getScalingThreshold.bind(this) as any);
+    router.put('/thresholds/:thresholdId', this.updateScalingThreshold.bind(this) as any);
+    router.delete('/thresholds/:thresholdId', this.deleteScalingThreshold.bind(this) as any);
+    router.post('/thresholds/evaluate', this.evaluateThresholds.bind(this) as any);
 
     // Alerts
-    router.get('/alerts', this.getCapacityAlerts.bind(this));
-    router.get('/alerts/:alertId', this.getCapacityAlert.bind(this));
-    router.post('/alerts/:alertId/acknowledge', this.acknowledgeAlert.bind(this));
-    router.post('/alerts/:alertId/resolve', this.resolveAlert.bind(this));
-    router.post('/alerts/:alertId/suppress', this.suppressAlert.bind(this));
-    router.get('/alerts/metrics', this.getAlertMetrics.bind(this));
+    router.get('/alerts', this.getCapacityAlerts.bind(this) as any);
+    router.get('/alerts/:alertId', this.getCapacityAlert.bind(this) as any);
+    router.post('/alerts/:alertId/acknowledge', this.acknowledgeAlert.bind(this) as any);
+    router.post('/alerts/:alertId/resolve', this.resolveAlert.bind(this) as any);
+    router.post('/alerts/:alertId/suppress', this.suppressAlert.bind(this) as any);
+    router.get('/alerts/metrics', this.getAlertMetrics.bind(this) as any);
   }
 
   private setupTrendAnalysisRoutes(router: Router): void {
-    router.post('/trends/analyze', this.analyzeTrend.bind(this));
-    router.post('/trends/batch-analyze', this.batchAnalyzeTrends.bind(this));
-    router.get('/trends/:trendId', this.getTrend.bind(this));
-    router.get('/resources/:resourceId/trends', this.getResourceTrends.bind(this));
-    router.post('/anomalies/detect', this.detectAnomalies.bind(this));
-    router.post('/trends/compare', this.compareResourceTrends.bind(this));
-    router.get('/trends/summary', this.getTrendSummary.bind(this));
+    router.post('/trends/analyze', this.analyzeTrend.bind(this) as any);
+    router.post('/trends/batch-analyze', this.batchAnalyzeTrends.bind(this) as any);
+    router.get('/trends/:trendId', this.getTrend.bind(this) as any);
+    router.get('/resources/:resourceId/trends', this.getResourceTrends.bind(this) as any);
+    router.post('/anomalies/detect', this.detectAnomalies.bind(this) as any);
+    router.post('/trends/compare', this.compareResourceTrends.bind(this) as any);
+    router.get('/trends/summary', this.getTrendSummary.bind(this) as any);
   }
 
   private setupRecommendationRoutes(router: Router): void {
-    router.post('/recommendations/generate', this.generateRecommendations.bind(this));
-    router.post('/recommendations/batch-generate', this.batchGenerateRecommendations.bind(this));
-    router.get('/recommendations/:recommendationId', this.getRecommendation.bind(this));
-    router.get('/recommendations', this.getRecommendations.bind(this));
-    router.post('/recommendations/:recommendationId/feedback', this.submitRecommendationFeedback.bind(this));
-    router.get('/recommendations/:recommendationId/effectiveness', this.getRecommendationEffectiveness.bind(this));
-    router.get('/resources/:resourceId/recommendations', this.getResourceRecommendations.bind(this));
+    router.post('/recommendations/generate', this.generateRecommendations.bind(this) as any);
+    router.post('/recommendations/batch-generate', this.batchGenerateRecommendations.bind(this) as any);
+    router.get('/recommendations/:recommendationId', this.getRecommendation.bind(this) as any);
+    router.get('/recommendations', this.getRecommendations.bind(this) as any);
+    router.post('/recommendations/:recommendationId/feedback', this.submitRecommendationFeedback.bind(this) as any);
+    router.get('/recommendations/:recommendationId/effectiveness', this.getRecommendationEffectiveness.bind(this) as any);
+    router.get('/resources/:resourceId/recommendations', this.getResourceRecommendations.bind(this) as any);
   }
 
   private setupReportingRoutes(router: Router): void {
-    router.post('/reports', this.generateReport.bind(this));
-    router.post('/reports/schedule', this.scheduleReport.bind(this));
-    router.get('/reports/:reportId', this.getReport.bind(this));
-    router.get('/reports', this.getReports.bind(this));
-    router.delete('/reports/schedules/:scheduleId', this.cancelScheduledReport.bind(this));
-    router.post('/reports/templates', this.createReportTemplate.bind(this));
-    router.get('/reports/templates', this.getReportTemplates.bind(this));
-    router.get('/reports/templates/:templateId', this.getReportTemplate.bind(this));
-    router.post('/reports/executive-summary', this.generateExecutiveSummaryReport.bind(this));
+    router.post('/reports', this.generateReport.bind(this) as any);
+    router.post('/reports/schedule', this.scheduleReport.bind(this) as any);
+    router.get('/reports/:reportId', this.getReport.bind(this) as any);
+    router.get('/reports', this.getReports.bind(this) as any);
+    router.delete('/reports/schedules/:scheduleId', this.cancelScheduledReport.bind(this) as any);
+    router.post('/reports/templates', this.createReportTemplate.bind(this) as any);
+    router.get('/reports/templates', this.getReportTemplates.bind(this) as any);
+    router.get('/reports/templates/:templateId', this.getReportTemplate.bind(this) as any);
+    router.post('/reports/executive-summary', this.generateExecutiveSummaryReport.bind(this) as any);
   }
 
   private setupCostOptimizationRoutes(router: Router): void {
-    router.post('/cost-optimization/analyze', this.analyzeCostOptimization.bind(this));
-    router.post('/cost-optimization/batch-analyze', this.batchAnalyzeCostOptimization.bind(this));
-    router.get('/cost-optimization/:resourceId', this.getCostOptimization.bind(this));
-    router.get('/cost-optimization', this.getAllCostOptimizations.bind(this));
-    router.post('/cost-optimization/:resourceId/implement', this.implementOptimization.bind(this));
-    router.get('/cost-optimization/:resourceId/roi', this.trackOptimizationROI.bind(this));
-    router.post('/cost-optimization/forecast', this.generateCostForecast.bind(this));
-    router.get('/cost-optimization/opportunities', this.getTopOptimizationOpportunities.bind(this));
+    router.post('/cost-optimization/analyze', this.analyzeCostOptimization.bind(this) as any);
+    router.post('/cost-optimization/batch-analyze', this.batchAnalyzeCostOptimization.bind(this) as any);
+    router.get('/cost-optimization/:resourceId', this.getCostOptimization.bind(this) as any);
+    router.get('/cost-optimization', this.getAllCostOptimizations.bind(this) as any);
+    router.post('/cost-optimization/:resourceId/implement', this.implementOptimization.bind(this) as any);
+    router.get('/cost-optimization/:resourceId/roi', this.trackOptimizationROI.bind(this) as any);
+    router.post('/cost-optimization/forecast', this.generateCostForecast.bind(this) as any);
+    router.get('/cost-optimization/opportunities', this.getTopOptimizationOpportunities.bind(this) as any);
   }
 
   private setupWorkflowRoutes(router: Router): void {
-    router.post('/workflows/templates', this.createWorkflowTemplate.bind(this));
-    router.get('/workflows/templates', this.getWorkflowTemplates.bind(this));
-    router.get('/workflows/templates/:templateId', this.getWorkflowTemplate.bind(this));
-    router.post('/workflows/execute', this.executeWorkflow.bind(this));
-    router.get('/workflows/executions/:executionId', this.getWorkflowExecution.bind(this));
-    router.get('/workflows/executions', this.getWorkflowExecutions.bind(this));
-    router.post('/workflows/executions/:executionId/approve', this.approveWorkflowStep.bind(this));
-    router.post('/workflows/executions/:executionId/reject', this.rejectWorkflowStep.bind(this));
-    router.delete('/workflows/executions/:executionId', this.cancelWorkflowExecution.bind(this));
-    router.get('/workflows/metrics', this.getWorkflowMetrics.bind(this));
+    router.post('/workflows/templates', this.createWorkflowTemplate.bind(this) as any);
+    router.get('/workflows/templates', this.getWorkflowTemplates.bind(this) as any);
+    router.get('/workflows/templates/:templateId', this.getWorkflowTemplate.bind(this) as any);
+    router.post('/workflows/execute', this.executeWorkflow.bind(this) as any);
+    router.get('/workflows/executions/:executionId', this.getWorkflowExecution.bind(this) as any);
+    router.get('/workflows/executions', this.getWorkflowExecutions.bind(this) as any);
+    router.post('/workflows/executions/:executionId/approve', this.approveWorkflowStep.bind(this) as any);
+    router.post('/workflows/executions/:executionId/reject', this.rejectWorkflowStep.bind(this) as any);
+    router.delete('/workflows/executions/:executionId', this.cancelWorkflowExecution.bind(this) as any);
+    router.get('/workflows/metrics', this.getWorkflowMetrics.bind(this) as any);
   }
 
   private setupSystemRoutes(router: Router): void {
-    router.get('/system/status', this.getSystemStatus.bind(this));
-    router.get('/system/metrics', this.getSystemMetrics.bind(this));
-    router.post('/system/maintenance', this.scheduleSystemMaintenance.bind(this));
-    router.get('/system/configuration', this.getSystemConfiguration.bind(this));
-    router.put('/system/configuration', this.updateSystemConfiguration.bind(this));
+    router.get('/system/status', this.getSystemStatus.bind(this) as any);
+    router.get('/system/metrics', this.getSystemMetrics.bind(this) as any);
+    router.post('/system/maintenance', this.scheduleSystemMaintenance.bind(this) as any);
+    router.get('/system/configuration', this.getSystemConfiguration.bind(this) as any);
+    router.put('/system/configuration', this.updateSystemConfiguration.bind(this) as any);
   }
 
   // Prediction Model Routes
-  private async createPredictionModel(req: Request, res: Response): Promise<void> {
+  private async createPredictionModel(req: Request, res: Response): Promise<any> {
     try {
       const model = await this.services.predictionService.createPredictionModel(req.body);
       res.status(201).json({ success: true, data: model });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getPredictionModels(req: Request, res: Response): Promise<void> {
+  private async getPredictionModels(req: Request, res: Response): Promise<any> {
     try {
       const { resourceType } = req.query;
       const models = resourceType 
         ? await this.services.predictionService.getModelsByResourceType(resourceType as ResourceType)
         : this.services.predictionService.getAllModels();
       res.json({ success: true, data: models });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getPredictionModel(req: Request, res: Response): Promise<void> {
+  private async getPredictionModel(req: Request, res: Response): Promise<any> {
     try {
       const model = this.services.predictionService.getModel(req.params.modelId);
       if (!model) {
@@ -234,79 +234,79 @@ export class CapacityPlanningController extends EventEmitter {
         return;
       }
       res.json({ success: true, data: model });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async updatePredictionModel(req: Request, res: Response): Promise<void> {
+  private async updatePredictionModel(req: Request, res: Response): Promise<any> {
     try {
       // Implementation would update model parameters
       res.json({ success: true, message: 'Model updated successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async deletePredictionModel(req: Request, res: Response): Promise<void> {
+  private async deletePredictionModel(req: Request, res: Response): Promise<any> {
     try {
       await this.services.predictionService.deactivateModel(req.params.modelId);
       res.json({ success: true, message: 'Model deactivated successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async trainPredictionModel(req: Request, res: Response): Promise<void> {
+  private async trainPredictionModel(req: Request, res: Response): Promise<any> {
     try {
       const { trainingData } = req.body;
       const accuracy = await this.services.predictionService.trainModel(req.params.modelId, trainingData);
       res.json({ success: true, data: { accuracy } });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async optimizePredictionModel(req: Request, res: Response): Promise<void> {
+  private async optimizePredictionModel(req: Request, res: Response): Promise<any> {
     try {
       const model = await this.services.predictionService.optimizeModel(req.params.modelId);
       res.json({ success: true, data: model });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getPredictionModelPerformance(req: Request, res: Response): Promise<void> {
+  private async getPredictionModelPerformance(req: Request, res: Response): Promise<any> {
     try {
       const performance = await this.services.predictionService.evaluateModelPerformance(req.params.modelId);
       res.json({ success: true, data: performance });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // Prediction Routes
-  private async generatePrediction(req: Request, res: Response): Promise<void> {
+  private async generatePrediction(req: Request, res: Response): Promise<any> {
     try {
       const { modelId, resourceId, options } = req.body;
       const prediction = await this.services.predictionService.generatePrediction(modelId, resourceId, options);
       res.json({ success: true, data: prediction });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async batchGeneratePredictions(req: Request, res: Response): Promise<void> {
+  private async batchGeneratePredictions(req: Request, res: Response): Promise<any> {
     try {
       const { requests } = req.body;
       const predictions = await this.services.predictionService.batchPredict(requests);
       res.json({ success: true, data: predictions });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getPrediction(req: Request, res: Response): Promise<void> {
+  private async getPrediction(req: Request, res: Response): Promise<any> {
     try {
       const prediction = this.services.predictionService.getPrediction(req.params.predictionId);
       if (!prediction) {
@@ -314,31 +314,31 @@ export class CapacityPlanningController extends EventEmitter {
         return;
       }
       res.json({ success: true, data: prediction });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getResourcePredictions(req: Request, res: Response): Promise<void> {
+  private async getResourcePredictions(req: Request, res: Response): Promise<any> {
     try {
       // Implementation would filter predictions by resource
       res.json({ success: true, data: [] });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // Threshold Routes
-  private async createScalingThreshold(req: Request, res: Response): Promise<void> {
+  private async createScalingThreshold(req: Request, res: Response): Promise<any> {
     try {
       const threshold = await this.services.thresholdMonitor.createThreshold(req.body);
       res.status(201).json({ success: true, data: threshold });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getScalingThresholds(req: Request, res: Response): Promise<void> {
+  private async getScalingThresholds(req: Request, res: Response): Promise<any> {
     try {
       const { resourceId, resourceType } = req.query;
       const thresholds = await this.services.thresholdMonitor.getThresholds(
@@ -346,128 +346,128 @@ export class CapacityPlanningController extends EventEmitter {
         resourceType as ResourceType
       );
       res.json({ success: true, data: thresholds });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getScalingThreshold(req: Request, res: Response): Promise<void> {
+  private async getScalingThreshold(req: Request, res: Response): Promise<any> {
     try {
       // Implementation would get specific threshold
       res.json({ success: true, data: {} });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async updateScalingThreshold(req: Request, res: Response): Promise<void> {
+  private async updateScalingThreshold(req: Request, res: Response): Promise<any> {
     try {
       const threshold = await this.services.thresholdMonitor.updateThreshold(req.params.thresholdId, req.body);
       res.json({ success: true, data: threshold });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async deleteScalingThreshold(req: Request, res: Response): Promise<void> {
+  private async deleteScalingThreshold(req: Request, res: Response): Promise<any> {
     try {
       // Implementation would delete threshold
       res.json({ success: true, message: 'Threshold deleted successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async evaluateThresholds(req: Request, res: Response): Promise<void> {
+  private async evaluateThresholds(req: Request, res: Response): Promise<any> {
     try {
       const { metrics } = req.body;
       const evaluations = await this.services.thresholdMonitor.evaluateThresholds(metrics);
       res.json({ success: true, data: evaluations });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // Alert Routes
-  private async getCapacityAlerts(req: Request, res: Response): Promise<void> {
+  private async getCapacityAlerts(req: Request, res: Response): Promise<any> {
     try {
       const { resourceId } = req.query;
       const alerts = await this.services.thresholdMonitor.getActiveAlerts(resourceId as string);
       res.json({ success: true, data: alerts });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getCapacityAlert(req: Request, res: Response): Promise<void> {
+  private async getCapacityAlert(req: Request, res: Response): Promise<any> {
     try {
       // Implementation would get specific alert
       res.json({ success: true, data: {} });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async acknowledgeAlert(req: Request, res: Response): Promise<void> {
+  private async acknowledgeAlert(req: Request, res: Response): Promise<any> {
     try {
       const { userId } = req.body;
       await this.services.thresholdMonitor.acknowledgeAlert(req.params.alertId, userId);
       res.json({ success: true, message: 'Alert acknowledged successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async resolveAlert(req: Request, res: Response): Promise<void> {
+  private async resolveAlert(req: Request, res: Response): Promise<any> {
     try {
       const { resolution } = req.body;
       await this.services.thresholdMonitor.resolveAlert(req.params.alertId, resolution);
       res.json({ success: true, message: 'Alert resolved successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async suppressAlert(req: Request, res: Response): Promise<void> {
+  private async suppressAlert(req: Request, res: Response): Promise<any> {
     try {
       const { duration } = req.body;
       await this.services.thresholdMonitor.suppressAlert(req.params.alertId, duration);
       res.json({ success: true, message: 'Alert suppressed successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getAlertMetrics(req: Request, res: Response): Promise<void> {
+  private async getAlertMetrics(req: Request, res: Response): Promise<any> {
     try {
       const metrics = await this.services.thresholdMonitor.getThresholdMetrics();
       res.json({ success: true, data: metrics });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // Trend Analysis Routes
-  private async analyzeTrend(req: Request, res: Response): Promise<void> {
+  private async analyzeTrend(req: Request, res: Response): Promise<any> {
     try {
       const trend = await this.services.trendAnalyzer.analyzeTrend(req.body);
       res.json({ success: true, data: trend });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async batchAnalyzeTrends(req: Request, res: Response): Promise<void> {
+  private async batchAnalyzeTrends(req: Request, res: Response): Promise<any> {
     try {
       const { requests } = req.body;
       const trends = await this.services.trendAnalyzer.batchAnalyzeTrends(requests);
       res.json({ success: true, data: trends });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getTrend(req: Request, res: Response): Promise<void> {
+  private async getTrend(req: Request, res: Response): Promise<any> {
     try {
       const trend = this.services.trendAnalyzer.getTrend(req.params.trendId);
       if (!trend) {
@@ -475,41 +475,41 @@ export class CapacityPlanningController extends EventEmitter {
         return;
       }
       res.json({ success: true, data: trend });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getResourceTrends(req: Request, res: Response): Promise<void> {
+  private async getResourceTrends(req: Request, res: Response): Promise<any> {
     try {
       // Implementation would filter trends by resource
       res.json({ success: true, data: [] });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async detectAnomalies(req: Request, res: Response): Promise<void> {
+  private async detectAnomalies(req: Request, res: Response): Promise<any> {
     try {
       const { resourceId, metric, timeRange } = req.body;
       const anomalies = await this.services.trendAnalyzer.detectAnomalies(resourceId, metric, timeRange);
       res.json({ success: true, data: anomalies });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async compareResourceTrends(req: Request, res: Response): Promise<void> {
+  private async compareResourceTrends(req: Request, res: Response): Promise<any> {
     try {
       const { resourceIds, metric, timeRange } = req.body;
       const comparison = await this.services.trendAnalyzer.compareResourceTrends(resourceIds, metric, timeRange);
       res.json({ success: true, data: comparison });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getTrendSummary(req: Request, res: Response): Promise<void> {
+  private async getTrendSummary(req: Request, res: Response): Promise<any> {
     try {
       const { resourceType, timeRange } = req.query;
       const summary = await this.services.trendAnalyzer.getTrendSummary(
@@ -517,32 +517,32 @@ export class CapacityPlanningController extends EventEmitter {
         timeRange ? JSON.parse(timeRange as string) : undefined
       );
       res.json({ success: true, data: summary });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // Recommendation Routes
-  private async generateRecommendations(req: Request, res: Response): Promise<void> {
+  private async generateRecommendations(req: Request, res: Response): Promise<any> {
     try {
       const recommendations = await this.services.recommendationEngine.generateRecommendations(req.body);
       res.json({ success: true, data: recommendations });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async batchGenerateRecommendations(req: Request, res: Response): Promise<void> {
+  private async batchGenerateRecommendations(req: Request, res: Response): Promise<any> {
     try {
       const { contexts } = req.body;
       const recommendations = await this.services.recommendationEngine.batchGenerateRecommendations(contexts);
       res.json({ success: true, data: Object.fromEntries(recommendations) });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getRecommendation(req: Request, res: Response): Promise<void> {
+  private async getRecommendation(req: Request, res: Response): Promise<any> {
     try {
       const recommendation = this.services.recommendationEngine.getRecommendation(req.params.recommendationId);
       if (!recommendation) {
@@ -550,70 +550,70 @@ export class CapacityPlanningController extends EventEmitter {
         return;
       }
       res.json({ success: true, data: recommendation });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getRecommendations(req: Request, res: Response): Promise<void> {
+  private async getRecommendations(req: Request, res: Response): Promise<any> {
     try {
       const { priority } = req.query;
       const recommendations = priority
         ? await this.services.recommendationEngine.getRecommendationsByPriority(priority as any)
         : this.services.recommendationEngine.getAllRecommendations();
       res.json({ success: true, data: recommendations });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async submitRecommendationFeedback(req: Request, res: Response): Promise<void> {
+  private async submitRecommendationFeedback(req: Request, res: Response): Promise<any> {
     try {
       await this.services.recommendationEngine.updateRecommendationFeedback(req.params.recommendationId, req.body);
       res.json({ success: true, message: 'Feedback submitted successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getRecommendationEffectiveness(req: Request, res: Response): Promise<void> {
+  private async getRecommendationEffectiveness(req: Request, res: Response): Promise<any> {
     try {
       const effectiveness = await this.services.recommendationEngine.evaluateRecommendationEffectiveness(req.params.recommendationId);
       res.json({ success: true, data: effectiveness });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getResourceRecommendations(req: Request, res: Response): Promise<void> {
+  private async getResourceRecommendations(req: Request, res: Response): Promise<any> {
     try {
       const recommendations = await this.services.recommendationEngine.getRecommendationsByResource(req.params.resourceId);
       res.json({ success: true, data: recommendations });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // Reporting Routes
-  private async generateReport(req: Request, res: Response): Promise<void> {
+  private async generateReport(req: Request, res: Response): Promise<any> {
     try {
       const report = await this.services.reportGenerator.generateReport(req.body);
       res.json({ success: true, data: report });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async scheduleReport(req: Request, res: Response): Promise<void> {
+  private async scheduleReport(req: Request, res: Response): Promise<any> {
     try {
       const scheduleId = await this.services.reportGenerator.scheduleReport(req.body);
       res.json({ success: true, data: { scheduleId } });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getReport(req: Request, res: Response): Promise<void> {
+  private async getReport(req: Request, res: Response): Promise<any> {
     try {
       const report = this.services.reportGenerator.getReport(req.params.reportId);
       if (!report) {
@@ -621,92 +621,92 @@ export class CapacityPlanningController extends EventEmitter {
         return;
       }
       res.json({ success: true, data: report });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getReports(req: Request, res: Response): Promise<void> {
+  private async getReports(req: Request, res: Response): Promise<any> {
     try {
       const reports = this.services.reportGenerator.getAllReports();
       res.json({ success: true, data: reports });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async cancelScheduledReport(req: Request, res: Response): Promise<void> {
+  private async cancelScheduledReport(req: Request, res: Response): Promise<any> {
     try {
       await this.services.reportGenerator.cancelScheduledReport(req.params.scheduleId);
       res.json({ success: true, message: 'Scheduled report cancelled successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async createReportTemplate(req: Request, res: Response): Promise<void> {
+  private async createReportTemplate(req: Request, res: Response): Promise<any> {
     try {
       const template = await this.services.reportGenerator.createReportTemplate(req.body);
       res.status(201).json({ success: true, data: template });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getReportTemplates(req: Request, res: Response): Promise<void> {
+  private async getReportTemplates(req: Request, res: Response): Promise<any> {
     try {
       const templates = this.services.reportGenerator.getAllTemplates();
       res.json({ success: true, data: templates });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getReportTemplate(req: Request, res: Response): Promise<void> {
+  private async getReportTemplate(req: Request, res: Response): Promise<any> {
     try {
-      const template = this.services.reportGenerator.getTemplate(req.params.templateId);
+      const template = this.services.reportGenerator.getTemplateById(req.params.templateId);
       if (!template) {
         res.status(404).json({ success: false, error: 'Template not found' });
         return;
       }
       res.json({ success: true, data: template });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async generateExecutiveSummaryReport(req: Request, res: Response): Promise<void> {
+  private async generateExecutiveSummaryReport(req: Request, res: Response): Promise<any> {
     try {
       const { timeRange } = req.body;
       const report = await this.services.reportGenerator.generateExecutiveSummaryReport(timeRange);
       res.json({ success: true, data: report });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // Cost Optimization Routes
-  private async analyzeCostOptimization(req: Request, res: Response): Promise<void> {
+  private async analyzeCostOptimization(req: Request, res: Response): Promise<any> {
     try {
       const { resourceId, timeRange } = req.body;
       const optimization = await this.services.costOptimizationService.analyzeCostOptimization(resourceId, timeRange);
       res.json({ success: true, data: optimization });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async batchAnalyzeCostOptimization(req: Request, res: Response): Promise<void> {
+  private async batchAnalyzeCostOptimization(req: Request, res: Response): Promise<any> {
     try {
       const { resourceIds } = req.body;
       const optimizations = await this.services.costOptimizationService.batchAnalyzeCostOptimization(resourceIds);
       res.json({ success: true, data: Object.fromEntries(optimizations) });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getCostOptimization(req: Request, res: Response): Promise<void> {
+  private async getCostOptimization(req: Request, res: Response): Promise<any> {
     try {
       const optimization = this.services.costOptimizationService.getOptimization(req.params.resourceId);
       if (!optimization) {
@@ -714,21 +714,21 @@ export class CapacityPlanningController extends EventEmitter {
         return;
       }
       res.json({ success: true, data: optimization });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getAllCostOptimizations(req: Request, res: Response): Promise<void> {
+  private async getAllCostOptimizations(req: Request, res: Response): Promise<any> {
     try {
       const optimizations = this.services.costOptimizationService.getAllOptimizations();
       res.json({ success: true, data: optimizations });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async implementOptimization(req: Request, res: Response): Promise<void> {
+  private async implementOptimization(req: Request, res: Response): Promise<any> {
     try {
       const { optimizationId, approvalLevel } = req.body;
       const result = await this.services.costOptimizationService.implementOptimization(
@@ -737,60 +737,60 @@ export class CapacityPlanningController extends EventEmitter {
         approvalLevel
       );
       res.json({ success: true, data: result });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async trackOptimizationROI(req: Request, res: Response): Promise<void> {
+  private async trackOptimizationROI(req: Request, res: Response): Promise<any> {
     try {
       const roi = await this.services.costOptimizationService.trackOptimizationROI(req.params.resourceId);
       res.json({ success: true, data: roi });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async generateCostForecast(req: Request, res: Response): Promise<void> {
+  private async generateCostForecast(req: Request, res: Response): Promise<any> {
     try {
       const { resourceId, forecastMonths } = req.body;
       const forecast = await this.services.costOptimizationService.generateCostForecast(resourceId, forecastMonths);
       res.json({ success: true, data: forecast });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getTopOptimizationOpportunities(req: Request, res: Response): Promise<void> {
+  private async getTopOptimizationOpportunities(req: Request, res: Response): Promise<any> {
     try {
       const { limit = 10 } = req.query;
       const opportunities = await this.services.costOptimizationService.getTopCostOptimizationOpportunities(Number(limit));
       res.json({ success: true, data: opportunities });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // Workflow Routes
-  private async createWorkflowTemplate(req: Request, res: Response): Promise<void> {
+  private async createWorkflowTemplate(req: Request, res: Response): Promise<any> {
     try {
       const template = await this.services.workflowManager.createWorkflowTemplate(req.body);
       res.status(201).json({ success: true, data: template });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getWorkflowTemplates(req: Request, res: Response): Promise<void> {
+  private async getWorkflowTemplates(req: Request, res: Response): Promise<any> {
     try {
       const templates = this.services.workflowManager.getAllWorkflowTemplates();
       res.json({ success: true, data: templates });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getWorkflowTemplate(req: Request, res: Response): Promise<void> {
+  private async getWorkflowTemplate(req: Request, res: Response): Promise<any> {
     try {
       const template = this.services.workflowManager.getWorkflowTemplate(req.params.templateId);
       if (!template) {
@@ -798,22 +798,22 @@ export class CapacityPlanningController extends EventEmitter {
         return;
       }
       res.json({ success: true, data: template });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async executeWorkflow(req: Request, res: Response): Promise<void> {
+  private async executeWorkflow(req: Request, res: Response): Promise<any> {
     try {
       const { workflow, alert } = req.body;
       const execution = await this.services.workflowManager.executeWorkflow(workflow, alert);
       res.json({ success: true, data: execution });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getWorkflowExecution(req: Request, res: Response): Promise<void> {
+  private async getWorkflowExecution(req: Request, res: Response): Promise<any> {
     try {
       const execution = this.services.workflowManager.getExecution(req.params.executionId);
       if (!execution) {
@@ -821,62 +821,62 @@ export class CapacityPlanningController extends EventEmitter {
         return;
       }
       res.json({ success: true, data: execution });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getWorkflowExecutions(req: Request, res: Response): Promise<void> {
+  private async getWorkflowExecutions(req: Request, res: Response): Promise<any> {
     try {
       const executions = this.services.workflowManager.getAllExecutions();
       res.json({ success: true, data: executions });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async approveWorkflowStep(req: Request, res: Response): Promise<void> {
+  private async approveWorkflowStep(req: Request, res: Response): Promise<any> {
     try {
       const { approvalId, userId, comments } = req.body;
       await this.services.workflowManager.approveWorkflowStep(req.params.executionId, approvalId, userId, comments);
       res.json({ success: true, message: 'Workflow step approved successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async rejectWorkflowStep(req: Request, res: Response): Promise<void> {
+  private async rejectWorkflowStep(req: Request, res: Response): Promise<any> {
     try {
       const { approvalId, userId, comments } = req.body;
       await this.services.workflowManager.rejectWorkflowStep(req.params.executionId, approvalId, userId, comments);
       res.json({ success: true, message: 'Workflow step rejected successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async cancelWorkflowExecution(req: Request, res: Response): Promise<void> {
+  private async cancelWorkflowExecution(req: Request, res: Response): Promise<any> {
     try {
       const { reason } = req.body;
       await this.services.workflowManager.cancelExecution(req.params.executionId, reason);
       res.json({ success: true, message: 'Workflow execution cancelled successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getWorkflowMetrics(req: Request, res: Response): Promise<void> {
+  private async getWorkflowMetrics(req: Request, res: Response): Promise<any> {
     try {
       const { workflowId } = req.query;
       const metrics = await this.services.workflowManager.getWorkflowMetrics(workflowId as string);
       res.json({ success: true, data: metrics });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
   // System Routes
-  private async getSystemStatus(req: Request, res: Response): Promise<void> {
+  private async getSystemStatus(req: Request, res: Response): Promise<any> {
     try {
       const status = {
         status: 'healthy',
@@ -894,31 +894,31 @@ export class CapacityPlanningController extends EventEmitter {
         }
       };
       res.json({ success: true, data: status });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getSystemMetrics(req: Request, res: Response): Promise<void> {
+  private async getSystemMetrics(req: Request, res: Response): Promise<any> {
     try {
       const metrics = this.metrics.getMetrics();
       res.json({ success: true, data: metrics });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async scheduleSystemMaintenance(req: Request, res: Response): Promise<void> {
+  private async scheduleSystemMaintenance(req: Request, res: Response): Promise<any> {
     try {
       const { maintenanceWindow } = req.body;
       // Implementation would schedule maintenance
       res.json({ success: true, message: 'System maintenance scheduled successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async getSystemConfiguration(req: Request, res: Response): Promise<void> {
+  private async getSystemConfiguration(req: Request, res: Response): Promise<any> {
     try {
       const config = {
         apiVersion: this.config.apiVersion,
@@ -935,16 +935,16 @@ export class CapacityPlanningController extends EventEmitter {
         }
       };
       res.json({ success: true, data: config });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
 
-  private async updateSystemConfiguration(req: Request, res: Response): Promise<void> {
+  private async updateSystemConfiguration(req: Request, res: Response): Promise<any> {
     try {
       // Implementation would update system configuration
       res.json({ success: true, message: 'System configuration updated successfully' });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error);
     }
   }
@@ -994,7 +994,7 @@ export class CapacityPlanningController extends EventEmitter {
     console.error('API Error:', error);
     
     const statusCode = error.statusCode || 500;
-    const message = error.message || 'Internal server error';
+    const message = error instanceof Error ? error.message : 'Internal server error';
     
     res.status(statusCode).json({
       success: false,
@@ -1032,7 +1032,7 @@ export class CapacityPlanningController extends EventEmitter {
     });
   }
 
-  public async start(): Promise<void> {
+  public async start(): Promise<any> {
     const server = this.app.listen(this.config.port, () => {
       console.log(`Capacity Planning API server listening on port ${this.config.port}`);
       this.emit('serverStarted', { port: this.config.port });
@@ -1101,3 +1101,5 @@ class APIMetrics {
     return sorted[index] || 0;
   }
 }
+
+

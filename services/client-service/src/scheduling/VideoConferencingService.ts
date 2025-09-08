@@ -639,6 +639,9 @@ export class VideoConferencingService extends EventEmitter {
         requireRegistration: false,
         allowGuests: false
       },
+      branding: {
+        customWelcomeMessage: 'Welcome to the internal team meeting'
+      },
       integrations: {
         calendar: true,
         crm: false,
@@ -1032,7 +1035,7 @@ export class VideoConferencingService extends EventEmitter {
     return updatedMeeting;
   }
 
-  private async updateExternalMeeting(meeting: VideoMeeting, updates: Partial<VideoMeeting>): Promise<void> {
+  private async updateExternalMeeting(meeting: VideoMeeting, updates: Partial<VideoMeeting>): Promise<any> {
     const provider = this.providers.get(meeting.providerId);
     if (!provider) {
       throw new Error(`Provider ${meeting.providerId} not found`);
@@ -1044,7 +1047,7 @@ export class VideoConferencingService extends EventEmitter {
     await new Promise(resolve => setTimeout(resolve, 500));
   }
 
-  async deleteMeeting(meetingId: string): Promise<void> {
+  async deleteMeeting(meetingId: string): Promise<any> {
     const meeting = this.meetings.get(meetingId);
     if (!meeting) {
       throw new Error(`Meeting ${meetingId} not found`);
@@ -1063,7 +1066,7 @@ export class VideoConferencingService extends EventEmitter {
     });
   }
 
-  private async deleteExternalMeeting(meeting: VideoMeeting): Promise<void> {
+  private async deleteExternalMeeting(meeting: VideoMeeting): Promise<any> {
     const provider = this.providers.get(meeting.providerId);
     if (!provider) return;
 
@@ -1215,7 +1218,7 @@ export class VideoConferencingService extends EventEmitter {
   }
 
   // Recording management
-  private async processRecordings(meetingId: string): Promise<void> {
+  private async processRecordings(meetingId: string): Promise<any> {
     const meeting = this.meetings.get(meetingId);
     if (!meeting) return;
 
@@ -1292,7 +1295,7 @@ export class VideoConferencingService extends EventEmitter {
     }, 30000); // 30 seconds
   }
 
-  private async completeRecordingProcessing(meetingId: string): Promise<void> {
+  private async completeRecordingProcessing(meetingId: string): Promise<any> {
     const meeting = this.meetings.get(meetingId);
     if (!meeting) return;
 
@@ -1349,7 +1352,7 @@ export class VideoConferencingService extends EventEmitter {
   }
 
   // Webhook processing
-  async processWebhookEvent(providerId: string, eventType: string, data: any, signature?: string): Promise<void> {
+  async processWebhookEvent(providerId: string, eventType: string, data: any, signature?: string): Promise<any> {
     // Verify webhook signature if provided
     if (signature && !this.verifyWebhookSignature(data, signature)) {
       throw new Error('Invalid webhook signature');
@@ -1375,7 +1378,7 @@ export class VideoConferencingService extends EventEmitter {
     }
   }
 
-  private async processWebhooks(): Promise<void> {
+  private async processWebhooks(): Promise<any> {
     const unprocessedWebhooks = Array.from(this.webhooks.values())
       .filter(webhook => !webhook.processed)
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
@@ -1383,8 +1386,8 @@ export class VideoConferencingService extends EventEmitter {
     for (const webhook of unprocessedWebhooks.slice(0, 10)) { // Process 10 at a time
       try {
         await this.processWebhookEventInternal(webhook);
-      } catch (error) {
-        webhook.error = error.message;
+      } catch (error: any) {
+        webhook.error = error instanceof Error ? error.message : 'Unknown error';
         webhook.processed = true;
         webhook.processedAt = new Date();
         this.webhooks.set(webhook.id, webhook);
@@ -1392,7 +1395,7 @@ export class VideoConferencingService extends EventEmitter {
     }
   }
 
-  private async processWebhookEventInternal(webhook: WebhookEvent): Promise<void> {
+  private async processWebhookEventInternal(webhook: WebhookEvent): Promise<any> {
     const meeting = await this.getMeetingByExternalId(webhook.externalMeetingId);
     if (!meeting) {
       console.warn(`Meeting not found for webhook: ${webhook.externalMeetingId}`);
@@ -1442,7 +1445,7 @@ export class VideoConferencingService extends EventEmitter {
     return signature.length > 10;
   }
 
-  private async handleRecordingReady(meetingId: string, data: any): Promise<void> {
+  private async handleRecordingReady(meetingId: string, data: any): Promise<any> {
     const meeting = this.meetings.get(meetingId);
     if (!meeting) return;
 
@@ -1458,7 +1461,7 @@ export class VideoConferencingService extends EventEmitter {
   }
 
   // Analytics and monitoring
-  private async updateMeetingAnalytics(): Promise<void> {
+  private async updateMeetingAnalytics(): Promise<any> {
     const activeMeetings = Array.from(this.meetings.values())
       .filter(meeting => meeting.status === 'started');
 
@@ -1577,7 +1580,7 @@ export class VideoConferencingService extends EventEmitter {
   }
 
   // Cleanup and maintenance
-  private async cleanupOldMeetings(): Promise<void> {
+  private async cleanupOldMeetings(): Promise<any> {
     if (!this.config.autoCleanupEnabled) return;
 
     const cutoffDate = new Date();
@@ -1603,7 +1606,7 @@ export class VideoConferencingService extends EventEmitter {
     console.log(`Cleaned up ${meetingsToCleanup.length} old meetings`);
   }
 
-  private async archiveRecordings(meeting: VideoMeeting): Promise<void> {
+  private async archiveRecordings(meeting: VideoMeeting): Promise<any> {
     console.log(`Archiving recordings for meeting ${meeting.id}`);
     
     // Mock archival process
@@ -1691,7 +1694,7 @@ export class VideoConferencingService extends EventEmitter {
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     console.log('Shutting down Video Conferencing Service...');
     
     // End all active meetings
@@ -1713,3 +1716,4 @@ export class VideoConferencingService extends EventEmitter {
 }
 
 export default VideoConferencingService;
+

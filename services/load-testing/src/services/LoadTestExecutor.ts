@@ -25,10 +25,10 @@ export class LoadTestExecutor extends EventEmitter {
     this.ensureConfigDirectory();
   }
 
-  private async ensureConfigDirectory(): Promise<void> {
+  private async ensureConfigDirectory(): Promise<any> {
     try {
       await fs.mkdir(this.configPath, { recursive: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create config directory:', error);
     }
   }
@@ -78,13 +78,13 @@ export class LoadTestExecutor extends EventEmitter {
       
       return testId;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('testError', { testId, error: (error as Error).message });
       throw error;
     }
   }
 
-  private async generateTestConfig(testId: string, config: LoadTestConfig): Promise<void> {
+  private async generateTestConfig(testId: string, config: LoadTestConfig): Promise<any> {
     // Generate Artillery configuration
     const artilleryConfig = this.generateArtilleryConfig(config);
     const configFile = path.join(this.configPath, `${testId}-artillery.yml`);
@@ -140,14 +140,14 @@ export class LoadTestExecutor extends EventEmitter {
             ...(request.params && { qs: request.params }),
             ...(request.validation && {
               capture: [
-                ...(request.validation.statusCode && [{
+                ...(request.validation.statusCode ? [{
                   json: '$.statusCode',
                   as: 'statusCode',
-                }]),
-                ...(request.validation.bodyContains && request.validation.bodyContains.map(content => ({
+                }] : []),
+                ...(request.validation.bodyContains ? request.validation.bodyContains.map(content => ({
                   regexp: content,
                   as: `contains_${content.replace(/[^a-zA-Z0-9]/g, '_')}`,
-                }))),
+                })) : []),
               ],
             }),
             ...(request.extractors && {
@@ -192,7 +192,7 @@ export class LoadTestExecutor extends EventEmitter {
     }
   }
 
-  private async runLoadTest(testId: string, config: LoadTestConfig): Promise<void> {
+  private async runLoadTest(testId: string, config: LoadTestConfig): Promise<any> {
     const useArtillery = config.scenarios.length > 1 || 
                         config.scenarios.some(s => s.requests.length > 1) ||
                         config.rampUp?.enabled;
@@ -204,7 +204,7 @@ export class LoadTestExecutor extends EventEmitter {
     }
   }
 
-  private async runArtilleryTest(testId: string, config: LoadTestConfig): Promise<void> {
+  private async runArtilleryTest(testId: string, config: LoadTestConfig): Promise<any> {
     const configFile = path.join(this.configPath, `${testId}-artillery.yml`);
     const resultFile = path.join(this.configPath, `${testId}-results.json`);
 
@@ -248,7 +248,7 @@ export class LoadTestExecutor extends EventEmitter {
           result.recommendations = this.generateRecommendations(result);
           
           this.emit('testCompleted', { testId, result });
-        } catch (error) {
+        } catch (error: any) {
           result.status = 'FAILED';
           this.emit('testError', { testId, error: (error as Error).message });
         }
@@ -262,7 +262,7 @@ export class LoadTestExecutor extends EventEmitter {
     });
   }
 
-  private async runAutocannonTest(testId: string, config: LoadTestConfig): Promise<void> {
+  private async runAutocannonTest(testId: string, config: LoadTestConfig): Promise<any> {
     const configFile = path.join(this.configPath, `${testId}-autocannon.json`);
     
     const autocannon = spawn('autocannon', [
@@ -304,7 +304,7 @@ export class LoadTestExecutor extends EventEmitter {
           result.recommendations = this.generateRecommendations(result);
           
           this.emit('testCompleted', { testId, result });
-        } catch (error) {
+        } catch (error: any) {
           result.status = 'FAILED';
           this.emit('testError', { testId, error: (error as Error).message });
         }
@@ -334,7 +334,7 @@ export class LoadTestExecutor extends EventEmitter {
     }
   }
 
-  private async processArtilleryResults(testId: string, data: any): Promise<void> {
+  private async processArtilleryResults(testId: string, data: any): Promise<any> {
     const result = this.testResults.get(testId);
     if (!result) return;
 
@@ -374,7 +374,7 @@ export class LoadTestExecutor extends EventEmitter {
     result.thresholdResults = this.evaluateThresholds(result.config.thresholds, result.summary);
   }
 
-  private async processAutocannonResults(testId: string, data: any): Promise<void> {
+  private async processAutocannonResults(testId: string, data: any): Promise<any> {
     const result = this.testResults.get(testId);
     if (!result) return;
 
@@ -529,7 +529,7 @@ export class LoadTestExecutor extends EventEmitter {
     return yaml;
   }
 
-  private async cleanupTestFiles(testId: string): Promise<void> {
+  private async cleanupTestFiles(testId: string): Promise<any> {
     try {
       const files = [
         `${testId}-artillery.yml`,
@@ -544,7 +544,7 @@ export class LoadTestExecutor extends EventEmitter {
           // Ignore cleanup errors
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Cleanup error:', error);
     }
   }
@@ -631,3 +631,4 @@ export class LoadTestExecutor extends EventEmitter {
     });
   }
 }
+

@@ -87,7 +87,7 @@ class CapacityTrendAnalyzer extends events_1.EventEmitter {
                 trendId,
                 resourceId: request.resourceId,
                 metric: request.metric,
-                error: error.message
+                error: error instanceof Error ? error.message : 'Unknown error'
             });
             throw error;
         }
@@ -479,7 +479,7 @@ class CapacityTrendAnalyzer extends events_1.EventEmitter {
                 await this.performScheduledAnalysis();
             }
             catch (error) {
-                this.emit('scheduledAnalysisError', { error: error.message });
+                this.emit('scheduledAnalysisError', { error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }, this.config.analysisInterval);
     }

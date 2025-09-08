@@ -193,7 +193,7 @@ class UserProfileService extends events_1.EventEmitter {
             catch (error) {
                 errors.push({
                     field: update.field,
-                    message: error.message,
+                    message: this.getErrorMessage(error),
                     code: 'UPDATE_ERROR',
                     severity: 'error'
                 });
@@ -297,7 +297,7 @@ class UserProfileService extends events_1.EventEmitter {
             catch (error) {
                 errors.push({
                     field: rule.field,
-                    message: `Validation error: ${error.message}`,
+                    message: `Validation error: ${this.getErrorMessage(error)}`,
                     code: 'VALIDATION_EXCEPTION',
                     severity: 'error'
                 });
@@ -440,6 +440,12 @@ class UserProfileService extends events_1.EventEmitter {
             }
         ];
         this.complianceRules.set('default', basicRules);
+    }
+    getErrorMessage(error) {
+        if (error instanceof Error) {
+            return error.message;
+        }
+        return String(error);
     }
 }
 exports.UserProfileService = UserProfileService;

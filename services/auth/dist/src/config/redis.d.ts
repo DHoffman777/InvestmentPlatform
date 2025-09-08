@@ -293,17 +293,17 @@ export declare class CacheService {
     private client;
     private constructor();
     static getInstance(): CacheService;
-    connect(): Promise<void>;
-    disconnect(): Promise<void>;
+    connect(): Promise<any>;
+    disconnect(): Promise<any>;
     get(key: string): Promise<string | null>;
-    set(key: string, value: string, ttl?: number): Promise<void>;
-    del(key: string): Promise<void>;
+    set(key: string, value: string, ttl?: number): Promise<any>;
+    del(key: string): Promise<any>;
     exists(key: string): Promise<boolean>;
     incr(key: string): Promise<number>;
-    expire(key: string, ttl: number): Promise<void>;
-    setSession(sessionId: string, data: any, ttl?: number): Promise<void>;
+    expire(key: string, ttl: number): Promise<any>;
+    setSession(sessionId: string, data: any, ttl?: number): Promise<any>;
     getSession(sessionId: string): Promise<any | null>;
-    deleteSession(sessionId: string): Promise<void>;
+    deleteSession(sessionId: string): Promise<any>;
     rateLimit(key: string, limit: number, window: number): Promise<{
         allowed: boolean;
         remaining: number;
@@ -311,3 +311,4 @@ export declare class CacheService {
 }
 export { redisClient };
 export default CacheService;
+

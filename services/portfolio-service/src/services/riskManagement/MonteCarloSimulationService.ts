@@ -102,7 +102,7 @@ export class MonteCarloSimulationService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error running Monte Carlo simulation:', error);
       throw error;
     }
@@ -408,7 +408,7 @@ export class MonteCarloSimulationService {
     return [
       {
         positionId: 'pos_001',
-        instrumentId: 'AAPL',
+        securityId: 'AAPL',
         symbol: 'AAPL',
         marketValue: 1000000,
         currentPrice: 150,
@@ -416,7 +416,7 @@ export class MonteCarloSimulationService {
       },
       {
         positionId: 'pos_002',
-        instrumentId: 'GOOGL',
+        securityId: 'GOOGL',
         symbol: 'GOOGL',
         marketValue: 800000,
         currentPrice: 2800,
@@ -424,7 +424,7 @@ export class MonteCarloSimulationService {
       },
       {
         positionId: 'pos_003',
-        instrumentId: 'BND',
+        securityId: 'BND',
         symbol: 'BND',
         marketValue: 500000,
         currentPrice: 80,
@@ -566,12 +566,12 @@ export class MonteCarloSimulationService {
     };
   }
 
-  private async storeMonteCarloResult(result: MonteCarloResult): Promise<void> {
+  private async storeMonteCarloResult(result: MonteCarloResult): Promise<any> {
     logger.debug('Storing Monte Carlo result', { resultId: result.id });
     // Implement database storage
   }
 
-  private async publishMonteCarloEvent(eventType: string, result: MonteCarloResult): Promise<void> {
+  private async publishMonteCarloEvent(eventType: string, result: MonteCarloResult): Promise<any> {
     try {
       await this.kafkaService.publishEvent('risk-management', {
         eventType,
@@ -581,8 +581,9 @@ export class MonteCarloSimulationService {
         timestamp: new Date(),
         data: result
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing Monte Carlo event:', error);
     }
   }
 }
+

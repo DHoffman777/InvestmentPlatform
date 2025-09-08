@@ -340,7 +340,7 @@ export class CalendarIntegrationService extends EventEmitter {
     setInterval(() => {
       this.performScheduledSync().catch(error => {
         console.error('Scheduled sync error:', error);
-        this.emit('syncError', { error: error.message, timestamp: new Date() });
+        this.emit('syncError', { error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date() });
       });
     }, this.config.syncIntervalMinutes * 60 * 1000);
   }
@@ -354,7 +354,7 @@ export class CalendarIntegrationService extends EventEmitter {
     return this.providers.get(providerId) || null;
   }
 
-  async updateProviderStatus(providerId: string, status: CalendarProvider['status'], errorDetails?: string): Promise<void> {
+  async updateProviderStatus(providerId: string, status: CalendarProvider['status'], errorDetails?: string): Promise<any> {
     const provider = this.providers.get(providerId);
     if (!provider) {
       throw new Error(`Provider ${providerId} not found`);
@@ -458,7 +458,7 @@ export class CalendarIntegrationService extends EventEmitter {
     return updatedConnection;
   }
 
-  async deleteConnection(connectionId: string): Promise<void> {
+  async deleteConnection(connectionId: string): Promise<any> {
     const connection = this.connections.get(connectionId);
     if (!connection) {
       throw new Error(`Connection ${connectionId} not found`);
@@ -520,12 +520,12 @@ export class CalendarIntegrationService extends EventEmitter {
     if (connection.status === 'connected') {
       try {
         await this.syncEventToProvider(event, connection);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to sync event to provider:`, error);
         this.emit('syncError', {
           eventId: event.id,
           connectionId: connection.id,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
@@ -599,12 +599,12 @@ export class CalendarIntegrationService extends EventEmitter {
     if (connection.status === 'connected') {
       try {
         await this.syncEventToProvider(updatedEvent, connection);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to sync event update to provider:`, error);
         this.emit('syncError', {
           eventId: eventId,
           connectionId: connection.id,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
@@ -620,7 +620,7 @@ export class CalendarIntegrationService extends EventEmitter {
     return updatedEvent;
   }
 
-  async deleteEvent(eventId: string): Promise<void> {
+  async deleteEvent(eventId: string): Promise<any> {
     const event = this.events.get(eventId);
     if (!event) {
       throw new Error(`Event ${eventId} not found`);
@@ -635,12 +635,12 @@ export class CalendarIntegrationService extends EventEmitter {
     if (connection.status === 'connected' && event.externalId) {
       try {
         await this.deleteEventFromProvider(event, connection);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to delete event from provider:`, error);
         this.emit('syncError', {
           eventId: eventId,
           connectionId: connection.id,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
@@ -710,7 +710,8 @@ export class CalendarIntegrationService extends EventEmitter {
             startTime: slotStart,
             endTime: slotEnd,
             status: conflictingEvent ? 
-              (conflictingEvent.availability as 'busy' | 'free' | 'tentative' | 'out_of_office') : 
+              (conflictingEvent.availability === 'free' ? 'available' : 
+               conflictingEvent.availability as 'busy' | 'tentative' | 'out_of_office') : 
               'available' as const,
             eventId: conflictingEvent?.id,
             eventTitle: conflictingEvent?.title
@@ -874,7 +875,7 @@ export class CalendarIntegrationService extends EventEmitter {
     // Start sync in background
     this.performSync(syncId).catch(error => {
       console.error(`Sync ${syncId} failed:`, error);
-      this.updateSyncStatus(syncId, 'failed', error.message);
+      this.updateSyncStatus(syncId, 'failed', error instanceof Error ? error.message : 'Unknown error');
     });
 
     return syncId;
@@ -884,7 +885,7 @@ export class CalendarIntegrationService extends EventEmitter {
     return this.syncJobs.get(syncId) || null;
   }
 
-  async cancelSync(syncId: string): Promise<void> {
+  async cancelSync(syncId: string): Promise<any> {
     const sync = this.syncJobs.get(syncId);
     if (!sync) {
       throw new Error(`Sync ${syncId} not found`);
@@ -898,7 +899,7 @@ export class CalendarIntegrationService extends EventEmitter {
     }
   }
 
-  private async performSync(syncId: string): Promise<void> {
+  private async performSync(syncId: string): Promise<any> {
     const sync = this.syncJobs.get(syncId);
     if (!sync) return;
 
@@ -923,10 +924,10 @@ export class CalendarIntegrationService extends EventEmitter {
       connection.syncSettings.nextSync = new Date(Date.now() + this.config.syncIntervalMinutes * 60 * 1000);
       this.connections.set(connection.id, connection);
 
-    } catch (error) {
+    } catch (error: any) {
       sync.status = 'failed';
       sync.errors.push({
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
     }
@@ -942,7 +943,7 @@ export class CalendarIntegrationService extends EventEmitter {
     });
   }
 
-  private async simulateSync(sync: CalendarSync, connection: CalendarConnection): Promise<void> {
+  private async simulateSync(sync: CalendarSync, connection: CalendarConnection): Promise<any> {
     // Simulate sync progress
     const totalEvents = Math.floor(Math.random() * 50) + 10;
     
@@ -969,7 +970,7 @@ export class CalendarIntegrationService extends EventEmitter {
     }
   }
 
-  private async performScheduledSync(): Promise<void> {
+  private async performScheduledSync(): Promise<any> {
     const now = new Date();
     const connectionsToSync = Array.from(this.connections.values())
       .filter(conn => 
@@ -982,7 +983,7 @@ export class CalendarIntegrationService extends EventEmitter {
     for (const connection of connectionsToSync) {
       try {
         await this.scheduleSync(connection.id, 'incremental');
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to schedule sync for connection ${connection.id}:`, error);
       }
     }
@@ -1004,7 +1005,7 @@ export class CalendarIntegrationService extends EventEmitter {
   }
 
   // Provider-specific sync methods (mock implementations)
-  private async syncEventToProvider(event: CalendarEvent, connection: CalendarConnection): Promise<void> {
+  private async syncEventToProvider(event: CalendarEvent, connection: CalendarConnection): Promise<any> {
     const provider = this.providers.get(connection.providerId);
     if (!provider) {
       throw new Error(`Provider ${connection.providerId} not found`);
@@ -1021,7 +1022,7 @@ export class CalendarIntegrationService extends EventEmitter {
     event.syncedAt = new Date();
   }
 
-  private async deleteEventFromProvider(event: CalendarEvent, connection: CalendarConnection): Promise<void> {
+  private async deleteEventFromProvider(event: CalendarEvent, connection: CalendarConnection): Promise<any> {
     const provider = this.providers.get(connection.providerId);
     if (!provider) {
       throw new Error(`Provider ${connection.providerId} not found`);
@@ -1074,14 +1075,14 @@ export class CalendarIntegrationService extends EventEmitter {
 
     return {
       status,
-      providers,
+      providers: providers as Record<string, 'active' | 'error' | 'inactive'>,
       connections,
       syncJobs,
       timestamp: new Date()
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     console.log('Shutting down Calendar Integration Service...');
 
     // Cancel all running sync jobs
@@ -1102,3 +1103,4 @@ export class CalendarIntegrationService extends EventEmitter {
 }
 
 export default CalendarIntegrationService;
+

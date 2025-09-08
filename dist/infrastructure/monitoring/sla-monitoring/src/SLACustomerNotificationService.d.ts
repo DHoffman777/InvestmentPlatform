@@ -207,15 +207,15 @@ export declare class SLACustomerNotificationService extends EventEmitter {
         affectedServices: string[];
         expectedImpact: string;
     }): Promise<string>;
-    updateCustomerPreferences(customerId: string, preferences: Partial<NotificationPreferences>): Promise<void>;
+    updateCustomerPreferences(customerId: string, preferences: Partial<NotificationPreferences>): Promise<any>;
     getNotificationHistory(customerId: string, options?: {
         startDate?: Date;
         endDate?: Date;
         types?: NotificationType[];
         limit?: number;
     }): Promise<NotificationRecord[]>;
-    acknowledgeNotification(customerId: string, notificationId: string): Promise<void>;
-    unsubscribeCustomer(customerId: string, category?: NotificationType[]): Promise<void>;
+    acknowledgeNotification(customerId: string, notificationId: string): Promise<any>;
+    unsubscribeCustomer(customerId: string, category?: NotificationType[]): Promise<any>;
     private processDeliveryQueue;
     private deliverNotification;
     private sendViaChannel;
@@ -246,5 +246,5 @@ export declare class SLACustomerNotificationService extends EventEmitter {
     private generateReportUrl;
     private generateNotificationId;
     private generateEscalationId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

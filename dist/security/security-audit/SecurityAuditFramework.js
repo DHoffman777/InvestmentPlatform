@@ -88,7 +88,7 @@ class SecurityAuditFramework extends events_1.EventEmitter {
             return result;
         }
         catch (error) {
-            this.emit('auditFailed', { auditId: this.auditId, error: error.message });
+            this.emit('auditFailed', { auditId: this.auditId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }

@@ -430,4 +430,5 @@ export declare class UserProfileService extends EventEmitter {
     private isValidEmail;
     private initializeValidationRules;
     private initializeComplianceRules;
+    private getErrorMessage;
 }

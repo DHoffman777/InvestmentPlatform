@@ -4,7 +4,6 @@ exports.MarketDataService = void 0;
 const client_1 = require("@prisma/client");
 const logger_1 = require("../utils/logger");
 const redis_1 = require("../config/redis");
-const decimal_js_1 = require("decimal.js");
 class MarketDataService {
     prisma;
     kafkaService; // Will be injected
@@ -75,8 +74,8 @@ class MarketDataService {
             let change;
             let changePercent;
             if (quoteData.last && quoteData.previousClose) {
-                change = new decimal_js_1.Decimal(quoteData.last).sub(new decimal_js_1.Decimal(quoteData.previousClose));
-                changePercent = change.div(new decimal_js_1.Decimal(quoteData.previousClose)).mul(100);
+                change = new Decimal(quoteData.last).sub(new Decimal(quoteData.previousClose));
+                changePercent = change.div(new Decimal(quoteData.previousClose)).mul(100);
             }
             // Create the quote
             const quote = await this.prisma.quote.create({

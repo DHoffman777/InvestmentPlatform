@@ -51,7 +51,7 @@ class ResourcePlanningDashboardService extends events_1.EventEmitter {
                     type: config.type,
                     data: null,
                     status: 'error',
-                    error_message: error.message,
+                    error_message: error instanceof Error ? error.message : 'Unknown error',
                     last_updated: timestamp,
                     data_source: config.data_source,
                     metrics: { data_points: 0, data_quality: 0, freshness_score: 0 }
@@ -466,7 +466,7 @@ class ResourcePlanningDashboardService extends events_1.EventEmitter {
                     await this.refreshDashboards();
                 }
                 catch (error) {
-                    console.error('Dashboard refresh failed:', error.message);
+                    console.error('Dashboard refresh failed:', error instanceof Error ? error.message : 'Unknown error');
                 }
             }, this.config.refreshInterval);
         }

@@ -12,7 +12,7 @@ class AutomatedFilingWorkflowsService {
     reminders = new Map();
     templates = new Map();
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('AutomatedFilingWorkflows');
         this.initializeWorkflowTemplates();
     }
     async createFilingWorkflow(tenantId, workflowConfig) {
@@ -407,7 +407,7 @@ class AutomatedFilingWorkflowsService {
             if (stepStatus) {
                 stepStatus.status = 'failed';
                 stepStatus.completedAt = new Date();
-                stepStatus.notes = `Automated execution failed: ${error.message}`;
+                stepStatus.notes = `Automated execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
                 execution.stepStatus.set(step.stepId, stepStatus);
             }
         }

@@ -103,8 +103,8 @@ export class DrillDownService {
     ]]
   ]);
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(eventPublisher?: EventPublisher) {
+    this.eventPublisher = eventPublisher || new EventPublisher('DrillDownService');
   }
 
   async performDrillDown(
@@ -124,7 +124,7 @@ export class DrillDownService {
         throw new Error('Visualization not found');
       }
 
-      const parentDataPoint = visualization.data.find(dp => 
+      const parentDataPoint = visualization.data.find((dp: any) => 
         dp.label === request.dataPointId || 
         dp.metadata?.id === request.dataPointId
       );
@@ -167,7 +167,7 @@ export class DrillDownService {
         availableLevels
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing drill-down:', error);
       throw error;
     }
@@ -203,7 +203,7 @@ export class DrillDownService {
           throw new Error(`Unsupported drill-down level: ${currentLevel}`);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating interactive drill-down:', error);
       throw error;
     }
@@ -460,8 +460,8 @@ export class DrillDownService {
     
     currentHierarchy.parentPath.forEach((level, index) => {
       breadcrumb.push({
-        level,
-        label: this.getLevelDisplayName(level),
+        level: level as DrillDownLevel,
+        label: this.getLevelDisplayName(level as DrillDownLevel),
         value: index === 0 ? 'Total' : 'Parent'
       });
     });
@@ -544,6 +544,36 @@ export class DrillDownService {
     return hierarchy.some(h => h.level === level && 
       h.parentPath.every((parent, index) => currentPath[index] === parent)
     );
+  }
+
+  async getBreadcrumbNavigation(
+    visualizationId: string,
+    currentLevel: DrillDownLevel,
+    dataPointId: string
+  ): Promise<DrillDownResponse['breadcrumb']> {
+    try {
+      const visualization = await this.getVisualization(visualizationId);
+      if (!visualization) {
+        return [];
+      }
+
+      const dataPoint = visualization.data.find((dp: any) => 
+        dp.label === dataPointId || dp.metadata?.id === dataPointId
+      );
+
+      if (!dataPoint) {
+        return [];
+      }
+
+      return this.generateBreadcrumb(
+        visualization.metricType,
+        currentLevel,
+        dataPoint
+      );
+    } catch (error: any) {
+      logger.error('Error generating breadcrumb navigation:', error);
+      return [];
+    }
   }
 
   getMaxDrillDepth(metricType: AnalyticsMetricType): number {

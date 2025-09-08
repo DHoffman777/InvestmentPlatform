@@ -4,7 +4,6 @@ exports.seedEquities = seedEquities;
 const client_1 = require("@prisma/client");
 const equitiesService_1 = require("../services/equitiesService");
 const logger_1 = require("../utils/logger");
-const decimal_js_1 = require("decimal.js");
 const prisma = new client_1.PrismaClient();
 const equitiesService = new equitiesService_1.EquitiesService(prisma);
 // Sample common stocks
@@ -20,12 +19,12 @@ const commonStocks = [
         country: 'US',
         sector: 'Technology',
         industry: 'Consumer Electronics',
-        marketCap: new decimal_js_1.Decimal('2800000000000'), // $2.8T
-        sharesOutstanding: new decimal_js_1.Decimal('15500000000'),
-        dividendYield: new decimal_js_1.Decimal('0.47'),
-        peRatio: new decimal_js_1.Decimal('28.5'),
-        pbRatio: new decimal_js_1.Decimal('12.8'),
-        beta: new decimal_js_1.Decimal('1.24'),
+        marketCap: new Decimal('2800000000000'), // $2.8T
+        sharesOutstanding: new Decimal('15500000000'),
+        dividendYield: new Decimal('0.47'),
+        peRatio: new Decimal('28.5'),
+        pbRatio: new Decimal('12.8'),
+        beta: new Decimal('1.24'),
         dividendFrequency: 'QUARTERLY',
         listingDate: new Date('1980-12-12'),
     },
@@ -40,12 +39,12 @@ const commonStocks = [
         country: 'US',
         sector: 'Technology',
         industry: 'Software',
-        marketCap: new decimal_js_1.Decimal('2400000000000'), // $2.4T
-        sharesOutstanding: new decimal_js_1.Decimal('7400000000'),
-        dividendYield: new decimal_js_1.Decimal('0.72'),
-        peRatio: new decimal_js_1.Decimal('32.1'),
-        pbRatio: new decimal_js_1.Decimal('11.5'),
-        beta: new decimal_js_1.Decimal('0.89'),
+        marketCap: new Decimal('2400000000000'), // $2.4T
+        sharesOutstanding: new Decimal('7400000000'),
+        dividendYield: new Decimal('0.72'),
+        peRatio: new Decimal('32.1'),
+        pbRatio: new Decimal('11.5'),
+        beta: new Decimal('0.89'),
         dividendFrequency: 'QUARTERLY',
         listingDate: new Date('1986-03-13'),
     },
@@ -60,11 +59,11 @@ const commonStocks = [
         country: 'US',
         sector: 'Technology',
         industry: 'Internet Services',
-        marketCap: new decimal_js_1.Decimal('1600000000000'), // $1.6T
-        sharesOutstanding: new decimal_js_1.Decimal('12900000000'),
-        peRatio: new decimal_js_1.Decimal('22.8'),
-        pbRatio: new decimal_js_1.Decimal('4.2'),
-        beta: new decimal_js_1.Decimal('1.05'),
+        marketCap: new Decimal('1600000000000'), // $1.6T
+        sharesOutstanding: new Decimal('12900000000'),
+        peRatio: new Decimal('22.8'),
+        pbRatio: new Decimal('4.2'),
+        beta: new Decimal('1.05'),
         dividendFrequency: 'SPECIAL',
         listingDate: new Date('2004-08-19'),
     },
@@ -79,12 +78,12 @@ const commonStocks = [
         country: 'US',
         sector: 'Financial Services',
         industry: 'Banks',
-        marketCap: new decimal_js_1.Decimal('420000000000'), // $420B
-        sharesOutstanding: new decimal_js_1.Decimal('2900000000'),
-        dividendYield: new decimal_js_1.Decimal('2.8'),
-        peRatio: new decimal_js_1.Decimal('11.2'),
-        pbRatio: new decimal_js_1.Decimal('1.4'),
-        beta: new decimal_js_1.Decimal('1.18'),
+        marketCap: new Decimal('420000000000'), // $420B
+        sharesOutstanding: new Decimal('2900000000'),
+        dividendYield: new Decimal('2.8'),
+        peRatio: new Decimal('11.2'),
+        pbRatio: new Decimal('1.4'),
+        beta: new Decimal('1.18'),
         dividendFrequency: 'QUARTERLY',
         listingDate: new Date('1969-03-05'),
     },
@@ -99,12 +98,12 @@ const commonStocks = [
         country: 'US',
         sector: 'Healthcare',
         industry: 'Pharmaceuticals',
-        marketCap: new decimal_js_1.Decimal('380000000000'), // $380B
-        sharesOutstanding: new decimal_js_1.Decimal('2400000000'),
-        dividendYield: new decimal_js_1.Decimal('3.1'),
-        peRatio: new decimal_js_1.Decimal('15.8'),
-        pbRatio: new decimal_js_1.Decimal('4.2'),
-        beta: new decimal_js_1.Decimal('0.68'),
+        marketCap: new Decimal('380000000000'), // $380B
+        sharesOutstanding: new Decimal('2400000000'),
+        dividendYield: new Decimal('3.1'),
+        peRatio: new Decimal('15.8'),
+        pbRatio: new Decimal('4.2'),
+        beta: new Decimal('0.68'),
         dividendFrequency: 'QUARTERLY',
         listingDate: new Date('1944-09-25'),
     },
@@ -120,14 +119,14 @@ const preferredStocks = [
         country: 'US',
         sector: 'Financial Services',
         industry: 'Banks',
-        dividendRate: new decimal_js_1.Decimal('6.25'),
-        parValue: new decimal_js_1.Decimal('25.00'),
+        dividendRate: new Decimal('6.25'),
+        parValue: new Decimal('25.00'),
         cumulative: true,
         perpetual: true,
-        callPrice: new decimal_js_1.Decimal('25.00'),
+        callPrice: new Decimal('25.00'),
         callDate: new Date('2027-12-30'),
         convertible: false,
-        marketCap: new decimal_js_1.Decimal('1200000000'), // $1.2B
+        marketCap: new Decimal('1200000000'), // $1.2B
         dividendFrequency: 'QUARTERLY',
     },
     {
@@ -139,14 +138,14 @@ const preferredStocks = [
         country: 'US',
         sector: 'Financial Services',
         industry: 'Banks',
-        dividendRate: new decimal_js_1.Decimal('5.85'),
-        parValue: new decimal_js_1.Decimal('25.00'),
+        dividendRate: new Decimal('5.85'),
+        parValue: new Decimal('25.00'),
         cumulative: true,
         perpetual: true,
-        callPrice: new decimal_js_1.Decimal('25.00'),
+        callPrice: new Decimal('25.00'),
         callDate: new Date('2026-06-15'),
         convertible: false,
-        marketCap: new decimal_js_1.Decimal('850000000'), // $850M
+        marketCap: new Decimal('850000000'), // $850M
         dividendFrequency: 'QUARTERLY',
     },
 ];
@@ -170,12 +169,12 @@ const adrs = [
         depositoryBank: 'JPMorgan Chase Bank',
         level: 2,
         sponsored: true,
-        marketCap: new decimal_js_1.Decimal('450000000000'), // $450B
-        sharesOutstanding: new decimal_js_1.Decimal('5200000000'),
-        dividendYield: new decimal_js_1.Decimal('2.1'),
-        peRatio: new decimal_js_1.Decimal('16.8'),
-        pbRatio: new decimal_js_1.Decimal('3.2'),
-        beta: new decimal_js_1.Decimal('0.95'),
+        marketCap: new Decimal('450000000000'), // $450B
+        sharesOutstanding: new Decimal('5200000000'),
+        dividendYield: new Decimal('2.1'),
+        peRatio: new Decimal('16.8'),
+        pbRatio: new Decimal('3.2'),
+        beta: new Decimal('0.95'),
         dividendFrequency: 'QUARTERLY',
         listingDate: new Date('1997-10-08'),
     },
@@ -197,12 +196,12 @@ const adrs = [
         depositoryBank: 'Bank of New York Mellon',
         level: 2,
         sponsored: true,
-        marketCap: new decimal_js_1.Decimal('280000000000'), // $280B
-        sharesOutstanding: new decimal_js_1.Decimal('410000000'),
-        dividendYield: new decimal_js_1.Decimal('0.9'),
-        peRatio: new decimal_js_1.Decimal('35.2'),
-        pbRatio: new decimal_js_1.Decimal('12.5'),
-        beta: new decimal_js_1.Decimal('1.35'),
+        marketCap: new Decimal('280000000000'), // $280B
+        sharesOutstanding: new Decimal('410000000'),
+        dividendYield: new Decimal('0.9'),
+        peRatio: new Decimal('35.2'),
+        pbRatio: new Decimal('12.5'),
+        beta: new Decimal('1.35'),
         dividendFrequency: 'ANNUAL',
         listingDate: new Date('1995-03-02'),
     },
@@ -224,12 +223,12 @@ const adrs = [
         depositoryBank: 'JPMorgan Chase Bank',
         level: 2,
         sponsored: true,
-        marketCap: new decimal_js_1.Decimal('320000000000'), // $320B
-        sharesOutstanding: new decimal_js_1.Decimal('4700000000'),
-        dividendYield: new decimal_js_1.Decimal('2.3'),
-        peRatio: new decimal_js_1.Decimal('28.9'),
-        pbRatio: new decimal_js_1.Decimal('18.5'),
-        beta: new decimal_js_1.Decimal('0.72'),
+        marketCap: new Decimal('320000000000'), // $320B
+        sharesOutstanding: new Decimal('4700000000'),
+        dividendYield: new Decimal('2.3'),
+        peRatio: new Decimal('28.9'),
+        pbRatio: new Decimal('18.5'),
+        beta: new Decimal('0.72'),
         dividendFrequency: 'SEMI_ANNUAL',
         listingDate: new Date('1981-07-08'),
     },

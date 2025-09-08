@@ -59,7 +59,7 @@ export declare class MFAService extends EventEmitter {
     /**
      * Set up SMS MFA for user
      */
-    setupSMSMFA(userId: string, phoneNumber: string): Promise<void>;
+    setupSMSMFA(userId: string, phoneNumber: string): Promise<any>;
     /**
      * Verify SMS code and enable SMS MFA
      */
@@ -71,7 +71,7 @@ export declare class MFAService extends EventEmitter {
     /**
      * Send SMS verification code
      */
-    sendSMSVerificationCode(userId: string): Promise<void>;
+    sendSMSVerificationCode(userId: string): Promise<any>;
     /**
      * Generate new backup codes for user
      */
@@ -79,7 +79,7 @@ export declare class MFAService extends EventEmitter {
     /**
      * Disable MFA for user (requires additional verification)
      */
-    disableMFA(userId: string, method: 'totp' | 'sms' | 'all'): Promise<void>;
+    disableMFA(userId: string, method: 'totp' | 'sms' | 'all'): Promise<any>;
     /**
      * Get user MFA status
      */
@@ -104,3 +104,4 @@ export declare class MFAMiddleware {
     requireMFA(): (req: any, res: any, next: any) => Promise<any>;
 }
 export default MFAService;
+

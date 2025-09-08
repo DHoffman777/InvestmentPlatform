@@ -593,7 +593,7 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
     return alert;
   }
 
-  private async processAlert(alert: SuspiciousActivityAlert): Promise<void> {
+  private async processAlert(alert: SuspiciousActivityAlert): Promise<any> {
     this.alerts.set(alert.id, alert);
     this.emit('alertCreated', alert);
 
@@ -607,7 +607,7 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
     await this.executeAutomatedActions(alert);
   }
 
-  private async executeAutomatedActions(alert: SuspiciousActivityAlert): Promise<void> {
+  private async executeAutomatedActions(alert: SuspiciousActivityAlert): Promise<any> {
     // Implement automated responses based on alert type and severity
     switch (alert.alertType) {
       case AlertType.BRUTE_FORCE_ATTACK:
@@ -705,6 +705,16 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
         'Check for VPN usage',
         'Monitor for additional anomalies'
       ],
+      [AlertType.OFF_HOURS_ACCESS]: [
+        'Verify user authorization',
+        'Check access justification',
+        'Monitor session activity'
+      ],
+      [AlertType.SUSPICIOUS_DEVICE]: [
+        'Verify device ownership',
+        'Check device security',
+        'Consider device quarantine'
+      ],
       [AlertType.PRIVILEGE_ESCALATION]: [
         'Immediately investigate',
         'Verify administrative access',
@@ -714,6 +724,36 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
         'Block data export temporarily',
         'Investigate data access patterns',
         'Contact security team immediately'
+      ],
+      [AlertType.BRUTE_FORCE_ATTACK]: [
+        'Block IP address',
+        'Implement rate limiting',
+        'Alert security team'
+      ],
+      [AlertType.ACCOUNT_TAKEOVER]: [
+        'Immediately suspend account',
+        'Force password reset',
+        'Contact account owner'
+      ],
+      [AlertType.UNUSUAL_ACTIVITY_VOLUME]: [
+        'Monitor activity patterns',
+        'Check for automation',
+        'Review access logs'
+      ],
+      [AlertType.INSIDER_THREAT]: [
+        'Escalate to security team',
+        'Monitor all user activity',
+        'Consider access restrictions'
+      ],
+      [AlertType.COMPLIANCE_VIOLATION]: [
+        'Review compliance policies',
+        'Document violation details',
+        'Report to compliance team'
+      ],
+      [AlertType.POLICY_VIOLATION]: [
+        'Review policy violations',
+        'Document incident details',
+        'Implement corrective actions'
       ]
     };
 
@@ -827,7 +867,7 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
     return sorted as T[];
   }
 
-  private async updateRuleFalsePositiveRate(alert: SuspiciousActivityAlert): Promise<void> {
+  private async updateRuleFalsePositiveRate(alert: SuspiciousActivityAlert): Promise<any> {
     // Update false positive rate for rules
     for (const rule of this.detectionRules.values()) {
       if (rule.alertType === alert.alertType) {
@@ -905,7 +945,7 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
     }, 5 * 60 * 1000);
   }
 
-  private async runBatchAnalysis(): Promise<void> {
+  private async runBatchAnalysis(): Promise<any> {
     // Analyze patterns across all recent activities
     try {
       // Update baselines for active users
@@ -915,12 +955,12 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
       await this.cleanupOldData();
       
       this.emit('batchAnalysisCompleted');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in batch analysis:', error);
     }
   }
 
-  private async updateAllBaselines(): Promise<void> {
+  private async updateAllBaselines(): Promise<any> {
     // Update baselines for users with recent activity
     const activeUsers = new Set<string>();
     
@@ -946,7 +986,7 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
     return allActivities;
   }
 
-  private async cleanupOldData(): Promise<void> {
+  private async cleanupOldData(): Promise<any> {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     
     // Clean up old alerts
@@ -964,7 +1004,7 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
     }
   }
 
-  private async loadThreatIntelligence(): Promise<void> {
+  private async loadThreatIntelligence(): Promise<any> {
     // Load threat intelligence from external sources
     // This would integrate with threat intelligence feeds in production
     
@@ -984,3 +1024,4 @@ export class SuspiciousActivityDetectionService extends EventEmitter {
     }
   }
 }
+

@@ -186,9 +186,9 @@ export class SLAReportingService extends EventEmitter {
       try {
         await this.exportReport(report, { format: format as any, includeCharts: true, includeRawData: false });
         report.deliveryStatus[format] = 'sent';
-      } catch (error) {
+      } catch (error: any) {
         report.deliveryStatus[format] = 'failed';
-        this.emit('reportExportFailed', { reportId: report.id, format, error: error.message });
+        this.emit('reportExportFailed', { reportId: report.id, format, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
 
@@ -213,7 +213,7 @@ export class SLAReportingService extends EventEmitter {
         ...widget,
         id: this.generateWidgetId(),
         dataSource: widget.dataSource || 'default'
-      })),
+      } as unknown as SLAWidget)),
       layout: {
         columns: config.layout.columns || 12,
         rows: Math.ceil(config.widgets.length / (config.layout.columns || 12)),
@@ -257,10 +257,10 @@ export class SLAReportingService extends EventEmitter {
     const widgetData: Record<string, any> = {};
     for (const widget of dashboard.widgets) {
       try {
-        widgetData[widget.id] = await this.getWidgetData(widget);
-      } catch (error) {
-        console.warn(`Failed to load data for widget ${widget.id}:`, error.message);
-        widgetData[widget.id] = { error: error.message };
+        widgetData[widget.id] = await this.getWidgetData(widget as unknown as DashboardWidget);
+      } catch (error: any) {
+        console.warn(`Failed to load data for widget ${widget.id}:`, error instanceof Error ? error.message : 'Unknown error');
+        widgetData[widget.id] = { error: error instanceof Error ? error.message : 'Unknown error' };
       }
     }
 
@@ -286,7 +286,7 @@ export class SLAReportingService extends EventEmitter {
     }
   }
 
-  async scheduleReport(templateId: string, schedule: ReportSchedule, recipients: string[]): Promise<void> {
+  async scheduleReport(templateId: string, schedule: ReportSchedule, recipients: string[]): Promise<any> {
     const template = this.templates.get(templateId);
     if (!template) {
       throw new Error(`Template ${templateId} not found`);
@@ -301,8 +301,8 @@ export class SLAReportingService extends EventEmitter {
     const job = setInterval(async () => {
       try {
         await this.generateScheduledReport(templateId, recipients);
-      } catch (error) {
-        this.emit('scheduledReportFailed', { templateId, error: error.message });
+      } catch (error: any) {
+        this.emit('scheduledReportFailed', { templateId, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }, interval);
 
@@ -428,7 +428,7 @@ export class SLAReportingService extends EventEmitter {
       const chart: SLAChart = {
         id: chartConfig.id,
         title: chartConfig.title,
-        type: chartConfig.type,
+        type: (chartConfig.type === 'trend' ? 'line' : chartConfig.type) as 'line' | 'bar' | 'pie' | 'heatmap' | 'gauge' | 'scatter',
         data: await this.generateChartData(chartConfig, data),
         configuration: {
           xAxis: chartConfig.xAxis,
@@ -709,7 +709,7 @@ export class SLAReportingService extends EventEmitter {
     }
   }
 
-  private async generateScheduledReport(templateId: string, recipients: string[]): Promise<void> {
+  private async generateScheduledReport(templateId: string, recipients: string[]): Promise<any> {
     const template = this.templates.get(templateId);
     if (!template) return;
 
@@ -806,6 +806,7 @@ export class SLAReportingService extends EventEmitter {
         }
       ],
       layout: {
+        layout: 'grid' as const,
         columns: 12,
         theme: 'light',
         refreshInterval: 30000,
@@ -850,7 +851,7 @@ export class SLAReportingService extends EventEmitter {
     return `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     // Cancel all scheduled jobs
     for (const job of this.scheduledJobs.values()) {
       clearInterval(job);
@@ -864,3 +865,4 @@ export class SLAReportingService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

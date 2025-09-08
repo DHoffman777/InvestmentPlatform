@@ -8,7 +8,7 @@ class ClientRegulatoryReportsService {
     eventPublisher;
     reports = new Map();
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('ClientRegulatoryReports');
     }
     async generateCRSReport(tenantId, clientId, clientName, reportData, reportingYear) {
         try {

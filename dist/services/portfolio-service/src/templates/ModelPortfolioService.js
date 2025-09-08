@@ -153,7 +153,7 @@ class ModelPortfolioService extends events_1.EventEmitter {
             for (const modelHolding of template.holdings) {
                 const currentHolding = currentHoldings.find(h => h.securityId === modelHolding.securityId);
                 const targetValue = totalValue * (modelHolding.targetWeight / 100);
-                const currentValue = currentHolding?.marketValue || 0;
+                const currentValue = currentHolding?.marketValue?.toNumber() || 0;
                 const difference = targetValue - currentValue;
                 if (Math.abs(difference) > totalValue * (template.rebalancingThreshold / 100)) {
                     const estimatedPrice = await this.getEstimatedPrice(modelHolding.securityId);

@@ -92,7 +92,7 @@ class FinancialDataRecoveryManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('recoveryFailed', {
                 recoveryId: this.recoveryId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -126,7 +126,7 @@ class FinancialDataRecoveryManager extends events_1.EventEmitter {
                         issueId: `step-${step.stepNumber}-error`,
                         severity: 'high',
                         category: 'system',
-                        description: `Failed to execute step ${step.stepNumber}: ${error.message}`,
+                        description: `Failed to execute step ${step.stepNumber}: ${error instanceof Error ? error.message : 'Unknown error'}`,
                         impact: 'Recovery process interrupted',
                         resolution: step.rollbackAction || 'Manual intervention required',
                         resolved: false
@@ -161,7 +161,7 @@ class FinancialDataRecoveryManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('recoveryFailed', {
                 recoveryId: this.recoveryId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -193,7 +193,7 @@ class FinancialDataRecoveryManager extends events_1.EventEmitter {
             return { valid, checks, issues };
         }
         catch (error) {
-            this.emit('backupValidationFailed', { backupId, error: error.message });
+            this.emit('backupValidationFailed', { backupId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -267,7 +267,7 @@ class FinancialDataRecoveryManager extends events_1.EventEmitter {
                 results.push({
                     procedureId: procedure.procedureId,
                     success: false,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }

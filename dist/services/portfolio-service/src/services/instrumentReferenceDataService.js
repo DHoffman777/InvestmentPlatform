@@ -17,10 +17,10 @@ class InstrumentReferenceDataService {
         // Check for existing instrument
         const existing = await this.findInstrumentByIdentifiers(request.identifiers, request.tenantId);
         if (existing) {
-            throw new Error(`Instrument already exists with identifier: ${existing.instrumentId}`);
+            throw new Error(`Instrument already exists with identifier: ${existing.securityId}`);
         }
         const instrument = {
-            instrumentId: request.instrumentId,
+            securityId: request.securityId,
             cusip: request.identifiers.cusip,
             isin: request.identifiers.isin,
             sedol: request.identifiers.sedol,
@@ -54,7 +54,7 @@ class InstrumentReferenceDataService {
             }
         });
         await this.kafkaService.publishEvent('instrument-created', {
-            instrumentId: created.instrumentId,
+            securityId: created.securityId,
             tenantId: request.tenantId,
             instrument: created,
             timestamp: new Date().toISOString()
@@ -64,7 +64,7 @@ class InstrumentReferenceDataService {
     async updateInstrument(request) {
         const existing = await this.prisma.instrumentMaster.findFirst({
             where: {
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 tenantId: request.tenantId
             }
         });
@@ -86,7 +86,7 @@ class InstrumentReferenceDataService {
             }
         });
         await this.kafkaService.publishEvent('instrument-updated', {
-            instrumentId: request.instrumentId,
+            securityId: request.securityId,
             tenantId: request.tenantId,
             changes: request.updates,
             updatedBy: request.updatedBy,
@@ -203,7 +203,7 @@ class InstrumentReferenceDataService {
         // Verify instrument exists
         const instrument = await this.prisma.instrumentMaster.findFirst({
             where: {
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 tenantId: request.tenantId
             }
         });
@@ -211,7 +211,7 @@ class InstrumentReferenceDataService {
             throw new Error('Instrument not found');
         }
         const corporateAction = {
-            instrumentId: request.instrumentId,
+            securityId: request.securityId,
             tenantId: request.tenantId,
             actionType: request.actionType,
             actionCode: this.generateActionCode(request.actionType),
@@ -235,14 +235,14 @@ class InstrumentReferenceDataService {
         await this.scheduleCorporateActionProcessing(created);
         await this.kafkaService.publishEvent('corporate-action-created', {
             corporateActionId: created.id,
-            instrumentId: request.instrumentId,
+            securityId: request.securityId,
             actionType: request.actionType,
             tenantId: request.tenantId,
             timestamp: new Date().toISOString()
         });
         return created;
     }
-    async getCorporateActions(instrumentId, tenantId) {
+    async getCorporateActions(securityId, tenantId) {
         return await this.prisma.corporateAction.findMany({
             where: {
                 instrumentId,
@@ -252,7 +252,7 @@ class InstrumentReferenceDataService {
         });
     }
     // Market Data Management
-    async updateMarketData(instrumentId, marketData, tenantId) {
+    async updateMarketData(securityId, marketData, tenantId) {
         const snapshot = {
             asOfDate: new Date(),
             asOfTime: new Date(),
@@ -280,7 +280,7 @@ class InstrumentReferenceDataService {
             timestamp: new Date().toISOString()
         });
     }
-    async getMarketData(instrumentId, tenantId) {
+    async getMarketData(securityId, tenantId) {
         return await this.prisma.marketDataSnapshot.findFirst({
             where: {
                 instrumentId,
@@ -297,16 +297,16 @@ class InstrumentReferenceDataService {
         for (const update of request.instruments) {
             try {
                 await this.updateInstrument({
-                    instrumentId: update.instrumentId,
+                    securityId: update.securityId,
                     updates: update.updates,
                     tenantId: request.tenantId,
                     updatedBy: request.updatedBy
                 });
-                results.successful.push(update.instrumentId);
+                results.successful.push(update.securityId);
             }
             catch (error) {
                 results.failed.push({
-                    instrumentId: update.instrumentId,
+                    securityId: update.securityId,
                     error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
@@ -322,7 +322,7 @@ class InstrumentReferenceDataService {
         return results;
     }
     // Data Quality and Validation
-    async validateInstrumentData(instrumentId, tenantId) {
+    async validateInstrumentData(securityId, tenantId) {
         const instrument = await this.prisma.instrumentMaster.findFirst({
             where: { instrumentId, tenantId }
         });
@@ -387,7 +387,7 @@ class InstrumentReferenceDataService {
             dataQuality: this.assessDataQuality(instrument)
         };
     }
-    async generateDataQualityReport(instrumentId, tenantId) {
+    async generateDataQualityReport(securityId, tenantId) {
         const instrument = await this.prisma.instrumentMaster.findFirst({
             where: { instrumentId, tenantId }
         });
@@ -459,7 +459,7 @@ class InstrumentReferenceDataService {
     }
     validateInstrumentRequest(request) {
         const errors = [];
-        if (!request.instrumentId)
+        if (!request.securityId)
             errors.push('Instrument ID is required');
         if (!request.name)
             errors.push('Instrument name is required');
@@ -491,7 +491,7 @@ class InstrumentReferenceDataService {
             }
         }
         return {
-            instrumentId: request.instrumentId,
+            securityId: request.securityId,
             isValid: errors.length === 0,
             errors,
             dataQuality: 'UNVERIFIED'
@@ -505,7 +505,7 @@ class InstrumentReferenceDataService {
     }
     validateCorporateActionRequest(request) {
         const errors = [];
-        if (!request.instrumentId)
+        if (!request.securityId)
             errors.push('Instrument ID is required');
         if (!request.actionType)
             errors.push('Action type is required');
@@ -527,7 +527,7 @@ class InstrumentReferenceDataService {
             errors.push('Announcement date cannot be after ex-date');
         }
         return {
-            instrumentId: request.instrumentId,
+            securityId: request.securityId,
             isValid: errors.length === 0,
             errors,
             dataQuality: 'UNVERIFIED'
@@ -699,7 +699,7 @@ class InstrumentReferenceDataService {
         // For now, we'll just publish an event
         await this.kafkaService.publishEvent('corporate-action-scheduled', {
             corporateActionId: action.id,
-            instrumentId: action.instrumentId,
+            securityId: action.securityId,
             exDate: action.exDate,
             actionType: action.actionType,
             processingRequired: new Date(action.exDate) <= new Date(),

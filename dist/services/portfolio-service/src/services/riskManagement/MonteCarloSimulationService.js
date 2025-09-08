@@ -289,7 +289,7 @@ class MonteCarloSimulationService {
         return [
             {
                 positionId: 'pos_001',
-                instrumentId: 'AAPL',
+                securityId: 'AAPL',
                 symbol: 'AAPL',
                 marketValue: 1000000,
                 currentPrice: 150,
@@ -297,7 +297,7 @@ class MonteCarloSimulationService {
             },
             {
                 positionId: 'pos_002',
-                instrumentId: 'GOOGL',
+                securityId: 'GOOGL',
                 symbol: 'GOOGL',
                 marketValue: 800000,
                 currentPrice: 2800,
@@ -305,7 +305,7 @@ class MonteCarloSimulationService {
             },
             {
                 positionId: 'pos_003',
-                instrumentId: 'BND',
+                securityId: 'BND',
                 symbol: 'BND',
                 marketValue: 500000,
                 currentPrice: 80,

@@ -8,11 +8,11 @@ import { AccountSetupService } from './AccountSetupService';
 import { ComplianceApprovalService } from './ComplianceApprovalService';
 import { OnboardingProgressService } from './OnboardingProgressService';
 export interface OnboardingNotificationService {
-    sendWelcomeNotification(clientId: string, workflowId: string): Promise<void>;
-    sendStepReminderNotification(clientId: string, stepName: string): Promise<void>;
-    sendMilestoneNotification(clientId: string, milestoneName: string): Promise<void>;
-    sendCompletionNotification(clientId: string, workflowId: string): Promise<void>;
-    sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<void>;
+    sendWelcomeNotification(clientId: string, workflowId: string): Promise<any>;
+    sendStepReminderNotification(clientId: string, stepName: string): Promise<any>;
+    sendMilestoneNotification(clientId: string, milestoneName: string): Promise<any>;
+    sendCompletionNotification(clientId: string, workflowId: string): Promise<any>;
+    sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<any>;
 }
 export interface AuthenticatedRequest extends Request {
     user?: {
@@ -103,9 +103,9 @@ export declare class OnboardingController extends EventEmitter {
     getRouter(): Router;
 }
 export declare class MockOnboardingNotificationService implements OnboardingNotificationService {
-    sendWelcomeNotification(clientId: string, workflowId: string): Promise<void>;
-    sendStepReminderNotification(clientId: string, stepName: string): Promise<void>;
-    sendMilestoneNotification(clientId: string, milestoneName: string): Promise<void>;
-    sendCompletionNotification(clientId: string, workflowId: string): Promise<void>;
-    sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<void>;
+    sendWelcomeNotification(clientId: string, workflowId: string): Promise<any>;
+    sendStepReminderNotification(clientId: string, stepName: string): Promise<any>;
+    sendMilestoneNotification(clientId: string, milestoneName: string): Promise<any>;
+    sendCompletionNotification(clientId: string, workflowId: string): Promise<any>;
+    sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<any>;
 }

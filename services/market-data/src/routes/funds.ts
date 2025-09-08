@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { query, param, body, validationResult } from 'express-validator';
+const { query, param, body, validationResult } = require('express-validator');
 import { FundsService, ETFData, MutualFundData } from '../services/fundsService';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { authenticateJWT, requirePermission } from '../middleware/auth';
-import { Decimal } from 'decimal.js';
+import { Prisma } from '@prisma/client';
+
+const { Decimal } = Prisma;
 
 const router = Router();
 const fundsService = new FundsService(prisma);
@@ -39,7 +41,7 @@ router.get('/search',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const filters = {
         query: req.query.query as string,
@@ -62,7 +64,7 @@ router.get('/search',
         filters,
         count: funds.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error searching funds:', { filters: req.query, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -80,7 +82,7 @@ router.get('/:symbol',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
 
@@ -94,7 +96,7 @@ router.get('/:symbol',
       }
 
       res.json({ fund });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching fund details:', { symbol: req.params.symbol, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -126,7 +128,7 @@ router.post('/etf',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const etfData: ETFData = {
         ...req.body,
@@ -143,13 +145,10 @@ router.post('/etf',
       const etf = await fundsService.upsertETF(etfData);
 
       res.status(201).json({
-        etf: {
-          ...etf,
-          marketCap: etf.marketCap?.toNumber(),
-        },
+        etf,
         message: 'ETF created/updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating/updating ETF:', { etfData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -185,7 +184,7 @@ router.post('/mutual-fund',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const fundData: MutualFundData = {
         ...req.body,
@@ -206,13 +205,10 @@ router.post('/mutual-fund',
       const fund = await fundsService.upsertMutualFund(fundData);
 
       res.status(201).json({
-        fund: {
-          ...fund,
-          marketCap: fund.marketCap?.toNumber(),
-        },
+        fund,
         message: 'Mutual fund created/updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating/updating mutual fund:', { fundData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -226,7 +222,7 @@ router.post('/mutual-fund',
 router.get('/families',
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const families = await fundsService.getFundFamilies();
 
@@ -234,7 +230,7 @@ router.get('/families',
         families,
         count: families.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching fund families:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -248,7 +244,7 @@ router.get('/families',
 router.get('/categories',
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const fundCategories = {
         etfCategories: {
@@ -343,7 +339,7 @@ router.get('/categories',
       };
 
       res.json({ fundCategories });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching fund categories:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -354,3 +350,4 @@ router.get('/categories',
 );
 
 export { router as fundsRouter };
+

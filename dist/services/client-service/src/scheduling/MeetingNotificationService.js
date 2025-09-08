@@ -674,7 +674,7 @@ class MeetingNotificationService extends events_1.EventEmitter {
             }
             catch (error) {
                 console.error(`Error processing job ${job.id}:`, error);
-                await this.handleJobFailure(job, error.message);
+                await this.handleJobFailure(job, error instanceof Error ? error.message : 'Unknown error');
             }
         }
     }
@@ -805,7 +805,7 @@ class MeetingNotificationService extends events_1.EventEmitter {
         }
         catch (error) {
             reminder.status = 'failed';
-            reminder.error = error.message;
+            reminder.error = error instanceof Error ? error.message : 'Unknown error';
             reminder.updatedAt = new Date();
         }
         this.reminders.set(reminderId, reminder);

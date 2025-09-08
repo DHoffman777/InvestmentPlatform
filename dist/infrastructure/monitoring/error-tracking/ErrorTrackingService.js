@@ -174,7 +174,7 @@ class ErrorTrackingService extends events_1.EventEmitter {
         const structuredError = {
             id: this.generateErrorId(),
             fingerprint,
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown error',
             category,
             severity,
             errorType: error.constructor.name,
@@ -218,7 +218,7 @@ class ErrorTrackingService extends events_1.EventEmitter {
     generateFingerprint(error, context) {
         const components = [
             error.constructor.name,
-            error.message.replace(/\d+/g, 'N'), // Replace numbers with N
+            error instanceof Error ? error.message : 'Unknown error'.replace(/\d+/g, 'N'), // Replace numbers with N
             context.service,
             context.environment,
             this.extractStackSignature(error.stack)
@@ -235,7 +235,7 @@ class ErrorTrackingService extends events_1.EventEmitter {
             .join('|');
     }
     categorizeError(error) {
-        const message = error.message.toLowerCase();
+        const message = error instanceof Error ? error.message : 'Unknown error'.toLowerCase();
         const stack = (error.stack || '').toLowerCase();
         const combined = `${message} ${stack}`;
         // Check predefined patterns
@@ -268,7 +268,7 @@ class ErrorTrackingService extends events_1.EventEmitter {
     assessSeverity(error, category, metadata) {
         // Check if error matches a pattern with predefined severity
         for (const pattern of this.errorPatterns.values()) {
-            if (pattern.pattern.test(error.message) ||
+            if (pattern.pattern.test(error instanceof Error ? error.message : 'Unknown error') ||
                 (error.stack && pattern.pattern.test(error.stack))) {
                 return pattern.severity;
             }
@@ -294,7 +294,7 @@ class ErrorTrackingService extends events_1.EventEmitter {
         }
     }
     matchErrorPattern(error) {
-        const combined = `${error.message} ${error.stack || ''}`;
+        const combined = `${error instanceof Error ? error.message : 'Unknown error'} ${error.stack || ''}`;
         for (const pattern of this.errorPatterns.values()) {
             if (pattern.pattern.test(combined)) {
                 return pattern;
@@ -343,7 +343,7 @@ class ErrorTrackingService extends events_1.EventEmitter {
                     data: {
                         id: error.id,
                         fingerprint: error.fingerprint,
-                        message: error.message,
+                        message: error instanceof Error ? error.message : 'Unknown error',
                         category: error.category,
                         severity: error.severity,
                         errorType: error.errorType,

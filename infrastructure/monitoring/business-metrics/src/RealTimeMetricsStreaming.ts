@@ -40,7 +40,7 @@ export interface StreamFilter {
 }
 
 export interface StreamMessage {
-  type: 'metric_update' | 'kpi_update' | 'alert' | 'heartbeat' | 'error' | 'subscription_status';
+  type: 'metric_update' | 'kpi_update' | 'alert' | 'heartbeat' | 'error' | 'subscription_status' | 'authentication_required' | 'authentication_success' | 'authentication_failed';
   timestamp: Date;
   subscriptionId?: string;
   payload: any;
@@ -124,8 +124,8 @@ export class RealTimeMetricsStreaming extends EventEmitter {
   private metricBuffer: Map<string, MetricValue[]> = new Map();
   private sequenceCounter: number = 0;
   private aggregationCache: Map<string, any> = new Map();
-  private heartbeatTimer: NodeJS.Timeout;
-  private cleanupTimer: NodeJS.Timeout;
+  private heartbeatTimer!: NodeJS.Timeout;
+  private cleanupTimer!: NodeJS.Timeout;
 
   constructor(config: StreamingConfig) {
     super();
@@ -182,7 +182,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
       try {
         const message = JSON.parse(data.toString());
         this.handleClientMessage(client, message);
-      } catch (error) {
+      } catch (error: any) {
         this.sendError(client, 'Invalid message format');
       }
     });
@@ -210,7 +210,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
     }
   }
 
-  private async handleClientMessage(client: StreamClient, message: any): Promise<void> {
+  private async handleClientMessage(client: StreamClient, message: any): Promise<any> {
     if (!this.checkRateLimit(client)) {
       this.sendError(client, 'Rate limit exceeded');
       return;
@@ -244,7 +244,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
     }
   }
 
-  private async handleAuthentication(client: StreamClient, payload: any): Promise<void> {
+  private async handleAuthentication(client: StreamClient, payload: any): Promise<any> {
     try {
       const isValid = await this.validateAuthentication(payload.token);
       
@@ -269,12 +269,12 @@ export class RealTimeMetricsStreaming extends EventEmitter {
           sequenceNumber: this.getNextSequenceNumber()
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       this.sendError(client, 'Authentication error');
     }
   }
 
-  private async handleSubscription(client: StreamClient, payload: any): Promise<void> {
+  private async handleSubscription(client: StreamClient, payload: any): Promise<any> {
     if (!client.isAuthenticated) {
       this.sendError(client, 'Authentication required');
       return;
@@ -307,12 +307,12 @@ export class RealTimeMetricsStreaming extends EventEmitter {
         subscriptionId: subscription.id 
       });
       
-    } catch (error) {
-      this.sendError(client, `Subscription failed: ${error.message}`);
+    } catch (error: any) {
+      this.sendError(client, `Subscription failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  private async handleUnsubscription(client: StreamClient, payload: any): Promise<void> {
+  private async handleUnsubscription(client: StreamClient, payload: any): Promise<any> {
     const subscriptionId = payload.subscriptionId;
     
     if (client.subscriptions.has(subscriptionId)) {
@@ -354,7 +354,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
     return subscription;
   }
 
-  private async sendInitialData(client: StreamClient, subscription: StreamSubscription): Promise<void> {
+  private async sendInitialData(client: StreamClient, subscription: StreamSubscription): Promise<any> {
     for (const metricId of subscription.metricIds) {
       const latestValue = await this.getLatestMetricValue(metricId);
       if (latestValue) {
@@ -393,7 +393,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
     }
   }
 
-  async publishMetricUpdate(metricValue: MetricValue): Promise<void> {
+  async publishMetricUpdate(metricValue: MetricValue): Promise<any> {
     this.addToBuffer(metricValue);
     
     const relevantSubscriptions = Array.from(this.subscriptions.values())
@@ -409,7 +409,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
             metricId: metricValue.metricId,
             subscriptionId: subscription.id,
             current: metricValue,
-            previous,
+            previous: previous || undefined,
             change: this.calculateChange(metricValue, previous)
           };
 
@@ -432,7 +432,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
     }
   }
 
-  async publishKPIUpdate(kpiId: string, kpiData: KPIStreamData): Promise<void> {
+  async publishKPIUpdate(kpiId: string, kpiData: KPIStreamData): Promise<any> {
     const relevantSubscriptions = Array.from(this.subscriptions.values())
       .filter(sub => sub.isActive && sub.kpiIds.includes(kpiId));
 
@@ -453,7 +453,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
     }
   }
 
-  async publishAlert(alert: MetricAlert): Promise<void> {
+  async publishAlert(alert: MetricAlert): Promise<any> {
     const alertData: AlertStreamData = {
       alertId: alert.id,
       subscriptionId: '',
@@ -553,7 +553,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
   }
 
   private async validateAuthentication(token: string): Promise<boolean> {
-    return token && token.length > 10;
+    return Boolean(token && token.length > 10);
   }
 
   private addToBuffer(metricValue: MetricValue): void {
@@ -786,7 +786,7 @@ export class RealTimeMetricsStreaming extends EventEmitter {
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     clearInterval(this.heartbeatTimer);
     clearInterval(this.cleanupTimer);
     
@@ -800,3 +800,4 @@ export class RealTimeMetricsStreaming extends EventEmitter {
     this.emit('serverShutdown');
   }
 }
+

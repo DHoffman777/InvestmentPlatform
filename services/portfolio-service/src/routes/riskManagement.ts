@@ -31,7 +31,7 @@ const correlationService = new CorrelationAnalysisService(prisma, kafkaService);
 const liquidityRiskService = new LiquidityRiskService(prisma, kafkaService);
 
 // VaR Calculation Routes
-router.post('/var/calculate', async (req, res) => {
+router.post('/var/calculate', async (req: any, res: any) => {
   try {
     const request: VaRCalculationRequest = {
       ...req.body,
@@ -52,7 +52,7 @@ router.post('/var/calculate', async (req, res) => {
       message: 'VaR calculation completed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in VaR calculation:', error);
     res.status(500).json({
       success: false,
@@ -62,7 +62,7 @@ router.post('/var/calculate', async (req, res) => {
   }
 });
 
-router.get('/var/:portfolioId/history', async (req, res) => {
+router.get('/var/:portfolioId/history', async (req: any, res: any) => {
   try {
     const { portfolioId } = req.params;
     const { startDate, endDate, method } = req.query;
@@ -82,7 +82,7 @@ router.get('/var/:portfolioId/history', async (req, res) => {
       message: 'VaR history retrieved successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving VaR history:', error);
     res.status(500).json({
       success: false,
@@ -92,7 +92,7 @@ router.get('/var/:portfolioId/history', async (req, res) => {
 });
 
 // Stress Testing Routes
-router.post('/stress-test/execute', async (req, res) => {
+router.post('/stress-test/execute', async (req: any, res: any) => {
   try {
     const request: StressTestRequest = {
       ...req.body,
@@ -113,7 +113,7 @@ router.post('/stress-test/execute', async (req, res) => {
       message: 'Stress test completed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in stress testing:', error);
     res.status(500).json({
       success: false,
@@ -123,7 +123,7 @@ router.post('/stress-test/execute', async (req, res) => {
   }
 });
 
-router.get('/stress-test/scenarios/historical', async (req, res) => {
+router.get('/stress-test/scenarios/historical', async (req: any, res: any) => {
   try {
     logger.info('Historical scenarios request received', {
       userId: req.user?.id
@@ -136,7 +136,7 @@ router.get('/stress-test/scenarios/historical', async (req, res) => {
       message: 'Historical scenarios retrieved successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving historical scenarios:', error);
     res.status(500).json({
       success: false,
@@ -146,7 +146,7 @@ router.get('/stress-test/scenarios/historical', async (req, res) => {
 });
 
 // Monte Carlo Simulation Routes
-router.post('/monte-carlo/simulate', async (req, res) => {
+router.post('/monte-carlo/simulate', async (req: any, res: any) => {
   try {
     const request: MonteCarloRequest = {
       ...req.body,
@@ -167,7 +167,7 @@ router.post('/monte-carlo/simulate', async (req, res) => {
       message: 'Monte Carlo simulation completed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in Monte Carlo simulation:', error);
     res.status(500).json({
       success: false,
@@ -178,7 +178,7 @@ router.post('/monte-carlo/simulate', async (req, res) => {
 });
 
 // Correlation Analysis Routes
-router.post('/correlation/analyze', async (req, res) => {
+router.post('/correlation/analyze', async (req: any, res: any) => {
   try {
     const request: CorrelationAnalysisRequest = {
       ...req.body,
@@ -199,7 +199,7 @@ router.post('/correlation/analyze', async (req, res) => {
       message: 'Correlation analysis completed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in correlation analysis:', error);
     res.status(500).json({
       success: false,
@@ -209,7 +209,7 @@ router.post('/correlation/analyze', async (req, res) => {
   }
 });
 
-router.get('/correlation/:portfolioId/matrix', async (req, res) => {
+router.get('/correlation/:portfolioId/matrix', async (req: any, res: any) => {
   try {
     const { portfolioId } = req.params;
     const { lookbackPeriod, matrixType } = req.query;
@@ -233,7 +233,7 @@ router.get('/correlation/:portfolioId/matrix', async (req, res) => {
       message: 'Correlation matrix retrieved successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving correlation matrix:', error);
     res.status(500).json({
       success: false,
@@ -243,7 +243,7 @@ router.get('/correlation/:portfolioId/matrix', async (req, res) => {
 });
 
 // Liquidity Risk Routes
-router.post('/liquidity/assess', async (req, res) => {
+router.post('/liquidity/assess', async (req: any, res: any) => {
   try {
     const request: LiquidityRiskRequest = {
       ...req.body,
@@ -264,7 +264,7 @@ router.post('/liquidity/assess', async (req, res) => {
       message: 'Liquidity risk assessment completed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in liquidity risk assessment:', error);
     res.status(500).json({
       success: false,
@@ -274,7 +274,7 @@ router.post('/liquidity/assess', async (req, res) => {
   }
 });
 
-router.get('/liquidity/:portfolioId/breakdown', async (req, res) => {
+router.get('/liquidity/:portfolioId/breakdown', async (req: any, res: any) => {
   try {
     const { portfolioId } = req.params;
     const { category } = req.query;
@@ -292,7 +292,7 @@ router.get('/liquidity/:portfolioId/breakdown', async (req, res) => {
       message: 'Liquidity breakdown retrieved successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving liquidity breakdown:', error);
     res.status(500).json({
       success: false,
@@ -302,7 +302,7 @@ router.get('/liquidity/:portfolioId/breakdown', async (req, res) => {
 });
 
 // Comprehensive Risk Analysis Route
-router.post('/analyze', async (req, res) => {
+router.post('/analyze', async (req: any, res: any) => {
   try {
     const request: RiskAnalysisRequest = {
       ...req.body,
@@ -318,20 +318,20 @@ router.post('/analyze', async (req, res) => {
     const results: any = {};
 
     // Execute requested analyses
-    if (request.analysisTypes.includes('VALUE_AT_RISK')) {
+    if (request.analysisTypes.includes('VALUE_AT_RISK' as any)) {
       const varRequest: VaRCalculationRequest = {
         portfolioId: request.portfolioId,
         tenantId: request.tenantId,
         asOfDate: request.asOfDate,
         confidenceLevel: request.confidenceLevel || 95,
-        timeHorizon: request.timeHorizon || '1D',
-        method: 'PARAMETRIC',
+        timeHorizon: (request.timeHorizon as any) || ('1D' as any),
+        method: 'PARAMETRIC' as any,
         includeStressTests: request.includeStressTesting || false
       };
       results.varResults = await varService.calculateVaR(varRequest);
     }
 
-    if (request.analysisTypes.includes('STRESS_TEST') && request.includeStressTesting) {
+    if (request.analysisTypes.includes('STRESS_TEST' as any) && request.includeStressTesting) {
       const stressRequest: StressTestRequest = {
         portfolioId: request.portfolioId,
         tenantId: request.tenantId,
@@ -342,13 +342,13 @@ router.post('/analyze', async (req, res) => {
       results.stressTestResults = await stressTestService.executeStressTest(stressRequest);
     }
 
-    if (request.analysisTypes.includes('MONTE_CARLO') && request.includeMonteCarloSimulation) {
+    if (request.analysisTypes.includes('MONTE_CARLO' as any) && request.includeMonteCarloSimulation) {
       const monteCarloRequest: MonteCarloRequest = {
         portfolioId: request.portfolioId,
         tenantId: request.tenantId,
         asOfDate: request.asOfDate,
         numberOfSimulations: 10000,
-        timeHorizon: request.timeHorizon || '1D',
+        timeHorizon: (request.timeHorizon as any) || ('1D' as any),
         confidenceLevel: request.confidenceLevel || 95,
         useHistoricalCorrelations: true,
         volatilityModel: 'HISTORICAL'
@@ -387,7 +387,7 @@ router.post('/analyze', async (req, res) => {
       message: 'Comprehensive risk analysis completed successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in comprehensive risk analysis:', error);
     res.status(500).json({
       success: false,
@@ -398,7 +398,7 @@ router.post('/analyze', async (req, res) => {
 });
 
 // Risk Dashboard Data Route
-router.get('/dashboard/:portfolioId', async (req, res) => {
+router.get('/dashboard/:portfolioId', async (req: any, res: any) => {
   try {
     const { portfolioId } = req.params;
     const { timeRange } = req.query;
@@ -441,7 +441,7 @@ router.get('/dashboard/:portfolioId', async (req, res) => {
       message: 'Risk dashboard data retrieved successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving risk dashboard data:', error);
     res.status(500).json({
       success: false,
@@ -451,7 +451,7 @@ router.get('/dashboard/:portfolioId', async (req, res) => {
 });
 
 // Risk Alerts Route
-router.get('/alerts/:portfolioId', async (req, res) => {
+router.get('/alerts/:portfolioId', async (req: any, res: any) => {
   try {
     const { portfolioId } = req.params;
     const { severity, limit } = req.query;
@@ -470,7 +470,7 @@ router.get('/alerts/:portfolioId', async (req, res) => {
       message: 'Risk alerts retrieved successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error retrieving risk alerts:', error);
     res.status(500).json({
       success: false,

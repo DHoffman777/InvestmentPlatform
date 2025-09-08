@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+const { body, param, query, validationResult } = require('express-validator');
 import { EventEmitter } from 'events';
 
 import { OnboardingWorkflowStateMachine, WorkflowState, WorkflowEvent } from './OnboardingWorkflowStateMachine';
@@ -11,14 +11,14 @@ import { ComplianceApprovalService, ComplianceWorkflowType } from './ComplianceA
 import { OnboardingProgressService, OnboardingPhase, StepStatus } from './OnboardingProgressService';
 
 export interface OnboardingNotificationService {
-  sendWelcomeNotification(clientId: string, workflowId: string): Promise<void>;
-  sendStepReminderNotification(clientId: string, stepName: string): Promise<void>;
-  sendMilestoneNotification(clientId: string, milestoneName: string): Promise<void>;
-  sendCompletionNotification(clientId: string, workflowId: string): Promise<void>;
-  sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<void>;
+  sendWelcomeNotification(clientId: string, workflowId: string): Promise<any>;
+  sendStepReminderNotification(clientId: string, stepName: string): Promise<any>;
+  sendMilestoneNotification(clientId: string, milestoneName: string): Promise<any>;
+  sendCompletionNotification(clientId: string, workflowId: string): Promise<any>;
+  sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<any>;
 }
 
-export interface AuthenticatedRequest extends Request {
+export type AuthenticatedRequest = Request & {
   user?: {
     id: string;
     tenantId: string;
@@ -126,7 +126,7 @@ export class OnboardingController extends EventEmitter {
     });
   }
 
-  private async handleStateTransition(event: any): Promise<void> {
+  private async handleStateTransition(event: any): Promise<any> {
     const { workflow, transition } = event;
     
     // Update progress tracking
@@ -142,7 +142,7 @@ export class OnboardingController extends EventEmitter {
         [WorkflowState.COMPLETED]: OnboardingPhase.COMPLETION
       } as Record<WorkflowState, OnboardingPhase>;
 
-      const currentPhase = phaseMap[workflow.currentState];
+      const currentPhase = phaseMap[workflow.currentState as WorkflowState];
       if (currentPhase) {
         // Start next phase
         const phaseProgress = progress.phases.find(p => p.phase === currentPhase);
@@ -205,256 +205,256 @@ export class OnboardingController extends EventEmitter {
 
   private setupRoutes(): void {
     // Workflow Management Routes
-    this.router.post('/workflows', this.validateCreateWorkflow(), this.createWorkflow.bind(this));
-    this.router.get('/workflows/:workflowId', this.validateWorkflowId(), this.getWorkflow.bind(this));
-    this.router.get('/workflows', this.validateGetWorkflows(), this.getWorkflows.bind(this));
-    this.router.post('/workflows/:workflowId/events', this.validateProcessEvent(), this.processEvent.bind(this));
-    this.router.get('/workflows/:workflowId/events', this.validateWorkflowId(), this.getAvailableEvents.bind(this));
+    this.router.post('/workflows', this.validateCreateWorkflow() as any, this.createWorkflow.bind(this) as any);
+    this.router.get('/workflows/:workflowId', this.validateWorkflowId() as any, this.getWorkflow.bind(this) as any);
+    this.router.get('/workflows', this.validateGetWorkflows() as any, this.getWorkflows.bind(this) as any);
+    this.router.post('/workflows/:workflowId/events', this.validateProcessEvent() as any, this.processEvent.bind(this) as any);
+    this.router.get('/workflows/:workflowId/events', this.validateWorkflowId() as any, this.getAvailableEvents.bind(this) as any);
 
     // Document Management Routes
-    this.router.post('/workflows/:workflowId/documents', this.validateSubmitDocument(), this.submitDocument.bind(this));
-    this.router.get('/workflows/:workflowId/documents', this.validateWorkflowId(), this.getDocuments.bind(this));
-    this.router.get('/workflows/:workflowId/documents/requirements', this.validateWorkflowId(), this.getDocumentRequirements.bind(this));
-    this.router.get('/workflows/:workflowId/documents/status', this.validateWorkflowId(), this.getDocumentStatus.bind(this));
+    this.router.post('/workflows/:workflowId/documents', this.validateSubmitDocument() as any, this.submitDocument.bind(this) as any);
+    this.router.get('/workflows/:workflowId/documents', this.validateWorkflowId() as any, this.getDocuments.bind(this) as any);
+    this.router.get('/workflows/:workflowId/documents/requirements', this.validateWorkflowId() as any, this.getDocumentRequirements.bind(this) as any);
+    this.router.get('/workflows/:workflowId/documents/status', this.validateWorkflowId() as any, this.getDocumentStatus.bind(this) as any);
 
     // Identity Verification Routes
-    this.router.post('/workflows/:workflowId/identity/sessions', this.validateCreateVerificationSession(), this.createVerificationSession.bind(this));
-    this.router.get('/workflows/:workflowId/identity/sessions/:sessionId', this.validateSessionId(), this.getVerificationSession.bind(this));
-    this.router.post('/workflows/:workflowId/identity/sessions/:sessionId/documents', this.validateDocumentVerification(), this.startDocumentVerification.bind(this));
-    this.router.post('/workflows/:workflowId/identity/sessions/:sessionId/biometric', this.validateBiometricVerification(), this.startBiometricVerification.bind(this));
-    this.router.post('/workflows/:workflowId/identity/sessions/:sessionId/kba', this.validateKBA(), this.startKBA.bind(this));
-    this.router.post('/workflows/:workflowId/identity/sessions/:sessionId/kba/:kbaId/answers', this.validateKBAAnswers(), this.submitKBAAnswers.bind(this));
+    this.router.post('/workflows/:workflowId/identity/sessions', this.validateCreateVerificationSession() as any, this.createVerificationSession.bind(this) as any);
+    this.router.get('/workflows/:workflowId/identity/sessions/:sessionId', this.validateSessionId() as any, this.getVerificationSession.bind(this) as any);
+    this.router.post('/workflows/:workflowId/identity/sessions/:sessionId/documents', this.validateDocumentVerification() as any, this.startDocumentVerification.bind(this) as any);
+    this.router.post('/workflows/:workflowId/identity/sessions/:sessionId/biometric', this.validateBiometricVerification() as any, this.startBiometricVerification.bind(this) as any);
+    this.router.post('/workflows/:workflowId/identity/sessions/:sessionId/kba', this.validateKBA() as any, this.startKBA.bind(this) as any);
+    this.router.post('/workflows/:workflowId/identity/sessions/:sessionId/kba/:kbaId/answers', this.validateKBAAnswers() as any, this.submitKBAAnswers.bind(this) as any);
 
     // KYC/AML Routes
-    this.router.get('/workflows/:workflowId/kyc', this.validateWorkflowId(), this.getKYCProfile.bind(this));
-    this.router.put('/workflows/:workflowId/kyc', this.validateUpdateKYC(), this.updateKYCProfile.bind(this));
-    this.router.post('/workflows/:workflowId/kyc/review', this.validateKYCReview(), this.reviewKYCProfile.bind(this));
-    this.router.get('/workflows/:workflowId/aml/screening', this.validateWorkflowId(), this.getAMLScreeningResults.bind(this));
+    this.router.get('/workflows/:workflowId/kyc', this.validateWorkflowId() as any, this.getKYCProfile.bind(this) as any);
+    this.router.put('/workflows/:workflowId/kyc', this.validateUpdateKYC() as any, this.updateKYCProfile.bind(this) as any);
+    this.router.post('/workflows/:workflowId/kyc/review', this.validateKYCReview() as any, this.reviewKYCProfile.bind(this) as any);
+    this.router.get('/workflows/:workflowId/aml/screening', this.validateWorkflowId() as any, this.getAMLScreeningResults.bind(this) as any);
 
     // Account Setup Routes
-    this.router.post('/workflows/:workflowId/account-setup', this.validateInitiateAccountSetup(), this.initiateAccountSetup.bind(this));
-    this.router.get('/workflows/:workflowId/account-setup', this.validateWorkflowId(), this.getAccountSetup.bind(this));
-    this.router.put('/workflows/:workflowId/account-setup', this.validateUpdateAccountSetup(), this.updateAccountSetup.bind(this));
+    this.router.post('/workflows/:workflowId/account-setup', this.validateInitiateAccountSetup() as any, this.initiateAccountSetup.bind(this) as any);
+    this.router.get('/workflows/:workflowId/account-setup', this.validateWorkflowId() as any, this.getAccountSetup.bind(this) as any);
+    this.router.put('/workflows/:workflowId/account-setup', this.validateUpdateAccountSetup() as any, this.updateAccountSetup.bind(this) as any);
 
     // Compliance Routes
-    this.router.get('/workflows/:workflowId/compliance', this.validateWorkflowId(), this.getComplianceWorkflow.bind(this));
-    this.router.post('/workflows/:workflowId/compliance/decisions', this.validateComplianceDecision(), this.submitComplianceDecision.bind(this));
+    this.router.get('/workflows/:workflowId/compliance', this.validateWorkflowId() as any, this.getComplianceWorkflow.bind(this) as any);
+    this.router.post('/workflows/:workflowId/compliance/decisions', this.validateComplianceDecision() as any, this.submitComplianceDecision.bind(this) as any);
 
     // Progress Tracking Routes
-    this.router.get('/workflows/:workflowId/progress', this.validateWorkflowId(), this.getProgress.bind(this));
-    this.router.get('/workflows/:workflowId/progress/summary', this.validateWorkflowId(), this.getProgressSummary.bind(this));
-    this.router.post('/workflows/:workflowId/progress/blockers', this.validateReportBlocker(), this.reportBlocker.bind(this));
-    this.router.post('/workflows/:workflowId/progress/blockers/:blockerId/resolve', this.validateResolveBlocker(), this.resolveBlocker.bind(this));
+    this.router.get('/workflows/:workflowId/progress', this.validateWorkflowId() as any, this.getProgress.bind(this) as any);
+    this.router.get('/workflows/:workflowId/progress/summary', this.validateWorkflowId() as any, this.getProgressSummary.bind(this) as any);
+    this.router.post('/workflows/:workflowId/progress/blockers', this.validateReportBlocker() as any, this.reportBlocker.bind(this) as any);
+    this.router.post('/workflows/:workflowId/progress/blockers/:blockerId/resolve', this.validateResolveBlocker() as any, this.resolveBlocker.bind(this) as any);
 
     // Analytics and Reporting Routes
-    this.router.get('/analytics/workflows', this.validateAnalyticsRequest(), this.getWorkflowAnalytics.bind(this));
-    this.router.get('/analytics/documents', this.validateAnalyticsRequest(), this.getDocumentAnalytics.bind(this));
-    this.router.get('/analytics/identity', this.validateAnalyticsRequest(), this.getIdentityVerificationAnalytics.bind(this));
-    this.router.get('/analytics/compliance', this.validateAnalyticsRequest(), this.getComplianceAnalytics.bind(this));
-    this.router.get('/analytics/progress', this.validateAnalyticsRequest(), this.getProgressAnalytics.bind(this));
+    this.router.get('/analytics/workflows', this.validateAnalyticsRequest() as any, this.getWorkflowAnalytics.bind(this) as any);
+    this.router.get('/analytics/documents', this.validateAnalyticsRequest() as any, this.getDocumentAnalytics.bind(this) as any);
+    this.router.get('/analytics/identity', this.validateAnalyticsRequest() as any, this.getIdentityVerificationAnalytics.bind(this) as any);
+    this.router.get('/analytics/compliance', this.validateAnalyticsRequest() as any, this.getComplianceAnalytics.bind(this) as any);
+    this.router.get('/analytics/progress', this.validateAnalyticsRequest() as any, this.getProgressAnalytics.bind(this) as any);
 
     // Client-facing Routes
-    this.router.get('/client/:clientId/workflows', this.validateClientId(), this.getClientWorkflows.bind(this));
-    this.router.get('/client/:clientId/progress', this.validateClientId(), this.getClientProgress.bind(this));
-    this.router.get('/client/:clientId/next-actions', this.validateClientId(), this.getClientNextActions.bind(this));
+    this.router.get('/client/:clientId/workflows', this.validateClientId() as any, this.getClientWorkflows.bind(this) as any);
+    this.router.get('/client/:clientId/progress', this.validateClientId() as any, this.getClientProgress.bind(this) as any);
+    this.router.get('/client/:clientId/next-actions', this.validateClientId() as any, this.getClientNextActions.bind(this) as any);
 
     // Admin Routes
-    this.router.get('/admin/workflows/pending', this.validateAdminAccess(), this.getPendingWorkflows.bind(this));
-    this.router.get('/admin/compliance/queue', this.validateAdminAccess(), this.getComplianceQueue.bind(this));
-    this.router.get('/admin/metrics/dashboard', this.validateAdminAccess(), this.getAdminDashboard.bind(this));
+    this.router.get('/admin/workflows/pending', this.validateAdminAccess() as any, this.getPendingWorkflows.bind(this) as any);
+    this.router.get('/admin/compliance/queue', this.validateAdminAccess() as any, this.getComplianceQueue.bind(this) as any);
+    this.router.get('/admin/metrics/dashboard', this.validateAdminAccess() as any, this.getAdminDashboard.bind(this) as any);
   }
 
   // Validation middleware
   private validateCreateWorkflow() {
     return [
-      body('clientId').isString().notEmpty(),
-      body('clientType').isIn(['individual', 'entity', 'trust', 'partnership']),
-      body('accountType').isString().notEmpty(),
-      body('metadata').isObject().optional(),
+      (body('clientId').isString() as any).notEmpty(),
+      (body('clientType').isIn(['individual', 'entity', 'trust', 'partnership']) as any),
+      (body('accountType').isString() as any).notEmpty(),
+      (body('metadata').isObject() as any).optional(),
       this.handleValidationErrors
     ];
   }
 
   private validateWorkflowId() {
     return [
-      param('workflowId').isUUID(),
+      (param('workflowId').isUUID() as any),
       this.handleValidationErrors
     ];
   }
 
   private validateGetWorkflows() {
     return [
-      query('status').isString().optional(),
-      query('clientId').isString().optional(),
-      query('limit').isInt({ min: 1, max: 100 }).optional(),
-      query('offset').isInt({ min: 0 }).optional(),
+      (query('status').isString() as any).optional(),
+      (query('clientId').isString() as any).optional(),
+      (query('limit').isInt({ min: 1, max: 100 }).optional() as any),
+      (query('offset').isInt({ min: 0 }).optional() as any),
       this.handleValidationErrors
     ];
   }
 
   private validateProcessEvent() {
     return [
-      param('workflowId').isUUID(),
-      body('event').isString().notEmpty(),
-      body('eventData').isObject().optional(),
-      body('triggeredBy').isString().notEmpty(),
+      (param('workflowId').isUUID() as any),
+      (body('event').isString() as any).notEmpty(),
+      (body('eventData').isObject() as any).optional(),
+      (body('triggeredBy').isString() as any).notEmpty(),
       this.handleValidationErrors
     ];
   }
 
   private validateSubmitDocument() {
     return [
-      param('workflowId').isUUID(),
-      body('requirementId').isString().notEmpty(),
-      body('fileName').isString().notEmpty(),
-      body('filePath').isString().notEmpty(),
-      body('fileSize').isInt({ min: 1 }),
-      body('mimeType').isString().notEmpty(),
+      (param('workflowId').isUUID() as any),
+      (body('requirementId').isString() as any).notEmpty(),
+      (body('fileName').isString() as any).notEmpty(),
+      (body('filePath').isString() as any).notEmpty(),
+      (body('fileSize').isInt({ min: 1 }) as any),
+      (body('mimeType').isString() as any).notEmpty(),
       this.handleValidationErrors
     ];
   }
 
   private validateCreateVerificationSession() {
     return [
-      param('workflowId').isUUID(),
-      body('sessionType').isIn(Object.values(VerificationSessionType)),
-      body('provider').isString().optional(),
+      (param('workflowId').isUUID() as any),
+      (body('sessionType').isIn(Object.values(VerificationSessionType)) as any),
+      (body('provider').isString() as any).optional(),
       this.handleValidationErrors
     ];
   }
 
   private validateSessionId() {
     return [
-      param('workflowId').isUUID(),
-      param('sessionId').isUUID(),
+      (param('workflowId').isUUID() as any),
+      (param('sessionId').isUUID() as any),
       this.handleValidationErrors
     ];
   }
 
   private validateDocumentVerification() {
     return [
-      param('workflowId').isUUID(),
-      param('sessionId').isUUID(),
-      body('documentType').isIn(Object.values(DocumentType)),
-      body('frontImagePath').isString().notEmpty(),
-      body('backImagePath').isString().optional(),
+      (param('workflowId').isUUID() as any),
+      (param('sessionId').isUUID() as any),
+      (body('documentType').isIn(Object.values(DocumentType)) as any),
+      (body('frontImagePath').isString() as any).notEmpty(),
+      (body('backImagePath').isString() as any).optional(),
       this.handleValidationErrors
     ];
   }
 
   private validateBiometricVerification() {
     return [
-      param('workflowId').isUUID(),
-      param('sessionId').isUUID(),
-      body('biometricType').isString().notEmpty(),
-      body('captureData').notEmpty(),
+      (param('workflowId').isUUID() as any),
+      (param('sessionId').isUUID() as any),
+      (body('biometricType').isString() as any).notEmpty(),
+      (body('captureData').notEmpty() as any),
       this.handleValidationErrors
     ];
   }
 
   private validateKBA() {
     return [
-      param('workflowId').isUUID(),
-      param('sessionId').isUUID(),
+      (param('workflowId').isUUID() as any),
+      (param('sessionId').isUUID() as any),
       this.handleValidationErrors
     ];
   }
 
   private validateKBAAnswers() {
     return [
-      param('workflowId').isUUID(),
-      param('sessionId').isUUID(),
-      param('kbaId').isUUID(),
-      body('answers').isArray().notEmpty(),
+      (param('workflowId').isUUID() as any),
+      (param('sessionId').isUUID() as any),
+      (param('kbaId').isUUID() as any),
+      (body('answers').isArray() as any).notEmpty(),
       this.handleValidationErrors
     ];
   }
 
   private validateUpdateKYC() {
     return [
-      param('workflowId').isUUID(),
-      body('personalInfo').isObject().optional(),
-      body('addressInfo').isObject().optional(),
-      body('financialInfo').isObject().optional(),
-      body('businessInfo').isObject().optional(),
+      (param('workflowId').isUUID() as any),
+      (body('personalInfo').isObject() as any).optional(),
+      (body('addressInfo').isObject() as any).optional(),
+      (body('financialInfo').isObject() as any).optional(),
+      (body('businessInfo').isObject() as any).optional(),
       this.handleValidationErrors
     ];
   }
 
   private validateKYCReview() {
     return [
-      param('workflowId').isUUID(),
-      body('decision').isIn(['approve', 'reject', 'request_more_info']),
-      body('notes').isString().optional(),
+      (param('workflowId').isUUID() as any),
+      (body('decision').isIn(['approve', 'reject', 'request_more_info']) as any),
+      (body('notes').isString() as any).optional(),
       this.handleValidationErrors
     ];
   }
 
   private validateInitiateAccountSetup() {
     return [
-      param('workflowId').isUUID(),
-      body('accountConfiguration').isObject(),
-      body('fundingSetup').isObject(),
-      body('investmentPreferences').isObject(),
+      (param('workflowId').isUUID() as any),
+      (body('accountConfiguration').isObject() as any),
+      (body('fundingSetup').isObject() as any),
+      (body('investmentPreferences').isObject() as any),
       this.handleValidationErrors
     ];
   }
 
   private validateUpdateAccountSetup() {
     return [
-      param('workflowId').isUUID(),
-      body('accountConfiguration').isObject().optional(),
-      body('fundingSetup').isObject().optional(),
-      body('investmentPreferences').isObject().optional(),
+      (param('workflowId').isUUID() as any),
+      (body('accountConfiguration').isObject() as any).optional(),
+      (body('fundingSetup').isObject() as any).optional(),
+      (body('investmentPreferences').isObject() as any).optional(),
       this.handleValidationErrors
     ];
   }
 
   private validateComplianceDecision() {
     return [
-      param('workflowId').isUUID(),
-      body('stepId').isString().notEmpty(),
-      body('decision').isIn(['APPROVE', 'REJECT', 'CONDITIONAL_APPROVE', 'REQUEST_MORE_INFO', 'ESCALATE']),
-      body('reasoning').isString().notEmpty(),
-      body('conditions').isArray().optional(),
+      (param('workflowId').isUUID() as any),
+      (body('stepId').isString() as any).notEmpty(),
+      (body('decision').isIn(['APPROVE', 'REJECT', 'CONDITIONAL_APPROVE', 'REQUEST_MORE_INFO', 'ESCALATE']) as any),
+      (body('reasoning').isString() as any).notEmpty(),
+      (body('conditions').isArray() as any).optional(),
       this.handleValidationErrors
     ];
   }
 
   private validateReportBlocker() {
     return [
-      param('workflowId').isUUID(),
-      body('name').isString().notEmpty(),
-      body('description').isString().notEmpty(),
-      body('type').isString().notEmpty(),
-      body('severity').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
-      body('reportedBy').isString().notEmpty(),
+      (param('workflowId').isUUID() as any),
+      (body('name').isString() as any).notEmpty(),
+      (body('description').isString() as any).notEmpty(),
+      (body('type').isString() as any).notEmpty(),
+      (body('severity').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']) as any),
+      (body('reportedBy').isString() as any).notEmpty(),
       this.handleValidationErrors
     ];
   }
 
   private validateResolveBlocker() {
     return [
-      param('workflowId').isUUID(),
-      param('blockerId').isUUID(),
-      body('resolution').isString().notEmpty(),
-      body('resolvedBy').isString().notEmpty(),
+      (param('workflowId').isUUID() as any),
+      (param('blockerId').isUUID() as any),
+      (body('resolution').isString() as any).notEmpty(),
+      (body('resolvedBy').isString() as any).notEmpty(),
       this.handleValidationErrors
     ];
   }
 
   private validateAnalyticsRequest() {
     return [
-      query('tenantId').isString().optional(),
-      query('startDate').isISO8601().optional(),
-      query('endDate').isISO8601().optional(),
+      (query('tenantId').isString() as any).optional(),
+      (query('startDate').isISO8601() as any).optional(),
+      (query('endDate').isISO8601() as any).optional(),
       this.handleValidationErrors
     ];
   }
 
   private validateClientId() {
     return [
-      param('clientId').isString().notEmpty(),
+      (param('clientId').isString() as any).notEmpty(),
       this.handleValidationErrors
     ];
   }
@@ -466,7 +466,7 @@ export class OnboardingController extends EventEmitter {
     ];
   }
 
-  private handleValidationErrors(req: Request, res: Response, next: NextFunction): void {
+  private handleValidationErrors(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       res.status(400).json({
@@ -490,7 +490,7 @@ export class OnboardingController extends EventEmitter {
   }
 
   // Route handlers
-  private async createWorkflow(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async createWorkflow(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const { clientId, clientType, accountType, metadata } = req.body;
       const tenantId = req.tenantId || req.user?.tenantId;
@@ -524,7 +524,7 @@ export class OnboardingController extends EventEmitter {
           metadata: workflow.metadata
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -532,7 +532,7 @@ export class OnboardingController extends EventEmitter {
     }
   }
 
-  private async getWorkflow(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getWorkflow(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const { workflowId } = req.params;
       const workflow = this.workflowStateMachine.getWorkflow(workflowId);
@@ -546,7 +546,7 @@ export class OnboardingController extends EventEmitter {
         success: true,
         data: workflow
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -554,7 +554,7 @@ export class OnboardingController extends EventEmitter {
     }
   }
 
-  private async getWorkflows(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getWorkflows(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const { status, clientId, limit = 50, offset = 0 } = req.query;
       const tenantId = req.tenantId || req.user?.tenantId;
@@ -572,7 +572,7 @@ export class OnboardingController extends EventEmitter {
           }
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -580,7 +580,7 @@ export class OnboardingController extends EventEmitter {
     }
   }
 
-  private async processEvent(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async processEvent(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const { workflowId } = req.params;
       const { event, eventData, triggeredBy } = req.body;
@@ -599,7 +599,7 @@ export class OnboardingController extends EventEmitter {
           errors: result.errors
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -607,7 +607,7 @@ export class OnboardingController extends EventEmitter {
     }
   }
 
-  private async getAvailableEvents(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getAvailableEvents(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const { workflowId } = req.params;
       const events = this.workflowStateMachine.getAvailableEvents(workflowId);
@@ -616,7 +616,7 @@ export class OnboardingController extends EventEmitter {
         success: true,
         data: { availableEvents: events }
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -624,7 +624,7 @@ export class OnboardingController extends EventEmitter {
     }
   }
 
-  private async submitDocument(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async submitDocument(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const { workflowId } = req.params;
       const { requirementId, fileName, filePath, fileSize, mimeType } = req.body;
@@ -658,7 +658,7 @@ export class OnboardingController extends EventEmitter {
           status: submission.status
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -666,7 +666,7 @@ export class OnboardingController extends EventEmitter {
     }
   }
 
-  private async getProgress(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getProgress(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const { workflowId } = req.params;
       const progress = this.progressService.getProgressByWorkflow(workflowId);
@@ -680,7 +680,7 @@ export class OnboardingController extends EventEmitter {
         success: true,
         data: progress
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -688,7 +688,7 @@ export class OnboardingController extends EventEmitter {
     }
   }
 
-  private async getProgressSummary(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getProgressSummary(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const { workflowId } = req.params;
       const progress = this.progressService.getProgressByWorkflow(workflowId);
@@ -704,7 +704,7 @@ export class OnboardingController extends EventEmitter {
         success: true,
         data: summary
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -713,127 +713,127 @@ export class OnboardingController extends EventEmitter {
   }
 
   // Placeholder implementations for remaining route handlers
-  private async getDocuments(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getDocuments(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { documents: [] } });
   }
 
-  private async getDocumentRequirements(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getDocumentRequirements(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { requirements: [] } });
   }
 
-  private async getDocumentStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getDocumentStatus(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { status: 'pending' } });
   }
 
-  private async createVerificationSession(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async createVerificationSession(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { sessionId: 'placeholder' } });
   }
 
-  private async getVerificationSession(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getVerificationSession(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { session: {} } });
   }
 
-  private async startDocumentVerification(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async startDocumentVerification(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { verificationId: 'placeholder' } });
   }
 
-  private async startBiometricVerification(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async startBiometricVerification(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { verificationId: 'placeholder' } });
   }
 
-  private async startKBA(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async startKBA(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { kbaId: 'placeholder', questions: [] } });
   }
 
-  private async submitKBAAnswers(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async submitKBAAnswers(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { passed: true, score: 85 } });
   }
 
-  private async getKYCProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getKYCProfile(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { profile: {} } });
   }
 
-  private async updateKYCProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async updateKYCProfile(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { updated: true } });
   }
 
-  private async reviewKYCProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async reviewKYCProfile(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { reviewed: true } });
   }
 
-  private async getAMLScreeningResults(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getAMLScreeningResults(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { results: [] } });
   }
 
-  private async initiateAccountSetup(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async initiateAccountSetup(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { setupId: 'placeholder' } });
   }
 
-  private async getAccountSetup(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getAccountSetup(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { setup: {} } });
   }
 
-  private async updateAccountSetup(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async updateAccountSetup(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { updated: true } });
   }
 
-  private async getComplianceWorkflow(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getComplianceWorkflow(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { workflow: {} } });
   }
 
-  private async submitComplianceDecision(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async submitComplianceDecision(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { decisionId: 'placeholder' } });
   }
 
-  private async reportBlocker(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async reportBlocker(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { blockerId: 'placeholder' } });
   }
 
-  private async resolveBlocker(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async resolveBlocker(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { resolved: true } });
   }
 
-  private async getWorkflowAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getWorkflowAnalytics(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { analytics: {} } });
   }
 
-  private async getDocumentAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getDocumentAnalytics(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { analytics: {} } });
   }
 
-  private async getIdentityVerificationAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getIdentityVerificationAnalytics(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { analytics: {} } });
   }
 
-  private async getComplianceAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getComplianceAnalytics(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { analytics: {} } });
   }
 
-  private async getProgressAnalytics(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getProgressAnalytics(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { analytics: {} } });
   }
 
-  private async getClientWorkflows(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getClientWorkflows(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { workflows: [] } });
   }
 
-  private async getClientProgress(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getClientProgress(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { progress: [] } });
   }
 
-  private async getClientNextActions(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getClientNextActions(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { actions: [] } });
   }
 
-  private async getPendingWorkflows(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getPendingWorkflows(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { workflows: [] } });
   }
 
-  private async getComplianceQueue(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getComplianceQueue(req: AuthenticatedRequest, res: Response): Promise<any> {
     res.json({ success: true, data: { queue: [] } });
   }
 
-  private async getAdminDashboard(req: AuthenticatedRequest, res: Response): Promise<void> {
+  private async getAdminDashboard(req: AuthenticatedRequest, res: Response): Promise<any> {
     try {
       const tenantId = req.query.tenantId as string;
 
@@ -856,7 +856,7 @@ export class OnboardingController extends EventEmitter {
           generatedAt: new Date()
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       res.status(500).json({
         success: false,
         error: error.message
@@ -871,23 +871,25 @@ export class OnboardingController extends EventEmitter {
 
 // Mock notification service implementation
 export class MockOnboardingNotificationService implements OnboardingNotificationService {
-  async sendWelcomeNotification(clientId: string, workflowId: string): Promise<void> {
+  async sendWelcomeNotification(clientId: string, workflowId: string): Promise<any> {
     console.log(`Welcome notification sent to client ${clientId} for workflow ${workflowId}`);
   }
 
-  async sendStepReminderNotification(clientId: string, stepName: string): Promise<void> {
+  async sendStepReminderNotification(clientId: string, stepName: string): Promise<any> {
     console.log(`Step reminder sent to client ${clientId} for step: ${stepName}`);
   }
 
-  async sendMilestoneNotification(clientId: string, milestoneName: string): Promise<void> {
+  async sendMilestoneNotification(clientId: string, milestoneName: string): Promise<any> {
     console.log(`Milestone notification sent to client ${clientId} for milestone: ${milestoneName}`);
   }
 
-  async sendCompletionNotification(clientId: string, workflowId: string): Promise<void> {
+  async sendCompletionNotification(clientId: string, workflowId: string): Promise<any> {
     console.log(`Completion notification sent to client ${clientId} for workflow ${workflowId}`);
   }
 
-  async sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<void> {
+  async sendDelayNotification(clientId: string, reason: string, newEstimate: Date): Promise<any> {
     console.log(`Delay notification sent to client ${clientId}. Reason: ${reason}, New estimate: ${newEstimate.toISOString()}`);
   }
 }
+
+

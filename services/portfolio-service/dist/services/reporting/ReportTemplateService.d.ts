@@ -17,9 +17,9 @@ export declare class ReportTemplateService {
         templates: ReportTemplate[];
         totalCount: number;
     }>;
-    deleteReportTemplate(tenantId: string, templateId: string, userId: string): Promise<void>;
+    deleteReportTemplate(tenantId: string, templateId: string, userId: string): Promise<any>;
     duplicateReportTemplate(tenantId: string, templateId: string, newName: string, userId: string): Promise<ReportTemplate>;
-    shareReportTemplate(tenantId: string, templateId: string, shareWith: string[], userId: string): Promise<void>;
+    shareReportTemplate(tenantId: string, templateId: string, shareWith: string[], userId: string): Promise<any>;
     createReportLibrary(tenantId: string, libraryData: Partial<ReportLibrary>, userId: string): Promise<ReportLibrary>;
     getReportUsageStats(tenantId: string, templateId?: string, dateRange?: {
         startDate: Date;

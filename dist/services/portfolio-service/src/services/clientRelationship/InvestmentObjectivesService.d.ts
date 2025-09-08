@@ -1,5 +1,5 @@
 import { Decimal } from '@prisma/client/runtime/library';
-import { InvestmentObjective, InvestmentRestriction, RestrictionType, RiskTolerance } from '../../models/clientRelationship/ClientRelationship';
+import { InvestmentObjective, InvestmentRestriction, RiskTolerance } from '../../models/clientRelationship/ClientRelationship';
 export interface InvestmentObjectiveRequest {
     clientId: string;
     objective: string;
@@ -12,7 +12,7 @@ export interface InvestmentObjectiveRequest {
 }
 export interface InvestmentRestrictionRequest {
     clientId: string;
-    restrictionType: RestrictionType;
+    restrictionType: string;
     description: string;
     appliesTo: string;
     isActive: boolean;
@@ -46,7 +46,7 @@ export interface ObjectiveAnalysis {
 export interface RestrictionAnalysis {
     clientId: string;
     totalRestrictions: number;
-    restrictionsByType: Record<RestrictionType, number>;
+    restrictionsByType: Record<string, number>;
     activeRestrictions: number;
     upcomingExpirations: Array<{
         restrictionId: string;
@@ -90,11 +90,11 @@ export declare class InvestmentObjectivesService {
     /**
      * Delete investment objective
      */
-    deleteObjective(objectiveId: string, tenantId: string, userId: string): Promise<void>;
+    deleteObjective(objectiveId: string, tenantId: string, userId: string): Promise<any>;
     /**
      * Delete investment restriction
      */
-    deleteRestriction(restrictionId: string, tenantId: string, userId: string): Promise<void>;
+    deleteRestriction(restrictionId: string, tenantId: string, userId: string): Promise<any>;
     /**
      * Analyze client's investment objectives
      */

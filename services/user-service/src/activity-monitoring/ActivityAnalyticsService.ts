@@ -784,14 +784,14 @@ export class ActivityAnalyticsService extends EventEmitter {
     }, 60 * 60 * 1000);
   }
 
-  private async processScheduledReports(): Promise<void> {
+  private async processScheduledReports(): Promise<any> {
     const now = new Date();
     
     for (const report of this.reports.values()) {
       if (report.isActive && report.schedule && this.shouldGenerateReport(report, now)) {
         try {
           await this.generateScheduledReport(report);
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error generating scheduled report ${report.id}:`, error);
         }
       }
@@ -806,7 +806,7 @@ export class ActivityAnalyticsService extends EventEmitter {
     return now >= report.nextGeneration;
   }
 
-  private async generateScheduledReport(report: AnalyticsReport): Promise<void> {
+  private async generateScheduledReport(report: AnalyticsReport): Promise<any> {
     // Generate report based on type and parameters
     this.emit('scheduledReportGenerated', report);
     
@@ -862,3 +862,4 @@ export class ActivityAnalyticsService extends EventEmitter {
     return totalDuration / sessions.length;
   }
 }
+

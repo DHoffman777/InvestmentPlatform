@@ -124,7 +124,7 @@ export declare class ErrorDashboardService extends EventEmitter {
     private calculateTrend;
     private calculateImpact;
     generateReport(reportId: string): Promise<any>;
-    checkAlertRules(): Promise<void>;
+    checkAlertRules(): Promise<any>;
     private evaluateAlertCondition;
     private compareValues;
     private startMetricsUpdater;
@@ -137,5 +137,5 @@ export declare class ErrorDashboardService extends EventEmitter {
     addAlertRule(rule: AlertRule): void;
     getReports(): ReportConfig[];
     getAlertRules(): AlertRule[];
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

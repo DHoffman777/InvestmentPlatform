@@ -168,6 +168,7 @@ class CashEquivalentService {
                     price: new client_1.Prisma.Decimal(1.0),
                     grossAmount: new client_1.Prisma.Decimal(Math.abs(request.amount)),
                     netAmount: new client_1.Prisma.Decimal(Math.abs(request.amount)),
+                    transactionDate: new Date(),
                     tradeDate: new Date(),
                     settlementDate: new Date(), // Immediate settlement for sweeps
                     status: 'SETTLED',
@@ -245,6 +246,7 @@ class CashEquivalentService {
                     price: new client_1.Prisma.Decimal(0),
                     grossAmount: new client_1.Prisma.Decimal(request.amount),
                     netAmount: new client_1.Prisma.Decimal(request.amount),
+                    transactionDate: request.distributionDate,
                     tradeDate: request.distributionDate,
                     settlementDate: request.distributionDate,
                     status: 'SETTLED',

@@ -110,7 +110,7 @@ export declare class SettlementTimelineTrackingService extends EventEmitter {
     private startMonitoringTimer;
     createSettlementInstruction(instructionData: Omit<SettlementInstruction, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<SettlementInstruction>;
     private createMilestoneTimeline;
-    updateMilestoneStatus(instructionId: string, milestoneType: string, status: 'COMPLETED' | 'DELAYED' | 'FAILED' | 'SKIPPED', notes?: string): Promise<void>;
+    updateMilestoneStatus(instructionId: string, milestoneType: string, status: 'COMPLETED' | 'DELAYED' | 'FAILED' | 'SKIPPED', notes?: string): Promise<any>;
     private updateInstructionStatus;
     recordMilestoneDelay(instructionId: string, milestoneId: string, reason: string, estimatedDuration?: number): Promise<SettlementDelay>;
     private classifyDelayType;

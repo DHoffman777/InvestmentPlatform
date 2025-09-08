@@ -104,8 +104,8 @@ export class MachineLearningInsightsService {
   private insights: Map<string, MachineLearningInsight> = new Map();
   private insightTemplates: Map<string, any> = new Map();
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(eventPublisher?: EventPublisher) {
+    this.eventPublisher = eventPublisher || new EventPublisher('MachineLearningInsightsService');
     this.initializeInsightTemplates();
   }
 
@@ -153,7 +153,7 @@ export class MachineLearningInsightsService {
 
       return insights;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating ML insights:', error);
       throw error;
     }
@@ -188,7 +188,7 @@ export class MachineLearningInsightsService {
         optimalClusters
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing cluster analysis:', error);
       throw error;
     }
@@ -216,7 +216,7 @@ export class MachineLearningInsightsService {
         trendAnalysis
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error recognizing patterns:', error);
       throw error;
     }
@@ -251,7 +251,7 @@ export class MachineLearningInsightsService {
       // Filter by constraints and rank by expected impact
       return this.filterAndRankOptimizations(suggestions, constraints);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating optimization suggestions:', error);
       throw error;
     }
@@ -280,7 +280,7 @@ export class MachineLearningInsightsService {
         riskDecomposition
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error analyzing performance drivers:', error);
       throw error;
     }

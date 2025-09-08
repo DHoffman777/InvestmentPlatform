@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { logger } from '../../../utils/logger';
+import { Decimal } from '@prisma/client/runtime/library';
 import { 
   CustodianConnection,
   CustodianConnectionConfig,
@@ -96,7 +97,7 @@ export class SchwabIntegrationService {
     );
   }
 
-  async validateConfig(config: CustodianConnectionConfig): Promise<void> {
+  async validateConfig(config: CustodianConnectionConfig): Promise<any> {
     // Validate Schwab-specific configuration requirements
     if (!config.authentication.credentials.clientId) {
       throw new Error('Schwab Client ID is required');
@@ -106,7 +107,7 @@ export class SchwabIntegrationService {
       throw new Error('Schwab Client Secret is required');
     }
 
-    if (config.connectionType !== APIConnectionType.REST_API) {
+    if ((config as any).connectionType !== APIConnectionType.REST_API) {
       throw new Error('Schwab only supports REST API connections');
     }
 
@@ -143,7 +144,7 @@ export class SchwabIntegrationService {
         }
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Schwab connection test failed:', error);
       results.push({
         testType: 'CONNECTIVITY',
@@ -168,7 +169,7 @@ export class SchwabIntegrationService {
         responseTime: Date.now() - startTime,
         details: { tokenType: response.tokenType }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'AUTHENTICATION',
         success: false,
@@ -192,7 +193,7 @@ export class SchwabIntegrationService {
         responseTime: Date.now() - startTime,
         details: { statusCode: response.status }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'CONNECTIVITY',
         success: false,
@@ -221,7 +222,7 @@ export class SchwabIntegrationService {
           recordCount: response.data?.length || 0
         }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'DATA_RETRIEVAL',
         success: false,
@@ -244,7 +245,7 @@ export class SchwabIntegrationService {
         responseTime: Date.now() - startTime,
         details: { statusCode: response.status }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'ORDER_SUBMISSION',
         success: false,
@@ -314,7 +315,7 @@ export class SchwabIntegrationService {
         }
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving data from Schwab:', error);
       throw error;
     }
@@ -347,7 +348,7 @@ export class SchwabIntegrationService {
           
           successCount++;
           
-        } catch (error) {
+        } catch (error: any) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           
           orderStatuses.push({
@@ -372,12 +373,12 @@ export class SchwabIntegrationService {
 
       return {
         submissionId: crypto.randomUUID(),
-        orderStatuses,
+        orderStatuses: orderStatuses as any,
         overallStatus,
-        errors
+        errors: errors as any
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting orders to Schwab:', error);
       throw error;
     }
@@ -423,7 +424,7 @@ export class SchwabIntegrationService {
         status: 'AVAILABLE'
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving documents from Schwab:', error);
       throw error;
     }
@@ -433,7 +434,7 @@ export class SchwabIntegrationService {
     try {
       const response = await this.client.get('/health', { timeout: 5000 });
       return response.status === 200;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Schwab health check failed:', error);
       return false;
     }
@@ -466,13 +467,13 @@ export class SchwabIntegrationService {
         expiresIn
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Schwab authentication failed:', error);
       throw error;
     }
   }
 
-  private async refreshAuthToken(): Promise<void> {
+  private async refreshAuthToken(): Promise<any> {
     // Implementation for token refresh
     logger.info('Refreshing Schwab auth token');
     // This would implement the OAuth2 refresh flow
@@ -514,7 +515,8 @@ export class SchwabIntegrationService {
     };
   }
 
-  private delay(ms: number): Promise<void> {
+  private delay(ms: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+

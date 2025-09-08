@@ -41,8 +41,8 @@ class ResourceOptimizationService extends events_1.EventEmitter {
                 recommendations.push(...engineRecommendations);
             }
             catch (error) {
-                console.error(`Recommendation engine ${engineId} failed:`, error.message);
-                this.emit('engineError', { engineId, error: error.message, timestamp: new Date() });
+                console.error(`Recommendation engine ${engineId} failed:`, error instanceof Error ? error.message : 'Unknown error');
+                this.emit('engineError', { engineId, error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date() });
             }
         }
         // Deduplicate and prioritize recommendations
@@ -396,7 +396,7 @@ class ResourceOptimizationService extends events_1.EventEmitter {
                 });
             }
             catch (error) {
-                console.error(`Failed to auto-apply recommendation ${recommendation.id}:`, error.message);
+                console.error(`Failed to auto-apply recommendation ${recommendation.id}:`, error instanceof Error ? error.message : 'Unknown error');
             }
         }
     }
@@ -450,7 +450,7 @@ class ResourceOptimizationService extends events_1.EventEmitter {
         }
         catch (error) {
             result.result.success = false;
-            result.result.notes = `Application failed: ${error.message}`;
+            result.result.notes = `Application failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
         }
         return result;
     }
@@ -551,7 +551,7 @@ class ResourceOptimizationService extends events_1.EventEmitter {
                 await this.updateRecommendationEngines();
             }
             catch (error) {
-                console.error('Recommendation engine update failed:', error.message);
+                console.error('Recommendation engine update failed:', error instanceof Error ? error.message : 'Unknown error');
             }
         }, this.config.recommendationUpdateInterval);
     }

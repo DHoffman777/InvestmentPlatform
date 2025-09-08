@@ -1,4 +1,11 @@
+
 import { Request, Response, NextFunction } from 'express';
+
+interface AuthenticatedRequest extends Request {
+  user?: any;
+  userId?: string;
+  tenantId?: string;
+}
 import { logger } from '../config/logger';
 
 interface AppError extends Error {
@@ -13,11 +20,11 @@ export const errorHandler = (
   next: NextFunction
 ): void => {
   let error = { ...err };
-  error.message = err.message;
+  error.message = err.message || 'Unknown error';
 
   // Log error
   logger.error('Error occurred:', {
-    error: error.message,
+    error: error instanceof Error ? error.message : 'Unknown error',
     stack: error.stack,
     url: req.url,
     method: req.method,
@@ -27,7 +34,7 @@ export const errorHandler = (
 
   // Default error values
   let statusCode = error.statusCode || 500;
-  let message = error.message || 'Internal Server Error';
+  let message = error instanceof Error ? error.message : 'Internal Server Error';
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {

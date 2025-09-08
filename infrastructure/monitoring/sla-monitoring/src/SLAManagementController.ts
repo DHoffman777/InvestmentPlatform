@@ -4,7 +4,21 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import compression from 'compression';
 import helmet from 'helmet';
-import { body, param, query, validationResult } from 'express-validator';
+// Import express-validator with proper type handling
+import expressValidator from 'express-validator';
+const { body, param, query, validationResult } = expressValidator as any;
+
+// Custom authenticated request type
+type AuthenticatedRequest = express.Request & {
+  requestId?: string;
+  startTime?: number;
+  user?: {
+    id: string;
+    email?: string;
+    roles?: string[];
+    sessionId?: string;
+  };
+};
 
 import { SLATrackingService } from './SLATrackingService';
 import { SLABreachDetectionService } from './SLABreachDetectionService';
@@ -23,6 +37,9 @@ import {
   SLASeverity,
   SLAStatus
 } from './SLADataModel';
+import { ScoringContext } from './SLAComplianceScoringService';
+import { AnalysisRequest } from './SLAHistoricalAnalysisService';
+import { NotificationType } from './SLACustomerNotificationService';
 
 export interface SLAManagementConfig {
   port: number;
@@ -56,6 +73,7 @@ export interface APIResponse<T = any> {
   message?: string;
   timestamp: Date;
   requestId: string;
+  details?: any;
   pagination?: {
     page: number;
     limit: number;
@@ -132,15 +150,16 @@ export class SLAManagementController extends EventEmitter {
     this.app.use(limiter);
 
     // Request logging and tracking
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
+    this.app.use((req: express.Request, res: Response, next: NextFunction) => {
+      const authReq = req as AuthenticatedRequest;
       this.requestCount++;
-      req.requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      req.startTime = Date.now();
+      authReq.requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      authReq.startTime = Date.now();
       
-      console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Request ID: ${req.requestId}`);
+      console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Request ID: ${authReq.requestId}`);
       
       res.on('finish', () => {
-        const duration = Date.now() - req.startTime;
+        const duration = Date.now() - (authReq.startTime || 0);
         console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
         
         this.emit('requestCompleted', {
@@ -148,7 +167,7 @@ export class SLAManagementController extends EventEmitter {
           path: req.path,
           statusCode: res.statusCode,
           duration,
-          requestId: req.requestId
+          requestId: authReq.requestId
         });
       });
       
@@ -157,7 +176,7 @@ export class SLAManagementController extends EventEmitter {
 
     // Authentication middleware
     if (this.config.authenticationRequired) {
-      this.app.use('/api', this.authenticateRequest.bind(this));
+      this.app.use('/api', this.authenticateRequest.bind(this) as any);
     }
   }
 
@@ -202,6 +221,7 @@ export class SLAManagementController extends EventEmitter {
   private setupHealthRoutes(router: express.Router): void {
     // Health check
     router.get('/health', (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       this.sendResponse(res, {
         status: 'healthy',
         timestamp: new Date(),
@@ -221,6 +241,7 @@ export class SLAManagementController extends EventEmitter {
 
     // Readiness check
     router.get('/ready', (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       this.sendResponse(res, {
         ready: true,
         checks: {
@@ -234,6 +255,7 @@ export class SLAManagementController extends EventEmitter {
     // Metrics endpoint
     if (this.config.metricsEnabled) {
       router.get('/metrics', (req: Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         this.sendResponse(res, {
           requests: {
             total: this.requestCount,
@@ -256,21 +278,21 @@ export class SLAManagementController extends EventEmitter {
     // Create SLA definition
     router.post('/slas',
       [
-        body('name').notEmpty().withMessage('SLA name is required'),
-        body('serviceId').notEmpty().withMessage('Service ID is required'),
-        body('targetValue').isNumeric().withMessage('Target value must be numeric'),
-        body('unit').notEmpty().withMessage('Unit is required'),
-        body('metricType').notEmpty().withMessage('Metric type is required')
-      ],
+        body('name').notEmpty().withMessage('SLA name is required') as any,
+        body('serviceId').notEmpty().withMessage('Service ID is required') as any,
+        body('targetValue').isNumeric().withMessage('Target value must be numeric') as any,
+        body('unit').notEmpty().withMessage('Unit is required') as any,
+        body('metricType').notEmpty().withMessage('Metric type is required')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaDefinition: Partial<SLADefinition> = req.body;
           
           // Add audit fields
           slaDefinition.createdAt = new Date();
           slaDefinition.updatedAt = new Date();
-          slaDefinition.createdBy = req.user?.id || 'system';
+          slaDefinition.createdBy = authReq.user?.id || 'system';
           slaDefinition.version = 1;
           slaDefinition.id = this.generateSLAId();
 
@@ -278,75 +300,79 @@ export class SLAManagementController extends EventEmitter {
           await this.services.trackingService.registerSLA(slaDefinition as SLADefinition);
 
           this.sendResponse(res, slaDefinition, 'SLA definition created successfully', 201);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get all SLA definitions
     router.get('/slas', async (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       try {
         const query: SLAQuery = req.query;
         const slas = await this.getSLADefinitions(query);
         
         this.sendResponse(res, slas);
-      } catch (error) {
-        this.sendError(res, error.message, 500, req.requestId);
+      } catch (error: any) {
+        this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
       }
     });
 
     // Get specific SLA definition
     router.get('/slas/:slaId',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const sla = await this.getSLADefinition(req.params.slaId);
           if (!sla) {
-            return this.sendError(res, 'SLA not found', 404, req.requestId);
+            return this.sendError(res, 'SLA not found', 404, authReq.requestId);
           }
           
           this.sendResponse(res, sla);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Update SLA definition
     router.put('/slas/:slaId',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaId = req.params.slaId;
           const updates = req.body;
           
           updates.updatedAt = new Date();
-          updates.updatedBy = req.user?.id || 'system';
+          updates.updatedBy = authReq.user?.id || 'system';
           updates.version = (updates.version || 1) + 1;
 
           const updatedSLA = await this.updateSLADefinition(slaId, updates);
           
           this.sendResponse(res, updatedSLA, 'SLA definition updated successfully');
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Delete SLA definition
     router.delete('/slas/:slaId',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           await this.services.trackingService.unregisterSLA(req.params.slaId);
           
           this.sendResponse(res, null, 'SLA definition deleted successfully');
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -355,21 +381,23 @@ export class SLAManagementController extends EventEmitter {
   private setupTrackingRoutes(router: express.Router): void {
     // Get SLA metrics
     router.get('/slas/:slaId/metrics',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const metric = await this.services.trackingService.getMetric(req.params.slaId);
           
           this.sendResponse(res, metric);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get metrics for multiple SLAs
     router.get('/metrics', async (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       try {
         const serviceId = req.query.serviceId as string;
         
@@ -378,21 +406,21 @@ export class SLAManagementController extends EventEmitter {
           : await this.services.trackingService.getAllMetrics();
         
         this.sendResponse(res, metrics);
-      } catch (error) {
-        this.sendError(res, error.message, 500, req.requestId);
+      } catch (error: any) {
+        this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
       }
     });
 
     // Get SLA history
     router.get('/slas/:slaId/history',
       [
-        param('slaId').notEmpty().withMessage('SLA ID is required'),
-        query('startDate').optional().isISO8601().withMessage('Start date must be valid ISO8601 date'),
-        query('endDate').optional().isISO8601().withMessage('End date must be valid ISO8601 date'),
-        query('aggregationInterval').optional().isNumeric().withMessage('Aggregation interval must be numeric')
-      ],
+        param('slaId').notEmpty().withMessage('SLA ID is required') as any,
+        query('startDate').optional().isISO8601().withMessage('Start date must be valid ISO8601 date') as any,
+        query('endDate').optional().isISO8601().withMessage('End date must be valid ISO8601 date') as any,
+        query('aggregationInterval').optional().isNumeric().withMessage('Aggregation interval must be numeric')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaId = req.params.slaId;
           const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -406,8 +434,8 @@ export class SLAManagementController extends EventEmitter {
           );
           
           this.sendResponse(res, history);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -415,11 +443,11 @@ export class SLAManagementController extends EventEmitter {
     // Start/stop SLA tracking
     router.post('/slas/:slaId/tracking/:action',
       [
-        param('slaId').notEmpty().withMessage('SLA ID is required'),
-        param('action').isIn(['start', 'stop']).withMessage('Action must be start or stop')
-      ],
+        param('slaId').notEmpty().withMessage('SLA ID is required') as any,
+        param('action').isIn(['start', 'stop']).withMessage('Action must be start or stop')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaId = req.params.slaId;
           const action = req.params.action;
@@ -431,23 +459,24 @@ export class SLAManagementController extends EventEmitter {
           }
           
           this.sendResponse(res, null, `SLA tracking ${action}ed successfully`);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Force recalculation
     router.post('/slas/:slaId/recalculate',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           await this.services.trackingService.recalculate(req.params.slaId);
           
           this.sendResponse(res, null, 'SLA metrics recalculated successfully');
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -456,21 +485,23 @@ export class SLAManagementController extends EventEmitter {
   private setupBreachRoutes(router: express.Router): void {
     // Get active breaches
     router.get('/breaches', async (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       try {
         const slaId = req.query.slaId as string;
         const breaches = await this.services.breachDetectionService.getActiveBreaches(slaId);
         
         this.sendResponse(res, breaches);
-      } catch (error) {
-        this.sendError(res, error.message, 500, req.requestId);
+      } catch (error: any) {
+        this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
       }
     });
 
     // Get breach history
     router.get('/slas/:slaId/breaches',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaId = req.params.slaId;
           const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -482,8 +513,8 @@ export class SLAManagementController extends EventEmitter {
           );
           
           this.sendResponse(res, breaches);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -491,21 +522,21 @@ export class SLAManagementController extends EventEmitter {
     // Acknowledge breach
     router.post('/breaches/:breachId/acknowledge',
       [
-        param('breachId').notEmpty().withMessage('Breach ID is required'),
-        body('comments').optional().isString().withMessage('Comments must be a string')
-      ],
+        param('breachId').notEmpty().withMessage('Breach ID is required') as any,
+        body('comments').optional().isString().withMessage('Comments must be a string')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const breachId = req.params.breachId;
-          const userId = req.user?.id || 'anonymous';
+          const userId = authReq.user?.id || 'anonymous';
           const comments = req.body.comments;
 
           await this.services.breachDetectionService.acknowledgeBreachInternal(breachId, userId, comments);
           
           this.sendResponse(res, null, 'Breach acknowledged successfully');
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -513,27 +544,28 @@ export class SLAManagementController extends EventEmitter {
     // Resolve breach
     router.post('/breaches/:breachId/resolve',
       [
-        param('breachId').notEmpty().withMessage('Breach ID is required'),
-        body('resolution').notEmpty().withMessage('Resolution description is required')
-      ],
+        param('breachId').notEmpty().withMessage('Breach ID is required') as any,
+        body('resolution').notEmpty().withMessage('Resolution description is required')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const breachId = req.params.breachId;
-          const userId = req.user?.id || 'anonymous';
+          const userId = authReq.user?.id || 'anonymous';
           const resolution = req.body.resolution;
 
           await this.services.breachDetectionService.resolveBreach(breachId, userId, resolution);
           
           this.sendResponse(res, null, 'Breach resolved successfully');
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get breach statistics
     router.get('/breaches/statistics', async (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       try {
         const slaId = req.query.slaId as string;
         const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
@@ -543,8 +575,8 @@ export class SLAManagementController extends EventEmitter {
         const statistics = await this.services.breachDetectionService.getBreachStatistics(slaId, timeWindow);
         
         this.sendResponse(res, statistics);
-      } catch (error) {
-        this.sendError(res, error.message, 500, req.requestId);
+      } catch (error: any) {
+        this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
       }
     });
   }
@@ -552,9 +584,10 @@ export class SLAManagementController extends EventEmitter {
   private setupComplianceRoutes(router: express.Router): void {
     // Calculate compliance score
     router.post('/slas/:slaId/compliance/calculate',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaId = req.params.slaId;
           const timeRange = {
@@ -563,8 +596,12 @@ export class SLAManagementController extends EventEmitter {
           };
 
           // Mock context - in real implementation, would gather actual data
-          const context = {
-            slaDefinition: await this.getSLADefinition(slaId),
+          const slaDefinition = await this.getSLADefinition(slaId);
+          if (!slaDefinition) {
+            return this.sendError(res, 'SLA not found', 404, authReq.requestId);
+          }
+          const context: ScoringContext = {
+            slaDefinition,
             timeWindow: timeRange,
             metrics: await this.services.trackingService.getSLAHistory(slaId, timeRange),
             breaches: await this.services.breachDetectionService.getBreachHistory(slaId, timeRange),
@@ -586,50 +623,53 @@ export class SLAManagementController extends EventEmitter {
           const score = await this.services.complianceScoringService.calculateComplianceScore(context);
           
           this.sendResponse(res, score);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get compliance grade
     router.get('/slas/:slaId/compliance/grade',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const score = parseFloat(req.query.score as string) || 85;
           const grade = await this.services.complianceScoringService.getComplianceGrade(score);
           
           this.sendResponse(res, grade);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get benchmark comparison
     router.get('/slas/:slaId/compliance/benchmark',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaId = req.params.slaId;
           const score = parseFloat(req.query.score as string) || 85;
           const benchmark = await this.services.complianceScoringService.getBenchmarkComparison(slaId, score);
           
           this.sendResponse(res, benchmark);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get historical compliance scores
     router.get('/slas/:slaId/compliance/history',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaId = req.params.slaId;
           const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -641,8 +681,8 @@ export class SLAManagementController extends EventEmitter {
           );
           
           this.sendResponse(res, scores);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -652,22 +692,22 @@ export class SLAManagementController extends EventEmitter {
     // Perform historical analysis
     router.post('/analysis/historical',
       [
-        body('slaIds').isArray().withMessage('SLA IDs must be an array'),
-        body('timeRange.start').isISO8601().withMessage('Start date must be valid ISO8601 date'),
-        body('timeRange.end').isISO8601().withMessage('End date must be valid ISO8601 date'),
-        body('analysisTypes').isArray().withMessage('Analysis types must be an array')
-      ],
+        body('slaIds').isArray().withMessage('SLA IDs must be an array') as any,
+        body('timeRange.start').isISO8601().withMessage('Start date must be valid ISO8601 date') as any,
+        body('timeRange.end').isISO8601().withMessage('End date must be valid ISO8601 date') as any,
+        body('analysisTypes').isArray().withMessage('Analysis types must be an array')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
-          const request = {
+          const request: AnalysisRequest = {
             slaIds: req.body.slaIds,
             timeRange: {
               start: new Date(req.body.timeRange.start),
               end: new Date(req.body.timeRange.end)
             },
-            analysisTypes: req.body.analysisTypes,
-            granularity: req.body.granularity || 'hour',
+            analysisTypes: req.body.analysisTypes || ['trends', 'patterns', 'anomalies'],
+            granularity: (req.body.granularity || 'hour') as 'hour' | 'day' | 'week' | 'month',
             includeBaseline: req.body.includeBaseline || false,
             compareWithPrevious: req.body.compareWithPrevious || false
           };
@@ -675,17 +715,18 @@ export class SLAManagementController extends EventEmitter {
           const analyses = await this.services.historicalAnalysisService.performHistoricalAnalysis(request);
           
           this.sendResponse(res, analyses);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get specific SLA analysis
     router.get('/slas/:slaId/analysis',
-      [param('slaId').notEmpty().withMessage('SLA ID is required')],
+      [(param('slaId').notEmpty().withMessage('SLA ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const slaId = req.params.slaId;
           const request = {
@@ -695,16 +736,16 @@ export class SLAManagementController extends EventEmitter {
               end: req.query.endDate ? new Date(req.query.endDate as string) : new Date()
             },
             analysisTypes: req.query.types ? (req.query.types as string).split(',') : ['trends', 'patterns', 'anomalies'],
-            granularity: req.query.granularity || 'hour',
+            granularity: (req.query.granularity || 'hour') as 'hour' | 'day' | 'week' | 'month',
             includeBaseline: req.query.includeBaseline === 'true',
             compareWithPrevious: req.query.compareWithPrevious === 'true'
           };
 
-          const analysis = await this.services.historicalAnalysisService.analyzeSLA(slaId, request);
+          const analysis = await this.services.historicalAnalysisService.analyzeSLA(slaId, request as AnalysisRequest);
           
           this.sendResponse(res, analysis);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -714,13 +755,13 @@ export class SLAManagementController extends EventEmitter {
     // Generate report
     router.post('/reports',
       [
-        body('type').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom_period']).withMessage('Invalid report type'),
-        body('title').notEmpty().withMessage('Report title is required'),
-        body('timeRange.start').isISO8601().withMessage('Start date must be valid ISO8601 date'),
-        body('timeRange.end').isISO8601().withMessage('End date must be valid ISO8601 date')
-      ],
+        body('type').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly', 'custom_period']).withMessage('Invalid report type') as any,
+        body('title').notEmpty().withMessage('Report title is required') as any,
+        body('timeRange.start').isISO8601().withMessage('Start date must be valid ISO8601 date') as any,
+        body('timeRange.end').isISO8601().withMessage('End date must be valid ISO8601 date')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const request = {
             templateId: req.body.templateId,
@@ -736,20 +777,21 @@ export class SLAManagementController extends EventEmitter {
             filters: req.body.filters,
             format: req.body.format,
             recipients: req.body.recipients,
-            requestedBy: req.user?.id || 'anonymous'
+            requestedBy: authReq.user?.id || 'anonymous'
           };
 
           const report = await this.services.reportingService.generateReport(request);
           
           this.sendResponse(res, report, 'Report generated successfully', 201);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get report history
     router.get('/reports', async (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       try {
         const options = {
           type: req.query.type as SLAReportType,
@@ -764,53 +806,54 @@ export class SLAManagementController extends EventEmitter {
         const reports = await this.services.reportingService.getReportHistory(options);
         
         this.sendResponse(res, reports);
-      } catch (error) {
-        this.sendError(res, error.message, 500, req.requestId);
+      } catch (error: any) {
+        this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
       }
     });
 
     // Create dashboard
     router.post('/dashboards',
       [
-        body('name').notEmpty().withMessage('Dashboard name is required'),
-        body('widgets').isArray().withMessage('Widgets must be an array')
-      ],
+        body('name').notEmpty().withMessage('Dashboard name is required') as any,
+        body('widgets').isArray().withMessage('Widgets must be an array')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const config = {
             name: req.body.name,
             description: req.body.description || '',
             widgets: req.body.widgets,
             layout: req.body.layout || { columns: 12, theme: 'light', refreshInterval: 30000, enableRealTime: true, widgets: [] },
-            permissions: req.body.permissions || [{ userId: req.user?.id || 'anonymous', role: 'admin' }],
+            permissions: req.body.permissions || [{ userId: authReq.user?.id || 'anonymous', role: 'admin' }],
             isDefault: req.body.isDefault || false,
-            createdBy: req.user?.id || 'anonymous'
+            createdBy: authReq.user?.id || 'anonymous'
           };
 
           const dashboard = await this.services.reportingService.createDashboard(config);
           
           this.sendResponse(res, dashboard, 'Dashboard created successfully', 201);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get dashboard data
     router.get('/dashboards/:dashboardId',
-      [param('dashboardId').notEmpty().withMessage('Dashboard ID is required')],
+      [(param('dashboardId').notEmpty().withMessage('Dashboard ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const dashboardId = req.params.dashboardId;
-          const userId = req.user?.id || 'anonymous';
+          const userId = authReq.user?.id || 'anonymous';
 
           const dashboardData = await this.services.reportingService.getDashboardData(dashboardId, userId);
           
           this.sendResponse(res, dashboardData);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -818,16 +861,16 @@ export class SLAManagementController extends EventEmitter {
     // Export report
     router.post('/reports/:reportId/export',
       [
-        param('reportId').notEmpty().withMessage('Report ID is required'),
-        body('format').isIn(['pdf', 'html', 'excel', 'csv', 'json']).withMessage('Invalid export format')
-      ],
+        param('reportId').notEmpty().withMessage('Report ID is required') as any,
+        body('format').isIn(['pdf', 'html', 'excel', 'csv', 'json']).withMessage('Invalid export format')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           // Would implement report export
           this.sendResponse(res, { exportUrl: `/exports/${req.params.reportId}.${req.body.format}` });
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -837,12 +880,12 @@ export class SLAManagementController extends EventEmitter {
     // Send customer notification
     router.post('/notifications',
       [
-        body('customerId').notEmpty().withMessage('Customer ID is required'),
-        body('type').notEmpty().withMessage('Notification type is required'),
-        body('subject').notEmpty().withMessage('Subject is required')
-      ],
+        body('customerId').notEmpty().withMessage('Customer ID is required') as any,
+        body('type').notEmpty().withMessage('Notification type is required') as any,
+        body('subject').notEmpty().withMessage('Subject is required')      ],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const request = {
             customerId: req.body.customerId,
@@ -859,40 +902,42 @@ export class SLAManagementController extends EventEmitter {
           const notificationId = await this.services.customerNotificationService.sendCustomerNotification(request);
           
           this.sendResponse(res, { notificationId }, 'Notification sent successfully', 201);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Get notification history
     router.get('/customers/:customerId/notifications',
-      [param('customerId').notEmpty().withMessage('Customer ID is required')],
+      [(param('customerId').notEmpty().withMessage('Customer ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const customerId = req.params.customerId;
           const options = {
             startDate: req.query.startDate ? new Date(req.query.startDate as string) : undefined,
             endDate: req.query.endDate ? new Date(req.query.endDate as string) : undefined,
-            types: req.query.types ? (req.query.types as string).split(',') : undefined,
+            types: req.query.types ? (req.query.types as string).split(',').map(t => t as NotificationType) : undefined,
             limit: req.query.limit ? parseInt(req.query.limit as string) : undefined
           };
 
           const history = await this.services.customerNotificationService.getNotificationHistory(customerId, options);
           
           this.sendResponse(res, history);
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Update customer preferences
     router.put('/customers/:customerId/preferences',
-      [param('customerId').notEmpty().withMessage('Customer ID is required')],
+      [(param('customerId').notEmpty().withMessage('Customer ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const customerId = req.params.customerId;
           const preferences = req.body;
@@ -900,17 +945,18 @@ export class SLAManagementController extends EventEmitter {
           await this.services.customerNotificationService.updateCustomerPreferences(customerId, preferences);
           
           this.sendResponse(res, null, 'Preferences updated successfully');
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Acknowledge notification
     router.post('/notifications/:notificationId/acknowledge',
-      [param('notificationId').notEmpty().withMessage('Notification ID is required')],
+      [(param('notificationId').notEmpty().withMessage('Notification ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const notificationId = req.params.notificationId;
           const customerId = req.body.customerId;
@@ -918,17 +964,18 @@ export class SLAManagementController extends EventEmitter {
           await this.services.customerNotificationService.acknowledgeNotification(customerId, notificationId);
           
           this.sendResponse(res, null, 'Notification acknowledged successfully');
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
 
     // Unsubscribe customer
     router.post('/customers/:customerId/unsubscribe',
-      [param('customerId').notEmpty().withMessage('Customer ID is required')],
+      [(param('customerId').notEmpty().withMessage('Customer ID is required') as any)],
       this.validateRequest,
-      async (req: Request, res: Response) => {
+      async (req: express.Request, res: Response) => {
+        const authReq = req as AuthenticatedRequest;
         try {
           const customerId = req.params.customerId;
           const categories = req.body.categories;
@@ -936,8 +983,8 @@ export class SLAManagementController extends EventEmitter {
           await this.services.customerNotificationService.unsubscribeCustomer(customerId, categories);
           
           this.sendResponse(res, null, 'Customer unsubscribed successfully');
-        } catch (error) {
-          this.sendError(res, error.message, 500, req.requestId);
+        } catch (error: any) {
+          this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
         }
       }
     );
@@ -946,15 +993,17 @@ export class SLAManagementController extends EventEmitter {
   private setupAdminRoutes(router: express.Router): void {
     // Admin middleware
     const adminAuth = (req: Request, res: Response, next: NextFunction) => {
+      const authReq = req as AuthenticatedRequest;
       const adminKey = req.headers['x-admin-key'];
       if (this.config.adminApiKey && adminKey !== this.config.adminApiKey) {
-        return this.sendError(res, 'Unauthorized admin access', 401, req.requestId);
+        return this.sendError(res, 'Unauthorized admin access', 401, authReq.requestId);
       }
       next();
     };
 
     // System status
     router.get('/admin/status', adminAuth, (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       this.sendResponse(res, {
         system: 'SLA Management System',
         version: this.config.apiVersion,
@@ -975,17 +1024,19 @@ export class SLAManagementController extends EventEmitter {
 
     // Bulk operations
     router.post('/admin/bulk-recalculate', adminAuth, async (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       try {
         await this.services.trackingService.recalculateAll();
         
         this.sendResponse(res, null, 'Bulk recalculation initiated');
-      } catch (error) {
-        this.sendError(res, error.message, 500, req.requestId);
+      } catch (error: any) {
+        this.sendError(res, error instanceof Error ? error.message : 'Unknown error', 500, authReq.requestId);
       }
     });
 
     // System configuration
     router.get('/admin/config', adminAuth, (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       const config = { ...this.config };
       delete config.jwtSecret;
       delete config.adminApiKey;
@@ -997,6 +1048,7 @@ export class SLAManagementController extends EventEmitter {
   private setupSwaggerDocs(): void {
     // Would implement Swagger/OpenAPI documentation
     this.app.get('/docs', (req: Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
       res.send(`
         <html>
           <head><title>SLA Management API Documentation</title></head>
@@ -1049,18 +1101,21 @@ export class SLAManagementController extends EventEmitter {
 
   private setupErrorHandling(): void {
     // 404 handler
-    this.app.use('*', (req: Request, res: Response) => {
-      this.sendError(res, `Route ${req.originalUrl} not found`, 404, req.requestId);
+    this.app.use('*', (req: express.Request, res: Response) => {
+      const authReq = req as AuthenticatedRequest;
+      this.sendError(res, `Route ${req.originalUrl} not found`, 404, authReq.requestId);
     });
 
     // Global error handler
-    this.app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+    this.app.use((error: Error, req: express.Request, res: Response, next: NextFunction) => {
+      const authReq = req as AuthenticatedRequest;
       console.error('Unhandled error:', error);
-      this.sendError(res, 'Internal server error', 500, req.requestId);
+      this.sendError(res, 'Internal server error', 500, authReq.requestId);
     });
   }
 
-  private authenticateRequest(req: Request, res: Response, next: NextFunction): void {
+  private authenticateRequest(req: express.Request, res: Response, next: NextFunction): void {
+    const authReq = req as AuthenticatedRequest;
     // Skip auth for health checks
     if (req.path.includes('/health') || req.path.includes('/ready')) {
       return next();
@@ -1068,22 +1123,23 @@ export class SLAManagementController extends EventEmitter {
 
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
-      return this.sendError(res, 'Authentication token required', 401, req.requestId);
+      return this.sendError(res, 'Authentication token required', 401, authReq.requestId);
     }
 
     try {
       // Mock JWT verification - in real implementation, would verify actual JWT
-      req.user = { id: 'user123', role: 'admin' };
+      (authReq as any).user = { id: 'user123', email: 'user@example.com', roles: ['admin'] };
       next();
-    } catch (error) {
-      this.sendError(res, 'Invalid authentication token', 401, req.requestId);
+    } catch (error: any) {
+      this.sendError(res, 'Invalid authentication token', 401, authReq.requestId);
     }
   }
 
-  private validateRequest = (req: Request, res: Response, next: NextFunction): void => {
+  private validateRequest = (req: express.Request, res: Response, next: NextFunction): void => {
+    const authReq = req as AuthenticatedRequest;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return this.sendError(res, 'Validation failed', 400, req.requestId, errors.array());
+      return this.sendError(res, 'Validation failed', 400, authReq.requestId, errors.array());
     }
     next();
   };
@@ -1094,7 +1150,7 @@ export class SLAManagementController extends EventEmitter {
       data,
       message,
       timestamp: new Date(),
-      requestId: res.req.requestId
+      requestId: ((res as any).req as AuthenticatedRequest)?.requestId || 'unknown'
     };
     
     res.status(statusCode).json(response);
@@ -1135,7 +1191,7 @@ export class SLAManagementController extends EventEmitter {
   }
 
   async start(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       this.server = this.app.listen(this.config.port, () => {
         console.log(`SLA Management API server started on port ${this.config.port}`);
         console.log(`API Documentation available at http://localhost:${this.config.port}/docs`);
@@ -1146,7 +1202,7 @@ export class SLAManagementController extends EventEmitter {
   }
 
   async shutdown(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       if (this.server) {
         this.server.close(() => {
           console.log('SLA Management API server shut down');
@@ -1161,12 +1217,14 @@ export class SLAManagementController extends EventEmitter {
 }
 
 // Extend Express Request interface to include custom properties
-declare global {
-  namespace Express {
-    interface Request {
-      requestId: string;
-      startTime: number;
-      user?: { id: string; role: string };
-    }
-  }
-}
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       requestId: string;
+//       startTime: number;
+//       user?: { id: string; role: string };
+//     }
+//   }
+// }
+
+

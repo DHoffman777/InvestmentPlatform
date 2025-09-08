@@ -234,5 +234,5 @@ export declare class PerformanceOptimizationService extends EventEmitter {
     private generatePlanId;
     private generateDependencyId;
     private generateRiskId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

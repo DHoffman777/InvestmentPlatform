@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { KafkaService } from '../../utils/kafka-mock';
-import { VaRCalculationRequest, VaRResult } from '../../models/riskManagement/RiskManagement';
+type VaRCalculationRequest = any;
+type VaRResult = any;
 export declare class VaRCalculationService {
     private prisma;
     private kafkaService;
@@ -43,3 +44,4 @@ export declare class VaRCalculationService {
     private calculateUndiversifiedMonteCarloVaR;
     private getActualPortfolioReturns;
 }
+export {};

@@ -190,7 +190,7 @@ export class SchedulingSystem {
     return result;
   }
 
-  async initialize(): Promise<void> {
+  async initialize(): Promise<any> {
     if (this.isInitialized) {
       throw new Error('Scheduling system is already initialized');
     }
@@ -214,13 +214,13 @@ export class SchedulingSystem {
       this.isInitialized = true;
       console.log('✅ Meeting Scheduling System initialization complete');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to initialize Meeting Scheduling System:', error);
       throw error;
     }
   }
 
-  private async initializeCalendarService(): Promise<void> {
+  private async initializeCalendarService(): Promise<any> {
     if (!this.config.calendar.enabled) {
       console.log('📅 Calendar Integration Service disabled');
       return;
@@ -245,7 +245,7 @@ export class SchedulingSystem {
     console.log('✅ Calendar Integration Service initialized');
   }
 
-  private async initializeAvailabilityService(): Promise<void> {
+  private async initializeAvailabilityService(): Promise<any> {
     if (!this.config.availability.enabled) {
       console.log('📊 Availability Management Service disabled');
       return;
@@ -272,7 +272,7 @@ export class SchedulingSystem {
     console.log('✅ Availability Management Service initialized');
   }
 
-  private async initializeBookingService(): Promise<void> {
+  private async initializeBookingService(): Promise<any> {
     if (!this.config.booking.enabled) {
       console.log('📝 Meeting Booking Service disabled');
       return;
@@ -304,7 +304,7 @@ export class SchedulingSystem {
     console.log('✅ Meeting Booking Service initialized');
   }
 
-  private async initializeNotificationService(): Promise<void> {
+  private async initializeNotificationService(): Promise<any> {
     if (!this.config.notifications.enabled) {
       console.log('📧 Meeting Notification Service disabled');
       return;
@@ -331,7 +331,7 @@ export class SchedulingSystem {
     console.log('✅ Meeting Notification Service initialized');
   }
 
-  private async initializeNotesService(): Promise<void> {
+  private async initializeNotesService(): Promise<any> {
     if (!this.config.notes.enabled) {
       console.log('📔 Meeting Notes Service disabled');
       return;
@@ -382,7 +382,7 @@ export class SchedulingSystem {
     console.log('✅ Meeting Notes Service initialized');
   }
 
-  private async initializeVideoService(): Promise<void> {
+  private async initializeVideoService(): Promise<any> {
     if (!this.config.video.enabled) {
       console.log('🎥 Video Conferencing Service disabled');
       return;
@@ -419,7 +419,7 @@ export class SchedulingSystem {
     console.log('✅ Video Conferencing Service initialized');
   }
 
-  private async initializeAnalyticsService(): Promise<void> {
+  private async initializeAnalyticsService(): Promise<any> {
     if (!this.config.analytics.enabled) {
       console.log('📈 Meeting Analytics Service disabled');
       return;
@@ -449,7 +449,7 @@ export class SchedulingSystem {
     console.log('✅ Meeting Analytics Service initialized');
   }
 
-  private async initializeAPIController(): Promise<void> {
+  private async initializeAPIController(): Promise<any> {
     if (!this.config.api.enabled) {
       console.log('🌐 Scheduling API Controller disabled');
       return;
@@ -763,7 +763,7 @@ export class SchedulingSystem {
     };
   }
 
-  async startAPI(): Promise<void> {
+  async startAPI(): Promise<any> {
     if (!this.apiController) {
       throw new Error('API Controller not initialized');
     }
@@ -772,14 +772,14 @@ export class SchedulingSystem {
     console.log(`🚀 Scheduling API started on port ${this.config.api.port}`);
   }
 
-  async stopAPI(): Promise<void> {
+  async stopAPI(): Promise<any> {
     if (this.apiController) {
       await this.apiController.stop();
       console.log('🛑 Scheduling API stopped');
     }
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     console.log('🔄 Shutting down Meeting Scheduling System...');
 
     // Stop API first
@@ -852,3 +852,4 @@ export * from './SchedulingController';
 
 // Default export
 export default SchedulingSystem;
+

@@ -111,7 +111,7 @@ export interface AssetClassAttribution {
     totalContribution: number;
 }
 export interface SecurityAttribution {
-    instrumentId: string;
+    securityId: string;
     instrumentName: string;
     averageWeight: number;
     beginningWeight: number;

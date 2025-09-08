@@ -163,7 +163,7 @@ export declare class LoadTestingFramework extends EventEmitter {
     private metrics;
     private results;
     private activeUsers;
-    private monitoringInterval;
+    private monitoringInterval?;
     constructor(config: LoadTestConfig);
     /**
      * Execute comprehensive load test suite

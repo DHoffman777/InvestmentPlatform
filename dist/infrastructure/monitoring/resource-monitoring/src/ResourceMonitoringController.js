@@ -161,7 +161,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(snapshot);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get utilization metrics for multiple resources
@@ -172,7 +172,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ snapshots });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Add data source
@@ -183,7 +183,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.status(201).json({ message: 'Data source added successfully', id: dataSource.id });
             }
             catch (error) {
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Remove data source
@@ -194,7 +194,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ message: 'Data source removed successfully' });
             }
             catch (error) {
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Collect metrics on demand
@@ -205,7 +205,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ metrics, count: metrics.length });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get historical utilization data
@@ -223,7 +223,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(historicalData);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
     }
@@ -237,7 +237,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(efficiency);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get efficiency insights
@@ -248,7 +248,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ insights });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get waste analysis
@@ -259,7 +259,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ waste_analyses: wasteAnalyses });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get optimization opportunities
@@ -270,7 +270,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ opportunities });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get efficiency benchmarks
@@ -288,7 +288,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 }
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Update efficiency benchmarks
@@ -300,7 +300,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ message: 'Benchmark updated successfully' });
             }
             catch (error) {
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
     }
@@ -313,7 +313,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ recommendations });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Generate new recommendations
@@ -336,7 +336,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ recommendations, count: recommendations.length });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Apply a recommendation
@@ -361,7 +361,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(result);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get recommendation results
@@ -372,7 +372,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ results });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get optimization engines
@@ -382,7 +382,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ engines });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get recommendation templates
@@ -392,7 +392,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ templates });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
     }
@@ -405,7 +405,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.status(response.status === 'approved' ? 201 : 202).json(response);
             }
             catch (error) {
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get allocations for a resource
@@ -423,7 +423,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ allocations, count: allocations.length });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get allocation details
@@ -441,7 +441,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.status(404).json({ error: 'Allocation not found' });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Release allocation
@@ -458,7 +458,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 }
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get allocation metrics
@@ -469,7 +469,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(metrics || { message: 'No metrics available' });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get optimization opportunities for allocations
@@ -480,7 +480,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ optimizations });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get allocation policies
@@ -490,7 +490,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ policies });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
     }
@@ -503,7 +503,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(correlation || { message: 'No cost correlation data available' });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Trigger cost correlation analysis
@@ -516,7 +516,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(correlation);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get cost alerts
@@ -527,7 +527,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ alerts });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get cost models
@@ -537,7 +537,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ models });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Create cost model
@@ -548,7 +548,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.status(201).json({ message: 'Cost model created successfully', id: modelData.id });
             }
             catch (error) {
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Update cost model
@@ -560,7 +560,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ message: 'Cost model updated successfully' });
             }
             catch (error) {
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Delete cost model
@@ -571,7 +571,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ message: 'Cost model deleted successfully' });
             }
             catch (error) {
-                res.status(400).json({ error: error.message });
+                res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
     }
@@ -592,7 +592,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(dashboard);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get dashboard data
@@ -606,7 +606,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(dashboard);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Export dashboard
@@ -620,7 +620,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.send(exportData);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get widget configurations
@@ -630,7 +630,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ widgets });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Get custom metrics
@@ -640,7 +640,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ metrics });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
     }
@@ -672,7 +672,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(metrics);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Configuration
@@ -695,7 +695,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json(config);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Service shutdown
@@ -709,7 +709,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 }, 1000);
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
         // Clear caches
@@ -719,7 +719,7 @@ class ResourceMonitoringController extends events_1.EventEmitter {
                 res.json({ message: 'Caches cleared successfully' });
             }
             catch (error) {
-                res.status(500).json({ error: error.message });
+                res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
             }
         });
     }

@@ -73,7 +73,7 @@ class TemplateRecognitionService {
         catch (error) {
             this.logger.error('Template recognition failed', {
                 documentId: request.documentId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             throw error;
@@ -435,7 +435,7 @@ class TemplateRecognitionService {
             }
         }
         catch (error) {
-            this.logger.warn('ML-based recognition failed', { error: error.message });
+            this.logger.warn('ML-based recognition failed', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
         return scores.sort((a, b) => b.confidenceScore - a.confidenceScore);
     }
@@ -549,7 +549,7 @@ class TemplateRecognitionService {
             });
         }
         catch (error) {
-            this.logger.error('Failed to initialize template recognition', { error: error.message });
+            this.logger.error('Failed to initialize template recognition', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async loadDefaultTemplates() {
@@ -634,7 +634,7 @@ class TemplateRecognitionService {
             this.logger.info('ML models initialized for template recognition');
         }
         catch (error) {
-            this.logger.warn('Failed to initialize ML models', { error: error.message });
+            this.logger.warn('Failed to initialize ML models', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async publishTemplateRecognitionEvent(documentId, tenantId, result) {

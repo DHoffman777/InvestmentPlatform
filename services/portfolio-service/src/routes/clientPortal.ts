@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+import { PrismaClient } from '@prisma/client';
+const { body, param, query, validationResult } = require('express-validator');
 import { ClientPortalService } from '../services/clientPortal/ClientPortalService';
 import { DashboardWidgetService } from '../services/clientPortal/DashboardWidgetService';
 import { authMiddleware } from '../middleware/auth';
@@ -14,8 +15,9 @@ import {
 import { logger } from '../utils/logger';
 
 const router = express.Router();
-const clientPortalService = new ClientPortalService();
-const dashboardWidgetService = new DashboardWidgetService();
+const prisma = new PrismaClient();
+const clientPortalService = new ClientPortalService(prisma);
+const dashboardWidgetService = new DashboardWidgetService(prisma);
 
 // Validation schemas
 const dashboardLayoutUpdateSchema = [
@@ -56,7 +58,7 @@ router.get('/dashboard/layout',
   authMiddleware,
   [query('layoutId').optional().isUUID().withMessage('Invalid layout ID')],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -79,7 +81,7 @@ router.get('/dashboard/layout',
         message: 'Dashboard layout retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving dashboard layout:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -92,10 +94,10 @@ router.get('/dashboard/layout',
 // Update dashboard layout
 router.put('/dashboard/layout/:layoutId',
   authMiddleware,
-  [param('layoutId').isUUID().withMessage('Valid layout ID required')],
+  [param('layoutId').isUUID().withMessage('Valid layout ID required') as any],
   dashboardLayoutUpdateSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -123,7 +125,7 @@ router.put('/dashboard/layout/:layoutId',
         message: 'Dashboard layout updated successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating dashboard layout:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -138,7 +140,7 @@ router.post('/dashboard/data',
   authMiddleware,
   dashboardDataSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -174,7 +176,7 @@ router.post('/dashboard/data',
         message: 'Dashboard data retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving dashboard data:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -187,9 +189,9 @@ router.post('/dashboard/data',
 // Refresh widget data
 router.post('/dashboard/widgets/:widgetId/refresh',
   authMiddleware,
-  [param('widgetId').isUUID().withMessage('Valid widget ID required')],
+  [param('widgetId').isUUID().withMessage('Valid widget ID required') as any],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -216,7 +218,7 @@ router.post('/dashboard/widgets/:widgetId/refresh',
         message: 'Widget refreshed successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error refreshing widget:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -238,7 +240,7 @@ router.get('/messages',
     query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -267,7 +269,7 @@ router.get('/messages',
         message: 'Messages retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving messages:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -280,9 +282,9 @@ router.get('/messages',
 // Mark message as read
 router.put('/messages/:messageId/read',
   authMiddleware,
-  [param('messageId').isUUID().withMessage('Valid message ID required')],
+  [param('messageId').isUUID().withMessage('Valid message ID required') as any],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -304,7 +306,7 @@ router.put('/messages/:messageId/read',
         message: 'Message marked as read'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error marking message as read:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -319,7 +321,7 @@ router.put('/messages/:messageId/read',
 // Get client preferences
 router.get('/preferences',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -341,7 +343,7 @@ router.get('/preferences',
         message: 'Preferences retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving preferences:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -356,7 +358,7 @@ router.put('/preferences',
   authMiddleware,
   preferencesUpdateSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -382,7 +384,7 @@ router.put('/preferences',
         message: 'Preferences updated successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating preferences:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -402,7 +404,7 @@ router.get('/analytics',
     query('endDate').optional().isISO8601().withMessage('Invalid end date')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -433,7 +435,7 @@ router.get('/analytics',
         message: 'Analytics retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving analytics:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -454,7 +456,7 @@ router.post('/session',
     body('deviceInfo.deviceType').isIn(['DESKTOP', 'MOBILE', 'TABLET']).withMessage('Invalid device type')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const clientId = req.user?.clientId;
@@ -493,7 +495,7 @@ router.post('/session',
         message: 'Portal session created successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating portal session:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -505,7 +507,7 @@ router.post('/session',
 
 // Health check for client portal
 router.get('/health',
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       res.json({
         success: true,
@@ -518,7 +520,7 @@ router.get('/health',
         message: 'Client portal service is healthy'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in client portal health check:', error);
       res.status(503).json({
         error: 'Service unavailable',
@@ -531,7 +533,7 @@ router.get('/health',
 // Configuration endpoint for white-labeling
 router.get('/configuration',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
 
@@ -586,7 +588,7 @@ router.get('/configuration',
         message: 'Portal configuration retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving portal configuration:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',

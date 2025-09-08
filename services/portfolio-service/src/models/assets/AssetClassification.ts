@@ -5,14 +5,14 @@ export interface AssetClass {
   id: string;
   name: string;
   code: string;
-  description: string;
-  parentClassId?: string;
+  description: string | null;
+  parentClassId?: string | null;
   level: number; // Hierarchy level (1 = top level, 2 = sub-class, etc.)
   
   // Classification attributes
-  assetType: 'EQUITY' | 'FIXED_INCOME' | 'CASH_EQUIVALENT' | 'ALTERNATIVE' | 'DERIVATIVE';
-  riskLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH';
-  liquidityTier: 'T0' | 'T1' | 'T2' | 'T3' | 'ILLIQUID';
+  assetType: 'EQUITY' | 'FIXED_INCOME' | 'CASH_EQUIVALENT' | 'ALTERNATIVE' | 'DERIVATIVE' | 'STRUCTURED_PRODUCT' | 'COMMODITY' | 'REAL_ESTATE';
+  riskLevel: 'CONSERVATIVE' | 'MODERATE_CONSERVATIVE' | 'MODERATE' | 'MODERATE_AGGRESSIVE' | 'AGGRESSIVE';
+  liquidityTier: 'TIER_1' | 'TIER_2' | 'TIER_3' | 'TIER_4';
   
   // Regulatory classifications
   regulatoryCategory?: string;
@@ -33,7 +33,7 @@ export interface AssetSubClass {
   assetClassId: string;
   name: string;
   code: string;
-  description: string;
+  description: string | null;
   
   // Specific characteristics
   characteristics: AssetCharacteristics;
@@ -90,7 +90,8 @@ export interface AssetCharacteristics {
 
 export interface InstrumentClassification {
   id: string;
-  instrumentId: string; // CUSIP, ISIN, or internal ID
+  instrumentId: string; // External instrument identifier
+  securityId?: string | null; // Internal security reference
   symbol?: string;
   instrumentName: string;
   
@@ -132,6 +133,17 @@ export interface InstrumentClassification {
   accreditedInvestorOnly: boolean;
   institutionalOnly: boolean;
   retailSuitable: boolean;
+  
+  // Market Data
+  primaryExchange?: string;
+  currency: string;
+  
+  // Classification Metadata
+  reviewFrequency: 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
+  
+  // Additional fields
+  tenantId: string;
+  emergingMarket?: boolean;
   
   // Status and metadata
   classificationDate: Date;
@@ -204,7 +216,8 @@ export interface AllocationConstraint {
 
 // Request/Response interfaces
 export interface ClassifyInstrumentRequest {
-  instrumentId: string;
+  instrumentId: string; // External instrument identifier
+  securityId?: string;
   symbol?: string;
   instrumentName: string;
   instrumentType: string;
@@ -214,7 +227,8 @@ export interface ClassifyInstrumentRequest {
 }
 
 export interface UpdateClassificationRequest {
-  instrumentId: string;
+  instrumentId: string; // External instrument identifier
+  securityId?: string;
   assetClassId?: string;
   assetSubClassId?: string;
   classifications?: ClassificationDimension[];

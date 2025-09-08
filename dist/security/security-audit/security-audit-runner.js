@@ -70,7 +70,7 @@ class SecurityAuditRunner {
             process.exit(criticalIssues > 0 ? 1 : 0);
         }
         catch (error) {
-            console.error('❌ Security audit execution failed:', error.message);
+            console.error('❌ Security audit execution failed:', error instanceof Error ? error.message : 'Unknown error');
             if (this.options.verbose) {
                 console.error(error.stack);
             }
@@ -217,7 +217,7 @@ class SecurityAuditRunner {
                 }
             }
             catch (error) {
-                console.error(`Scan failed: ${error.message}`);
+                console.error(`Scan failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
             // Wait for next scan
             console.log(`⏳ Next scan in ${scanInterval / 1000 / 60} minutes...`);

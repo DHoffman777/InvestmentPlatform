@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+const { body, param, query, validationResult } = require('express-validator');
 import { ReportingEngineService } from '../services/reporting/ReportingEngineService';
 import { authMiddleware } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
@@ -86,7 +86,7 @@ router.post('/templates',
   authMiddleware,
   createTemplateSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -117,7 +117,7 @@ router.post('/templates',
         message: 'Report template created successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating report template:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -138,7 +138,7 @@ router.get('/templates',
     query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
 
@@ -167,7 +167,7 @@ router.get('/templates',
         message: 'Report templates retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report templates:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -180,9 +180,9 @@ router.get('/templates',
 // Get report template by ID
 router.get('/templates/:templateId',
   authMiddleware,
-  [param('templateId').isUUID().withMessage('Valid template ID required')],
+  [param('templateId').isUUID().withMessage('Valid template ID required') as any],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const { templateId } = req.params;
@@ -211,7 +211,7 @@ router.get('/templates/:templateId',
         message: 'Report template retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report template:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -226,7 +226,7 @@ router.put('/templates/:templateId',
   authMiddleware,
   updateTemplateSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -254,7 +254,7 @@ router.put('/templates/:templateId',
         message: 'Report template updated successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating report template:', error);
       const statusCode = error instanceof Error && error.message.includes('not found') ? 404 : 500;
       res.status(statusCode).json({
@@ -268,9 +268,9 @@ router.put('/templates/:templateId',
 // Delete report template
 router.delete('/templates/:templateId',
   authMiddleware,
-  [param('templateId').isUUID().withMessage('Valid template ID required')],
+  [param('templateId').isUUID().withMessage('Valid template ID required') as any],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -292,7 +292,7 @@ router.delete('/templates/:templateId',
         message: 'Report template deleted successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deleting report template:', error);
       const statusCode = error instanceof Error && error.message.includes('not found') ? 404 : 500;
       res.status(statusCode).json({
@@ -311,7 +311,7 @@ router.post('/templates/:templateId/duplicate',
     body('name').isLength({ min: 1, max: 255 }).withMessage('New template name is required')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -340,7 +340,7 @@ router.post('/templates/:templateId/duplicate',
         message: 'Report template duplicated successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error duplicating report template:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -357,7 +357,7 @@ router.post('/generate',
   authMiddleware,
   generateReportSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -394,7 +394,7 @@ router.post('/generate',
         message: 'Report generation started'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating report:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -416,7 +416,7 @@ router.get('/jobs',
     query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
 
@@ -446,7 +446,7 @@ router.get('/jobs',
         message: 'Report jobs retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report jobs:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -459,9 +459,9 @@ router.get('/jobs',
 // Get report job by ID
 router.get('/jobs/:jobId',
   authMiddleware,
-  [param('jobId').isUUID().withMessage('Valid job ID required')],
+  [param('jobId').isUUID().withMessage('Valid job ID required') as any],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { jobId } = req.params;
 
@@ -482,7 +482,7 @@ router.get('/jobs/:jobId',
         message: 'Report job retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report job:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -495,9 +495,9 @@ router.get('/jobs/:jobId',
 // Cancel report job
 router.post('/jobs/:jobId/cancel',
   authMiddleware,
-  [param('jobId').isUUID().withMessage('Valid job ID required')],
+  [param('jobId').isUUID().withMessage('Valid job ID required') as any],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const userId = req.user?.id;
       const { jobId } = req.params;
@@ -518,7 +518,7 @@ router.post('/jobs/:jobId/cancel',
         message: 'Report job cancelled successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error cancelling report job:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -541,7 +541,7 @@ router.post('/performance',
     body('format').optional().isIn(Object.values(ReportFormat)).withMessage('Invalid format')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -580,7 +580,7 @@ router.post('/performance',
         message: 'Performance report generation started'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating performance report:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -599,7 +599,7 @@ router.post('/holdings',
     body('format').optional().isIn(Object.values(ReportFormat)).withMessage('Invalid format')
   ],
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -635,7 +635,7 @@ router.post('/holdings',
         message: 'Holdings report generation started'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating holdings report:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -650,7 +650,7 @@ router.post('/custom/build',
   authMiddleware,
   customReportSchema,
   validateRequest,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -674,7 +674,7 @@ router.post('/custom/build',
         message: 'Custom report built successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error building custom report:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -687,7 +687,7 @@ router.post('/custom/build',
 // Dashboard and Analytics
 router.get('/dashboard',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -709,7 +709,7 @@ router.get('/dashboard',
         message: 'Dashboard metrics retrieved successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving dashboard metrics:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',

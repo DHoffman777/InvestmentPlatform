@@ -84,7 +84,6 @@ export declare const ENCRYPTION_FIELD_MAPPING: {
  * PostgreSQL Transparent Data Encryption (TDE) configuration
  */
 export declare class PostgreSQLEncryptionManager {
-    #private;
     /**
      * Configure PostgreSQL for encryption at rest
      */
@@ -93,14 +92,43 @@ export declare class PostgreSQLEncryptionManager {
      * Generate key rotation script
      */
     static generateKeyRotationScript(): string;
-    ": any;
-    PGDB: string;
-    KEY_BACKUP_PATH: string;
-    echo: any;
-    "Starting TDE key rotation for database: $PGDB": any;
-    Create: any;
-    key: any;
-    backup: any;
-    directory: any;
-    mkdir: any;
 }
+/**
+ * Application-level encryption middleware for Express.js
+ */
+export declare class ExpressEncryptionMiddleware {
+    private encryptionService;
+    constructor(encryptionService: DatabaseEncryptionService);
+    /**
+     * Middleware to encrypt request data
+     */
+    encryptRequest(): (req: any, res: any, next: any) => Promise<void>;
+    /**
+     * Middleware to decrypt response data
+     */
+    decryptResponse(): (req: any, res: any, next: any) => Promise<void>;
+    private containsSensitiveData;
+    private encryptSensitiveFields;
+    private decryptSensitiveFields;
+}
+declare const _default: {
+    DatabaseEncryptionService: typeof DatabaseEncryptionService;
+    PostgreSQLEncryptionManager: typeof PostgreSQLEncryptionManager;
+    ExpressEncryptionMiddleware: typeof ExpressEncryptionMiddleware;
+    SensitiveFieldType: typeof SensitiveFieldType;
+    ENCRYPTION_FIELD_MAPPING: {
+        'clients.ssn': SensitiveFieldType;
+        'clients.tax_id': SensitiveFieldType;
+        'clients.phone': SensitiveFieldType;
+        'clients.email': SensitiveFieldType;
+        'clients.address': SensitiveFieldType;
+        'clients.notes': SensitiveFieldType;
+        'accounts.account_number': SensitiveFieldType;
+        'accounts.routing_number': SensitiveFieldType;
+        'transactions.notes': SensitiveFieldType;
+        'transactions.external_account': SensitiveFieldType;
+        'documents.content': SensitiveFieldType;
+        'documents.metadata': SensitiveFieldType;
+    };
+};
+export default _default;

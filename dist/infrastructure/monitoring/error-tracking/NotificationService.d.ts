@@ -94,7 +94,7 @@ export declare class NotificationService extends EventEmitter {
     constructor();
     private createLogger;
     private initializeDefaultTemplates;
-    addChannel(channel: NotificationChannel): Promise<void>;
+    addChannel(channel: NotificationChannel): Promise<any>;
     private validateChannelConfig;
     private initializeChannelClient;
     sendNotification(context: NotificationContext, channelIds?: string[]): Promise<NotificationResult[]>;
@@ -118,5 +118,5 @@ export declare class NotificationService extends EventEmitter {
     removeChannel(channelId: string): boolean;
     addTemplate(template: NotificationTemplate): void;
     getTemplates(): NotificationTemplate[];
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

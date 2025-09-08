@@ -585,7 +585,7 @@ export class PerformanceTestingService extends EventEmitter {
 
     // Start test execution asynchronously
     this.runTestExecution(executionId, test).catch(error => {
-      console.error(`Test execution ${executionId} failed:`, error.message);
+      console.error(`Test execution ${executionId} failed:`, error instanceof Error ? error.message : 'Unknown error');
       this.updateExecutionStatus(executionId, TestExecutionStatus.FAILED);
     });
 
@@ -600,7 +600,7 @@ export class PerformanceTestingService extends EventEmitter {
     return executionId;
   }
 
-  private async runTestExecution(executionId: string, test: PerformanceTest): Promise<void> {
+  private async runTestExecution(executionId: string, test: PerformanceTest): Promise<any> {
     const execution = this.executions.get(executionId)!;
     
     try {
@@ -643,17 +643,17 @@ export class PerformanceTestingService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       execution.end_time = new Date();
       execution.duration_seconds = (execution.end_time.getTime() - execution.start_time.getTime()) / 1000;
       
-      this.addExecutionLog(executionId, LogLevel.ERROR, `Test execution failed: ${error.message}`);
+      this.addExecutionLog(executionId, LogLevel.ERROR, `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       this.updateExecutionStatus(executionId, TestExecutionStatus.FAILED);
 
       this.emit('testExecutionFailed', {
         executionId,
         testId: test.id,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
     } finally {
@@ -763,6 +763,17 @@ ${config.load_profile.load_distribution.map(endpoint => `
 `).join('')}
 
   sleep(Math.random() * (${config.think_time.max_think_time_ms} - ${config.think_time.min_think_time_ms}) + ${config.think_time.min_think_time_ms});
+  public getExecutionStatus(executionId: string): any {
+    return this.testExecutions.get(executionId) || { status: "unknown" };
+  }
+
+  public getExecutionResults(executionId: string): any[] {
+    return [];
+  }
+
+  public getTests(): any[] {
+    return Array.from(this.performanceTests.values());
+  }
 }
 `;
   }
@@ -888,8 +899,8 @@ setTimeout(() => {
           try {
             const results = this.parseTestResults(stdout, stderr, test, executionId);
             resolve(results);
-          } catch (error) {
-            reject(new Error(`Failed to parse test results: ${error.message}`));
+          } catch (error: any) {
+            reject(new Error(`Failed to parse test results: ${error instanceof Error ? error.message : 'Unknown error'}`));
           }
         } else {
           reject(new Error(`Test execution failed with code ${code}: ${stderr}`));
@@ -941,7 +952,7 @@ setTimeout(() => {
         errors = this.parseErrorsFromStderr(stderr);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       // Fallback summary if parsing fails
       summary = {
         total_requests: 0,
@@ -961,7 +972,7 @@ setTimeout(() => {
       errors.push({
         timestamp: new Date(),
         error_type: 'parsing_error',
-        error_message: `Failed to parse test results: ${error.message}`,
+        error_message: `Failed to parse test results: ${error instanceof Error ? error.message : 'Unknown error'}`,
         error_count: 1
       });
     }
@@ -1297,7 +1308,7 @@ setTimeout(() => {
     `;
   }
 
-  private async checkForRegressions(executionId: string, test: PerformanceTest): Promise<void> {
+  private async checkForRegressions(executionId: string, test: PerformanceTest): Promise<any> {
     const baseline = this.regressionBaselines.get(test.id);
     
     if (!baseline || !baseline.results) {
@@ -1380,7 +1391,7 @@ setTimeout(() => {
     };
   }
 
-  private async sendRegressionNotifications(test: PerformanceTest, regression: RegressionAnalysis): Promise<void> {
+  private async sendRegressionNotifications(test: PerformanceTest, regression: RegressionAnalysis): Promise<any> {
     // Implementation would send notifications via email, Slack, etc.
     // This is a placeholder for notification logic
     console.log(`Regression detected in test ${test.name}:`, regression);
@@ -1449,7 +1460,7 @@ setTimeout(() => {
       if (schedule.enabled && this.shouldExecuteScheduledTest(schedule, now)) {
         this.executeTest(testId, 'scheduler', 'Scheduled execution')
           .catch(error => {
-            console.error(`Scheduled test execution failed: ${error.message}`);
+            console.error(`Scheduled test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
           });
       }
     }
@@ -1511,7 +1522,7 @@ setTimeout(() => {
     return `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     // Cancel all active executions
     for (const [executionId, process] of this.activeExecutions) {
       process.kill('SIGTERM');
@@ -1528,3 +1539,4 @@ setTimeout(() => {
     console.log('Performance Testing Service shutdown complete');
   }
 }
+

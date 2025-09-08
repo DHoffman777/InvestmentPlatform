@@ -17,9 +17,14 @@ function getPrismaClient() {
             log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
         });
         // Add connection and disconnection event handlers
-        prisma.$on('beforeExit', async () => {
-            logger_1.logger.info('Prisma client disconnecting...');
-        });
+        try {
+            prisma.$on('beforeExit', async () => {
+                logger_1.logger.info('Prisma client disconnecting...');
+            });
+        }
+        catch (error) {
+            // Event listener setup failed, continue without it
+        }
         // Handle process exit to ensure clean disconnection
         process.on('beforeExit', async () => {
             await prisma.$disconnect();

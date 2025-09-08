@@ -4,7 +4,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VaRCalculationService = void 0;
 const logger_1 = require("../../utils/logger");
-const RiskManagement_1 = require("../../models/riskManagement/RiskManagement");
+// Constants for enum-like behavior
+const RiskMeasurementMethod = {
+    PARAMETRIC: 'PARAMETRIC',
+    HISTORICAL_SIMULATION: 'HISTORICAL_SIMULATION',
+    MONTE_CARLO: 'MONTE_CARLO'
+};
+const ConfidenceLevel = {
+    NINETY_FIVE: 95,
+    NINETY_NINE: 99,
+    NINETY_NINE_NINE: 99.9
+};
 class VaRCalculationService {
     prisma;
     kafkaService;
@@ -30,13 +40,13 @@ class VaRCalculationService {
             // Calculate VaR based on method
             let varResult;
             switch (request.method) {
-                case RiskManagement_1.RiskMeasurementMethod.PARAMETRIC:
+                case RiskMeasurementMethod.PARAMETRIC:
                     varResult = await this.calculateParametricVaR(request, portfolioData, marketData);
                     break;
-                case RiskManagement_1.RiskMeasurementMethod.HISTORICAL_SIMULATION:
+                case RiskMeasurementMethod.HISTORICAL_SIMULATION:
                     varResult = await this.calculateHistoricalVaR(request, portfolioData, marketData);
                     break;
-                case RiskManagement_1.RiskMeasurementMethod.MONTE_CARLO:
+                case RiskMeasurementMethod.MONTE_CARLO:
                     varResult = await this.calculateMonteCarloVaR(request, portfolioData, marketData);
                     break;
                 default:
@@ -253,7 +263,7 @@ class VaRCalculationService {
             const contribution = (position.marketValue / portfolioValue) * marginalVar;
             marginalVaR.push({
                 positionId: position.positionId,
-                instrumentId: position.instrumentId,
+                securityId: position.securityId,
                 symbol: position.symbol,
                 marginalVaR: marginalVar,
                 contribution,
@@ -275,7 +285,7 @@ class VaRCalculationService {
             const incrementalVar = varWithPosition - varWithoutPosition;
             incrementalVaR.push({
                 positionId: position.positionId,
-                instrumentId: position.instrumentId,
+                securityId: position.securityId,
                 symbol: position.symbol,
                 incrementalVaR: incrementalVar,
                 portfolioVaRWithout: varWithoutPosition,
@@ -358,7 +368,7 @@ class VaRCalculationService {
         return [
             {
                 positionId: 'pos_001',
-                instrumentId: 'AAPL',
+                securityId: 'AAPL',
                 symbol: 'AAPL',
                 marketValue: 1000000,
                 assetClass: 'EQUITY',
@@ -366,7 +376,7 @@ class VaRCalculationService {
             },
             {
                 positionId: 'pos_002',
-                instrumentId: 'GOOGL',
+                securityId: 'GOOGL',
                 symbol: 'GOOGL',
                 marketValue: 800000,
                 assetClass: 'EQUITY',
@@ -455,11 +465,11 @@ class VaRCalculationService {
     }
     async getZScore(confidenceLevel) {
         const zScores = {
-            [RiskManagement_1.ConfidenceLevel.NINETY_FIVE]: 1.645,
-            [RiskManagement_1.ConfidenceLevel.NINETY_NINE]: 2.326,
-            [RiskManagement_1.ConfidenceLevel.NINETY_NINE_NINE]: 3.09
+            95: 1.645,
+            99: 2.326,
+            99.9: 3.09
         };
-        return zScores[confidenceLevel];
+        return zScores[confidenceLevel] || 1.645;
     }
     async calculateUndiversifiedVaR(portfolioData, volatility, zScore) {
         // Sum of individual position VaRs (no diversification benefit)

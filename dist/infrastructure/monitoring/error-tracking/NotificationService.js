@@ -104,7 +104,7 @@ class NotificationService extends events_1.EventEmitter {
                 "fields": [
                   {
                     "type": "mrkdwn",
-                    "text": "*Error:*\n{{error.message}}"
+                    "text": "*Error:*\n{{error instanceof Error ? error.message : 'An error occurred'}}"
                   },
                   {
                     "type": "mrkdwn",
@@ -260,7 +260,7 @@ class NotificationService extends events_1.EventEmitter {
                 results.push({
                     channelId: channel.id,
                     success: false,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date(),
                     rateLimited: false
                 });

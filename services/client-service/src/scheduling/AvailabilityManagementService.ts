@@ -391,7 +391,7 @@ export class AvailabilityManagementService extends EventEmitter {
     }, msUntilMidnight);
   }
 
-  private async generateDailySlots(): Promise<void> {
+  private async generateDailySlots(): Promise<any> {
     console.log('Generating daily availability slots...');
     
     for (const profile of this.profiles.values()) {
@@ -500,7 +500,7 @@ export class AvailabilityManagementService extends EventEmitter {
     return updatedProfile;
   }
 
-  async deleteProfile(profileId: string): Promise<void> {
+  async deleteProfile(profileId: string): Promise<any> {
     const profile = this.profiles.get(profileId);
     if (!profile) {
       throw new Error(`Profile ${profileId} not found`);
@@ -525,7 +525,7 @@ export class AvailabilityManagementService extends EventEmitter {
   }
 
   // Slot generation and management
-  private async generateSlotsForProfile(profile: AvailabilityProfile): Promise<void> {
+  private async generateSlotsForProfile(profile: AvailabilityProfile): Promise<any> {
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + this.config.slotGenerationWindow);
@@ -562,7 +562,7 @@ export class AvailabilityManagementService extends EventEmitter {
     pattern: AvailabilityProfile['availability']['patterns'][0],
     startDate: Date,
     endDate: Date
-  ): Promise<void> {
+  ): Promise<any> {
     const currentDate = new Date(startDate);
     
     while (currentDate <= endDate) {
@@ -590,7 +590,7 @@ export class AvailabilityManagementService extends EventEmitter {
     pattern: AvailabilityProfile['availability']['patterns'][0],
     date: Date,
     workingHours: AvailabilityProfile['workingHours'][string]
-  ): Promise<void> {
+  ): Promise<any> {
     const patternStart = this.parseTime(pattern.startTime);
     const patternEnd = this.parseTime(pattern.endTime);
     const workStart = this.parseTime(workingHours.start);
@@ -663,7 +663,7 @@ export class AvailabilityManagementService extends EventEmitter {
     profile: AvailabilityProfile,
     startDate: Date,
     endDate: Date
-  ): Promise<void> {
+  ): Promise<any> {
     for (const exception of profile.availability.exceptions) {
       if (exception.date >= startDate && exception.date <= endDate) {
         await this.applyException(profile, exception);
@@ -674,7 +674,7 @@ export class AvailabilityManagementService extends EventEmitter {
   private async applyException(
     profile: AvailabilityProfile,
     exception: AvailabilityProfile['availability']['exceptions'][0]
-  ): Promise<void> {
+  ): Promise<any> {
     const daySlots = Array.from(this.slots.values())
       .filter(slot => 
         slot.profileId === profile.id &&
@@ -714,7 +714,7 @@ export class AvailabilityManagementService extends EventEmitter {
   private async createExceptionSlots(
     profile: AvailabilityProfile,
     exception: AvailabilityProfile['availability']['exceptions'][0]
-  ): Promise<void> {
+  ): Promise<any> {
     if (!exception.startTime || !exception.endTime) return;
 
     const startTime = this.parseTime(exception.startTime);
@@ -764,7 +764,7 @@ export class AvailabilityManagementService extends EventEmitter {
     profile: AvailabilityProfile,
     startDate: Date,
     endDate: Date
-  ): Promise<void> {
+  ): Promise<any> {
     for (const override of profile.availability.overrides) {
       if (override.startDateTime <= endDate && override.endDateTime >= startDate) {
         await this.applyOverride(profile, override);
@@ -775,7 +775,7 @@ export class AvailabilityManagementService extends EventEmitter {
   private async applyOverride(
     profile: AvailabilityProfile,
     override: AvailabilityProfile['availability']['overrides'][0]
-  ): Promise<void> {
+  ): Promise<any> {
     // Remove existing slots that overlap with override
     const overlappingSlots = Array.from(this.slots.values())
       .filter(slot => 
@@ -816,7 +816,7 @@ export class AvailabilityManagementService extends EventEmitter {
     }
   }
 
-  private async regenerateSlotsForProfile(profile: AvailabilityProfile): Promise<void> {
+  private async regenerateSlotsForProfile(profile: AvailabilityProfile): Promise<any> {
     console.log(`Regenerating slots for profile ${profile.id}...`);
     await this.generateSlotsForProfile(profile);
   }
@@ -1287,7 +1287,7 @@ export class AvailabilityManagementService extends EventEmitter {
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     console.log('Shutting down Availability Management Service...');
     
     // Clear all data

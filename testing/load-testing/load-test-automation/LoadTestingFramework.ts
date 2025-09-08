@@ -178,11 +178,11 @@ export interface Bottleneck {
 export class LoadTestingFramework extends EventEmitter {
   private config: LoadTestConfig;
   private testId: string;
-  private startTime: Date;
-  private metrics: PerformanceMetrics;
-  private results: LoadTestResult;
+  private startTime: Date = new Date();
+  private metrics: PerformanceMetrics = {} as PerformanceMetrics;
+  private results: LoadTestResult = {} as LoadTestResult;
   private activeUsers: Map<string, UserSession> = new Map();
-  private monitoringInterval: NodeJS.Timeout;
+  private monitoringInterval?: NodeJS.Timeout;
 
   constructor(config: LoadTestConfig) {
     super();
@@ -221,7 +221,7 @@ export class LoadTestingFramework extends EventEmitter {
       return this.results;
       
     } catch (error) {
-      this.emit('testFailed', { testId: this.testId, error: error.message });
+      this.emit('testFailed', { testId: this.testId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     } finally {
       this.cleanup();
@@ -459,7 +459,7 @@ export class LoadTestingFramework extends EventEmitter {
         await this.sleep(60000); // 1 minute between tests
         
       } catch (error) {
-        console.log(`System failure at ${currentUsers} users: ${error.message}`);
+        console.log(`System failure at ${currentUsers} users: ${error instanceof Error ? error.message : 'Unknown error'}`);
         break;
       }
     }
@@ -752,7 +752,7 @@ export class LoadTestingFramework extends EventEmitter {
       timestamp: new Date(),
       scenario: 'current_scenario', // TODO: track current scenario
       endpoint: `${endpoint.method} ${endpoint.path}`,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       statusCode: error.status,
       responseTime: error.responseTime
     };
@@ -822,11 +822,11 @@ export class LoadTestingFramework extends EventEmitter {
 
   private calculateResourceAverages(): void {
     ['cpu', 'memory', 'diskIO', 'networkIO'].forEach(resource => {
-      const samples = this.metrics.resources[resource].samples;
+      const samples = (this.metrics.resources as any)[resource].samples;
       if (samples.length > 0) {
-        this.metrics.resources[resource].avg = samples.reduce((a, b) => a + b, 0) / samples.length;
-        this.metrics.resources[resource].min = Math.min(...samples);
-        this.metrics.resources[resource].max = Math.max(...samples);
+        (this.metrics.resources as any)[resource].avg = samples.reduce((a: number, b: number) => a + b, 0) / samples.length;
+        (this.metrics.resources as any)[resource].min = Math.min(...samples);
+        (this.metrics.resources as any)[resource].max = Math.max(...samples);
       }
     });
   }

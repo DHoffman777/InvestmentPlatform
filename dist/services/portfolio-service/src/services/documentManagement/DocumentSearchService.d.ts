@@ -187,9 +187,9 @@ export declare class DocumentSearchService {
     constructor(prisma: PrismaClient, logger: Logger, kafkaService: KafkaService);
     searchDocuments(request: DocumentSearchRequest): Promise<EnhancedSearchResult>;
     semanticSearch(query: SemanticSearchQuery, tenantId: string): Promise<SemanticSearchResult[]>;
-    indexDocument(document: Document, extractedData?: ExtractedData): Promise<void>;
-    removeFromIndex(documentId: string): Promise<void>;
-    rebuildIndex(tenantId: string): Promise<void>;
+    indexDocument(document: Document, extractedData?: ExtractedData): Promise<any>;
+    removeFromIndex(documentId: string): Promise<any>;
+    rebuildIndex(tenantId: string): Promise<any>;
     private buildEnhancedQuery;
     private executeSearch;
     private applyFilters;

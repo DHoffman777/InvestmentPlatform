@@ -36,6 +36,6 @@ export declare class CDNManagementService extends EventEmitter {
     getPerformanceMetrics(): Promise<PerformanceMetrics[]>;
     getHealthStatus(): Promise<any>;
     start(port?: number): void;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
     getApp(): express.Application;
 }

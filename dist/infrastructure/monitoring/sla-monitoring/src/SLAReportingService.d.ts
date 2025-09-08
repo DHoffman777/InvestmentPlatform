@@ -135,7 +135,7 @@ export declare class SLAReportingService extends EventEmitter {
         widgetData: Record<string, any>;
     }>;
     getWidgetData(widget: DashboardWidget): Promise<any>;
-    scheduleReport(templateId: string, schedule: ReportSchedule, recipients: string[]): Promise<void>;
+    scheduleReport(templateId: string, schedule: ReportSchedule, recipients: string[]): Promise<any>;
     exportReport(report: SLAReport, options: ExportOptions): Promise<Buffer>;
     getReportHistory(options?: {
         type?: SLAReportType;
@@ -182,5 +182,5 @@ export declare class SLAReportingService extends EventEmitter {
     private generateReportId;
     private generateDashboardId;
     private generateWidgetId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

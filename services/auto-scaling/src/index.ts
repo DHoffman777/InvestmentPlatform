@@ -290,7 +290,7 @@ const shutdown = async (signal: string) => {
     await autoScalingService.stop();
     console.log('Shutdown completed successfully');
     process.exit(0);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error during shutdown:', error);
     process.exit(1);
   }

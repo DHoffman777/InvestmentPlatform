@@ -52,7 +52,7 @@ class SLATrackingService extends events_1.EventEmitter {
                 this.queueCalculation(slaId, 1);
             }
             catch (error) {
-                this.emit('trackingError', { slaId, error: error.message });
+                this.emit('trackingError', { slaId, error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }, sla.measurement.frequency);
         this.trackingIntervals.set(slaId, interval);
@@ -185,7 +185,7 @@ class SLATrackingService extends events_1.EventEmitter {
                 history.push(metric);
             }
             catch (error) {
-                console.warn(`Failed to calculate metric for interval ${i}:`, error.message);
+                console.warn(`Failed to calculate metric for interval ${i}:`, error instanceof Error ? error.message : 'Unknown error');
             }
         }
         return history;
@@ -205,7 +205,7 @@ class SLATrackingService extends events_1.EventEmitter {
                 await this.recalculate(slaId);
             }
             catch (error) {
-                this.emit('recalculationError', { slaId, error: error.message });
+                this.emit('recalculationError', { slaId, error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }
     }

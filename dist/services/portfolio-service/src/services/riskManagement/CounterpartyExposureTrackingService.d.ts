@@ -1,12 +1,10 @@
 import { PrismaClient } from '@prisma/client';
-import { KafkaProducer } from '../../utils/kafka/producer';
-import { Logger } from '../../utils/logger';
-import { CounterpartyExposureAssessment, CounterpartyExposureRequest } from '../../models/riskManagement/RiskManagement';
+type CounterpartyExposureAssessment = any;
+type CounterpartyExposureRequest = any;
 export declare class CounterpartyExposureTrackingService {
     private prisma;
-    private kafkaProducer;
     private logger;
-    constructor(prisma: PrismaClient, kafkaProducer: KafkaProducer, logger: Logger);
+    constructor(prisma: PrismaClient, customLogger?: any);
     trackCounterpartyExposure(request: CounterpartyExposureRequest): Promise<CounterpartyExposureAssessment>;
     trackAllCounterpartyExposures(request: Omit<CounterpartyExposureRequest, 'counterpartyId'>): Promise<CounterpartyExposureAssessment[]>;
     private getPortfolioData;
@@ -64,3 +62,4 @@ export declare class CounterpartyExposureTrackingService {
     private analyzePortfolioCounterpartyConcentration;
     private storeAssessment;
 }
+export {};

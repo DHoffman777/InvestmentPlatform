@@ -246,6 +246,14 @@ export interface RecoveryExecution {
     status: 'initiated' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
     currentPhase: string;
     completedProcedures: string[];
+    activeProcedures: string[];
+    pendingProcedures: string[];
+    resources: ResourceAllocation;
+    timeline: ExecutionTimeline;
+    issues: RecoveryIssue[];
+    communications: CommunicationLog[];
+    costs: ActualCosts;
+    metrics: RecoveryMetrics;
 }
 /**
  * Business Continuity Management System
@@ -647,6 +655,51 @@ interface AvailabilitySchedule {
     timeZone: string;
     holidays: boolean;
     backup: string;
+}
+interface ExecutionTimeline {
+    events: TimelineEvent[];
+}
+interface TimelineEvent {
+    timestamp: Date;
+    type: string;
+    description: string;
+    duration: number;
+    responsible: string;
+}
+interface RecoveryIssue {
+    id: string;
+    type: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    description: string;
+    error?: string;
+    timestamp: Date;
+    resolved: boolean;
+    assignedTo: string;
+    resolutionSteps: string[];
+}
+interface CommunicationLog {
+    id: string;
+    timestamp: Date;
+    type: string;
+    sender: string;
+    recipients: string[];
+    message: string;
+    method: string;
+    successful: boolean;
+}
+interface ActualCosts {
+    estimated: number;
+    actual: number;
+    breakdown: {
+        [category: string]: number;
+    };
+}
+interface RecoveryMetrics {
+    proceduresCompleted: number;
+    proceduresTotal: number;
+    averageExecutionTime: number;
+    successRate: number;
+    resourceUtilization: number;
 }
 interface ProcedureExecutionResult {
     procedureId: string;

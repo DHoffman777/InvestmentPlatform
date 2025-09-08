@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FundsService = void 0;
 const logger_1 = require("../utils/logger");
-const decimal_js_1 = require("decimal.js");
 class FundsService {
     prisma;
     constructor(prisma) {
@@ -173,7 +172,7 @@ class FundsService {
                 whereClause.securityType = assetClass;
             }
             if (minAUM !== undefined) {
-                whereClause.marketCap = { gte: new decimal_js_1.Decimal(minAUM) };
+                whereClause.marketCap = { gte: new Decimal(minAUM) };
             }
             const securities = await this.prisma.security.findMany({
                 where: whereClause,
@@ -325,9 +324,9 @@ class FundsService {
             fundamentals.forEach(fund => {
                 const metadata = fund.additionalData;
                 const fundFamily = metadata?.fundFamily;
-                const aum = fund.security?.marketCap || new decimal_js_1.Decimal(0);
+                const aum = fund.security?.marketCap || new Decimal(0);
                 if (fundFamily) {
-                    const existing = familyData.get(fundFamily) || { count: 0, totalAUM: new decimal_js_1.Decimal(0) };
+                    const existing = familyData.get(fundFamily) || { count: 0, totalAUM: new Decimal(0) };
                     familyData.set(fundFamily, {
                         count: existing.count + 1,
                         totalAUM: existing.totalAUM.add(aum),

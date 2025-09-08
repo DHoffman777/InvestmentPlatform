@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BusinessMetricsController = void 0;
 const express_1 = __importDefault(require("express"));
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 class BusinessMetricsController {
     app;
@@ -103,49 +103,49 @@ class BusinessMetricsController {
     }
     setupMetricDefinitionRoutes(router) {
         router.get('/metrics/definitions', this.validateTenantId(), this.getMetricDefinitions.bind(this));
-        router.post('/metrics/definitions', this.validateTenantId(), (0, express_validator_1.body)('name').notEmpty().withMessage('Name is required'), (0, express_validator_1.body)('displayName').notEmpty().withMessage('Display name is required'), (0, express_validator_1.body)('category').isIn(['financial', 'operational', 'client', 'portfolio', 'trading', 'risk', 'compliance', 'performance', 'security', 'system']), (0, express_validator_1.body)('type').isIn(['counter', 'gauge', 'histogram', 'summary', 'rate', 'percentage', 'currency', 'duration']), this.validateRequest, this.createMetricDefinition.bind(this));
-        router.get('/metrics/definitions/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.getMetricDefinition.bind(this));
-        router.put('/metrics/definitions/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateTenantId(), this.validateRequest, this.updateMetricDefinition.bind(this));
-        router.delete('/metrics/definitions/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.deleteMetricDefinition.bind(this));
-        router.get('/metrics/values', this.validateTenantId(), (0, express_validator_1.query)('metricId').notEmpty(), (0, express_validator_1.query)('startTime').isISO8601(), (0, express_validator_1.query)('endTime').isISO8601(), this.validateRequest, this.getMetricValues.bind(this));
-        router.post('/metrics/values', this.validateTenantId(), (0, express_validator_1.body)('metricId').notEmpty(), (0, express_validator_1.body)('value').isNumeric(), (0, express_validator_1.body)('timestamp').optional().isISO8601(), this.validateRequest, this.recordMetricValue.bind(this));
-        router.post('/metrics/values/batch', this.validateTenantId(), (0, express_validator_1.body)('values').isArray({ min: 1, max: 1000 }), this.validateRequest, this.recordMetricValuesBatch.bind(this));
+        router.post('/metrics/definitions', this.validateTenantId(), body('name').notEmpty().withMessage('Name is required'), body('displayName').notEmpty().withMessage('Display name is required'), body('category').isIn(['financial', 'operational', 'client', 'portfolio', 'trading', 'risk', 'compliance', 'performance', 'security', 'system']), body('type').isIn(['counter', 'gauge', 'histogram', 'summary', 'rate', 'percentage', 'currency', 'duration']), this.validateRequest, this.createMetricDefinition.bind(this));
+        router.get('/metrics/definitions/:id', param('id').notEmpty(), this.validateRequest, this.getMetricDefinition.bind(this));
+        router.put('/metrics/definitions/:id', param('id').notEmpty(), this.validateTenantId(), this.validateRequest, this.updateMetricDefinition.bind(this));
+        router.delete('/metrics/definitions/:id', param('id').notEmpty(), this.validateRequest, this.deleteMetricDefinition.bind(this));
+        router.get('/metrics/values', this.validateTenantId(), query('metricId').notEmpty(), query('startTime').isISO8601(), query('endTime').isISO8601(), this.validateRequest, this.getMetricValues.bind(this));
+        router.post('/metrics/values', this.validateTenantId(), body('metricId').notEmpty(), body('value').isNumeric(), body('timestamp').optional().isISO8601(), this.validateRequest, this.recordMetricValue.bind(this));
+        router.post('/metrics/values/batch', this.validateTenantId(), body('values').isArray({ min: 1, max: 1000 }), this.validateRequest, this.recordMetricValuesBatch.bind(this));
     }
     setupKPIRoutes(router) {
         router.get('/kpis', this.validateTenantId(), this.getKPIs.bind(this));
-        router.post('/kpis', this.validateTenantId(), (0, express_validator_1.body)('name').notEmpty().withMessage('Name is required'), (0, express_validator_1.body)('metricIds').isArray({ min: 1 }), this.validateRequest, this.createKPI.bind(this));
-        router.get('/kpis/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.getKPI.bind(this));
-        router.put('/kpis/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateTenantId(), this.validateRequest, this.updateKPI.bind(this));
-        router.delete('/kpis/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.deleteKPI.bind(this));
-        router.get('/kpis/:id/current-value', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.getKPICurrentValue.bind(this));
-        router.post('/kpis/:id/targets', (0, express_validator_1.param)('id').notEmpty(), (0, express_validator_1.body)('targetValue').isNumeric(), (0, express_validator_1.body)('timeFrame').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly']), this.validateRequest, this.createKPITarget.bind(this));
+        router.post('/kpis', this.validateTenantId(), body('name').notEmpty().withMessage('Name is required'), body('metricIds').isArray({ min: 1 }), this.validateRequest, this.createKPI.bind(this));
+        router.get('/kpis/:id', param('id').notEmpty(), this.validateRequest, this.getKPI.bind(this));
+        router.put('/kpis/:id', param('id').notEmpty(), this.validateTenantId(), this.validateRequest, this.updateKPI.bind(this));
+        router.delete('/kpis/:id', param('id').notEmpty(), this.validateRequest, this.deleteKPI.bind(this));
+        router.get('/kpis/:id/current-value', param('id').notEmpty(), this.validateRequest, this.getKPICurrentValue.bind(this));
+        router.post('/kpis/:id/targets', param('id').notEmpty(), body('targetValue').isNumeric(), body('timeFrame').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly']), this.validateRequest, this.createKPITarget.bind(this));
     }
     setupDashboardRoutes(router) {
         router.get('/dashboards/templates', this.validateTenantId(), this.getDashboardTemplates.bind(this));
-        router.post('/dashboards/templates', this.validateTenantId(), (0, express_validator_1.body)('name').notEmpty().withMessage('Name is required'), (0, express_validator_1.body)('type').isIn(['executive', 'operational', 'analytical', 'compliance']), this.validateRequest, this.createDashboardTemplate.bind(this));
-        router.get('/dashboards/templates/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.getDashboardTemplate.bind(this));
-        router.put('/dashboards/templates/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateTenantId(), this.validateRequest, this.updateDashboardTemplate.bind(this));
-        router.delete('/dashboards/templates/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.deleteDashboardTemplate.bind(this));
-        router.post('/dashboards/templates/:id/clone', (0, express_validator_1.param)('id').notEmpty(), (0, express_validator_1.body)('name').notEmpty(), this.validateTenantId(), this.validateRequest, this.cloneDashboardTemplate.bind(this));
-        router.post('/dashboards/instances', this.validateTenantId(), (0, express_validator_1.body)('templateId').notEmpty(), (0, express_validator_1.body)('name').notEmpty(), this.validateRequest, this.createDashboardInstance.bind(this));
+        router.post('/dashboards/templates', this.validateTenantId(), body('name').notEmpty().withMessage('Name is required'), body('type').isIn(['executive', 'operational', 'analytical', 'compliance']), this.validateRequest, this.createDashboardTemplate.bind(this));
+        router.get('/dashboards/templates/:id', param('id').notEmpty(), this.validateRequest, this.getDashboardTemplate.bind(this));
+        router.put('/dashboards/templates/:id', param('id').notEmpty(), this.validateTenantId(), this.validateRequest, this.updateDashboardTemplate.bind(this));
+        router.delete('/dashboards/templates/:id', param('id').notEmpty(), this.validateRequest, this.deleteDashboardTemplate.bind(this));
+        router.post('/dashboards/templates/:id/clone', param('id').notEmpty(), body('name').notEmpty(), this.validateTenantId(), this.validateRequest, this.cloneDashboardTemplate.bind(this));
+        router.post('/dashboards/instances', this.validateTenantId(), body('templateId').notEmpty(), body('name').notEmpty(), this.validateRequest, this.createDashboardInstance.bind(this));
         router.get('/dashboards/instances', this.validateTenantId(), this.getDashboardInstances.bind(this));
-        router.get('/dashboards/instances/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.getDashboardInstance.bind(this));
-        router.get('/dashboards/instances/:id/render', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.renderDashboard.bind(this));
+        router.get('/dashboards/instances/:id', param('id').notEmpty(), this.validateRequest, this.getDashboardInstance.bind(this));
+        router.get('/dashboards/instances/:id/render', param('id').notEmpty(), this.validateRequest, this.renderDashboard.bind(this));
     }
     setupAlertingRoutes(router) {
         router.get('/alerts/rules', this.validateTenantId(), this.getAlertRules.bind(this));
-        router.post('/alerts/rules', this.validateTenantId(), (0, express_validator_1.body)('name').notEmpty().withMessage('Name is required'), (0, express_validator_1.body)('type').isIn(['threshold', 'anomaly', 'trend', 'missing_data', 'composite']), (0, express_validator_1.body)('conditions').isArray({ min: 1 }), this.validateRequest, this.createAlertRule.bind(this));
-        router.get('/alerts/rules/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.getAlertRule.bind(this));
-        router.put('/alerts/rules/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateTenantId(), this.validateRequest, this.updateAlertRule.bind(this));
-        router.delete('/alerts/rules/:id', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.deleteAlertRule.bind(this));
+        router.post('/alerts/rules', this.validateTenantId(), body('name').notEmpty().withMessage('Name is required'), body('type').isIn(['threshold', 'anomaly', 'trend', 'missing_data', 'composite']), body('conditions').isArray({ min: 1 }), this.validateRequest, this.createAlertRule.bind(this));
+        router.get('/alerts/rules/:id', param('id').notEmpty(), this.validateRequest, this.getAlertRule.bind(this));
+        router.put('/alerts/rules/:id', param('id').notEmpty(), this.validateTenantId(), this.validateRequest, this.updateAlertRule.bind(this));
+        router.delete('/alerts/rules/:id', param('id').notEmpty(), this.validateRequest, this.deleteAlertRule.bind(this));
         router.get('/alerts/active', this.validateTenantId(), this.getActiveAlerts.bind(this));
-        router.post('/alerts/:id/acknowledge', (0, express_validator_1.param)('id').notEmpty(), (0, express_validator_1.body)('notes').optional(), this.validateRequest, this.acknowledgeAlert.bind(this));
-        router.post('/alerts/:id/resolve', (0, express_validator_1.param)('id').notEmpty(), (0, express_validator_1.body)('reason').notEmpty(), this.validateRequest, this.resolveAlert.bind(this));
-        router.get('/alerts/:id/history', (0, express_validator_1.param)('id').notEmpty(), this.validateRequest, this.getAlertHistory.bind(this));
+        router.post('/alerts/:id/acknowledge', param('id').notEmpty(), body('notes').optional(), this.validateRequest, this.acknowledgeAlert.bind(this));
+        router.post('/alerts/:id/resolve', param('id').notEmpty(), body('reason').notEmpty(), this.validateRequest, this.resolveAlert.bind(this));
+        router.get('/alerts/:id/history', param('id').notEmpty(), this.validateRequest, this.getAlertHistory.bind(this));
         router.get('/alerts/statistics', this.validateTenantId(), this.getAlertStatistics.bind(this));
     }
     setupExecutiveRoutes(router) {
-        router.get('/executive/summary', this.validateTenantId(), (0, express_validator_1.query)('period').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly']), (0, express_validator_1.query)('startDate').optional().isISO8601(), (0, express_validator_1.query)('endDate').optional().isISO8601(), this.validateRequest, this.getExecutiveSummary.bind(this));
+        router.get('/executive/summary', this.validateTenantId(), query('period').isIn(['daily', 'weekly', 'monthly', 'quarterly', 'yearly']), query('startDate').optional().isISO8601(), query('endDate').optional().isISO8601(), this.validateRequest, this.getExecutiveSummary.bind(this));
         router.get('/executive/metrics', this.validateTenantId(), this.getExecutiveMetrics.bind(this));
         router.get('/executive/insights', this.validateTenantId(), this.getExecutiveInsights.bind(this));
         router.get('/executive/recommendations', this.validateTenantId(), this.getExecutiveRecommendations.bind(this));
@@ -153,23 +153,23 @@ class BusinessMetricsController {
     }
     setupDrillDownRoutes(router) {
         router.get('/drilldown/paths', this.validateTenantId(), this.getDrillDownPaths.bind(this));
-        router.post('/drilldown/paths', this.validateTenantId(), (0, express_validator_1.body)('name').notEmpty(), (0, express_validator_1.body)('levels').isArray({ min: 1 }), (0, express_validator_1.body)('metricIds').isArray({ min: 1 }), this.validateRequest, this.createDrillDownPath.bind(this));
-        router.post('/drilldown/sessions', this.validateTenantId(), (0, express_validator_1.body)('pathId').notEmpty(), this.validateRequest, this.startDrillDownSession.bind(this));
-        router.post('/drilldown/sessions/:sessionId/navigate', (0, express_validator_1.param)('sessionId').notEmpty(), (0, express_validator_1.body)('level').optional().isInt({ min: 0 }), (0, express_validator_1.body)('selectedValue').optional(), this.validateRequest, this.navigateDrillDown.bind(this));
-        router.post('/drilldown/sessions/:sessionId/back', (0, express_validator_1.param)('sessionId').notEmpty(), this.validateRequest, this.navigateBack.bind(this));
-        router.post('/drilldown/sessions/:sessionId/bookmarks', (0, express_validator_1.param)('sessionId').notEmpty(), (0, express_validator_1.body)('name').notEmpty(), (0, express_validator_1.body)('description').optional(), this.validateRequest, this.createDrillDownBookmark.bind(this));
-        router.get('/drilldown/sessions/:sessionId/bookmarks', (0, express_validator_1.param)('sessionId').notEmpty(), this.validateRequest, this.getDrillDownBookmarks.bind(this));
-        router.post('/drilldown/sessions/:sessionId/bookmarks/:bookmarkId/load', (0, express_validator_1.param)('sessionId').notEmpty(), (0, express_validator_1.param)('bookmarkId').notEmpty(), this.validateRequest, this.loadDrillDownBookmark.bind(this));
-        router.delete('/drilldown/sessions/:sessionId', (0, express_validator_1.param)('sessionId').notEmpty(), this.validateRequest, this.endDrillDownSession.bind(this));
+        router.post('/drilldown/paths', this.validateTenantId(), body('name').notEmpty(), body('levels').isArray({ min: 1 }), body('metricIds').isArray({ min: 1 }), this.validateRequest, this.createDrillDownPath.bind(this));
+        router.post('/drilldown/sessions', this.validateTenantId(), body('pathId').notEmpty(), this.validateRequest, this.startDrillDownSession.bind(this));
+        router.post('/drilldown/sessions/:sessionId/navigate', param('sessionId').notEmpty(), body('level').optional().isInt({ min: 0 }), body('selectedValue').optional(), this.validateRequest, this.navigateDrillDown.bind(this));
+        router.post('/drilldown/sessions/:sessionId/back', param('sessionId').notEmpty(), this.validateRequest, this.navigateBack.bind(this));
+        router.post('/drilldown/sessions/:sessionId/bookmarks', param('sessionId').notEmpty(), body('name').notEmpty(), body('description').optional(), this.validateRequest, this.createDrillDownBookmark.bind(this));
+        router.get('/drilldown/sessions/:sessionId/bookmarks', param('sessionId').notEmpty(), this.validateRequest, this.getDrillDownBookmarks.bind(this));
+        router.post('/drilldown/sessions/:sessionId/bookmarks/:bookmarkId/load', param('sessionId').notEmpty(), param('bookmarkId').notEmpty(), this.validateRequest, this.loadDrillDownBookmark.bind(this));
+        router.delete('/drilldown/sessions/:sessionId', param('sessionId').notEmpty(), this.validateRequest, this.endDrillDownSession.bind(this));
     }
     setupExportRoutes(router) {
-        router.post('/exports/metrics', this.validateTenantId(), (0, express_validator_1.body)('metricIds').isArray({ min: 1 }), (0, express_validator_1.body)('format').isIn(['csv', 'xlsx', 'json', 'pdf']), (0, express_validator_1.body)('startDate').isISO8601(), (0, express_validator_1.body)('endDate').isISO8601(), this.validateRequest, this.exportMetrics.bind(this));
-        router.post('/exports/dashboards/:instanceId', (0, express_validator_1.param)('instanceId').notEmpty(), (0, express_validator_1.body)('format').isIn(['pdf', 'png', 'xlsx']), this.validateRequest, this.exportDashboard.bind(this));
-        router.post('/exports/drilldown/:sessionId', (0, express_validator_1.param)('sessionId').notEmpty(), (0, express_validator_1.body)('format').isIn(['csv', 'xlsx', 'json', 'pdf']), this.validateRequest, this.exportDrillDown.bind(this));
-        router.get('/exports/:exportId/status', (0, express_validator_1.param)('exportId').notEmpty(), this.validateRequest, this.getExportStatus.bind(this));
-        router.get('/exports/:exportId/download', (0, express_validator_1.param)('exportId').notEmpty(), this.validateRequest, this.downloadExport.bind(this));
+        router.post('/exports/metrics', this.validateTenantId(), body('metricIds').isArray({ min: 1 }), body('format').isIn(['csv', 'xlsx', 'json', 'pdf']), body('startDate').isISO8601(), body('endDate').isISO8601(), this.validateRequest, this.exportMetrics.bind(this));
+        router.post('/exports/dashboards/:instanceId', param('instanceId').notEmpty(), body('format').isIn(['pdf', 'png', 'xlsx']), this.validateRequest, this.exportDashboard.bind(this));
+        router.post('/exports/drilldown/:sessionId', param('sessionId').notEmpty(), body('format').isIn(['csv', 'xlsx', 'json', 'pdf']), this.validateRequest, this.exportDrillDown.bind(this));
+        router.get('/exports/:exportId/status', param('exportId').notEmpty(), this.validateRequest, this.getExportStatus.bind(this));
+        router.get('/exports/:exportId/download', param('exportId').notEmpty(), this.validateRequest, this.downloadExport.bind(this));
         router.get('/exports', this.validateTenantId(), this.getExports.bind(this));
-        router.delete('/exports/:exportId', (0, express_validator_1.param)('exportId').notEmpty(), this.validateRequest, this.deleteExport.bind(this));
+        router.delete('/exports/:exportId', param('exportId').notEmpty(), this.validateRequest, this.deleteExport.bind(this));
     }
     setupSystemRoutes(router) {
         router.get('/system/stats', this.getSystemStats.bind(this));
@@ -193,7 +193,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, definitions, { pagination: this.calculatePagination(options, definitions.length) });
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async createMetricDefinition(req, res) {
@@ -209,7 +209,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, definition, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'CREATION_ERROR', error.message);
+            this.sendError(res, 400, 'CREATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getMetricDefinition(req, res) {
@@ -221,7 +221,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, definition);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async updateMetricDefinition(req, res) {
@@ -230,7 +230,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, definition);
         }
         catch (error) {
-            this.sendError(res, 400, 'UPDATE_ERROR', error.message);
+            this.sendError(res, 400, 'UPDATE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async deleteMetricDefinition(req, res) {
@@ -239,7 +239,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { deleted: true });
         }
         catch (error) {
-            this.sendError(res, 400, 'DELETE_ERROR', error.message);
+            this.sendError(res, 400, 'DELETE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getMetricValues(req, res) {
@@ -249,7 +249,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, values);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async recordMetricValue(req, res) {
@@ -264,7 +264,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, metricValue, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'RECORD_ERROR', error.message);
+            this.sendError(res, 400, 'RECORD_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async recordMetricValuesBatch(req, res) {
@@ -280,7 +280,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { recorded: results.length, values: results });
         }
         catch (error) {
-            this.sendError(res, 400, 'BATCH_RECORD_ERROR', error.message);
+            this.sendError(res, 400, 'BATCH_RECORD_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getKPIs(req, res) {
@@ -290,7 +290,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, kpis, { pagination: this.calculatePagination(options, kpis.length) });
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async createKPI(req, res) {
@@ -306,7 +306,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, kpi, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'CREATION_ERROR', error.message);
+            this.sendError(res, 400, 'CREATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getKPI(req, res) {
@@ -318,7 +318,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, kpi);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async updateKPI(req, res) {
@@ -327,7 +327,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, kpi);
         }
         catch (error) {
-            this.sendError(res, 400, 'UPDATE_ERROR', error.message);
+            this.sendError(res, 400, 'UPDATE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async deleteKPI(req, res) {
@@ -336,7 +336,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { deleted: true });
         }
         catch (error) {
-            this.sendError(res, 400, 'DELETE_ERROR', error.message);
+            this.sendError(res, 400, 'DELETE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getKPICurrentValue(req, res) {
@@ -351,7 +351,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, currentValue);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async createKPITarget(req, res) {
@@ -368,7 +368,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, target, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'CREATION_ERROR', error.message);
+            this.sendError(res, 400, 'CREATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getDashboardTemplates(req, res) {
@@ -377,7 +377,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, templates);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async createDashboardTemplate(req, res) {
@@ -390,7 +390,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, template, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'CREATION_ERROR', error.message);
+            this.sendError(res, 400, 'CREATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getDashboardTemplate(req, res) {
@@ -402,7 +402,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, template);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async updateDashboardTemplate(req, res) {
@@ -411,7 +411,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, template);
         }
         catch (error) {
-            this.sendError(res, 400, 'UPDATE_ERROR', error.message);
+            this.sendError(res, 400, 'UPDATE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async deleteDashboardTemplate(req, res) {
@@ -420,7 +420,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { deleted: true });
         }
         catch (error) {
-            this.sendError(res, 400, 'DELETE_ERROR', error.message);
+            this.sendError(res, 400, 'DELETE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async cloneDashboardTemplate(req, res) {
@@ -429,7 +429,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, template, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'CLONE_ERROR', error.message);
+            this.sendError(res, 400, 'CLONE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async createDashboardInstance(req, res) {
@@ -438,7 +438,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, instance, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'CREATION_ERROR', error.message);
+            this.sendError(res, 400, 'CREATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getDashboardInstances(req, res) {
@@ -447,7 +447,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, instances);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getDashboardInstance(req, res) {
@@ -459,7 +459,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, instance);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async renderDashboard(req, res) {
@@ -468,7 +468,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, dashboard);
         }
         catch (error) {
-            this.sendError(res, 500, 'RENDER_ERROR', error.message);
+            this.sendError(res, 500, 'RENDER_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getAlertRules(req, res) {
@@ -477,7 +477,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, rules);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async createAlertRule(req, res) {
@@ -490,7 +490,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, rule, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'CREATION_ERROR', error.message);
+            this.sendError(res, 400, 'CREATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getAlertRule(req, res) {
@@ -502,7 +502,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, rule);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async updateAlertRule(req, res) {
@@ -511,7 +511,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, rule);
         }
         catch (error) {
-            this.sendError(res, 400, 'UPDATE_ERROR', error.message);
+            this.sendError(res, 400, 'UPDATE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async deleteAlertRule(req, res) {
@@ -520,7 +520,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { deleted: true });
         }
         catch (error) {
-            this.sendError(res, 400, 'DELETE_ERROR', error.message);
+            this.sendError(res, 400, 'DELETE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getActiveAlerts(req, res) {
@@ -529,7 +529,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, alerts);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async acknowledgeAlert(req, res) {
@@ -538,7 +538,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { acknowledged: true });
         }
         catch (error) {
-            this.sendError(res, 400, 'ACKNOWLEDGE_ERROR', error.message);
+            this.sendError(res, 400, 'ACKNOWLEDGE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async resolveAlert(req, res) {
@@ -547,7 +547,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { resolved: true });
         }
         catch (error) {
-            this.sendError(res, 400, 'RESOLVE_ERROR', error.message);
+            this.sendError(res, 400, 'RESOLVE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getAlertHistory(req, res) {
@@ -556,7 +556,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, history);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getAlertStatistics(req, res) {
@@ -565,7 +565,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, stats);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getExecutiveSummary(req, res) {
@@ -577,7 +577,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, summary);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getExecutiveMetrics(req, res) {
@@ -587,7 +587,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, metrics);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getExecutiveInsights(req, res) {
@@ -597,7 +597,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, insights);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getExecutiveRecommendations(req, res) {
@@ -607,7 +607,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, recommendations);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getPerformanceSummary(req, res) {
@@ -617,7 +617,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, performance);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getDrillDownPaths(req, res) {
@@ -626,7 +626,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, paths);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async createDrillDownPath(req, res) {
@@ -635,7 +635,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, path, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'CREATION_ERROR', error.message);
+            this.sendError(res, 400, 'CREATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async startDrillDownSession(req, res) {
@@ -644,7 +644,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, session, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'SESSION_ERROR', error.message);
+            this.sendError(res, 400, 'SESSION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async navigateDrillDown(req, res) {
@@ -653,7 +653,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, result);
         }
         catch (error) {
-            this.sendError(res, 400, 'NAVIGATION_ERROR', error.message);
+            this.sendError(res, 400, 'NAVIGATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async navigateBack(req, res) {
@@ -662,7 +662,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, result);
         }
         catch (error) {
-            this.sendError(res, 400, 'NAVIGATION_ERROR', error.message);
+            this.sendError(res, 400, 'NAVIGATION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async createDrillDownBookmark(req, res) {
@@ -671,7 +671,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, bookmark, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'BOOKMARK_ERROR', error.message);
+            this.sendError(res, 400, 'BOOKMARK_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getDrillDownBookmarks(req, res) {
@@ -683,7 +683,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, session.bookmarks);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async loadDrillDownBookmark(req, res) {
@@ -692,7 +692,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, result);
         }
         catch (error) {
-            this.sendError(res, 400, 'BOOKMARK_ERROR', error.message);
+            this.sendError(res, 400, 'BOOKMARK_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async endDrillDownSession(req, res) {
@@ -701,7 +701,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { ended: true });
         }
         catch (error) {
-            this.sendError(res, 400, 'SESSION_ERROR', error.message);
+            this.sendError(res, 400, 'SESSION_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async exportMetrics(req, res) {
@@ -717,7 +717,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, exportResult, undefined, 202);
         }
         catch (error) {
-            this.sendError(res, 400, 'EXPORT_ERROR', error.message);
+            this.sendError(res, 400, 'EXPORT_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async exportDashboard(req, res) {
@@ -733,7 +733,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, exportResult, undefined, 202);
         }
         catch (error) {
-            this.sendError(res, 400, 'EXPORT_ERROR', error.message);
+            this.sendError(res, 400, 'EXPORT_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async exportDrillDown(req, res) {
@@ -742,7 +742,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, exportResult, undefined, 201);
         }
         catch (error) {
-            this.sendError(res, 400, 'EXPORT_ERROR', error.message);
+            this.sendError(res, 400, 'EXPORT_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getExportStatus(req, res) {
@@ -758,7 +758,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, status);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async downloadExport(req, res) {
@@ -768,7 +768,7 @@ class BusinessMetricsController {
             res.send(JSON.stringify({ exportId: req.params.exportId, data: 'mock export data' }));
         }
         catch (error) {
-            this.sendError(res, 500, 'DOWNLOAD_ERROR', error.message);
+            this.sendError(res, 500, 'DOWNLOAD_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getExports(req, res) {
@@ -777,7 +777,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, exports);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async deleteExport(req, res) {
@@ -785,7 +785,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { deleted: true });
         }
         catch (error) {
-            this.sendError(res, 400, 'DELETE_ERROR', error.message);
+            this.sendError(res, 400, 'DELETE_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getSystemStats(req, res) {
@@ -800,7 +800,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, stats);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getSystemHealth(req, res) {
@@ -820,7 +820,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, health);
         }
         catch (error) {
-            this.sendError(res, 500, 'HEALTH_CHECK_ERROR', error.message);
+            this.sendError(res, 500, 'HEALTH_CHECK_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async getSystemMetrics(req, res) {
@@ -835,7 +835,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, metrics);
         }
         catch (error) {
-            this.sendError(res, 500, 'FETCH_ERROR', error.message);
+            this.sendError(res, 500, 'FETCH_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async clearSystemCache(req, res) {
@@ -843,7 +843,7 @@ class BusinessMetricsController {
             this.sendSuccess(res, { cacheCleared: true });
         }
         catch (error) {
-            this.sendError(res, 500, 'CACHE_CLEAR_ERROR', error.message);
+            this.sendError(res, 500, 'CACHE_CLEAR_ERROR', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     healthCheck = (req, res) => {
@@ -867,7 +867,7 @@ class BusinessMetricsController {
         };
     }
     validateRequest = (req, res, next) => {
-        const errors = (0, express_validator_1.validationResult)(req);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return this.sendError(res, 400, 'VALIDATION_ERROR', 'Validation failed', errors.array());
         }

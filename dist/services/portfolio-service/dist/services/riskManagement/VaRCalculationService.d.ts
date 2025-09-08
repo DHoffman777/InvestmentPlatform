@@ -1,0 +1,208 @@
+export const __esModule: boolean;
+export class VaRCalculationService {
+    constructor(prisma: any, kafkaService: any);
+    prisma: any;
+    kafkaService: any;
+    calculateVaR(request: any): Promise<{
+        id: string;
+        portfolioId: any;
+        tenantId: any;
+        calculationDate: Date;
+        asOfDate: any;
+        confidenceLevel: any;
+        timeHorizon: any;
+        method: any;
+        totalVaR: number;
+        diversifiedVaR: number;
+        undiversifiedVaR: any;
+        diversificationBenefit: number;
+        componentVaR: any[];
+        marginalVaR: any[];
+        incrementalVaR: any[];
+        modelAccuracy: number;
+        calculationTime: number;
+        dataQuality: {};
+        assumptions: {};
+        createdAt: Date;
+        calculatedBy: string;
+    }>;
+    calculateParametricVaR(request: any, portfolioData: any, marketData: any): Promise<{
+        id: string;
+        portfolioId: any;
+        tenantId: any;
+        calculationDate: Date;
+        asOfDate: any;
+        confidenceLevel: any;
+        timeHorizon: any;
+        method: any;
+        totalVaR: number;
+        diversifiedVaR: number;
+        undiversifiedVaR: any;
+        diversificationBenefit: number;
+        componentVaR: any[];
+        marginalVaR: any[];
+        incrementalVaR: any[];
+        modelAccuracy: number;
+        calculationTime: number;
+        dataQuality: {};
+        assumptions: {};
+        createdAt: Date;
+        calculatedBy: string;
+    }>;
+    calculateHistoricalVaR(request: any, portfolioData: any, marketData: any): Promise<{
+        id: string;
+        portfolioId: any;
+        tenantId: any;
+        calculationDate: Date;
+        asOfDate: any;
+        confidenceLevel: any;
+        timeHorizon: any;
+        method: any;
+        totalVaR: number;
+        diversifiedVaR: number;
+        undiversifiedVaR: number;
+        diversificationBenefit: number;
+        componentVaR: any[];
+        marginalVaR: any[];
+        incrementalVaR: any[];
+        modelAccuracy: number;
+        calculationTime: number;
+        dataQuality: {};
+        assumptions: {};
+        createdAt: Date;
+        calculatedBy: string;
+    }>;
+    calculateMonteCarloVaR(request: any, portfolioData: any, marketData: any): Promise<{
+        id: string;
+        portfolioId: any;
+        tenantId: any;
+        calculationDate: Date;
+        asOfDate: any;
+        confidenceLevel: any;
+        timeHorizon: any;
+        method: any;
+        totalVaR: number;
+        diversifiedVaR: number;
+        undiversifiedVaR: number;
+        diversificationBenefit: number;
+        componentVaR: any[];
+        marginalVaR: any[];
+        incrementalVaR: any[];
+        modelAccuracy: number;
+        calculationTime: number;
+        dataQuality: {};
+        assumptions: {};
+        createdAt: Date;
+        calculatedBy: string;
+    }>;
+    calculateComponentVaR(portfolioData: any, marketData: any, request: any): Promise<{
+        assetClass: string;
+        componentType: string;
+        componentName: string;
+        var: number;
+        percentOfTotal: number;
+        correlation: number;
+    }[]>;
+    calculateMarginalVaR(portfolioData: any, marketData: any, request: any): Promise<{
+        positionId: any;
+        securityId: any;
+        symbol: any;
+        marginalVaR: number;
+        contribution: number;
+        percentContribution: number;
+    }[]>;
+    calculateIncrementalVaR(portfolioData: any, marketData: any, request: any): Promise<{
+        positionId: any;
+        securityId: any;
+        symbol: any;
+        incrementalVaR: number;
+        portfolioVaRWithout: number;
+        portfolioVaRWith: number;
+    }[]>;
+    performBacktesting(varResult: any, request: any): Promise<{
+        testPeriod: {
+            startDate: Date;
+            endDate: Date;
+        };
+        numberOfExceptions: number;
+        exceptionRate: number;
+        expectedExceptionRate: number;
+        kupiecTest: {
+            testStatistic: number;
+            criticalValue: number;
+            pValue: number;
+            rejectNull: boolean;
+        };
+        christoffersenTest: {
+            testStatistic: number;
+            criticalValue: number;
+            pValue: number;
+            rejectNull: boolean;
+        };
+        isModelAccurate: boolean;
+    }>;
+    performKupiecTest(exceptions: any, observations: any, expectedRate: any): Promise<{
+        testStatistic: number;
+        criticalValue: number;
+        pValue: number;
+        rejectNull: boolean;
+    }>;
+    performChristoffersenTest(actualReturns: any, expectedVaR: any): Promise<{
+        testStatistic: number;
+        criticalValue: number;
+        pValue: number;
+        rejectNull: boolean;
+    }>;
+    getPortfolioData(portfolioId: any, asOfDate: any): Promise<{
+        positionId: string;
+        securityId: string;
+        symbol: string;
+        marketValue: number;
+        assetClass: string;
+        sector: string;
+    }[]>;
+    getMarketData(portfolioData: any, asOfDate: any): Promise<{
+        prices: {};
+        returns: {};
+        volatilities: {};
+        correlations: {};
+    }>;
+    assessDataQuality(portfolioData: any, marketData: any): Promise<{
+        completeness: number;
+        accuracy: number;
+        timeliness: number;
+        missingDataPoints: any[];
+        qualityScore: number;
+    }>;
+    getModelAssumptions(request: any): Promise<{
+        distributionAssumption: string;
+        correlationModel: string;
+        volatilityModel: string;
+        lookbackPeriod: number;
+        dataFrequency: string;
+        adjustments: any[];
+    }>;
+    extractReturns(portfolioData: any, marketData: any, lookback: any): Promise<any[]>;
+    calculatePortfolioWeights(portfolioData: any): Promise<any>;
+    calculateCovarianceMatrix(returns: any): Promise<any[][]>;
+    calculatePortfolioVariance(weights: any, covarianceMatrix: any): Promise<number>;
+    getTimeAdjustment(timeHorizon: any): Promise<any>;
+    getZScore(confidenceLevel: any): Promise<any>;
+    calculateUndiversifiedVaR(portfolioData: any, volatility: any, zScore: any): Promise<any>;
+    storeVaRResult(result: any): Promise<void>;
+    publishVaREvent(eventType: any, result: any): Promise<void>;
+    getHistoricalReturns(portfolioData: any, marketData: any, days: any): Promise<any[]>;
+    calculatePortfolioHistoricalReturns(portfolioData: any, historicalReturns: any): Promise<any>;
+    getPercentileIndex(confidenceLevel: any, length: any): Promise<number>;
+    calculateCorrelationMatrix(portfolioData: any, marketData: any): Promise<any[][]>;
+    calculateAssetVolatilities(portfolioData: any, marketData: any): Promise<any>;
+    generateCorrelatedRandomNumbers(correlationMatrix: any): Promise<any>;
+    normalRandom(): number;
+    calculateSimulatedPortfolioReturn(portfolioData: any, assetReturns: any): Promise<any>;
+    chiSquareCDF(x: any, df: any): number;
+    groupByAssetClass(portfolioData: any): Promise<any>;
+    calculateSubPortfolioVaR(positions: any, marketData: any, request: any): Promise<number>;
+    calculateUndiversifiedHistoricalVaR(portfolioData: any, historicalReturns: any, request: any): Promise<number>;
+    calculateUndiversifiedMonteCarloVaR(portfolioData: any, volatilities: any, request: any): Promise<number>;
+    getActualPortfolioReturns(portfolioId: any, days: any): Promise<number[]>;
+}

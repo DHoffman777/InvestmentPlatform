@@ -146,7 +146,7 @@ export class SSOService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('ssoError', {
         providerId: provider.id,
         error: error instanceof Error ? error.message : String(error),
@@ -171,7 +171,7 @@ export class SSOService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('ssoError', {
         providerId: provider.id,
         error: error instanceof Error ? error.message : String(error),
@@ -208,7 +208,7 @@ export class SSOService extends EventEmitter {
 
       return loginUrl;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('ssoError', {
         providerId,
         error: error instanceof Error ? error.message : String(error),
@@ -283,7 +283,7 @@ export class SSOService extends EventEmitter {
 
       return userProfile;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('ssoError', {
         providerId,
         error: error instanceof Error ? error.message : String(error),
@@ -326,7 +326,7 @@ export class SSOService extends EventEmitter {
 
       return authUrl;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('ssoError', {
         providerId,
         error: error instanceof Error ? error.message : String(error),
@@ -399,7 +399,7 @@ export class SSOService extends EventEmitter {
 
       return userProfile;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('ssoError', {
         providerId,
         error: error instanceof Error ? error.message : String(error),
@@ -467,7 +467,7 @@ export class SSOService extends EventEmitter {
 
       return logoutUrl;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('ssoError', {
         sessionId,
         error: error instanceof Error ? error.message : String(error),
@@ -625,7 +625,7 @@ export class SSOMiddleware {
         };
 
         next();
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({
           error: 'SSO authentication error',
           message: error instanceof Error ? error.message : String(error)

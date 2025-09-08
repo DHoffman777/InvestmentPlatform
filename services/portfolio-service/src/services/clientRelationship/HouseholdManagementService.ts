@@ -86,7 +86,7 @@ export class HouseholdManagementService {
         householdName: request.householdName,
         primaryClientId: request.primaryClientId,
         relationships: [],
-        totalAssets: new Decimal(0),
+        totalAssets: new (Decimal as any)(0),
         combinedRiskTolerance: primaryClient.riskTolerance as RiskTolerance,
         sharedObjectives: request.sharedObjectives?.map(obj => ({
           id: randomUUID(),
@@ -115,7 +115,7 @@ export class HouseholdManagementService {
 
       return household;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating household group:', error);
       throw error;
     }
@@ -187,7 +187,7 @@ export class HouseholdManagementService {
 
       return relationship;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error adding client relationship:', error);
       throw error;
     }
@@ -234,7 +234,7 @@ export class HouseholdManagementService {
         members
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving household:', error);
       throw error;
     }
@@ -279,7 +279,7 @@ export class HouseholdManagementService {
         ...updates
       } as ClientRelationship;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating client relationship:', error);
       throw error;
     }
@@ -293,7 +293,7 @@ export class HouseholdManagementService {
     clientId: string,
     tenantId: string,
     userId: string
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.info('Removing client from household', { householdId, clientId, tenantId });
 
@@ -321,7 +321,7 @@ export class HouseholdManagementService {
 
       logger.info('Client removed from household successfully');
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error removing client from household:', error);
       throw error;
     }
@@ -364,7 +364,7 @@ export class HouseholdManagementService {
 
       return analytics;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating household analytics:', error);
       throw error;
     }
@@ -410,7 +410,7 @@ export class HouseholdManagementService {
         }
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error listing households:', error);
       throw error;
     }
@@ -430,7 +430,7 @@ export class HouseholdManagementService {
       householdName: 'Mock Household',
       primaryClientId: 'client-1',
       relationships: [],
-      totalAssets: new Decimal(0),
+      totalAssets: new (Decimal as any)(0),
       sharedObjectives: [],
       createdAt: new Date(),
       updatedAt: new Date()
@@ -443,7 +443,7 @@ export class HouseholdManagementService {
   ): Promise<Decimal> {
     // This would calculate total assets across all household members
     // from portfolio values, account balances, etc.
-    return new Decimal(0);
+    return new (Decimal as any)(0);
   }
 
   private calculateCombinedRiskTolerance(members: any[]): RiskTolerance {
@@ -477,8 +477,8 @@ export class HouseholdManagementService {
     return members.map(member => ({
       clientId: member.id,
       clientName: `${member.firstName || ''} ${member.lastName || ''}`.trim() || member.entityName || 'Unknown',
-      assets: new Decimal(0),
-      percentage: new Decimal(0)
+      assets: new (Decimal as any)(0),
+      percentage: new (Decimal as any)(0)
     }));
   }
 
@@ -517,3 +517,5 @@ export class HouseholdManagementService {
     return maxPossibleAlignment > 0 ? (alignmentCount / maxPossibleAlignment) * 100 : 0;
   }
 }
+
+

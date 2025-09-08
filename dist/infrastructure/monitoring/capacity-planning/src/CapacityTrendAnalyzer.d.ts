@@ -124,5 +124,5 @@ export declare class CapacityTrendAnalyzer extends EventEmitter {
     private generateBatchId;
     getTrend(trendId: string): CapacityTrend | null;
     getAllTrends(): CapacityTrend[];
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

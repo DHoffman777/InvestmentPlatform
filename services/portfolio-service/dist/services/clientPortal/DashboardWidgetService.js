@@ -4,11 +4,10 @@ exports.DashboardWidgetService = void 0;
 const crypto_1 = require("crypto");
 const ClientPortal_1 = require("../../models/clientPortal/ClientPortal");
 const logger_1 = require("../../utils/logger");
-const eventPublisher_1 = require("../../utils/eventPublisher");
 class DashboardWidgetService {
-    eventPublisher;
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    prisma;
+    constructor(prisma) {
+        this.prisma = prisma;
     }
     async getWidgetData(widget, context) {
         try {
@@ -59,13 +58,13 @@ class DashboardWidgetService {
             const lastUpdated = new Date();
             await this.updateWidgetTimestamp(widgetId, lastUpdated);
             // Publish refresh event
-            await this.eventPublisher.publish('dashboard.widget.refreshed', {
-                tenantId: context.tenantId,
-                clientId: context.clientId,
-                widgetId,
-                widgetType: widget.type,
-                refreshedAt: lastUpdated
-            });
+            // await this.eventPublisher.publish('dashboard.widget.refreshed', {
+            //   tenantId: context.tenantId,
+            //   clientId: context.clientId,
+            //   widgetId,
+            //   widgetType: widget.type,
+            //   refreshedAt: lastUpdated
+            // });
             return { data, lastUpdated };
         }
         catch (error) {

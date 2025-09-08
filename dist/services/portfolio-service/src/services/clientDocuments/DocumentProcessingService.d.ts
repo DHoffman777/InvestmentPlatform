@@ -1,11 +1,12 @@
+import { PrismaClient } from '@prisma/client';
 import { ClientDocument, DocumentUploadRequest, DocumentUploadResponse, DocumentSearchRequest, DocumentSearchResponse, BulkDocumentOperation, BulkOperationResult, DocumentClassification, ExtractionResult, DocumentValidation } from '../../models/clientDocuments/ClientDocuments';
 export declare class DocumentProcessingService {
-    private eventPublisher;
-    constructor();
+    private prisma;
+    constructor(prisma: PrismaClient);
     uploadDocument(request: DocumentUploadRequest): Promise<DocumentUploadResponse>;
     searchDocuments(request: DocumentSearchRequest): Promise<DocumentSearchResponse>;
     getDocument(tenantId: string, documentId: string, userId: string): Promise<ClientDocument | null>;
-    deleteDocument(tenantId: string, documentId: string, userId: string): Promise<void>;
+    deleteDocument(tenantId: string, documentId: string, userId: string): Promise<any>;
     performBulkOperation(operation: BulkDocumentOperation): Promise<BulkOperationResult>;
     classifyDocument(documentId: string): Promise<DocumentClassification>;
     extractDocumentData(documentId: string): Promise<ExtractionResult[]>;

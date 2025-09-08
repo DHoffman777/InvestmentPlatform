@@ -248,11 +248,11 @@ class RootCauseAnalysisService extends events_1.EventEmitter {
                 }
             }
             catch (error) {
-                console.error(`Failed to apply analysis rule ${ruleId}:`, error.message);
+                console.error(`Failed to apply analysis rule ${ruleId}:`, error instanceof Error ? error.message : 'Unknown error');
                 this.emit('ruleError', {
                     ruleId,
                     bottleneckId: bottleneck.id,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }
@@ -367,7 +367,7 @@ class RootCauseAnalysisService extends events_1.EventEmitter {
             return rootCause;
         }
         catch (error) {
-            console.error(`Failed to generate root cause for rule ${rule.id}:`, error.message);
+            console.error(`Failed to generate root cause for rule ${rule.id}:`, error instanceof Error ? error.message : 'Unknown error');
             return null;
         }
     }

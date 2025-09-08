@@ -97,5 +97,5 @@ export declare class DatabaseOptimizer extends EventEmitter {
         indexAnalysis: IndexAnalysis[];
         recommendations: OptimizationRecommendation[];
     }>;
-    disconnect(): Promise<void>;
+    disconnect(): Promise<any>;
 }

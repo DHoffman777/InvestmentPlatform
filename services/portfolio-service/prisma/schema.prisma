@@ -49,6 +49,7 @@ model Portfolio {
   // Relations
   positions         Position[]
   transactions      Transaction[]
+  orders            Order[]
   allocations       AllocationRule[]
   performanceRecords PerformanceRecord[]
   portfolioAccess   PortfolioAccess[]
@@ -78,12 +79,16 @@ model Position {
   // Position data
   quantity        Decimal         @default(0) @db.Decimal(15, 6)
   marketValue     Decimal         @map("market_value") @default(0) @db.Decimal(15, 2)
+  currentValue    Decimal         @map("current_value") @default(0) @db.Decimal(15, 2)  // Alias for marketValue
   costBasis       Decimal         @map("cost_basis") @default(0) @db.Decimal(15, 2)
   averageCost     Decimal         @map("average_cost") @default(0) @db.Decimal(15, 6)
   
   // P&L tracking
   unrealizedGainLoss Decimal      @map("unrealized_gain_loss") @default(0) @db.Decimal(15, 2)
   realizedGainLoss   Decimal      @map("realized_gain_loss") @default(0) @db.Decimal(15, 2)
+  dayChange          Decimal?      @map("day_change") @db.Decimal(15, 2)
+  gainLoss           Decimal?      @map("gain_loss") @db.Decimal(15, 2)
+  gainLossPercentage Decimal?      @map("gain_loss_percentage") @db.Decimal(8, 4)
   
   // Price information
   lastPrice       Decimal?        @map("last_price") @db.Decimal(15, 6)
@@ -99,6 +104,7 @@ model Position {
   
   // Relations
   portfolio       Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  security        Security?       @relation(fields: [securityId], references: [id])
   transactions    Transaction[]
   taxLots         TaxLot[]
   
@@ -119,6 +125,8 @@ model Transaction {
   // Transaction details
   transactionType   TransactionType   @map("transaction_type")
   symbol            String            @db.VarChar(20)
+  description       String?           @db.Text
+  amount            Decimal           @default(0) @db.Decimal(15, 2)
   quantity          Decimal           @default(0) @db.Decimal(15, 6)
   price             Decimal           @default(0) @db.Decimal(15, 6)
   grossAmount       Decimal           @map("gross_amount") @default(0) @db.Decimal(15, 2)
@@ -130,6 +138,7 @@ model Transaction {
   taxes             Decimal           @default(0) @db.Decimal(15, 2)
   
   // Transaction metadata
+  transactionDate   DateTime          @map("transaction_date") @db.Timestamptz
   tradeDate         DateTime          @map("trade_date") @db.Timestamptz
   settlementDate    DateTime          @map("settlement_date") @db.Timestamptz
   currency          String            @default("USD") @db.VarChar(3)
@@ -176,6 +185,7 @@ model TaxLot {
   quantity        Decimal         @default(0) @db.Decimal(15, 6)
   costBasis       Decimal         @map("cost_basis") @default(0) @db.Decimal(15, 2)
   acquiredDate    DateTime        @map("acquired_date") @db.Timestamptz
+  openDate        DateTime        @map("open_date") @db.Timestamptz
   
   // Status
   isActive        Boolean         @map("is_active") @default(true)
@@ -322,6 +332,283 @@ model ModelPortfolioAssignment {
   @@map("model_portfolio_assignments")
 }
 
+// Trading and Order Management Models
+
+model Order {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  portfolioId       String            @map("portfolio_id") @db.Uuid
+  symbol            String            @db.VarChar(50)
+  orderType         String            @map("order_type") @db.VarChar(50)
+  side              String            @db.VarChar(10) // BUY/SELL
+  quantity          Decimal           @db.Decimal(15, 4)
+  price             Decimal?          @db.Decimal(15, 4)
+  status            String            @default("PENDING") @db.VarChar(50)
+  timeInForce       String            @map("time_in_force") @default("DAY") @db.VarChar(20)
+  tradingSession    String            @map("trading_session") @default("REGULAR") @db.VarChar(20)
+  instrumentId      String?           @map("instrument_id") @db.VarChar(100)
+  orderDate         DateTime          @map("order_date") @db.Timestamptz
+  averageFillPrice  Decimal?          @map("average_fill_price") @db.Decimal(15, 4)
+  filledQuantity    Decimal           @map("filled_quantity") @default(0) @db.Decimal(15, 4)
+  
+  // Audit fields
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  createdBy         String            @map("created_by") @db.Uuid
+  
+  // Relations
+  portfolio         Portfolio         @relation(fields: [portfolioId], references: [id])
+  executions        OrderExecution[]
+  
+  @@index([tenantId, portfolioId])
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+model OrderExecution {
+  id                String            @id @default(uuid()) @db.Uuid
+  orderId           String            @map("order_id") @db.Uuid
+  executionId       String            @map("execution_id") @db.VarChar(100)
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  quantity          Decimal           @db.Decimal(15, 4)
+  price             Decimal           @db.Decimal(15, 4)
+  executionQuantity Decimal           @map("execution_quantity") @db.Decimal(15, 4)
+  executionPrice    Decimal           @map("execution_price") @db.Decimal(15, 4)
+  commission        Decimal           @default(0) @db.Decimal(15, 4)
+  regulatoryFees    Decimal           @map("regulatory_fees") @default(0) @db.Decimal(15, 4)
+  exchangeFees      Decimal           @map("exchange_fees") @default(0) @db.Decimal(15, 4)
+  otherFees         Decimal           @map("other_fees") @default(0) @db.Decimal(15, 4)
+  executionTime     DateTime          @map("execution_time") @db.Timestamptz
+  settlementDate    DateTime?         @map("settlement_date") @db.Timestamptz
+  venue             String?           @db.VarChar(100)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  
+  // Relations
+  order             Order             @relation(fields: [orderId], references: [id])
+  
+  @@index([orderId])
+  @@map("order_executions")
+}
+
+model InstrumentMaster {
+  id                String            @id @default(uuid()) @db.Uuid
+  securityId        String            @unique @map("security_id") @db.VarChar(50)
+  symbol            String            @db.VarChar(50)
+  name              String            @db.VarChar(255)
+  assetClass        String            @map("asset_class") @db.VarChar(50)
+  securityType      String            @map("security_type") @db.VarChar(50)
+  instrumentType    String            @map("instrument_type") @db.VarChar(50)
+  issuerName        String            @map("issuer_name") @db.VarChar(255)
+  tradingCurrency   String            @map("trading_currency") @default("USD") @db.VarChar(3)
+  currency          String            @default("USD") @db.VarChar(3)
+  exchange          String?           @db.VarChar(50)
+  isActive          Boolean           @map("is_active") @default(true)
+  isDelisted        Boolean           @map("is_delisted") @default(false)
+  dataSource        String            @map("data_source") @default("internal") @db.VarChar(50)
+  dataVendor        String            @map("data_vendor") @default("internal") @db.VarChar(50)
+  dataQuality       Json              @map("data_quality")
+  createdBy         String            @map("created_by") @db.VarChar(255)
+  updatedBy         String            @map("updated_by") @db.VarChar(255)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  lastUpdated       DateTime          @map("last_updated") @default(now()) @db.Timestamptz
+  
+  @@index([assetClass, securityType])
+  @@index([securityId])
+  @@map("instrument_master")
+}
+
+model MarketDataSnapshot {
+  id                String            @id @default(uuid()) @db.Uuid
+  instrumentId      String            @map("instrument_id") @db.Uuid
+  price             Decimal           @db.Decimal(15, 4)
+  bidPrice          Decimal?          @map("bid_price") @db.Decimal(15, 4)
+  askPrice          Decimal?          @map("ask_price") @db.Decimal(15, 4)
+  volume            Decimal?          @db.Decimal(15, 0)
+  timestamp         DateTime          @db.Timestamptz
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  
+  @@index([instrumentId, timestamp])
+  @@map("market_data_snapshots")
+}
+
+model Trade {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  portfolioId       String            @map("portfolio_id") @db.Uuid
+  symbol            String            @db.VarChar(50)
+  side              String            @db.VarChar(10)
+  quantity          Decimal           @db.Decimal(15, 4)
+  price             Decimal           @db.Decimal(15, 4)
+  tradeDate         DateTime          @map("trade_date") @db.Date
+  settlementDate    DateTime          @map("settlement_date") @db.Date
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  
+  @@index([tenantId, portfolioId])
+  @@map("trades")
+}
+
+model TradeConfirmation {
+  id                String            @id @default(uuid()) @db.Uuid
+  tradeId           String            @map("trade_id") @db.Uuid
+  status            String            @default("PENDING") @db.VarChar(50)
+  confirmationData  Json              @map("confirmation_data") @default("{}")
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  
+  @@index([tradeId])
+  @@map("trade_confirmations")
+}
+
+model TradeBreak {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  tradeId           String            @map("trade_id") @db.Uuid
+  breakType         String            @map("break_type") @db.VarChar(50)
+  description       String            @db.Text
+  status            String            @default("OPEN") @db.VarChar(50)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  
+  @@index([tenantId, status])
+  @@map("trade_breaks")
+}
+
+model OrderAllocation {
+  id                String            @id @default(uuid()) @db.Uuid
+  orderId           String            @map("order_id") @db.Uuid
+  portfolioId       String            @map("portfolio_id") @db.Uuid
+  allocation        Decimal           @db.Decimal(15, 4)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  
+  @@index([orderId])
+  @@map("order_allocations")
+}
+
+model BenchmarkComparison {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  portfolioId       String            @map("portfolio_id") @db.Uuid
+  benchmarkId       String            @map("benchmark_id") @db.VarChar(100)
+  periodStart       DateTime          @map("period_start") @db.Date
+  periodEnd         DateTime          @map("period_end") @db.Date
+  portfolioReturn   Decimal           @map("portfolio_return") @db.Decimal(10, 6)
+  benchmarkReturn   Decimal           @map("benchmark_return") @db.Decimal(10, 6)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  
+  @@index([tenantId, portfolioId])
+  @@map("benchmark_comparisons")
+}
+
+model PerformanceAttribution {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  portfolioId       String            @map("portfolio_id") @db.Uuid
+  attributionType   String            @map("attribution_type") @db.VarChar(50)
+  periodStart       DateTime          @map("period_start") @db.Date
+  periodEnd         DateTime          @map("period_end") @db.Date
+  attribution       Decimal           @db.Decimal(10, 6)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  
+  @@index([tenantId, portfolioId])
+  @@map("performance_attributions")
+}
+
+model TransactionCostAnalysis {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  transactionId     String            @map("transaction_id") @db.Uuid
+  implicitCost      Decimal           @map("implicit_cost") @db.Decimal(15, 4)
+  explicitCost      Decimal           @map("explicit_cost") @db.Decimal(15, 4)
+  totalCost         Decimal           @map("total_cost") @db.Decimal(15, 4)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  
+  @@index([tenantId])
+  @@map("transaction_cost_analyses")
+}
+
+model CustodianMessage {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  messageType       String            @map("message_type") @db.VarChar(50)
+  content           Json              @default("{}")
+  status            String            @default("PENDING") @db.VarChar(50)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  
+  @@index([tenantId, messageType])
+  @@map("custodian_messages")
+}
+
+model RegulatoryReport {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  reportType        String            @map("report_type") @db.VarChar(50)
+  reportData        Json              @map("report_data") @default("{}")
+  status            String            @default("PENDING") @db.VarChar(50)
+  filingDate        DateTime?         @map("filing_date") @db.Date
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  
+  @@index([tenantId, reportType])
+  @@map("regulatory_reports")
+}
+
+model TradeMatch {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  internalTradeId   String            @map("internal_trade_id") @db.Uuid
+  externalTradeId   String            @map("external_trade_id") @db.VarChar(100)
+  matchStatus       String            @map("match_status") @default("MATCHED") @db.VarChar(50)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  
+  @@index([tenantId])
+  @@map("trade_matches")
+}
+
+model Counterparty {
+  id                String            @id @default(uuid()) @db.Uuid
+  name              String            @db.VarChar(255)
+  code              String            @unique @db.VarChar(50)
+  counterpartyType  String            @map("counterparty_type") @db.VarChar(50)
+  isActive          Boolean           @map("is_active") @default(true)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  
+  @@index([counterpartyType])
+  @@map("counterparties")
+}
+
+model RegulatoryRule {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  ruleName          String            @map("rule_name") @db.VarChar(255)
+  ruleType          String            @map("rule_type") @db.VarChar(50)
+  jurisdiction      String            @db.VarChar(50)
+  ruleDefinition    Json              @map("rule_definition") @default("{}")
+  isActive          Boolean           @map("is_active") @default(true)
+  
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  
+  @@index([tenantId, ruleType])
+  @@map("regulatory_rules")
+}
+
 // Enums
 enum PortfolioType {
   MANAGED
@@ -387,6 +674,7 @@ enum TransactionType {
   STOCK_DIVIDEND
   MERGER
   SPINOFF
+  REBALANCE
   FEE
   TAX
 }
@@ -1330,4 +1618,484 @@ enum AlertSeverity {
   LOW
   MEDIUM
   HIGH
+  CRITICAL
+}
+
+enum AssetType {
+  EQUITY
+  FIXED_INCOME
+  ALTERNATIVE
+  CASH_EQUIVALENT
+  DERIVATIVE
+  STRUCTURED_PRODUCT
+  COMMODITY
+  REAL_ESTATE
+}
+
+enum LiquidityTier {
+  TIER_1
+  TIER_2
+  TIER_3
+  TIER_4
+}
+
+enum ReviewFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+}
+
+enum AnalyticsEventType {
+  metric_update
+  threshold_breach
+  anomaly_detected
+  performance_alert
+  risk_alert
+  compliance_breach
+  data_refresh
+  TEMPLATE_RECOGNITION_COMPLETED
+  OCR_COMPLETED
+  LANGUAGE_PROCESSING_COMPLETED
+  VERSION_CONTROL_OPERATION
+  DOCUMENT_SEARCH_PERFORMED
+  DOCUMENT_FILING_COMPLETED
+  DATA_EXTRACTION_COMPLETED
+}
+
+enum AnalyticsMetricType {
+  PORTFOLIO_PERFORMANCE
+  RISK_METRICS
+  ASSET_ALLOCATION
+  LIQUIDITY_ANALYSIS
+  ATTRIBUTION_ANALYSIS
+  VALUE_AT_RISK
+  CONCENTRATION
+  CREDIT_RISK
+  LIQUIDITY_RISK
+  LEVERAGE
+  TOTAL_NET_EXPOSURE
+}
+
+enum EntityType {
+  portfolio
+  position
+  client
+  tenant
+  instrument
+}
+
+enum RebalanceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+  TRIGGER_BASED
+}
+
+enum TimeHorizon {
+  SHORT
+  MEDIUM
+  LONG
+  VERY_LONG
+}
+
+// Missing models for compliance and analytics
+
+model AssetAllocation {
+  id                      String              @id @default(uuid()) @db.Uuid
+  tenantId                String              @map("tenant_id") @db.VarChar(255)
+  portfolioId             String?             @map("portfolio_id") @db.Uuid      // Optional - can be template
+  name                    String              @db.VarChar(200)
+  description             String?             @db.Text
+  
+  // Allocation Rules
+  allocations             Json                // Array of allocation rules
+  constraints             Json?               // Array of constraints
+  rebalancingThreshold    Decimal             @map("rebalancing_threshold") @db.Decimal(5, 2) @default(5.0)
+  rebalancingFrequency    RebalanceFrequency  @map("rebalancing_frequency") @default(QUARTERLY)
+  
+  // Risk Profile
+  riskProfile             RiskTolerance       @map("risk_profile") @default(MODERATE)
+  timeHorizon             TimeHorizon         @map("time_horizon") @default(MEDIUM)
+  
+  // Status
+  isActive                Boolean             @map("is_active") @default(true)
+  effectiveDate           DateTime            @map("effective_date") @default(now()) @db.Timestamptz
+  expirationDate          DateTime?           @map("expiration_date") @db.Timestamptz
+  
+  createdAt               DateTime            @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt               DateTime            @map("updated_at") @updatedAt @db.Timestamptz
+  createdBy               String              @map("created_by") @db.Uuid
+  
+  // Relations
+  assetClass              AssetClass?         @relation("AssetClassAllocations", fields: [portfolioId], references: [id])
+  
+  @@index([tenantId, portfolioId])
+  @@index([tenantId, isActive])
+  @@map("asset_allocations")
+}
+
+model RealTimeAnalyticsEvent {
+  id              String                @id @default(uuid()) @db.Uuid
+  tenantId        String                @map("tenant_id") @db.VarChar(255)
+  eventType       AnalyticsEventType    @map("event_type")
+  metricType      AnalyticsMetricType   @map("metric_type")
+  entityId        String                @map("entity_id") @db.VarChar(100)        // Portfolio, position, client ID
+  entityType      EntityType            @map("entity_type")
+  severity        AlertSeverity         @default(LOW)
+  timestamp       DateTime              @default(now()) @db.Timestamptz
+  data            Json                  // Event-specific data
+  processed       Boolean               @default(false)
+  processedAt     DateTime?             @map("processed_at") @db.Timestamptz
+  
+  createdAt       DateTime              @map("created_at") @default(now()) @db.Timestamptz
+  
+  @@index([tenantId, eventType, timestamp])
+  @@index([entityId, entityType])
+  @@index([tenantId, processed])
+  @@map("real_time_analytics_events")
+}
+
+model AssetClass {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.VarChar(255)
+  name              String            @db.VarChar(100)
+  code              String            @db.VarChar(20)     // GICS or internal code
+  description       String?           @db.Text
+  level             Int               @default(1)          // Hierarchy level
+  assetType         AssetType         @map("asset_type")
+  riskLevel         RiskTolerance     @map("risk_level") @default(MODERATE)
+  liquidityTier     LiquidityTier     @map("liquidity_tier") @default(TIER_2)
+  parentClassId     String?           @map("parent_class_id") @db.Uuid
+  isActive          Boolean           @map("is_active") @default(true)
+  regulatoryClass   String?           @map("regulatory_class") @db.VarChar(100)
+  createdAt         DateTime          @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime          @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  subClasses        AssetSubClass[]
+  parentClass       AssetClass?       @relation("AssetClassHierarchy", fields: [parentClassId], references: [id])
+  childClasses      AssetClass[]      @relation("AssetClassHierarchy")
+  instruments       InstrumentClassification[]
+  allocations       AssetAllocation[] @relation("AssetClassAllocations")
+  
+  @@unique([tenantId, code])
+  @@index([tenantId, assetType])
+  @@index([tenantId, isActive])
+  @@map("asset_classes")
+}
+
+model AssetSubClass {
+  id            String              @id @default(uuid()) @db.Uuid
+  tenantId      String              @map("tenant_id") @db.VarChar(255)
+  assetClassId  String              @map("asset_class_id") @db.Uuid
+  name          String              @db.VarChar(100)
+  code          String              @db.VarChar(20)     // Internal or industry code
+  description   String?             @db.Text
+  characteristics Json?             // Flexible characteristics data
+  isActive      Boolean             @map("is_active") @default(true)
+  createdAt     DateTime            @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt     DateTime            @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  assetClass    AssetClass          @relation(fields: [assetClassId], references: [id])
+  instruments   InstrumentClassification[]
+  
+  @@unique([tenantId, assetClassId, code])
+  @@index([tenantId, isActive])
+  @@map("asset_sub_classes")
+}
+
+model AttributionAnalysis {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.VarChar(255)
+  portfolioId String   @map("portfolio_id") @db.Uuid
+  period      String   @db.VarChar(50)
+  totalReturn Decimal  @map("total_return") @db.Decimal(10, 4)
+  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt   DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("attribution_analyses")
+}
+
+model ComplianceBreach {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.VarChar(255)
+  portfolioId String   @map("portfolio_id") @db.Uuid
+  ruleId      String   @map("rule_id") @db.Uuid
+  severity    String   @db.VarChar(50)
+  status      String   @db.VarChar(50)
+  description String   @db.Text
+  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt   DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("compliance_breaches")
+}
+
+model ComplianceRule {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  description String   @db.Text
+  ruleType    String   @map("rule_type") @db.VarChar(100)
+  isActive    Boolean  @map("is_active") @default(true)
+  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt   DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("compliance_rules")
+}
+
+model ComplianceWorkflow {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  status      String   @db.VarChar(50)
+  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt   DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("compliance_workflows")
+}
+
+model CorporateAction {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @map("tenant_id") @db.VarChar(255)
+  securityId       String   @map("security_id") @db.VarChar(50)
+  actionCode       String   @map("action_code") @db.VarChar(20)
+  actionType       String   @map("action_type") @db.VarChar(100)
+  announcementDate DateTime @map("announcement_date") @db.Timestamptz
+  recordDate       DateTime @map("record_date") @db.Timestamptz
+  exDate           DateTime @map("ex_date") @db.Timestamptz
+  payableDate      DateTime @map("payable_date") @db.Timestamptz
+  description      String   @db.Text
+  actionDetails    Json     @map("action_details")
+  status           String   @default("pending") @db.VarChar(50)
+  source           String   @default("internal") @db.VarChar(50)
+  processedDate    DateTime? @map("processed_date") @db.Timestamptz
+  createdAt        DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt        DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@index([securityId])
+  @@index([exDate])
+  @@map("corporate_actions")
+}
+
+model DerivativeInstrument {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.VarChar(255)
+  symbol            String   @db.VarChar(50)
+  instrumentType    String   @map("instrument_type") @db.VarChar(100)
+  underlyingAsset   String   @map("underlying_asset") @db.VarChar(50)
+  expirationDate    DateTime @map("expiration_date") @db.Timestamptz
+  strikePrice       Decimal? @map("strike_price") @db.Decimal(15, 4)
+  createdAt         DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("derivative_instruments")
+}
+
+model FixedIncomePortfolioAnalytics {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.VarChar(255)
+  portfolioId        String   @map("portfolio_id") @db.Uuid
+  duration           Decimal  @db.Decimal(8, 4)
+  modifiedDuration   Decimal  @map("modified_duration") @db.Decimal(8, 4)
+  convexity          Decimal  @db.Decimal(8, 4)
+  yieldToMaturity    Decimal  @map("yield_to_maturity") @db.Decimal(6, 4)
+  createdAt          DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt          DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("fixed_income_portfolio_analytics")
+}
+
+model FixedIncomeSecurity {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.VarChar(255)
+  symbol          String   @db.VarChar(50)
+  issuer          String   @db.VarChar(255)
+  maturityDate    DateTime @map("maturity_date") @db.Timestamptz
+  couponRate      Decimal  @map("coupon_rate") @db.Decimal(6, 4)
+  faceValue       Decimal  @map("face_value") @db.Decimal(15, 2)
+  createdAt       DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt       DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("fixed_income_securities")
+}
+
+model GreeksCalculation {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.VarChar(255)
+  optionId   String   @map("option_id") @db.Uuid
+  delta      Decimal  @db.Decimal(8, 6)
+  gamma      Decimal  @db.Decimal(8, 6)
+  theta      Decimal  @db.Decimal(8, 6)
+  vega       Decimal  @db.Decimal(8, 6)
+  rho        Decimal  @db.Decimal(8, 6)
+  createdAt  DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt  DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("greeks_calculations")
+}
+
+model ImpliedVolatilityAnalysis {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.VarChar(255)
+  securityId         String   @map("security_id") @db.Uuid
+  impliedVolatility  Decimal  @map("implied_volatility") @db.Decimal(8, 6)
+  calculationDate    DateTime @map("calculation_date") @db.Timestamptz
+  createdAt          DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt          DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("implied_volatility_analyses")
+}
+
+model InstrumentClassification {
+  id                  String              @id @default(uuid()) @db.Uuid
+  tenantId            String              @map("tenant_id") @db.VarChar(255)
+  instrumentId        String              @map("instrument_id") @db.VarChar(50)  // External instrument identifier
+  instrumentName      String              @map("instrument_name") @db.VarChar(200)
+  securityId          String?             @map("security_id") @db.Uuid           // Internal security reference
+  
+  // Asset Classification Relations
+  assetClassId        String              @map("asset_class_id") @db.Uuid
+  assetClass          AssetClass          @relation(fields: [assetClassId], references: [id])
+  assetSubClassId     String?             @map("asset_sub_class_id") @db.Uuid
+  assetSubClass       AssetSubClass?      @relation(fields: [assetSubClassId], references: [id])
+  
+  // GICS Classification
+  gicsSector          String?             @map("gics_sector") @db.VarChar(100)
+  gicsIndustryGroup   String?             @map("gics_industry_group") @db.VarChar(100)
+  gicsIndustry        String?             @map("gics_industry") @db.VarChar(100)
+  gicsSubIndustry     String?             @map("gics_sub_industry") @db.VarChar(100)
+  
+  // Geographic Classification  
+  regionCode          String?             @map("region_code") @db.VarChar(20)     // North America, Europe, Asia, etc.
+  countryCode         String?             @map("country_code") @db.VarChar(3)     // ISO country code
+  developedMarket     Boolean             @map("developed_market") @default(true)
+  emergingMarket      Boolean             @map("emerging_market") @default(false)
+  
+  // Market Data
+  primaryExchange     String?             @map("primary_exchange") @db.VarChar(20)
+  currency            String              @default("USD") @db.VarChar(3)
+  
+  // Classification Metadata
+  classifications     Json?               // Flexible classification data
+  isActive            Boolean             @map("is_active") @default(true)
+  classificationDate  DateTime            @map("classification_date") @default(now()) @db.Timestamptz
+  lastReviewDate      DateTime?           @map("last_review_date") @db.Timestamptz
+  reviewFrequency     ReviewFrequency     @map("review_frequency") @default(ANNUAL)
+  
+  createdAt           DateTime            @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt           DateTime            @map("updated_at") @updatedAt @db.Timestamptz
+  
+  @@unique([tenantId, instrumentId])
+  @@index([tenantId, assetClassId])
+  @@index([tenantId, isActive])
+  @@index([gicsSector, gicsIndustry])
+  @@map("instrument_classifications")
+}
+
+model InvestmentGuideline {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.VarChar(255)
+  portfolioId    String   @map("portfolio_id") @db.Uuid
+  guidelineType  String   @map("guideline_type") @db.VarChar(100)
+  description    String   @db.Text
+  minThreshold   Decimal? @map("min_threshold") @db.Decimal(8, 4)
+  maxThreshold   Decimal? @map("max_threshold") @db.Decimal(8, 4)
+  isActive       Boolean  @map("is_active") @default(true)
+  createdAt      DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt      DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("investment_guidelines")
+}
+
+model OptionStrategy {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.VarChar(255)
+  portfolioId  String   @map("portfolio_id") @db.Uuid
+  strategyType String   @map("strategy_type") @db.VarChar(100)
+  description  String   @db.Text
+  createdAt    DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt    DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("option_strategies")
+}
+
+model PerformanceMeasurement {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.VarChar(255)
+  portfolioId    String   @map("portfolio_id") @db.Uuid
+  periodId       String   @map("period_id") @db.Uuid
+  totalReturn    Decimal  @map("total_return") @db.Decimal(10, 6)
+  benchmarkReturn Decimal @map("benchmark_return") @db.Decimal(10, 6)
+  alphaValue     Decimal  @map("alpha_value") @db.Decimal(10, 6)
+  betaValue      Decimal  @map("beta_value") @db.Decimal(10, 6)
+  sharpeRatio    Decimal  @map("sharpe_ratio") @db.Decimal(10, 6)
+  createdAt      DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt      DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("performance_measurements")
+}
+
+model PerformancePeriod {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.VarChar(255)
+  name      String   @db.VarChar(100)
+  startDate DateTime @map("start_date") @db.Timestamptz
+  endDate   DateTime @map("end_date") @db.Timestamptz
+  createdAt DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("performance_periods")
+}
+
+model RestrictedList {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.VarChar(255)
+  securityId  String   @map("security_id") @db.Uuid
+  listType    String   @map("list_type") @db.VarChar(50)
+  reason      String   @db.Text
+  isActive    Boolean  @map("is_active") @default(true)
+  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt   DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("restricted_lists")
+}
+
+model Security {
+  id           String      @id @default(uuid()) @db.Uuid
+  tenantId     String      @map("tenant_id") @db.VarChar(255)
+  symbol       String      @db.VarChar(50)
+  name         String      @db.VarChar(255)
+  securityType String      @map("security_type") @db.VarChar(100)
+  exchange     String?     @db.VarChar(50)
+  currency     String      @db.VarChar(3)
+  isActive     Boolean     @map("is_active") @default(true)
+  createdAt    DateTime    @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt    DateTime    @map("updated_at") @updatedAt @db.Timestamptz
+  
+  // Relations
+  positions    Position[]
+  
+  @@unique([tenantId, symbol])
+  @@index([tenantId, securityType])
+  @@map("securities")
+}
+
+model SuitabilityProfile {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.VarChar(255)
+  clientId          String   @map("client_id") @db.Uuid
+  riskTolerance     String   @map("risk_tolerance") @db.VarChar(50)
+  investmentGoals   String   @map("investment_goals") @db.Text
+  timeHorizon       String   @map("time_horizon") @db.VarChar(50)
+  liquidityNeeds    String   @map("liquidity_needs") @db.VarChar(50)
+  createdAt         DateTime @map("created_at") @default(now()) @db.Timestamptz
+  updatedAt         DateTime @map("updated_at") @updatedAt @db.Timestamptz
+
+  @@map("suitability_profiles")
 }

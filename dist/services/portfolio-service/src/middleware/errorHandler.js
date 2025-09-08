@@ -152,7 +152,7 @@ const errorHandler = (error, req, res, next) => {
         code = 'DATABASE_CONNECTION_FAILED';
     }
     // Handle Prisma Client Request errors
-    else if (error instanceof client_1.Prisma.PrismaClientRequestError) {
+    else if (error instanceof client_1.Prisma.PrismaClientKnownRequestError) {
         statusCode = 500;
         message = 'Database request failed';
         code = 'DATABASE_REQUEST_FAILED';

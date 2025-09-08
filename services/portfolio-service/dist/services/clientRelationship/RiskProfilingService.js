@@ -123,18 +123,7 @@ class RiskProfilingService {
             });
             // Get client and portfolio information
             const client = await this.prisma.clientProfile.findFirst({
-                where: { id: request.clientId, tenantId },
-                include: {
-                    portfolios: {
-                        include: {
-                            positions: {
-                                include: {
-                                    instrument: true
-                                }
-                            }
-                        }
-                    }
-                }
+                where: { id: request.clientId, tenantId }
             });
             if (!client) {
                 throw new Error(`Client not found: ${request.clientId}`);
@@ -183,7 +172,7 @@ class RiskProfilingService {
                     assessmentType: assessment.assessmentType,
                     riskTolerance: assessment.riskTolerance,
                     riskCapacity: assessment.riskCapacity,
-                    investmentObjectives: JSON.stringify(assessment.investmentObjectives),
+                    investmentObjectives: assessment.investmentObjectives,
                     timeHorizon: assessment.timeHorizon,
                     liquidityNeeds: assessment.liquidityNeeds,
                     netWorth: assessment.netWorth,
@@ -193,7 +182,7 @@ class RiskProfilingService {
                     riskScore: assessment.riskScore,
                     objectiveAlignment: assessment.objectiveAlignment,
                     recommendedAllocation: JSON.stringify(assessment.recommendedAllocation),
-                    unsuitableInvestments: JSON.stringify(assessment.unsuitableInvestments),
+                    unsuitableInvestments: assessment.unsuitableInvestments,
                     reviewedBy: assessment.reviewedBy,
                     reviewDate: assessment.reviewDate,
                     nextReviewDate: assessment.nextReviewDate,
@@ -237,18 +226,7 @@ class RiskProfilingService {
             const alerts = [];
             // Get client and portfolio data
             const client = await this.prisma.clientProfile.findFirst({
-                where: { id: clientId, tenantId },
-                include: {
-                    portfolios: {
-                        include: {
-                            positions: {
-                                include: {
-                                    instrument: true
-                                }
-                            }
-                        }
-                    }
-                }
+                where: { id: clientId, tenantId }
             });
             if (!client) {
                 throw new Error(`Client not found: ${clientId}`);
@@ -273,11 +251,11 @@ class RiskProfilingService {
                         title: alert.title,
                         description: alert.description,
                         triggeredDate: alert.triggeredDate,
-                        portfolioId: alert.portfolioId,
-                        holdingSymbol: alert.holdingSymbol,
-                        currentValue: alert.currentValue,
-                        thresholdValue: alert.thresholdValue,
-                        recommendedAction: alert.recommendedAction,
+                        portfolioId: alert.portfolioId || undefined,
+                        holdingSymbol: alert.holdingSymbol || undefined,
+                        currentValue: alert.currentValue || undefined,
+                        thresholdValue: alert.thresholdValue || undefined,
+                        recommendedAction: alert.recommendedAction || 'No action specified',
                         isAcknowledged: alert.isAcknowledged,
                         isResolved: alert.isResolved
                     }
@@ -318,7 +296,7 @@ class RiskProfilingService {
                 questionnaireVersion: q.questionnaireVersion,
                 completedDate: q.completedDate,
                 responses: JSON.parse(q.responses),
-                calculatedRiskScore: q.calculatedRiskScore,
+                calculatedRiskScore: q.calculatedRiskScore.toNumber(),
                 recommendedRiskTolerance: q.recommendedRiskTolerance,
                 isValid: q.isValid,
                 expirationDate: q.expirationDate,
@@ -353,17 +331,17 @@ class RiskProfilingService {
                 title: alert.title,
                 description: alert.description,
                 triggeredDate: alert.triggeredDate,
-                portfolioId: alert.portfolioId,
-                holdingSymbol: alert.holdingSymbol,
-                currentValue: alert.currentValue,
-                thresholdValue: alert.thresholdValue,
-                recommendedAction: alert.recommendedAction,
+                portfolioId: alert.portfolioId || undefined,
+                holdingSymbol: alert.holdingSymbol || undefined,
+                currentValue: alert.currentValue || undefined,
+                thresholdValue: alert.thresholdValue || undefined,
+                recommendedAction: alert.recommendedAction || 'No action specified',
                 isAcknowledged: alert.isAcknowledged,
-                acknowledgedBy: alert.acknowledgedBy,
-                acknowledgedDate: alert.acknowledgedDate,
+                acknowledgedBy: alert.acknowledgedBy || undefined,
+                acknowledgedDate: alert.acknowledgedDate || undefined,
                 isResolved: alert.isResolved,
-                resolvedDate: alert.resolvedDate,
-                resolution: alert.resolution
+                resolvedDate: alert.resolvedDate || undefined,
+                resolution: alert.resolution || undefined
             }));
         }
         catch (error) {
@@ -389,19 +367,19 @@ class RiskProfilingService {
         };
         responses.forEach(response => {
             const category = response.category.toLowerCase();
-            if (category === 'risk_capacity') {
+            if (category === 'riskcapacity') {
                 scores.riskCapacity += response.answerValue * response.weight;
                 weights.riskCapacity += response.weight;
             }
-            else if (category === 'risk_tolerance') {
+            else if (category === 'risktolerance') {
                 scores.riskTolerance += response.answerValue * response.weight;
                 weights.riskTolerance += response.weight;
             }
-            else if (category === 'investment_knowledge') {
+            else if (category === 'investmentknowledge') {
                 scores.investmentKnowledge += response.answerValue * response.weight;
                 weights.investmentKnowledge += response.weight;
             }
-            else if (category === 'time_horizon') {
+            else if (category === 'timehorizon') {
                 scores.timeHorizon += response.answerValue * response.weight;
                 weights.timeHorizon += response.weight;
             }

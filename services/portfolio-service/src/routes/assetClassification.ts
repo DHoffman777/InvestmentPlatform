@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getKafkaService } from '../utils/kafka-mock';
 import { AssetClassificationService } from '../services/assetClassificationService';
-import { AuthenticatedRequest } from '../middleware/auth';
+import { } from '../middleware/auth';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
@@ -13,7 +13,7 @@ const assetClassificationService = new AssetClassificationService(prisma, kafkaS
 // Asset Class Management Routes
 
 // Get all asset classes
-router.get('/asset-classes', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/asset-classes', async (req: any, res: any) => {
   try {
     const { assetType, riskLevel, liquidityTier, parentClassId, isActive } = req.query;
     
@@ -31,7 +31,7 @@ router.get('/asset-classes', async (req: AuthenticatedRequest, res: Response) =>
       data: assetClasses,
       total: assetClasses.length
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching asset classes:', error);
     res.status(500).json({
       success: false,
@@ -42,7 +42,7 @@ router.get('/asset-classes', async (req: AuthenticatedRequest, res: Response) =>
 });
 
 // Create new asset class
-router.post('/asset-classes', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/asset-classes', async (req: any, res: any) => {
   try {
     const {
       name,
@@ -67,7 +67,7 @@ router.post('/asset-classes', async (req: AuthenticatedRequest, res: Response) =
       });
     }
 
-    const validAssetTypes = ['EQUITY', 'FIXED_INCOME', 'CASH_EQUIVALENT', 'ALTERNATIVE', 'DERIVATIVE'];
+    const validAssetTypes = ['EQUITY', 'FIXED_INCOME', 'CASH_EQUIVALENT', 'ALTERNATIVE', 'DERIVATIVE', 'STRUCTURED_PRODUCT', 'COMMODITY', 'REAL_ESTATE'];
     if (!validAssetTypes.includes(assetType)) {
       return res.status(400).json({
         success: false,
@@ -112,7 +112,7 @@ router.post('/asset-classes', async (req: AuthenticatedRequest, res: Response) =
       data: assetClass,
       message: 'Asset class created successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating asset class:', error);
     res.status(500).json({
       success: false,
@@ -123,7 +123,7 @@ router.post('/asset-classes', async (req: AuthenticatedRequest, res: Response) =
 });
 
 // Update asset class
-router.put('/asset-classes/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.put('/asset-classes/:id', async (req: any, res: any) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -135,7 +135,7 @@ router.put('/asset-classes/:id', async (req: AuthenticatedRequest, res: Response
       data: assetClass,
       message: 'Asset class updated successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error updating asset class:', error);
     res.status(500).json({
       success: false,
@@ -148,7 +148,7 @@ router.put('/asset-classes/:id', async (req: AuthenticatedRequest, res: Response
 // Asset Sub-Class Management Routes
 
 // Get asset sub-classes
-router.get('/asset-subclasses', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/asset-subclasses', async (req: any, res: any) => {
   try {
     const { assetClassId } = req.query;
 
@@ -162,7 +162,7 @@ router.get('/asset-subclasses', async (req: AuthenticatedRequest, res: Response)
       data: subClasses,
       total: subClasses.length
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching asset sub-classes:', error);
     res.status(500).json({
       success: false,
@@ -173,7 +173,7 @@ router.get('/asset-subclasses', async (req: AuthenticatedRequest, res: Response)
 });
 
 // Create asset sub-class
-router.post('/asset-subclasses', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/asset-subclasses', async (req: any, res: any) => {
   try {
     const {
       assetClassId,
@@ -221,7 +221,7 @@ router.post('/asset-subclasses', async (req: AuthenticatedRequest, res: Response
       data: subClass,
       message: 'Asset sub-class created successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating asset sub-class:', error);
     res.status(500).json({
       success: false,
@@ -234,7 +234,7 @@ router.post('/asset-subclasses', async (req: AuthenticatedRequest, res: Response
 // Instrument Classification Routes
 
 // Classify an instrument
-router.post('/instruments/:instrumentId/classify', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/instruments/:instrumentId/classify', async (req: any, res: any) => {
   try {
     const { instrumentId } = req.params;
     const { symbol, instrumentName, instrumentType, additionalData } = req.body;
@@ -248,7 +248,8 @@ router.post('/instruments/:instrumentId/classify', async (req: AuthenticatedRequ
     }
 
     const classification = await assetClassificationService.classifyInstrument({
-      instrumentId,
+      instrumentId: instrumentId,
+      securityId: instrumentId,
       symbol,
       instrumentName,
       instrumentType,
@@ -262,7 +263,7 @@ router.post('/instruments/:instrumentId/classify', async (req: AuthenticatedRequ
       data: classification,
       message: 'Instrument classified successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error classifying instrument:', error);
     const statusCode = error instanceof Error && error.message.includes('already classified') ? 409 : 500;
     res.status(statusCode).json({
@@ -274,7 +275,7 @@ router.post('/instruments/:instrumentId/classify', async (req: AuthenticatedRequ
 });
 
 // Get instrument classification
-router.get('/instruments/:instrumentId/classification', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/instruments/:instrumentId/classification', async (req: any, res: any) => {
   try {
     const { instrumentId } = req.params;
 
@@ -294,7 +295,7 @@ router.get('/instruments/:instrumentId/classification', async (req: Authenticate
       success: true,
       data: classification
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching instrument classification:', error);
     res.status(500).json({
       success: false,
@@ -305,7 +306,7 @@ router.get('/instruments/:instrumentId/classification', async (req: Authenticate
 });
 
 // Update instrument classification
-router.put('/instruments/:instrumentId/classification', async (req: AuthenticatedRequest, res: Response) => {
+router.put('/instruments/:instrumentId/classification', async (req: any, res: any) => {
   try {
     const { instrumentId } = req.params;
     const {
@@ -321,7 +322,8 @@ router.put('/instruments/:instrumentId/classification', async (req: Authenticate
     } = req.body;
 
     const classification = await assetClassificationService.updateInstrumentClassification({
-      instrumentId,
+      instrumentId: instrumentId,
+      securityId: instrumentId,
       assetClassId,
       assetSubClassId,
       classifications,
@@ -340,7 +342,7 @@ router.put('/instruments/:instrumentId/classification', async (req: Authenticate
       data: classification,
       message: 'Instrument classification updated successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error updating instrument classification:', error);
     res.status(500).json({
       success: false,
@@ -353,7 +355,7 @@ router.put('/instruments/:instrumentId/classification', async (req: Authenticate
 // Asset Allocation Management Routes
 
 // Get asset allocations
-router.get('/allocations', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/allocations', async (req: any, res: any) => {
   try {
     const { portfolioId } = req.query;
 
@@ -367,7 +369,7 @@ router.get('/allocations', async (req: AuthenticatedRequest, res: Response) => {
       data: allocations,
       total: allocations.length
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching asset allocations:', error);
     res.status(500).json({
       success: false,
@@ -378,7 +380,7 @@ router.get('/allocations', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Create asset allocation
-router.post('/allocations', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/allocations', async (req: any, res: any) => {
   try {
     const {
       portfolioId,
@@ -444,7 +446,7 @@ router.post('/allocations', async (req: AuthenticatedRequest, res: Response) => 
       data: allocation,
       message: 'Asset allocation created successfully'
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error creating asset allocation:', error);
     res.status(500).json({
       success: false,
@@ -457,7 +459,7 @@ router.post('/allocations', async (req: AuthenticatedRequest, res: Response) => 
 // Analytics and Reporting Routes
 
 // Get classification summary
-router.get('/summary', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/summary', async (req: any, res: any) => {
   try {
     const summary = await assetClassificationService.getClassificationSummary(req.user!.tenantId);
 
@@ -465,7 +467,7 @@ router.get('/summary', async (req: AuthenticatedRequest, res: Response) => {
       success: true,
       data: summary
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching classification summary:', error);
     res.status(500).json({
       success: false,
@@ -476,7 +478,7 @@ router.get('/summary', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // Analyze portfolio classification
-router.get('/portfolios/:portfolioId/analysis', async (req: AuthenticatedRequest, res: Response) => {
+router.get('/portfolios/:portfolioId/analysis', async (req: any, res: any) => {
   try {
     const { portfolioId } = req.params;
 
@@ -489,7 +491,7 @@ router.get('/portfolios/:portfolioId/analysis', async (req: AuthenticatedRequest
       success: true,
       data: analysis
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error analyzing portfolio classification:', error);
     res.status(500).json({
       success: false,
@@ -500,7 +502,7 @@ router.get('/portfolios/:portfolioId/analysis', async (req: AuthenticatedRequest
 });
 
 // Bulk classification operations
-router.post('/instruments/bulk-classify', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/instruments/bulk-classify', async (req: any, res: any) => {
   try {
     const { instruments } = req.body;
 
@@ -517,7 +519,8 @@ router.post('/instruments/bulk-classify', async (req: AuthenticatedRequest, res:
     for (const instrument of instruments) {
       try {
         const classification = await assetClassificationService.classifyInstrument({
-          instrumentId: instrument.instrumentId,
+          instrumentId: instrument.securityId,
+          securityId: instrument.securityId,
           symbol: instrument.symbol,
           instrumentName: instrument.instrumentName,
           instrumentType: instrument.instrumentType,
@@ -526,9 +529,9 @@ router.post('/instruments/bulk-classify', async (req: AuthenticatedRequest, res:
           classifiedBy: req.user!.userId
         });
         results.push(classification);
-      } catch (error) {
+      } catch (error: any) {
         errors.push({
-          instrumentId: instrument.instrumentId,
+          securityId: instrument.securityId,
           error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
@@ -545,7 +548,7 @@ router.post('/instruments/bulk-classify', async (req: AuthenticatedRequest, res:
       },
       message: `Bulk classification completed: ${results.length} successful, ${errors.length} failed`
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error in bulk classification:', error);
     res.status(500).json({
       success: false,
@@ -556,7 +559,7 @@ router.post('/instruments/bulk-classify', async (req: AuthenticatedRequest, res:
 });
 
 // Standard asset classes reference
-router.get('/standard-classes', async (req: Request, res: Response) => {
+router.get('/standard-classes', async (req: any, res: any) => {
   try {
     res.json({
       success: true,
@@ -613,7 +616,7 @@ router.get('/standard-classes', async (req: Request, res: Response) => {
         timeHorizons: ['SHORT', 'MEDIUM', 'LONG', 'VERY_LONG']
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching standard asset classes:', error);
     res.status(500).json({
       success: false,

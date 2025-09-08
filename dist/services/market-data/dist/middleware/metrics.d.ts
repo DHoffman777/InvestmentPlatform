@@ -1,0 +1,10 @@
+export const __esModule: boolean;
+export const register: any;
+export function metricsMiddleware(req: any, res: any, next: any): void;
+export function trackMarketDataOperation(operation: any, status?: string): void;
+export function trackDbQuery(operation: any, table: any, duration: any): void;
+export function trackCacheOperation(operation: any, result: any): void;
+export function trackVendorApiCall(vendor: any, endpoint: any, status: any): void;
+export function updateQuoteFreshness(symbol: any, source: any, ageInSeconds: any): void;
+export function updateSecuritiesCount(assetClass: any, count: any): void;
+export function collectMarketDataMetrics(): Promise<void>;

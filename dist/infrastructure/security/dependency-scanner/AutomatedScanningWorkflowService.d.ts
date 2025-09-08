@@ -147,8 +147,8 @@ export declare class AutomatedScanningWorkflowService extends EventEmitter {
     getSchedulesByTenant(tenantId: string): ScanSchedule[];
     getExecution(executionId: string): WorkflowExecution | undefined;
     getExecutionsBySchedule(scheduleId: string, limit?: number): WorkflowExecution[];
-    enableSchedule(scheduleId: string): Promise<void>;
-    disableSchedule(scheduleId: string): Promise<void>;
+    enableSchedule(scheduleId: string): Promise<any>;
+    disableSchedule(scheduleId: string): Promise<any>;
     cancelExecution(executionId: string): boolean;
     getActiveExecutions(): WorkflowExecution[];
     getWorkflowMetrics(tenantId?: string): any;

@@ -154,5 +154,5 @@ export declare class CostOptimizationService extends EventEmitter {
     private generateBatchId;
     getOptimization(resourceId: string): CostOptimization | null;
     getAllOptimizations(): CostOptimization[];
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

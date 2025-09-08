@@ -2,18 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fundsRouter = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { query, param, body, validationResult } = require('express-validator');
 const fundsService_1 = require("../services/fundsService");
 const database_1 = require("../config/database");
 const logger_1 = require("../utils/logger");
 const auth_1 = require("../middleware/auth");
-const decimal_js_1 = require("decimal.js");
 const router = (0, express_1.Router)();
 exports.fundsRouter = router;
 const fundsService = new fundsService_1.FundsService(database_1.prisma);
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -24,17 +23,17 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/funds/search - Search funds with advanced filtering
 router.get('/search', [
-    (0, express_validator_1.query)('query').optional().isString().trim().isLength({ max: 50 }).withMessage('Query must be max 50 characters'),
-    (0, express_validator_1.query)('fundType').optional().isIn(['ETF', 'MUTUAL_FUND']).withMessage('Fund type must be ETF or MUTUAL_FUND'),
-    (0, express_validator_1.query)('assetClass').optional().isString().trim().withMessage('Invalid asset class'),
-    (0, express_validator_1.query)('investmentStyle').optional().isIn(['GROWTH', 'VALUE', 'BLEND']).withMessage('Invalid investment style'),
-    (0, express_validator_1.query)('marketCapFocus').optional().isIn(['LARGE_CAP', 'MID_CAP', 'SMALL_CAP', 'MULTI_CAP']).withMessage('Invalid market cap focus'),
-    (0, express_validator_1.query)('geographicFocus').optional().isIn(['DOMESTIC', 'INTERNATIONAL', 'EMERGING_MARKETS', 'GLOBAL']).withMessage('Invalid geographic focus'),
-    (0, express_validator_1.query)('fundFamily').optional().isString().trim().withMessage('Invalid fund family'),
-    (0, express_validator_1.query)('minAUM').optional().isNumeric().withMessage('Min AUM must be numeric'),
-    (0, express_validator_1.query)('maxExpenseRatio').optional().isNumeric().withMessage('Max expense ratio must be numeric'),
-    (0, express_validator_1.query)('minMorningstarRating').optional().isInt({ min: 1, max: 5 }).withMessage('Morningstar rating must be 1-5'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('Limit must be between 1 and 100'),
+    query('query').optional().isString().trim().isLength({ max: 50 }).withMessage('Query must be max 50 characters'),
+    query('fundType').optional().isIn(['ETF', 'MUTUAL_FUND']).withMessage('Fund type must be ETF or MUTUAL_FUND'),
+    query('assetClass').optional().isString().trim().withMessage('Invalid asset class'),
+    query('investmentStyle').optional().isIn(['GROWTH', 'VALUE', 'BLEND']).withMessage('Invalid investment style'),
+    query('marketCapFocus').optional().isIn(['LARGE_CAP', 'MID_CAP', 'SMALL_CAP', 'MULTI_CAP']).withMessage('Invalid market cap focus'),
+    query('geographicFocus').optional().isIn(['DOMESTIC', 'INTERNATIONAL', 'EMERGING_MARKETS', 'GLOBAL']).withMessage('Invalid geographic focus'),
+    query('fundFamily').optional().isString().trim().withMessage('Invalid fund family'),
+    query('minAUM').optional().isNumeric().withMessage('Min AUM must be numeric'),
+    query('maxExpenseRatio').optional().isNumeric().withMessage('Max expense ratio must be numeric'),
+    query('minMorningstarRating').optional().isInt({ min: 1, max: 5 }).withMessage('Morningstar rating must be 1-5'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('Limit must be between 1 and 100'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const filters = {
@@ -67,7 +66,7 @@ router.get('/search', [
 });
 // GET /api/funds/:symbol - Get detailed fund information
 router.get('/:symbol', [
-    (0, express_validator_1.param)('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
+    param('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { symbol } = req.params;
@@ -90,33 +89,33 @@ router.get('/:symbol', [
 });
 // POST /api/funds/etf - Create/update ETF
 router.post('/etf', [
-    (0, express_validator_1.body)('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Symbol is required and must be 1-10 characters'),
-    (0, express_validator_1.body)('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
-    (0, express_validator_1.body)('exchange').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Exchange is required'),
-    (0, express_validator_1.body)('managementFee').isNumeric().withMessage('Management fee is required and must be numeric'),
-    (0, express_validator_1.body)('expenseRatio').isNumeric().withMessage('Expense ratio is required and must be numeric'),
-    (0, express_validator_1.body)('aum').isNumeric().withMessage('AUM is required and must be numeric'),
-    (0, express_validator_1.body)('fundFamily').isString().trim().isLength({ min: 1 }).withMessage('Fund family is required'),
-    (0, express_validator_1.body)('inceptionDate').isISO8601().toDate().withMessage('Invalid inception date'),
-    (0, express_validator_1.body)('navFrequency').isIn(['DAILY', 'WEEKLY', 'MONTHLY']).withMessage('Invalid NAV frequency'),
-    (0, express_validator_1.body)('assetClass').isIn(['EQUITY_ETF', 'BOND_ETF', 'COMMODITY_ETF', 'CURRENCY_ETF', 'REAL_ESTATE_ETF', 'MIXED_ETF']).withMessage('Invalid asset class'),
-    (0, express_validator_1.body)('investmentStyle').optional().isIn(['GROWTH', 'VALUE', 'BLEND']).withMessage('Invalid investment style'),
-    (0, express_validator_1.body)('marketCapFocus').optional().isIn(['LARGE_CAP', 'MID_CAP', 'SMALL_CAP', 'MULTI_CAP']).withMessage('Invalid market cap focus'),
-    (0, express_validator_1.body)('geographicFocus').optional().isIn(['DOMESTIC', 'INTERNATIONAL', 'EMERGING_MARKETS', 'GLOBAL']).withMessage('Invalid geographic focus'),
-    (0, express_validator_1.body)('dividendYield').optional().isNumeric().withMessage('Dividend yield must be numeric'),
-    (0, express_validator_1.body)('distributionFrequency').optional().isIn(['ANNUAL', 'SEMI_ANNUAL', 'QUARTERLY', 'MONTHLY']).withMessage('Invalid distribution frequency'),
+    body('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Symbol is required and must be 1-10 characters'),
+    body('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
+    body('exchange').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Exchange is required'),
+    body('managementFee').isNumeric().withMessage('Management fee is required and must be numeric'),
+    body('expenseRatio').isNumeric().withMessage('Expense ratio is required and must be numeric'),
+    body('aum').isNumeric().withMessage('AUM is required and must be numeric'),
+    body('fundFamily').isString().trim().isLength({ min: 1 }).withMessage('Fund family is required'),
+    body('inceptionDate').isISO8601().toDate().withMessage('Invalid inception date'),
+    body('navFrequency').isIn(['DAILY', 'WEEKLY', 'MONTHLY']).withMessage('Invalid NAV frequency'),
+    body('assetClass').isIn(['EQUITY_ETF', 'BOND_ETF', 'COMMODITY_ETF', 'CURRENCY_ETF', 'REAL_ESTATE_ETF', 'MIXED_ETF']).withMessage('Invalid asset class'),
+    body('investmentStyle').optional().isIn(['GROWTH', 'VALUE', 'BLEND']).withMessage('Invalid investment style'),
+    body('marketCapFocus').optional().isIn(['LARGE_CAP', 'MID_CAP', 'SMALL_CAP', 'MULTI_CAP']).withMessage('Invalid market cap focus'),
+    body('geographicFocus').optional().isIn(['DOMESTIC', 'INTERNATIONAL', 'EMERGING_MARKETS', 'GLOBAL']).withMessage('Invalid geographic focus'),
+    body('dividendYield').optional().isNumeric().withMessage('Dividend yield must be numeric'),
+    body('distributionFrequency').optional().isIn(['ANNUAL', 'SEMI_ANNUAL', 'QUARTERLY', 'MONTHLY']).withMessage('Invalid distribution frequency'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:write']), async (req, res) => {
     try {
         const etfData = {
             ...req.body,
             fundType: 'ETF',
-            managementFee: new decimal_js_1.Decimal(req.body.managementFee),
-            expenseRatio: new decimal_js_1.Decimal(req.body.expenseRatio),
-            aum: new decimal_js_1.Decimal(req.body.aum),
-            dividendYield: req.body.dividendYield ? new decimal_js_1.Decimal(req.body.dividendYield) : undefined,
-            averageDailyVolume: req.body.averageDailyVolume ? new decimal_js_1.Decimal(req.body.averageDailyVolume) : undefined,
-            beta: req.body.beta ? new decimal_js_1.Decimal(req.body.beta) : undefined,
-            standardDeviation: req.body.standardDeviation ? new decimal_js_1.Decimal(req.body.standardDeviation) : undefined,
+            managementFee: new Decimal(req.body.managementFee),
+            expenseRatio: new Decimal(req.body.expenseRatio),
+            aum: new Decimal(req.body.aum),
+            dividendYield: req.body.dividendYield ? new Decimal(req.body.dividendYield) : undefined,
+            averageDailyVolume: req.body.averageDailyVolume ? new Decimal(req.body.averageDailyVolume) : undefined,
+            beta: req.body.beta ? new Decimal(req.body.beta) : undefined,
+            standardDeviation: req.body.standardDeviation ? new Decimal(req.body.standardDeviation) : undefined,
         };
         const etf = await fundsService.upsertETF(etfData);
         res.status(201).json({
@@ -137,41 +136,41 @@ router.post('/etf', [
 });
 // POST /api/funds/mutual-fund - Create/update mutual fund
 router.post('/mutual-fund', [
-    (0, express_validator_1.body)('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Symbol is required'),
-    (0, express_validator_1.body)('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
-    (0, express_validator_1.body)('managementFee').isNumeric().withMessage('Management fee is required and must be numeric'),
-    (0, express_validator_1.body)('expenseRatio').isNumeric().withMessage('Expense ratio is required and must be numeric'),
-    (0, express_validator_1.body)('aum').isNumeric().withMessage('AUM is required and must be numeric'),
-    (0, express_validator_1.body)('fundFamily').isString().trim().isLength({ min: 1 }).withMessage('Fund family is required'),
-    (0, express_validator_1.body)('inceptionDate').isISO8601().toDate().withMessage('Invalid inception date'),
-    (0, express_validator_1.body)('shareClass').isIn(['A', 'B', 'C', 'I', 'R', 'T', 'Y']).withMessage('Invalid share class'),
-    (0, express_validator_1.body)('minimumInvestment').isNumeric().withMessage('Minimum investment is required and must be numeric'),
-    (0, express_validator_1.body)('navFrequency').isIn(['DAILY', 'WEEKLY', 'MONTHLY']).withMessage('Invalid NAV frequency'),
-    (0, express_validator_1.body)('cutoffTime').isString().trim().withMessage('Cutoff time is required'),
-    (0, express_validator_1.body)('settlementDays').isInt({ min: 0, max: 10 }).withMessage('Settlement days must be 0-10'),
-    (0, express_validator_1.body)('assetClass').isIn(['EQUITY_FUND', 'BOND_FUND', 'MONEY_MARKET_FUND', 'BALANCED_FUND', 'ALTERNATIVE_FUND']).withMessage('Invalid asset class'),
-    (0, express_validator_1.body)('frontLoadFee').optional().isNumeric().withMessage('Front load fee must be numeric'),
-    (0, express_validator_1.body)('backLoadFee').optional().isNumeric().withMessage('Back load fee must be numeric'),
-    (0, express_validator_1.body)('redemptionFee').optional().isNumeric().withMessage('Redemption fee must be numeric'),
-    (0, express_validator_1.body)('minimumSubsequent').optional().isNumeric().withMessage('Minimum subsequent must be numeric'),
-    (0, express_validator_1.body)('morningstarRating').optional().isInt({ min: 1, max: 5 }).withMessage('Morningstar rating must be 1-5'),
-    (0, express_validator_1.body)('isClosedToNewInvestors').optional().isBoolean().withMessage('Closed to new investors must be boolean'),
+    body('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Symbol is required'),
+    body('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
+    body('managementFee').isNumeric().withMessage('Management fee is required and must be numeric'),
+    body('expenseRatio').isNumeric().withMessage('Expense ratio is required and must be numeric'),
+    body('aum').isNumeric().withMessage('AUM is required and must be numeric'),
+    body('fundFamily').isString().trim().isLength({ min: 1 }).withMessage('Fund family is required'),
+    body('inceptionDate').isISO8601().toDate().withMessage('Invalid inception date'),
+    body('shareClass').isIn(['A', 'B', 'C', 'I', 'R', 'T', 'Y']).withMessage('Invalid share class'),
+    body('minimumInvestment').isNumeric().withMessage('Minimum investment is required and must be numeric'),
+    body('navFrequency').isIn(['DAILY', 'WEEKLY', 'MONTHLY']).withMessage('Invalid NAV frequency'),
+    body('cutoffTime').isString().trim().withMessage('Cutoff time is required'),
+    body('settlementDays').isInt({ min: 0, max: 10 }).withMessage('Settlement days must be 0-10'),
+    body('assetClass').isIn(['EQUITY_FUND', 'BOND_FUND', 'MONEY_MARKET_FUND', 'BALANCED_FUND', 'ALTERNATIVE_FUND']).withMessage('Invalid asset class'),
+    body('frontLoadFee').optional().isNumeric().withMessage('Front load fee must be numeric'),
+    body('backLoadFee').optional().isNumeric().withMessage('Back load fee must be numeric'),
+    body('redemptionFee').optional().isNumeric().withMessage('Redemption fee must be numeric'),
+    body('minimumSubsequent').optional().isNumeric().withMessage('Minimum subsequent must be numeric'),
+    body('morningstarRating').optional().isInt({ min: 1, max: 5 }).withMessage('Morningstar rating must be 1-5'),
+    body('isClosedToNewInvestors').optional().isBoolean().withMessage('Closed to new investors must be boolean'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:write']), async (req, res) => {
     try {
         const fundData = {
             ...req.body,
             fundType: 'MUTUAL_FUND',
-            managementFee: new decimal_js_1.Decimal(req.body.managementFee),
-            expenseRatio: new decimal_js_1.Decimal(req.body.expenseRatio),
-            aum: new decimal_js_1.Decimal(req.body.aum),
-            minimumInvestment: new decimal_js_1.Decimal(req.body.minimumInvestment),
-            frontLoadFee: req.body.frontLoadFee ? new decimal_js_1.Decimal(req.body.frontLoadFee) : undefined,
-            backLoadFee: req.body.backLoadFee ? new decimal_js_1.Decimal(req.body.backLoadFee) : undefined,
-            redemptionFee: req.body.redemptionFee ? new decimal_js_1.Decimal(req.body.redemptionFee) : undefined,
-            minimumSubsequent: req.body.minimumSubsequent ? new decimal_js_1.Decimal(req.body.minimumSubsequent) : undefined,
-            dividendYield: req.body.dividendYield ? new decimal_js_1.Decimal(req.body.dividendYield) : undefined,
-            beta: req.body.beta ? new decimal_js_1.Decimal(req.body.beta) : undefined,
-            standardDeviation: req.body.standardDeviation ? new decimal_js_1.Decimal(req.body.standardDeviation) : undefined,
+            managementFee: new Decimal(req.body.managementFee),
+            expenseRatio: new Decimal(req.body.expenseRatio),
+            aum: new Decimal(req.body.aum),
+            minimumInvestment: new Decimal(req.body.minimumInvestment),
+            frontLoadFee: req.body.frontLoadFee ? new Decimal(req.body.frontLoadFee) : undefined,
+            backLoadFee: req.body.backLoadFee ? new Decimal(req.body.backLoadFee) : undefined,
+            redemptionFee: req.body.redemptionFee ? new Decimal(req.body.redemptionFee) : undefined,
+            minimumSubsequent: req.body.minimumSubsequent ? new Decimal(req.body.minimumSubsequent) : undefined,
+            dividendYield: req.body.dividendYield ? new Decimal(req.body.dividendYield) : undefined,
+            beta: req.body.beta ? new Decimal(req.body.beta) : undefined,
+            standardDeviation: req.body.standardDeviation ? new Decimal(req.body.standardDeviation) : undefined,
         };
         const fund = await fundsService.upsertMutualFund(fundData);
         res.status(201).json({

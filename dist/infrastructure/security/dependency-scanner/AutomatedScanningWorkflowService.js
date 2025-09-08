@@ -197,8 +197,8 @@ class AutomatedScanningWorkflowService extends events_1.EventEmitter {
             execution.status = 'FAILED';
             execution.endTime = new Date();
             execution.duration = execution.endTime.getTime() - execution.startTime.getTime();
-            execution.errors.push(error.message);
-            await this.sendFailureNotifications(schedule, execution, error.message);
+            execution.errors.push(error instanceof Error ? error.message : 'Unknown error');
+            await this.sendFailureNotifications(schedule, execution, error instanceof Error ? error.message : 'Unknown error');
             this.emit('executionFailed', {
                 executionId: execution.id,
                 scheduleId,
@@ -244,7 +244,7 @@ class AutomatedScanningWorkflowService extends events_1.EventEmitter {
                     status: 'FAILED',
                     error: error.message
                 });
-                execution.errors.push(`Inventory scan failed for ${projectPath}: ${error.message}`);
+                execution.errors.push(`Inventory scan failed for ${projectPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 this.emit('projectScanFailed', {
                     executionId: execution.id,
                     projectPath,
@@ -293,7 +293,7 @@ class AutomatedScanningWorkflowService extends events_1.EventEmitter {
                     status: 'FAILED',
                     error: error.message
                 });
-                execution.errors.push(`Vulnerability scan failed for ${inventoryResult.inventoryId}: ${error.message}`);
+                execution.errors.push(`Vulnerability scan failed for ${inventoryResult.inventoryId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 this.emit('vulnerabilityScanFailed', {
                     executionId: execution.id,
                     inventoryId: inventoryResult.inventoryId,

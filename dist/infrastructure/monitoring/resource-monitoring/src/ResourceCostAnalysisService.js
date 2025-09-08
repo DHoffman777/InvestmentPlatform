@@ -660,7 +660,7 @@ class ResourceCostAnalysisService extends events_1.EventEmitter {
                 await this.performScheduledAnalysis();
             }
             catch (error) {
-                console.error('Scheduled cost analysis failed:', error.message);
+                console.error('Scheduled cost analysis failed:', error instanceof Error ? error.message : 'Unknown error');
             }
         }, this.config.analysisInterval);
         // Cost update scheduler
@@ -669,7 +669,7 @@ class ResourceCostAnalysisService extends events_1.EventEmitter {
                 await this.updateCostData();
             }
             catch (error) {
-                console.error('Cost data update failed:', error.message);
+                console.error('Cost data update failed:', error instanceof Error ? error.message : 'Unknown error');
             }
         }, this.config.costUpdateInterval);
     }
@@ -681,7 +681,7 @@ class ResourceCostAnalysisService extends events_1.EventEmitter {
                 this.emit('analysisScheduled', { resourceId, timestamp: new Date() });
             }
             catch (error) {
-                console.error(`Analysis failed for resource ${resourceId}:`, error.message);
+                console.error(`Analysis failed for resource ${resourceId}:`, error instanceof Error ? error.message : 'Unknown error');
             }
         }
     }

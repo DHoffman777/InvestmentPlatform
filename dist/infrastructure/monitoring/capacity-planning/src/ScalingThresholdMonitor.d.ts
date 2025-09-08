@@ -74,9 +74,9 @@ export declare class ScalingThresholdMonitor extends EventEmitter {
     private makeScalingDecision;
     private executeScaling;
     private scheduleEscalation;
-    acknowledgeAlert(alertId: string, userId: string): Promise<void>;
-    resolveAlert(alertId: string, resolution: string): Promise<void>;
-    suppressAlert(alertId: string, duration: number): Promise<void>;
+    acknowledgeAlert(alertId: string, userId: string): Promise<any>;
+    resolveAlert(alertId: string, resolution: string): Promise<any>;
+    suppressAlert(alertId: string, duration: number): Promise<any>;
     getThresholds(resourceId?: string, resourceType?: ResourceType): Promise<ScalingThreshold[]>;
     getActiveAlerts(resourceId?: string): Promise<CapacityAlert[]>;
     getThresholdMetrics(): Promise<{
@@ -121,5 +121,5 @@ export declare class ScalingThresholdMonitor extends EventEmitter {
     private collectCurrentMetrics;
     private generateThresholdId;
     private generateAlertId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

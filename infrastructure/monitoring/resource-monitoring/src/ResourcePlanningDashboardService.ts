@@ -212,13 +212,13 @@ export class ResourcePlanningDashboardService extends EventEmitter {
           filters
         );
         widgets.set(widgetId, widgetData);
-      } catch (error) {
+      } catch (error: any) {
         widgets.set(widgetId, {
           widget_id: widgetId,
           type: config.type,
           data: null,
           status: 'error',
-          error_message: error.message,
+          error_message: error instanceof Error ? error.message : 'Unknown error',
           last_updated: timestamp,
           data_source: config.data_source,
           metrics: { data_points: 0, data_quality: 0, freshness_score: 0 }
@@ -322,7 +322,7 @@ export class ResourcePlanningDashboardService extends EventEmitter {
         break;
       
       case WidgetType.COST_BREAKDOWN:
-        data = this.generateCostBreakdownData(costData, filters);
+        data = this.generateCostBreakdown(costData);
         break;
       
       case WidgetType.WASTE_ANALYSIS:
@@ -748,14 +748,14 @@ export class ResourcePlanningDashboardService extends EventEmitter {
       this.refreshScheduler = setInterval(async () => {
         try {
           await this.refreshDashboards();
-        } catch (error) {
-          console.error('Dashboard refresh failed:', error.message);
+        } catch (error: any) {
+          console.error('Dashboard refresh failed:', error instanceof Error ? error.message : 'Unknown error');
         }
       }, this.config.refreshInterval);
     }
   }
 
-  private async refreshDashboards(): Promise<void> {
+  private async refreshDashboards(): Promise<any> {
     for (const dashboardId of this.dashboardData.keys()) {
       this.emit('dashboardRefreshRequested', { dashboardId, timestamp: new Date() });
     }
@@ -865,7 +865,7 @@ export class ResourcePlanningDashboardService extends EventEmitter {
   private exportToPDF(dashboardData: DashboardData, config: DashboardExport): Buffer { return Buffer.from('pdf data'); }
   private exportToPNG(dashboardData: DashboardData, config: DashboardExport): Buffer { return Buffer.from('png data'); }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     if (this.refreshScheduler) {
       clearInterval(this.refreshScheduler);
     }
@@ -873,3 +873,4 @@ export class ResourcePlanningDashboardService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

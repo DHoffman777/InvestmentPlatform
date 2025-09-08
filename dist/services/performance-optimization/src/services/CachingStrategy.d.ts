@@ -99,7 +99,7 @@ export declare class CachingStrategy extends EventEmitter {
     private addTags;
     private findStrategy;
     private updateMetrics;
-    warmupCache(): Promise<void>;
+    warmupCache(): Promise<any>;
     private executeWarmupStrategy;
     getPerformanceReport(): Promise<CachePerformanceReport>;
     private parseMemoryInfo;
@@ -109,5 +109,5 @@ export declare class CachingStrategy extends EventEmitter {
     addStrategy(strategy: CacheStrategy): void;
     removeStrategy(name: string): boolean;
     getStrategies(): CacheStrategy[];
-    disconnect(): Promise<void>;
+    disconnect(): Promise<any>;
 }

@@ -11,7 +11,7 @@ class ReportGenerationService {
     eventPublisher;
     constructor() {
         this.reportTemplateService = new ReportTemplateService_1.ReportTemplateService();
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('ReportGenerationService');
     }
     async generateReport(tenantId, request, userId) {
         try {
@@ -111,7 +111,7 @@ class ReportGenerationService {
                 });
             }
             catch (error) {
-                await this.failReportJob(jobId, error.message);
+                await this.failReportJob(jobId, error instanceof Error ? error.message : 'Unknown error');
                 // Publish failure event
                 await this.eventPublisher.publish('report.generation.failed', {
                     tenantId: job.tenantId,

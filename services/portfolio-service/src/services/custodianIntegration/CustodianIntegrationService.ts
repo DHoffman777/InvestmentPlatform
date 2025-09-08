@@ -124,7 +124,7 @@ export class CustodianIntegrationService {
         testResults
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating custodian connection:', error);
       throw error;
     }
@@ -182,7 +182,7 @@ export class CustodianIntegrationService {
         errors: processedFeed.processingErrors
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing custodian data feed:', error);
       await this.updatePerformanceMetrics(connectionId, 0, false);
       throw error;
@@ -220,7 +220,7 @@ export class CustodianIntegrationService {
 
       // Check for material discrepancies
       const materialDiscrepancies = reconciliationResults.filter(
-        result => result.discrepancies.some(d => !d.withinTolerance)
+        result => result.discrepancies.some((d: any) => !d.withinTolerance)
       );
 
       // Create alerts for material discrepancies
@@ -256,7 +256,7 @@ export class CustodianIntegrationService {
         results: reconciliationResults
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing custodian reconciliation:', error);
       throw error;
     }
@@ -305,7 +305,7 @@ export class CustodianIntegrationService {
 
       return submissionResults;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting orders to custodian:', error);
       throw error;
     }
@@ -354,13 +354,13 @@ export class CustodianIntegrationService {
         estimatedCompletion: new Date()
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving documents from custodian:', error);
       throw error;
     }
   }
 
-  async monitorConnections(): Promise<void> {
+  async monitorConnections(): Promise<any> {
     try {
       logger.info('Starting custodian connection monitoring');
 
@@ -380,7 +380,7 @@ export class CustodianIntegrationService {
           // Check for alerts
           await this.checkForAlerts(connection.id);
           
-        } catch (error) {
+        } catch (error: any) {
           logger.error(`Error monitoring connection ${connection.id}:`, error);
           await this.handleConnectionError(connection.id, error);
         }
@@ -388,12 +388,12 @@ export class CustodianIntegrationService {
 
       logger.info('Custodian connection monitoring completed');
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error during connection monitoring:', error);
     }
   }
 
-  private async validateConnectionConfig(request: CustodianConnectionRequest): Promise<void> {
+  private async validateConnectionConfig(request: CustodianConnectionRequest): Promise<any> {
     // Validate required fields
     if (!request.custodianType || !request.custodianName || !request.connectionConfig) {
       throw new Error('Missing required connection configuration');
@@ -476,7 +476,7 @@ export class CustodianIntegrationService {
           // Validate and transform record
           await this.validateRecord(feedData.records[i], request.feedType, connection);
           processedFeed.processedCount++;
-        } catch (error) {
+        } catch (error: any) {
           processedFeed.errorCount++;
           processedFeed.processingErrors.push({
             id: crypto.randomUUID(),
@@ -494,12 +494,12 @@ export class CustodianIntegrationService {
     processedFeed.processingStatus = processedFeed.errorCount === 0 ? 
       FileProcessingStatus.COMPLETED : 
       FileProcessingStatus.PARTIAL_SUCCESS;
-    processedFeed.processingCompleted = new Date();
+    (processedFeed as any).processingCompleted = new Date();
 
     return processedFeed;
   }
 
-  private async validateRecord(record: any, feedType: string, connection: CustodianConnection): Promise<void> {
+  private async validateRecord(record: any, feedType: string, connection: CustodianConnection): Promise<any> {
     // Implement validation logic based on feed type and custodian requirements
     const mapping = connection.connectionConfig.dataMapping;
     
@@ -529,13 +529,13 @@ export class CustodianIntegrationService {
       unmatchedRecords: results.filter(r => r.status === ReconciliationStatus.UNMATCHED).length,
       discrepancyCount: results.reduce((sum, r) => sum + r.discrepancies.length, 0),
       materialDiscrepancies: results.filter(r => r.discrepancies.some((d: any) => !d.withinTolerance)).length,
-      reconciledValue: new Decimal(0),
-      discrepancyAmount: new Decimal(0),
-      accuracyPercentage: new Decimal(95.5)
+      reconciledValue: new (Decimal as any)(0),
+      discrepancyAmount: new (Decimal as any)(0),
+      accuracyPercentage: new (Decimal as any)(95.5)
     };
   }
 
-  private async createReconciliationAlerts(connectionId: string, discrepancies: any[]): Promise<void> {
+  private async createReconciliationAlerts(connectionId: string, discrepancies: any[]): Promise<any> {
     for (const discrepancy of discrepancies) {
       const alert: CustodianAlert = {
         id: crypto.randomUUID(),
@@ -558,13 +558,13 @@ export class CustodianIntegrationService {
     try {
       const integrationService = this.getIntegrationService(connection.custodianType);
       return await integrationService.healthCheck(connection);
-    } catch (error) {
+    } catch (error: any) {
       logger.error(`Health check failed for connection ${connection.id}:`, error);
       return false;
     }
   }
 
-  private async updateConnectionStatus(connectionId: string, isHealthy: boolean): Promise<void> {
+  private async updateConnectionStatus(connectionId: string, isHealthy: boolean): Promise<any> {
     const connection = this.activeConnections.get(connectionId);
     if (connection) {
       connection.status = isHealthy ? CustodianConnectionStatus.CONNECTED : CustodianConnectionStatus.ERROR;
@@ -580,22 +580,22 @@ export class CustodianIntegrationService {
     }
   }
 
-  private async updatePerformanceMetrics(connectionId: string, responseTime: number, success: boolean): Promise<void> {
+  private async updatePerformanceMetrics(connectionId: string, responseTime: number, success: boolean): Promise<any> {
     // Update performance metrics
     // Implementation would track various metrics over time
   }
 
-  private async collectPerformanceMetrics(connectionId: string): Promise<void> {
+  private async collectPerformanceMetrics(connectionId: string): Promise<any> {
     // Collect and store performance metrics
     // Implementation would gather various operational metrics
   }
 
-  private async checkForAlerts(connectionId: string): Promise<void> {
+  private async checkForAlerts(connectionId: string): Promise<any> {
     // Check for various alert conditions
     // Implementation would monitor thresholds and create alerts as needed
   }
 
-  private async handleConnectionError(connectionId: string, error: any): Promise<void> {
+  private async handleConnectionError(connectionId: string, error: any): Promise<any> {
     logger.error(`Handling connection error for ${connectionId}:`, error);
     
     const connection = this.activeConnections.get(connectionId);
@@ -613,13 +613,13 @@ export class CustodianIntegrationService {
     }
   }
 
-  private async initializePerformanceMonitoring(connectionId: string): Promise<void> {
+  private async initializePerformanceMonitoring(connectionId: string): Promise<any> {
     // Initialize performance monitoring for the connection
     // Implementation would set up metrics collection
   }
 
   // Database operations (placeholders - actual implementation would use Prisma)
-  private async saveCustodianConnection(connection: CustodianConnection): Promise<void> {
+  private async saveCustodianConnection(connection: CustodianConnection): Promise<any> {
     // Save to database using Prisma
   }
 
@@ -628,27 +628,27 @@ export class CustodianIntegrationService {
     return null;
   }
 
-  private async updateCustodianConnection(connection: CustodianConnection): Promise<void> {
+  private async updateCustodianConnection(connection: CustodianConnection): Promise<any> {
     // Update in database using Prisma
   }
 
-  private async storeProcessedData(feedData: any): Promise<void> {
+  private async storeProcessedData(feedData: any): Promise<any> {
     // Store processed feed data
   }
 
-  private async storeReconciliationResults(connectionId: string, results: any[], summary: any): Promise<void> {
+  private async storeReconciliationResults(connectionId: string, results: any[], summary: any): Promise<any> {
     // Store reconciliation results
   }
 
-  private async storeOrderSubmissions(connectionId: string, request: OrderSubmissionRequest, results: OrderSubmissionResponse): Promise<void> {
+  private async storeOrderSubmissions(connectionId: string, request: OrderSubmissionRequest, results: OrderSubmissionResponse): Promise<any> {
     // Store order submission records
   }
 
-  private async storeDocumentRetrievals(connectionId: string, request: DocumentRetrievalRequest, documents: any[]): Promise<void> {
+  private async storeDocumentRetrievals(connectionId: string, request: DocumentRetrievalRequest, documents: any[]): Promise<any> {
     // Store document retrieval records
   }
 
-  private async storeAlert(alert: CustodianAlert): Promise<void> {
+  private async storeAlert(alert: CustodianAlert): Promise<any> {
     // Store alert in database
   }
 
@@ -662,11 +662,11 @@ export class CustodianIntegrationService {
     return {};
   }
 
-  private async validateOrders(orders: any[], connection: CustodianConnection): Promise<void> {
+  private async validateOrders(orders: any[], connection: CustodianConnection): Promise<any> {
     // Validate orders before submission
   }
 
-  private async updateOrderStatuses(results: OrderSubmissionResponse): Promise<void> {
+  private async updateOrderStatuses(results: OrderSubmissionResponse): Promise<any> {
     // Update order statuses in database
   }
 
@@ -675,3 +675,5 @@ export class CustodianIntegrationService {
     return [];
   }
 }
+
+

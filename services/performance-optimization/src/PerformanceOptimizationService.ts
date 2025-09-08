@@ -37,11 +37,11 @@ export interface PerformanceOptimizationConfig {
 
 export class PerformanceOptimizationService {
   private app: express.Application;
-  private dbOptimizer: DatabaseOptimizer;
-  private queryAnalyzer: QueryPerformanceAnalyzer;
-  private dbMonitor: DatabaseMonitor;
-  private apiOptimizer: ApiPerformanceOptimizer;
-  private cachingStrategy: CachingStrategy;
+  private dbOptimizer!: DatabaseOptimizer;
+  private queryAnalyzer!: QueryPerformanceAnalyzer;
+  private dbMonitor!: DatabaseMonitor;
+  private apiOptimizer!: ApiPerformanceOptimizer;
+  private cachingStrategy!: CachingStrategy;
   private config: PerformanceOptimizationConfig;
 
   constructor(config: PerformanceOptimizationConfig) {
@@ -113,7 +113,7 @@ export class PerformanceOptimizationService {
     });
   }
 
-  private async considerAutoOptimization(recommendation: any): Promise<void> {
+  private async considerAutoOptimization(recommendation: any): Promise<any> {
     if (recommendation.implementation.riskLevel === 'LOW' && 
         recommendation.type === 'INDEX') {
       console.log(`Auto-implementing low-risk optimization: ${recommendation.title}`);
@@ -135,7 +135,7 @@ export class PerformanceOptimizationService {
       try {
         const statistics = await this.dbMonitor.getDetailedStatistics();
         res.json(statistics);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get database health' });
       }
     });
@@ -145,7 +145,7 @@ export class PerformanceOptimizationService {
         const timeWindow = parseInt(req.query.timeWindow as string) || 3600000;
         const slowQueries = await this.dbOptimizer.analyzeSlowQueries(timeWindow);
         res.json(slowQueries);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to analyze slow queries' });
       }
     });
@@ -154,7 +154,7 @@ export class PerformanceOptimizationService {
       try {
         const indexAnalysis = await this.dbOptimizer.analyzeIndexUsage();
         res.json(indexAnalysis);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to analyze indexes' });
       }
     });
@@ -163,7 +163,7 @@ export class PerformanceOptimizationService {
       try {
         const report = await this.dbOptimizer.generateOptimizationReport();
         res.json(report);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to generate optimization report' });
       }
     });
@@ -174,7 +174,7 @@ export class PerformanceOptimizationService {
         const { query } = req.body;
         const analysis = this.queryAnalyzer.analyzeQuery(query);
         res.json(analysis);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to analyze query' });
       }
     });
@@ -184,7 +184,7 @@ export class PerformanceOptimizationService {
         const { query, iterations = 10 } = req.body;
         const benchmark = await this.queryAnalyzer.benchmarkQuery(query, iterations);
         res.json(benchmark);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to benchmark query' });
       }
     });
@@ -194,7 +194,7 @@ export class PerformanceOptimizationService {
         const { queries } = req.body;
         const report = await this.queryAnalyzer.generateOptimizationReport(queries);
         res.json(report);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to generate query optimization report' });
       }
     });
@@ -205,7 +205,7 @@ export class PerformanceOptimizationService {
         const timeWindow = parseInt(req.query.timeWindow as string) || 86400000;
         const report = this.apiOptimizer.generatePerformanceReport(timeWindow);
         res.json(report);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to generate API performance report' });
       }
     });
@@ -220,7 +220,7 @@ export class PerformanceOptimizationService {
           parseInt(timeWindow as string)
         );
         res.json(analysis);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to analyze endpoint' });
       }
     });
@@ -229,7 +229,7 @@ export class PerformanceOptimizationService {
       try {
         const optimizations = this.apiOptimizer.generateAutomaticOptimizations();
         res.json(optimizations);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to generate optimizations' });
       }
     });
@@ -238,7 +238,7 @@ export class PerformanceOptimizationService {
       try {
         const alerts = this.apiOptimizer.getActiveAlerts();
         res.json(alerts);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get alerts' });
       }
     });
@@ -248,7 +248,7 @@ export class PerformanceOptimizationService {
         const { alertId } = req.params;
         const resolved = this.apiOptimizer.resolveAlert(alertId);
         res.json({ resolved });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to resolve alert' });
       }
     });
@@ -258,7 +258,7 @@ export class PerformanceOptimizationService {
       try {
         const report = await this.cachingStrategy.getPerformanceReport();
         res.json(report);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get cache performance report' });
       }
     });
@@ -267,7 +267,7 @@ export class PerformanceOptimizationService {
       try {
         await this.cachingStrategy.warmupCache();
         res.json({ message: 'Cache warmup initiated' });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to warmup cache' });
       }
     });
@@ -277,7 +277,7 @@ export class PerformanceOptimizationService {
         const { tag } = req.params;
         const deletedCount = await this.cachingStrategy.invalidateByTag(tag);
         res.json({ deletedCount });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to invalidate cache by tag' });
       }
     });
@@ -287,7 +287,7 @@ export class PerformanceOptimizationService {
         const { pattern } = req.body;
         const deletedCount = await this.cachingStrategy.invalidateByPattern(pattern);
         res.json({ deletedCount });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to invalidate cache by pattern' });
       }
     });
@@ -296,7 +296,7 @@ export class PerformanceOptimizationService {
       try {
         const strategies = this.cachingStrategy.getStrategies();
         res.json(strategies);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get cache strategies' });
       }
     });
@@ -328,7 +328,7 @@ export class PerformanceOptimizationService {
         };
 
         res.json(report);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to generate comprehensive report' });
       }
     });
@@ -397,7 +397,7 @@ export class PerformanceOptimizationService {
           const report = await this.generateDailyReport();
           // Store or send the report
           console.log('Daily report generated successfully');
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to generate daily report:', error);
         }
       });
@@ -411,7 +411,7 @@ export class PerformanceOptimizationService {
           const report = await this.generateWeeklyReport();
           // Store or send the report
           console.log('Weekly report generated successfully');
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to generate weekly report:', error);
         }
       });
@@ -423,7 +423,7 @@ export class PerformanceOptimizationService {
       try {
         await this.cachingStrategy.warmupCache();
         console.log('Cache warmup completed');
-      } catch (error) {
+      } catch (error: any) {
         console.error('Cache warmup failed:', error);
       }
     });
@@ -434,7 +434,7 @@ export class PerformanceOptimizationService {
       try {
         const analysis = await this.dbOptimizer.analyzeIndexUsage();
         console.log(`Index analysis completed. Found ${analysis.length} indexes.`);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Index analysis failed:', error);
       }
     });
@@ -489,14 +489,14 @@ export class PerformanceOptimizationService {
     };
   }
 
-  public async startMonitoring(): Promise<void> {
+  public async startMonitoring(): Promise<any> {
     if (this.config.monitoring.enabled) {
       this.dbMonitor.startMonitoring(this.config.monitoring.interval);
       console.log('Database monitoring started');
     }
   }
 
-  public async stopMonitoring(): Promise<void> {
+  public async stopMonitoring(): Promise<any> {
     this.dbMonitor.stopMonitoring();
     console.log('Database monitoring stopped');
   }
@@ -508,12 +508,12 @@ export class PerformanceOptimizationService {
     });
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     console.log('Shutting down Performance Optimization Service...');
     
     await this.stopMonitoring();
     await this.dbOptimizer.disconnect();
-    await this.queryAnalyzer.$disconnect();
+    // await this.queryAnalyzer.disconnect(); // QueryPerformanceAnalyzer doesn't have disconnect method
     await this.dbMonitor.disconnect();
     await this.cachingStrategy.disconnect();
 
@@ -524,3 +524,4 @@ export class PerformanceOptimizationService {
     return this.app;
   }
 }
+

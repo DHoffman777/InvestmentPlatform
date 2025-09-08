@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { glob } from 'glob';
+const glob = require('glob') as any;
 import { execSync } from 'child_process';
 
 export interface Dependency {
@@ -148,10 +148,10 @@ export class DependencyInventoryService extends EventEmitter {
             filePath: packageFile.filePath, 
             dependencyCount: dependencies.length 
           });
-        } catch (error) {
+        } catch (error: any) {
           this.emit('packageFileError', { 
             filePath: packageFile.filePath, 
-            error: error.message 
+            error: error instanceof Error ? error.message : 'Unknown error' 
           });
           continue;
         }
@@ -175,8 +175,8 @@ export class DependencyInventoryService extends EventEmitter {
       });
       
       return inventory;
-    } catch (error) {
-      this.emit('scanFailed', { projectPath, tenantId, error: error.message });
+    } catch (error: any) {
+      this.emit('scanFailed', { projectPath, tenantId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -289,8 +289,8 @@ export class DependencyInventoryService extends EventEmitter {
       // Fetch metadata for dependencies
       await this.enrichNpmDependencies(dependencies);
       
-    } catch (error) {
-      throw new Error(`Failed to parse npm package file ${filePath}: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to parse npm package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return dependencies;
@@ -328,9 +328,9 @@ export class DependencyInventoryService extends EventEmitter {
         const yarnDeps = this.parseYarnLock(lockContent);
         dependencies.push(...yarnDeps);
       }
-    } catch (error) {
+    } catch (error: any) {
       // Non-fatal error, continue without transitive dependencies
-      console.warn(`Failed to parse lock file ${lockFilePath}: ${error.message}`);
+      console.warn(`Failed to parse lock file ${lockFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return dependencies;
@@ -408,8 +408,8 @@ export class DependencyInventoryService extends EventEmitter {
         dependencies.push(...tomlDeps);
       }
       
-    } catch (error) {
-      throw new Error(`Failed to parse Python package file ${filePath}: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to parse Python package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return dependencies;
@@ -465,8 +465,8 @@ export class DependencyInventoryService extends EventEmitter {
         const gradleDeps = this.parseBuildGradle(content);
         dependencies.push(...gradleDeps);
       }
-    } catch (error) {
-      throw new Error(`Failed to parse Java package file ${filePath}: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to parse Java package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return dependencies;
@@ -571,8 +571,8 @@ export class DependencyInventoryService extends EventEmitter {
           }
         }
       }
-    } catch (error) {
-      throw new Error(`Failed to parse .NET package file ${filePath}: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to parse .NET package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return dependencies;
@@ -604,8 +604,8 @@ export class DependencyInventoryService extends EventEmitter {
           }
         }
       }
-    } catch (error) {
-      throw new Error(`Failed to parse Ruby package file ${filePath}: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to parse Ruby package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return dependencies;
@@ -647,8 +647,8 @@ export class DependencyInventoryService extends EventEmitter {
           }
         }
       }
-    } catch (error) {
-      throw new Error(`Failed to parse Go package file ${filePath}: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to parse Go package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return dependencies;
@@ -690,14 +690,14 @@ export class DependencyInventoryService extends EventEmitter {
           }
         }
       }
-    } catch (error) {
-      throw new Error(`Failed to parse Rust package file ${filePath}: ${error.message}`);
+    } catch (error: any) {
+      throw new Error(`Failed to parse Rust package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     return dependencies;
   }
 
-  private async enrichNpmDependencies(dependencies: Dependency[]): Promise<void> {
+  private async enrichNpmDependencies(dependencies: Dependency[]): Promise<any> {
     for (const dep of dependencies.filter(d => d.ecosystem === 'npm')) {
       try {
         // Fetch package metadata from npm registry
@@ -709,7 +709,7 @@ export class DependencyInventoryService extends EventEmitter {
           dep.licenses = metadata.license ? [metadata.license] : [];
           dep.maintainers = metadata.maintainers?.map((m: any) => m.name) || [];
         }
-      } catch (error) {
+      } catch (error: any) {
         // Non-fatal error, continue without metadata
         continue;
       }
@@ -722,7 +722,7 @@ export class DependencyInventoryService extends EventEmitter {
       if (response.ok) {
         return await response.json();
       }
-    } catch (error) {
+    } catch (error: any) {
       // Ignore network errors
     }
     return null;
@@ -761,7 +761,7 @@ export class DependencyInventoryService extends EventEmitter {
       const content = await fs.readFile(filePath);
       const crypto = await import('crypto');
       return crypto.createHash('sha256').update(content).digest('hex');
-    } catch (error) {
+    } catch (error: any) {
       return 'unknown';
     }
   }
@@ -865,3 +865,4 @@ export class DependencyInventoryService extends EventEmitter {
     };
   }
 }
+

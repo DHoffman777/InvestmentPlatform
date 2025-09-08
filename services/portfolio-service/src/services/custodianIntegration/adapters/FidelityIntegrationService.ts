@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
+// @ts-ignore - ssh2-sftp-client types not installed
 import { Client } from 'ssh2-sftp-client';
 import { logger } from '../../../utils/logger';
 import { 
@@ -118,7 +119,7 @@ export class FidelityIntegrationService {
     );
   }
 
-  async validateConfig(config: CustodianConnectionConfig): Promise<void> {
+  async validateConfig(config: CustodianConnectionConfig & { connectionType?: APIConnectionType }): Promise<any> {
     // Validate Fidelity-specific configuration requirements
     if (config.connectionType === APIConnectionType.REST_API) {
       if (!config.authentication.credentials.apiKey) {
@@ -146,7 +147,7 @@ export class FidelityIntegrationService {
     }
   }
 
-  async testConnection(config: CustodianConnectionConfig): Promise<ConnectionTestResult[]> {
+  async testConnection(config: CustodianConnectionConfig & { connectionType?: APIConnectionType }): Promise<ConnectionTestResult[]> {
     const results: ConnectionTestResult[] = [];
 
     try {
@@ -168,7 +169,7 @@ export class FidelityIntegrationService {
         results.push(sftpResult);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Fidelity connection test failed:', error);
       results.push({
         testType: 'CONNECTIVITY',
@@ -181,13 +182,13 @@ export class FidelityIntegrationService {
     return results;
   }
 
-  private async testApiAuthentication(config: CustodianConnectionConfig): Promise<ConnectionTestResult> {
+  private async testApiAuthentication(config: CustodianConnectionConfig & { connectionType?: APIConnectionType }): Promise<ConnectionTestResult> {
     const startTime = Date.now();
     
     try {
       // Set API key for test
       const originalHeaders = this.client.defaults.headers;
-      this.client.defaults.headers['X-API-Key'] = config.authentication.credentials.apiKey;
+      this.client.defaults.headers['X-API-Key'] = config.authentication.credentials.apiKey || '';
       
       const response = await this.client.get('/auth/validate', {
         timeout: 10000
@@ -202,7 +203,7 @@ export class FidelityIntegrationService {
         responseTime: Date.now() - startTime,
         details: { statusCode: response.status }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'AUTHENTICATION',
         success: false,
@@ -226,7 +227,7 @@ export class FidelityIntegrationService {
         responseTime: Date.now() - startTime,
         details: { statusCode: response.status }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'CONNECTIVITY',
         success: false,
@@ -254,7 +255,7 @@ export class FidelityIntegrationService {
           recordCount: response.data?.positions?.length || 0
         }
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         testType: 'DATA_RETRIEVAL',
         success: false,
@@ -290,7 +291,7 @@ export class FidelityIntegrationService {
           directory: config.fileTransfer!.directory
         }
       };
-    } catch (error) {
+    } catch (error: any) {
       try {
         await this.sftpClient.end();
       } catch (closeError) {
@@ -322,7 +323,7 @@ export class FidelityIntegrationService {
         throw new Error(`Unsupported connection type: ${connection.connectionType}`);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving data from Fidelity:', error);
       throw error;
     }
@@ -400,7 +401,7 @@ export class FidelityIntegrationService {
       
       // List files matching pattern
       const files = await this.sftpClient.list(connection.connectionConfig.fileTransfer!.directory);
-      const matchingFiles = files.filter(file => this.matchesPattern(file.name, filePattern));
+      const matchingFiles = files.filter((file: any) => this.matchesPattern(file.name, filePattern));
 
       if (matchingFiles.length === 0) {
         throw new Error(`No files found matching pattern: ${filePattern}`);
@@ -428,12 +429,12 @@ export class FidelityIntegrationService {
         metadata: {
           recordCount: allRecords.length,
           retrievedAt: new Date(),
-          filesProcessed: matchingFiles.map(f => f.name),
+          filesProcessed: matchingFiles.map((f: any) => f.name),
           source: 'SFTP'
         }
       };
 
-    } catch (error) {
+    } catch (error: any) {
       try {
         await this.sftpClient.end();
       } catch (closeError) {
@@ -455,7 +456,7 @@ export class FidelityIntegrationService {
       
       throw new Error('Order submission not supported for Fidelity integration. Please use Fidelity WorkStation for order entry.');
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting orders to Fidelity:', error);
       throw error;
     }
@@ -502,7 +503,7 @@ export class FidelityIntegrationService {
         }));
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving documents from Fidelity:', error);
       throw error;
     }
@@ -531,7 +532,7 @@ export class FidelityIntegrationService {
         await this.sftpClient.end();
         return true;
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Fidelity health check failed:', error);
       return false;
     }
@@ -657,13 +658,14 @@ export class FidelityIntegrationService {
         default:
           return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.warn('Error parsing Fidelity record:', { fields, error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }
 
-  private delay(ms: number): Promise<void> {
+  private delay(ms: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+

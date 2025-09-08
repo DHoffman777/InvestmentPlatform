@@ -18,12 +18,13 @@ export const errorHandler = (
   let details: any = null;
 
   // Handle Prisma errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (error.code) {
+  if ((error as any) instanceof Prisma.PrismaClientKnownRequestError) {
+    const prismaError = error as Prisma.PrismaClientKnownRequestError;
+    switch (prismaError.code) {
       case 'P2002':
         statusCode = 409;
         message = 'Unique constraint failed';
-        details = `Duplicate value for field: ${error.meta?.target}`;
+        details = `Duplicate value for field: ${prismaError.meta?.target}`;
         break;
       case 'P2014':
         statusCode = 400;
@@ -57,19 +58,19 @@ export const errorHandler = (
     }
   } 
   // Handle Prisma validation errors
-  else if (error instanceof Prisma.PrismaClientValidationError) {
+  else if ((error as any) instanceof Prisma.PrismaClientValidationError) {
     statusCode = 400;
     message = 'Validation error';
     details = 'Invalid data provided';
   }
   // Handle Prisma initialization errors
-  else if (error instanceof Prisma.PrismaClientInitializationError) {
+  else if ((error as any) instanceof Prisma.PrismaClientInitializationError) {
     statusCode = 503;
     message = 'Database connection error';
     details = 'Unable to connect to database';
   }
   // Handle custom errors
-  else if (error instanceof Error && 'statusCode' in error) {
+  else if ((error as any) instanceof Error && 'statusCode' in error) {
     statusCode = error.statusCode || 500;
     message = error.message;
   }
@@ -91,7 +92,7 @@ export const errorHandler = (
     details = error.message;
   }
   // Handle generic errors
-  else if (error instanceof Error) {
+  else if ((error as any) instanceof Error) {
     message = error.message;
   }
 
@@ -104,7 +105,7 @@ export const errorHandler = (
     path: req.path,
     query: req.query,
     body: req.method !== 'GET' ? req.body : undefined,
-    userId: req.user?.sub,
+    userId: (req as any).user?.sub,
     tenantId: req.user?.tenantId,
     ip: req.ip,
     userAgent: req.get('User-Agent'),

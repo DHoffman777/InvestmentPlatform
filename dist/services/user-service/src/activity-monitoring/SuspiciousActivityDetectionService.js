@@ -451,6 +451,16 @@ class SuspiciousActivityDetectionService extends events_1.EventEmitter {
                 'Check for VPN usage',
                 'Monitor for additional anomalies'
             ],
+            [AlertType.OFF_HOURS_ACCESS]: [
+                'Verify user authorization',
+                'Check access justification',
+                'Monitor session activity'
+            ],
+            [AlertType.SUSPICIOUS_DEVICE]: [
+                'Verify device ownership',
+                'Check device security',
+                'Consider device quarantine'
+            ],
             [AlertType.PRIVILEGE_ESCALATION]: [
                 'Immediately investigate',
                 'Verify administrative access',
@@ -460,6 +470,36 @@ class SuspiciousActivityDetectionService extends events_1.EventEmitter {
                 'Block data export temporarily',
                 'Investigate data access patterns',
                 'Contact security team immediately'
+            ],
+            [AlertType.BRUTE_FORCE_ATTACK]: [
+                'Block IP address',
+                'Implement rate limiting',
+                'Alert security team'
+            ],
+            [AlertType.ACCOUNT_TAKEOVER]: [
+                'Immediately suspend account',
+                'Force password reset',
+                'Contact account owner'
+            ],
+            [AlertType.UNUSUAL_ACTIVITY_VOLUME]: [
+                'Monitor activity patterns',
+                'Check for automation',
+                'Review access logs'
+            ],
+            [AlertType.INSIDER_THREAT]: [
+                'Escalate to security team',
+                'Monitor all user activity',
+                'Consider access restrictions'
+            ],
+            [AlertType.COMPLIANCE_VIOLATION]: [
+                'Review compliance policies',
+                'Document violation details',
+                'Report to compliance team'
+            ],
+            [AlertType.POLICY_VIOLATION]: [
+                'Review policy violations',
+                'Document incident details',
+                'Implement corrective actions'
             ]
         };
         return actions[alertType] || ['Investigate activity', 'Monitor user behavior'];

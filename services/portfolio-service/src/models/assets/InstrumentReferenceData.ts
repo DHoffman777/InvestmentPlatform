@@ -3,7 +3,7 @@
 
 export interface InstrumentMaster {
   id: string;
-  instrumentId: string; // Primary identifier (CUSIP, ISIN, etc.)
+  securityId: string; // Primary identifier (CUSIP, ISIN, etc.)
   
   // Identifiers
   cusip?: string;
@@ -61,7 +61,7 @@ export interface InstrumentMaster {
 }
 
 export interface RelatedInstrument {
-  instrumentId: string;
+  securityId: string;
   relationshipType: InstrumentRelationshipType;
   description?: string;
   effectiveDate?: Date;
@@ -69,7 +69,7 @@ export interface RelatedInstrument {
 }
 
 export interface InstrumentAttributes {
-  instrumentId: string;
+  securityId: string;
   
   // Trading characteristics
   lotSize?: number;
@@ -119,7 +119,7 @@ export interface InstrumentAttributes {
 
 export interface CorporateAction {
   id: string;
-  instrumentId: string;
+  securityId: string;
   tenantId: string;
   
   // Action details
@@ -192,7 +192,7 @@ export interface CorporateActionDetails {
 }
 
 export interface MarketDataSnapshot {
-  instrumentId: string;
+  securityId: string;
   asOfDate: Date;
   asOfTime: Date;
   
@@ -359,7 +359,7 @@ export type MappingType =
 
 // Request/Response interfaces
 export interface CreateInstrumentRequest {
-  instrumentId: string;
+  securityId: string;
   identifiers: {
     cusip?: string;
     isin?: string;
@@ -384,7 +384,7 @@ export interface CreateInstrumentRequest {
 }
 
 export interface UpdateInstrumentRequest {
-  instrumentId: string;
+  securityId: string;
   updates: Partial<InstrumentMaster>;
   tenantId: string;
   updatedBy: string;
@@ -409,7 +409,7 @@ export interface SearchInstrumentRequest {
 }
 
 export interface ProcessCorporateActionRequest {
-  instrumentId: string;
+  securityId: string;
   actionType: CorporateActionType;
   announcementDate: Date;
   exDate: Date;
@@ -429,7 +429,7 @@ export interface InstrumentLookupRequest {
 
 export interface BulkInstrumentUpdateRequest {
   instruments: Array<{
-    instrumentId: string;
+    securityId: string;
     updates: Partial<InstrumentMaster>;
   }>;
   tenantId: string;
@@ -437,7 +437,7 @@ export interface BulkInstrumentUpdateRequest {
 }
 
 export interface InstrumentValidationResult {
-  instrumentId: string;
+  securityId: string;
   isValid: boolean;
   errors: string[];
   warnings?: string[];
@@ -459,7 +459,7 @@ export interface CorporateActionImpact {
   newQuantity: number;
   cashAmount?: number;
   newInstruments?: Array<{
-    instrumentId: string;
+    securityId: string;
     quantity: number;
   }>;
   taxImplications: {
@@ -470,7 +470,7 @@ export interface CorporateActionImpact {
 }
 
 export interface DataQualityReport {
-  instrumentId: string;
+  securityId: string;
   overallQuality: DataQualityScore;
   fieldQuality: Record<string, DataQualityScore>;
   missingFields: string[];
@@ -491,7 +491,7 @@ export interface IdentifierValidation {
 }
 
 export interface MarketDataQuality {
-  instrumentId: string;
+  securityId: string;
   asOfDate: Date;
   priceQuality: DataQualityScore;
   volumeQuality: DataQualityScore;

@@ -2,7 +2,7 @@ export interface Order {
     id: string;
     tenantId: string;
     portfolioId: string;
-    instrumentId: string;
+    securityId: string;
     clientOrderId: string;
     exchangeOrderId?: string;
     parentOrderId?: string;
@@ -314,7 +314,7 @@ export declare enum RiskSeverity {
 }
 export interface CreateOrderRequest {
     portfolioId: string;
-    instrumentId: string;
+    securityId: string;
     orderType: OrderType;
     orderSide: OrderSide;
     quantity: number;

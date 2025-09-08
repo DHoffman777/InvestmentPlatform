@@ -4,10 +4,10 @@ exports.errorHandler = void 0;
 const logger_1 = require("../config/logger");
 const errorHandler = (err, req, res, next) => {
     let error = { ...err };
-    error.message = err.message;
+    error.message = err.message || 'Unknown error';
     // Log error
     logger_1.logger.error('Error occurred:', {
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack,
         url: req.url,
         method: req.method,
@@ -16,7 +16,7 @@ const errorHandler = (err, req, res, next) => {
     });
     // Default error values
     let statusCode = error.statusCode || 500;
-    let message = error.message || 'Internal Server Error';
+    let message = error instanceof Error ? error.message : 'Internal Server Error';
     // Mongoose bad ObjectId
     if (err.name === 'CastError') {
         statusCode = 400;

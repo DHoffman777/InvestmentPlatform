@@ -310,12 +310,12 @@ export class RootCauseAnalysisService extends EventEmitter {
             timestamp: new Date()
           });
         }
-      } catch (error) {
-        console.error(`Failed to apply analysis rule ${ruleId}:`, error.message);
+      } catch (error: any) {
+        console.error(`Failed to apply analysis rule ${ruleId}:`, error instanceof Error ? error.message : 'Unknown error');
         this.emit('ruleError', {
           ruleId,
           bottleneckId: bottleneck.id,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
@@ -451,8 +451,8 @@ export class RootCauseAnalysisService extends EventEmitter {
       };
 
       return rootCause;
-    } catch (error) {
-      console.error(`Failed to generate root cause for rule ${rule.id}:`, error.message);
+    } catch (error: any) {
+      console.error(`Failed to generate root cause for rule ${rule.id}:`, error instanceof Error ? error.message : 'Unknown error');
       return null;
     }
   }
@@ -1149,7 +1149,7 @@ export class RootCauseAnalysisService extends EventEmitter {
     return `fix_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     // Cleanup resources
     this.analyzedBottlenecks.clear();
     this.historicalAnalyses.clear();
@@ -1174,3 +1174,4 @@ interface HistoricalAnalysis {
   rootCauseCount: number;
   topRootCauseCategory: RootCauseCategory;
 }
+

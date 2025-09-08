@@ -1,8 +1,9 @@
+import { PrismaClient } from '@prisma/client';
 import { ClientDocument, DocumentUploadRequest, DocumentUploadResponse, DocumentSearchResponse, DocumentTemplate, DocumentType, DocumentStatus, DocumentPermission, BulkDocumentOperation, BulkOperationResult } from '../../models/clientDocuments/ClientDocuments';
 export declare class ClientDocumentService {
+    private prisma;
     private documentProcessingService;
-    private eventPublisher;
-    constructor();
+    constructor(prisma: PrismaClient);
     uploadClientDocument(request: DocumentUploadRequest): Promise<DocumentUploadResponse>;
     getClientDocuments(tenantId: string, clientId: string, userId: string, options?: {
         documentType?: DocumentType;
@@ -14,8 +15,8 @@ export declare class ClientDocumentService {
     }): Promise<DocumentSearchResponse>;
     getClientDocumentById(tenantId: string, documentId: string, userId: string): Promise<ClientDocument | null>;
     updateClientDocument(tenantId: string, documentId: string, updates: Partial<ClientDocument>, userId: string): Promise<ClientDocument>;
-    deleteClientDocument(tenantId: string, documentId: string, userId: string, reason?: string): Promise<void>;
-    shareDocumentWithClient(tenantId: string, documentId: string, recipientClientId: string, permissions: DocumentPermission[], userId: string, expirationDate?: Date): Promise<void>;
+    deleteClientDocument(tenantId: string, documentId: string, userId: string, reason?: string): Promise<any>;
+    shareDocumentWithClient(tenantId: string, documentId: string, recipientClientId: string, permissions: DocumentPermission[], userId: string, expirationDate?: Date): Promise<any>;
     getClientDocumentTemplates(tenantId: string, documentType?: DocumentType): Promise<DocumentTemplate[]>;
     performBulkDocumentOperation(tenantId: string, operation: BulkDocumentOperation, userId: string): Promise<BulkOperationResult>;
     getClientDocumentStats(tenantId: string, clientId: string): Promise<any>;

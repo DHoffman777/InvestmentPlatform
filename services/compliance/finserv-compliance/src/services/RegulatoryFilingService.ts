@@ -273,7 +273,7 @@ export class RegulatoryFilingService extends EventEmitter {
         confirmationNumber: submissionResult.confirmationNumber,
       };
 
-    } catch (error) {
+    } catch (error: any) {
       filing.status = 'REVIEW';
       await this.redis.setex(`filing:${filingId}`, 86400 * 365 * 7, JSON.stringify(filing));
 
@@ -410,7 +410,7 @@ export class RegulatoryFilingService extends EventEmitter {
     }, 24 * 60 * 60 * 1000);
   }
 
-  private async checkFilingDeadlines(): Promise<void> {
+  private async checkFilingDeadlines(): Promise<any> {
     const today = new Date();
     const upcoming = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
@@ -435,12 +435,12 @@ export class RegulatoryFilingService extends EventEmitter {
     }
   }
 
-  private async generatePeriodicFilings(): Promise<void> {
+  private async generatePeriodicFilings(): Promise<any> {
     // Generate new filing requirements based on firm registrations and frequencies
     console.log('Generating periodic filing requirements');
   }
 
-  private async scheduleFilingReminders(filing: FilingRequirement): Promise<void> {
+  private async scheduleFilingReminders(filing: FilingRequirement): Promise<any> {
     // Schedule reminders at 30, 14, 7, and 1 days before due date
     const reminderDays = [30, 14, 7, 1];
     const now = Date.now();
@@ -601,7 +601,7 @@ export class RegulatoryFilingService extends EventEmitter {
     return filing.estimatedHours; // Simplified
   }
 
-  private async recordSubmission(filingId: string, submittedBy: string, result: any): Promise<void> {
+  private async recordSubmission(filingId: string, submittedBy: string, result: any): Promise<any> {
     const submissionRecord = {
       filingId,
       submittedBy,
@@ -749,7 +749,8 @@ export class RegulatoryFilingService extends EventEmitter {
     return `${year}-W${week.toString().padStart(2, '0')}`;
   }
 
-  public async cleanup(): Promise<void> {
+  public async cleanup(): Promise<any> {
     await this.redis.quit();
   }
 }
+

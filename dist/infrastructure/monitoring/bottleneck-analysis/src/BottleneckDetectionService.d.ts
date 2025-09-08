@@ -41,6 +41,7 @@ export declare class BottleneckDetectionService extends EventEmitter {
     private historicalProfiles;
     private detectedBottlenecks;
     private anomalyBaselines;
+    private activeBottlenecks;
     constructor(config: BottleneckDetectionConfig);
     private initializeDetectionAlgorithms;
     analyzeProfile(profile: PerformanceProfile): Promise<PerformanceBottleneck[]>;
@@ -84,5 +85,6 @@ export declare class BottleneckDetectionService extends EventEmitter {
     getDetectionStatistics(): any;
     private generateBottleneckId;
     private generateRootCauseId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
+    getBottlenecks(): any[];
 }

@@ -129,6 +129,7 @@ export declare class ActivityRetentionService extends EventEmitter {
     private compressionProvider;
     private encryptionProvider;
     private storageProvider;
+    private getErrorMessage;
     constructor();
     createRetentionPolicy(policy: Omit<RetentionPolicy, 'id' | 'createdAt' | 'updatedAt' | 'appliedCount'>): Promise<RetentionPolicy>;
     updateRetentionPolicy(policyId: string, updates: Partial<RetentionPolicy>): Promise<RetentionPolicy | null>;

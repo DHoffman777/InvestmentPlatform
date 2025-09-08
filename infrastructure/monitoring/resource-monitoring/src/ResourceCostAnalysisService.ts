@@ -849,6 +849,17 @@ export class ResourceCostAnalysisService extends EventEmitter {
     };
   }
 
+  private mapEffortLevel(effort: 'trivial' | 'low' | 'medium' | 'high' | 'expert'): 'minimal' | 'low' | 'medium' | 'high' | 'extensive' {
+    switch (effort) {
+      case 'trivial':
+        return 'minimal';
+      case 'expert':
+        return 'extensive';
+      default:
+        return effort;
+    }
+  }
+
   private async generateCostRecommendations(
     resourceId: string,
     correlations: any,
@@ -869,7 +880,7 @@ export class ResourceCostAnalysisService extends EventEmitter {
         expected_savings: opportunity.savings_amount,
         implementation: {
           priority: opportunity.priority > 75 ? 'high' : 'medium',
-          effort: opportunity.implementation.effort,
+          effort: this.mapEffortLevel(opportunity.implementation.effort),
           timeline: opportunity.implementation.timeline,
           steps: opportunity.implementation.steps,
           risks: [`Performance impact: ${opportunity.impact_analysis.performance_impact}`],
@@ -927,7 +938,7 @@ export class ResourceCostAnalysisService extends EventEmitter {
     });
   }
 
-  private async checkCostAlerts(resourceId: string, correlation: CostCorrelation): Promise<void> {
+  private async checkCostAlerts(resourceId: string, correlation: CostCorrelation): Promise<any> {
     const alerts: CostAlert[] = [];
 
     // Check for anomaly alerts
@@ -1041,8 +1052,8 @@ export class ResourceCostAnalysisService extends EventEmitter {
     this.analysisScheduler = setInterval(async () => {
       try {
         await this.performScheduledAnalysis();
-      } catch (error) {
-        console.error('Scheduled cost analysis failed:', error.message);
+      } catch (error: any) {
+        console.error('Scheduled cost analysis failed:', error instanceof Error ? error.message : 'Unknown error');
       }
     }, this.config.analysisInterval);
 
@@ -1050,25 +1061,25 @@ export class ResourceCostAnalysisService extends EventEmitter {
     this.costUpdateScheduler = setInterval(async () => {
       try {
         await this.updateCostData();
-      } catch (error) {
-        console.error('Cost data update failed:', error.message);
+      } catch (error: any) {
+        console.error('Cost data update failed:', error instanceof Error ? error.message : 'Unknown error');
       }
     }, this.config.costUpdateInterval);
   }
 
-  private async performScheduledAnalysis(): Promise<void> {
+  private async performScheduledAnalysis(): Promise<any> {
     // Perform analysis for all resources
     for (const resourceId of this.costData.keys()) {
       try {
         // This would normally trigger analysis with current snapshot
         this.emit('analysisScheduled', { resourceId, timestamp: new Date() });
-      } catch (error) {
-        console.error(`Analysis failed for resource ${resourceId}:`, error.message);
+      } catch (error: any) {
+        console.error(`Analysis failed for resource ${resourceId}:`, error instanceof Error ? error.message : 'Unknown error');
       }
     }
   }
 
-  private async updateCostData(): Promise<void> {
+  private async updateCostData(): Promise<any> {
     // Update cost data from cost providers
     this.emit('costDataUpdated', { timestamp: new Date() });
   }
@@ -1173,7 +1184,7 @@ export class ResourceCostAnalysisService extends EventEmitter {
   private generateRecommendationId(): string { return `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`; }
   private generateAlertId(): string { return `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`; }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     if (this.analysisScheduler) {
       clearInterval(this.analysisScheduler);
     }
@@ -1185,3 +1196,4 @@ export class ResourceCostAnalysisService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

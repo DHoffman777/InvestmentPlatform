@@ -115,6 +115,6 @@ export declare class CapacityPlanningReportGenerator extends EventEmitter {
     getReport(reportId: string): CapacityReport | null;
     getAllReports(): CapacityReport[];
     getAllTemplates(): ReportTemplate[];
-    cancelScheduledReport(scheduleId: string): Promise<void>;
-    shutdown(): Promise<void>;
+    cancelScheduledReport(scheduleId: string): Promise<any>;
+    shutdown(): Promise<any>;
 }

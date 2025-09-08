@@ -84,9 +84,9 @@ export declare class MetricsCollectionPipeline extends EventEmitter {
     private deadLetterQueue;
     private rateLimiters;
     constructor(config: CollectionConfig);
-    registerDataSource(dataSource: DataSource): Promise<void>;
-    registerMetricDefinition(metric: MetricDefinition): Promise<void>;
-    createCollectionJob(job: CollectionJob): Promise<void>;
+    registerDataSource(dataSource: DataSource): Promise<any>;
+    registerMetricDefinition(metric: MetricDefinition): Promise<any>;
+    createCollectionJob(job: CollectionJob): Promise<any>;
     executeJob(jobId: string): Promise<CollectionResult>;
     collectData(job: CollectionJob): Promise<any[]>;
     private collectFromDatabase;

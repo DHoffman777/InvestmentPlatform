@@ -3,13 +3,13 @@
  */
 declare class MockKafkaService {
     private connected;
-    connect(): Promise<void>;
-    disconnect(): Promise<void>;
+    connect(): Promise<any>;
+    disconnect(): Promise<any>;
     isConnected(): boolean;
-    publish(topic: string, message: any): Promise<void>;
-    subscribe(topic: string, handler: (message: any) => void): Promise<void>;
-    publishEvent(topic: string, message: any): Promise<void>;
-    publishMessage(topic: string, message: any): Promise<void>;
+    publish(topic: string, message: any): Promise<any>;
+    subscribe(topic: string, handler: (message: any) => void): Promise<any>;
+    publishEvent(topic: string, message: any): Promise<any>;
+    publishMessage(topic: string, message: any): Promise<any>;
 }
 export declare function getKafkaService(): MockKafkaService;
 export { MockKafkaService as KafkaService };

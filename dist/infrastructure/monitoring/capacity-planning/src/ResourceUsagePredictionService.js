@@ -69,7 +69,7 @@ class ResourceUsagePredictionService extends events_1.EventEmitter {
             return accuracy;
         }
         catch (error) {
-            this.emit('trainingFailed', { modelId, error: error.message });
+            this.emit('trainingFailed', { modelId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -127,7 +127,7 @@ class ResourceUsagePredictionService extends events_1.EventEmitter {
             return prediction;
         }
         catch (error) {
-            this.emit('predictionFailed', { predictionId, modelId, resourceId, error: error.message });
+            this.emit('predictionFailed', { predictionId, modelId, resourceId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }

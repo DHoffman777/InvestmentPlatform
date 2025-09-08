@@ -168,7 +168,7 @@ class PositionService {
                 }
                 else {
                     const quantityDiff = new client_1.Prisma.Decimal(custodianPos.quantity).sub(currentPos.quantity);
-                    const valueDiff = new client_1.Prisma.Decimal(custodianPos.marketValue).sub(currentPos.marketValue || 0);
+                    const valueDiff = new client_1.Prisma.Decimal(custodianPos.marketValue).sub(currentPos.marketValue?.toNumber() || 0);
                     if (quantityDiff.abs().gte(new client_1.Prisma.Decimal(0.01)) || valueDiff.abs().gte(new client_1.Prisma.Decimal(0.01))) {
                         discrepancies.push({
                             symbol,

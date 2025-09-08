@@ -81,7 +81,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
   private thresholds: Map<string, ScalingThreshold> = new Map();
   private activeAlerts: Map<string, CapacityAlert> = new Map();
   private thresholdStates: Map<string, ThresholdState> = new Map();
-  private evaluationTimer: NodeJS.Timeout;
+  private evaluationTimer!: NodeJS.Timeout;
   private config: ThresholdMonitorConfig;
   private scalingExecutor: ScalingExecutor;
   private alertManager: AlertManager;
@@ -212,7 +212,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
     };
   }
 
-  private async processEvaluation(evaluation: ThresholdEvaluation, threshold: ScalingThreshold): Promise<void> {
+  private async processEvaluation(evaluation: ThresholdEvaluation, threshold: ScalingThreshold): Promise<any> {
     if (!evaluation.isTriggered) {
       return;
     }
@@ -260,7 +260,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
     return alert;
   }
 
-  private async processAlert(alert: CapacityAlert, threshold: ScalingThreshold): Promise<void> {
+  private async processAlert(alert: CapacityAlert, threshold: ScalingThreshold): Promise<any> {
     await this.alertManager.sendNotifications(alert);
     
     if (this.config.enableAutoScaling && this.shouldAutoScale(alert, threshold)) {
@@ -308,7 +308,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
     return decision;
   }
 
-  private async executeScaling(decision: ScalingDecision): Promise<void> {
+  private async executeScaling(decision: ScalingDecision): Promise<any> {
     if (decision.confidence < 0.7) {
       this.emit('scalingSkipped', { 
         resourceId: decision.resourceId, 
@@ -325,11 +325,11 @@ export class ScalingThresholdMonitor extends EventEmitter {
         action: decision.action, 
         targetCapacity: decision.impact.targetCapacity 
       });
-    } catch (error) {
+    } catch (error: any) {
       this.emit('scalingFailed', { 
         resourceId: decision.resourceId, 
         action: decision.action, 
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       });
       
       try {
@@ -337,7 +337,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
       } catch (rollbackError) {
         this.emit('rollbackFailed', { 
           resourceId: decision.resourceId, 
-          error: rollbackError.message 
+          error: rollbackError instanceof Error ? rollbackError.message : 'Unknown rollback error' 
         });
       }
     }
@@ -371,7 +371,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
     }, nextEscalation.timeToEscalate);
   }
 
-  async acknowledgeAlert(alertId: string, userId: string): Promise<void> {
+  async acknowledgeAlert(alertId: string, userId: string): Promise<any> {
     const alert = this.activeAlerts.get(alertId);
     if (!alert) {
       throw new Error(`Alert ${alertId} not found`);
@@ -384,7 +384,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
     this.emit('alertAcknowledged', { alertId, userId });
   }
 
-  async resolveAlert(alertId: string, resolution: string): Promise<void> {
+  async resolveAlert(alertId: string, resolution: string): Promise<any> {
     const alert = this.activeAlerts.get(alertId);
     if (!alert) {
       throw new Error(`Alert ${alertId} not found`);
@@ -397,7 +397,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
     this.emit('alertResolved', { alertId, resolution });
   }
 
-  async suppressAlert(alertId: string, duration: number): Promise<void> {
+  async suppressAlert(alertId: string, duration: number): Promise<any> {
     const alert = this.activeAlerts.get(alertId);
     if (!alert) {
       throw new Error(`Alert ${alertId} not found`);
@@ -816,7 +816,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
     };
   }
 
-  private async validateThreshold(threshold: ScalingThreshold): Promise<void> {
+  private async validateThreshold(threshold: ScalingThreshold): Promise<any> {
     if (!threshold.resourceId) {
       throw new Error('Resource ID is required');
     }
@@ -843,8 +843,8 @@ export class ScalingThresholdMonitor extends EventEmitter {
       try {
         const metrics = await this.collectCurrentMetrics();
         await this.evaluateThresholds(metrics);
-      } catch (error) {
-        this.emit('evaluationError', { error: error.message });
+      } catch (error: any) {
+        this.emit('evaluationError', { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }, this.config.evaluationInterval);
   }
@@ -861,7 +861,7 @@ export class ScalingThresholdMonitor extends EventEmitter {
     return `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     if (this.evaluationTimer) {
       clearInterval(this.evaluationTimer);
     }
@@ -885,24 +885,24 @@ interface ThresholdState {
 }
 
 class ScalingExecutor {
-  async execute(decision: ScalingDecision): Promise<void> {
+  async execute(decision: ScalingDecision): Promise<any> {
     for (const step of decision.executionPlan) {
       await this.executeStep(step);
     }
   }
 
-  async rollback(decision: ScalingDecision): Promise<void> {
+  async rollback(decision: ScalingDecision): Promise<any> {
     for (const step of decision.rollbackPlan) {
       await this.executeStep(step);
     }
   }
 
-  private async executeStep(step: ScalingStep): Promise<void> {
+  private async executeStep(step: ScalingStep): Promise<any> {
     console.log(`Executing step: ${step.action} with parameters:`, step.parameters);
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
   }
 }
 
@@ -913,26 +913,27 @@ class AlertManager {
     this.channels = channels;
   }
 
-  async sendNotifications(alert: CapacityAlert): Promise<void> {
+  async sendNotifications(alert: CapacityAlert): Promise<any> {
     const activeChannels = this.channels.filter(c => c.isActive);
     
     for (const channel of activeChannels) {
       try {
         await this.sendNotification(channel, alert);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to send notification via ${channel.type}:`, error);
       }
     }
   }
 
-  async executeAction(action: AlertAction, alert: CapacityAlert): Promise<void> {
+  async executeAction(action: AlertAction, alert: CapacityAlert): Promise<any> {
     console.log(`Executing alert action: ${action.type} for alert ${alert.id}`);
   }
 
-  private async sendNotification(channel: NotificationChannel, alert: CapacityAlert): Promise<void> {
+  private async sendNotification(channel: NotificationChannel, alert: CapacityAlert): Promise<any> {
     console.log(`Sending ${alert.severity} alert to ${channel.type}: ${alert.title}`);
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
   }
 }
+

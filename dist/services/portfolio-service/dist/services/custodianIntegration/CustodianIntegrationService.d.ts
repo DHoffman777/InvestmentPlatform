@@ -1,0 +1,124 @@
+export const __esModule: boolean;
+export class CustodianIntegrationService {
+    constructor(prisma: any, kafkaService: any);
+    prisma: any;
+    kafkaService: any;
+    integrationServices: Map<any, any>;
+    performanceMetrics: Map<any, any>;
+    activeConnections: Map<any, any>;
+    initializeIntegrationServices(): void;
+    createCustodianConnection(tenantId: any, request: any, userId: any): Promise<{
+        connection: {
+            id: `${string}-${string}-${string}-${string}-${string}`;
+            tenantId: any;
+            custodianType: any;
+            custodianName: any;
+            custodianCode: any;
+            connectionType: any;
+            connectionConfig: any;
+            status: CustodianIntegration_1.CustodianConnectionStatus;
+            lastSuccessfulConnection: Date;
+            lastConnectionAttempt: Date;
+            connectionRetries: number;
+            maxRetries: number;
+            isActive: boolean;
+            supportedFeatures: any;
+            rateLimits: any;
+            errorLog: any[];
+            createdAt: Date;
+            updatedAt: Date;
+            createdBy: any;
+            updatedBy: any;
+        };
+        testResults: any;
+    }>;
+    processCustodianDataFeed(connectionId: any, request: any): Promise<{
+        feedId: `${string}-${string}-${string}-${string}-${string}`;
+        status: CustodianIntegration_1.FileProcessingStatus;
+        recordCount: any;
+        estimatedCompletion: any;
+        errors: any[];
+    }>;
+    performReconciliation(connectionId: any, request: any): Promise<{
+        reconciliationId: `${string}-${string}-${string}-${string}-${string}`;
+        status: CustodianIntegration_1.ReconciliationStatus;
+        summary: {
+            totalRecords: any;
+            matchedRecords: any;
+            unmatchedRecords: any;
+            discrepancyCount: any;
+            materialDiscrepancies: any;
+            reconciledValue: library_1.Decimal;
+            discrepancyAmount: library_1.Decimal;
+            accuracyPercentage: library_1.Decimal;
+        };
+        results: any[];
+    }>;
+    submitOrders(connectionId: any, request: any): Promise<any>;
+    retrieveDocuments(connectionId: any, request: any): Promise<{
+        requestId: `${string}-${string}-${string}-${string}-${string}`;
+        documents: any[];
+        status: string;
+        estimatedCompletion: Date;
+    }>;
+    monitorConnections(): Promise<void>;
+    validateConnectionConfig(request: any): Promise<void>;
+    testConnection(request: any): Promise<any>;
+    getIntegrationService(custodianType: any): any;
+    getCustodianConnection(connectionId: any): Promise<any>;
+    processAndValidateData(feedData: any, connection: any, request: any): Promise<{
+        id: `${string}-${string}-${string}-${string}-${string}`;
+        custodianConnectionId: any;
+        tenantId: any;
+        portfolioId: any;
+        processingDate: Date;
+        feedType: any;
+        recordCount: any;
+        processedCount: number;
+        errorCount: number;
+        processingStatus: CustodianIntegration_1.FileProcessingStatus;
+        processingStarted: Date;
+        processingErrors: any[];
+        reconciliationResults: any[];
+        checksums: {
+            recordCount: any;
+        };
+        createdAt: Date;
+        processedBy: string;
+    }>;
+    validateRecord(record: any, feedType: any, connection: any): Promise<void>;
+    performDataReconciliation(custodianData: any, portfolioData: any, request: any): Promise<any[]>;
+    generateReconciliationSummary(results: any): Promise<{
+        totalRecords: any;
+        matchedRecords: any;
+        unmatchedRecords: any;
+        discrepancyCount: any;
+        materialDiscrepancies: any;
+        reconciledValue: library_1.Decimal;
+        discrepancyAmount: library_1.Decimal;
+        accuracyPercentage: library_1.Decimal;
+    }>;
+    createReconciliationAlerts(connectionId: any, discrepancies: any): Promise<void>;
+    performHealthCheck(connection: any): Promise<any>;
+    updateConnectionStatus(connectionId: any, isHealthy: any): Promise<void>;
+    updatePerformanceMetrics(connectionId: any, responseTime: any, success: any): Promise<void>;
+    collectPerformanceMetrics(connectionId: any): Promise<void>;
+    checkForAlerts(connectionId: any): Promise<void>;
+    handleConnectionError(connectionId: any, error: any): Promise<void>;
+    initializePerformanceMonitoring(connectionId: any): Promise<void>;
+    saveCustodianConnection(connection: any): Promise<void>;
+    loadCustodianConnection(connectionId: any): Promise<any>;
+    updateCustodianConnection(connection: any): Promise<void>;
+    storeProcessedData(feedData: any): Promise<void>;
+    storeReconciliationResults(connectionId: any, results: any, summary: any): Promise<void>;
+    storeOrderSubmissions(connectionId: any, request: any, results: any): Promise<void>;
+    storeDocumentRetrievals(connectionId: any, request: any, documents: any): Promise<void>;
+    storeAlert(alert: any): Promise<void>;
+    getCustodianData(connection: any, request: any): Promise<{}>;
+    getPortfolioData(request: any): Promise<{}>;
+    validateOrders(orders: any, connection: any): Promise<void>;
+    updateOrderStatuses(results: any): Promise<void>;
+    processDocuments(documents: any, request: any): Promise<any[]>;
+}
+import CustodianIntegration_1 = require("../../models/custodianIntegration/CustodianIntegration");
+import library_1 = require("@prisma/client/runtime/library");

@@ -100,7 +100,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
   
   // Override res.end to capture metrics
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any): any {
     const duration = (Date.now() - start) / 1000;
     const statusCode = res.statusCode.toString();
     
@@ -128,7 +128,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
     }
     
     // Call original end method
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
   
   next();
@@ -166,7 +166,7 @@ export const collectMarketDataMetrics = async () => {
     // This is just an example of how you might collect custom metrics
     
     logger.debug('Custom market data metrics collected');
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error collecting market data metrics:', error);
   }
 };

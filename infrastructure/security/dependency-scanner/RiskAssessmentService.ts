@@ -205,7 +205,7 @@ export class RiskAssessmentService extends EventEmitter {
     
     const riskFactors = await this.calculateRiskFactors(dependency, vulnerabilities, context);
     const businessImpactScore = this.calculateBusinessImpactScore(riskFactors, context);
-    const technicalRiskScore = this.calculateTechnicalRiskScore(riskFactors, vulnerability);
+    const technicalRiskScore = this.calculateTechnicalRiskScore(riskFactors, vulnerabilities);
     const exploitabilityScore = this.calculateExploitabilityScore(vulnerabilities);
     const environmentalScore = this.calculateEnvironmentalScore(context);
     
@@ -266,7 +266,7 @@ export class RiskAssessmentService extends EventEmitter {
         type: 'SECURITY_VULNERABILITY',
         description: `${vuln.severity} severity vulnerability: ${vuln.title}`,
         severity: vuln.severity,
-        weight: this.assessmentCriteria.vulnerabilityWeights[vuln.severity.toLowerCase()],
+        weight: this.assessmentCriteria.vulnerabilityWeights[vuln.severity.toLowerCase() as keyof typeof this.assessmentCriteria.vulnerabilityWeights],
         score: this.mapSeverityToScore(vuln.severity),
         weightedScore: 0, // Will be calculated
         evidence: [`CVE: ${vuln.cve}`, `CVSS: ${vuln.cvssScore}`].filter(Boolean),
@@ -350,7 +350,7 @@ export class RiskAssessmentService extends EventEmitter {
         category: 'DEPENDENCY',
         type: 'LICENSE_RISK',
         description: licenseRisk.description,
-        severity: licenseRisk.severity,
+        severity: licenseRisk.severity as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO',
         weight: this.assessmentCriteria.dependencyFactors.licenseRisk,
         score: licenseRisk.score,
         weightedScore: 0,
@@ -372,7 +372,7 @@ export class RiskAssessmentService extends EventEmitter {
       type: 'ENVIRONMENT_TYPE',
       description: `Deployed in ${context.environmentType.toLowerCase()} environment`,
       severity: context.environmentType === 'PRODUCTION' ? 'HIGH' : context.environmentType === 'STAGING' ? 'MEDIUM' : 'LOW',
-      weight: this.assessmentCriteria.environmentalFactors[context.environmentType.toLowerCase()],
+      weight: this.assessmentCriteria.environmentalFactors[context.environmentType.toLowerCase() as keyof typeof this.assessmentCriteria.environmentalFactors],
       score: this.mapEnvironmentToScore(context.environmentType),
       weightedScore: 0,
       evidence: [`Environment: ${context.environmentType}`],
@@ -386,7 +386,7 @@ export class RiskAssessmentService extends EventEmitter {
       category: 'ENVIRONMENT',
       type: 'DATA_CLASSIFICATION',
       description: `Processes ${context.dataClassification.toLowerCase()} data`,
-      severity: this.mapDataClassificationToSeverity(context.dataClassification),
+      severity: this.mapDataClassificationToSeverity(context.dataClassification) as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO',
       weight: 1.0,
       score: this.mapDataClassificationToScore(context.dataClassification),
       weightedScore: 0,
@@ -406,8 +406,8 @@ export class RiskAssessmentService extends EventEmitter {
       category: 'BUSINESS',
       type: 'APPLICATION_CRITICALITY',
       description: `${context.applicationCriticality.toLowerCase()} criticality application`,
-      severity: context.applicationCriticality === 'CRITICAL' ? 'CRITICAL' : context.applicationCriticality,
-      weight: this.assessmentCriteria.businessFactors[`${context.applicationCriticality.toLowerCase()}Application`],
+      severity: context.applicationCriticality === 'CRITICAL' ? 'CRITICAL' : context.applicationCriticality as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO',
+      weight: this.assessmentCriteria.businessFactors[`${context.applicationCriticality.toLowerCase()}Application` as keyof typeof this.assessmentCriteria.businessFactors],
       score: this.mapCriticalityToScore(context.applicationCriticality),
       weightedScore: 0,
       evidence: [`Criticality: ${context.applicationCriticality}`],
@@ -472,7 +472,7 @@ export class RiskAssessmentService extends EventEmitter {
     
     vulnerabilities.forEach(vuln => {
       const exploitabilityLevel = vuln.exploitability || 'NOT_DEFINED';
-      const score = this.assessmentCriteria.exploitabilityFactors[exploitabilityLevel.toLowerCase()] || 1.0;
+      const score = this.assessmentCriteria.exploitabilityFactors[exploitabilityLevel.toLowerCase() as keyof typeof this.assessmentCriteria.exploitabilityFactors] || 1.0;
       maxExploitability = Math.max(maxExploitability, score * 50); // Base score of 50
     });
     
@@ -480,7 +480,7 @@ export class RiskAssessmentService extends EventEmitter {
   }
 
   private calculateEnvironmentalScore(context: BusinessContext): number {
-    const envMultiplier = this.assessmentCriteria.environmentalFactors[context.environmentType.toLowerCase()];
+    const envMultiplier = this.assessmentCriteria.environmentalFactors[context.environmentType.toLowerCase() as keyof typeof this.assessmentCriteria.environmentalFactors];
     const dataMultiplier = this.mapDataClassificationToScore(context.dataClassification) / 100;
     
     return Math.min(100, (envMultiplier + dataMultiplier) * 50);
@@ -686,13 +686,14 @@ export class RiskAssessmentService extends EventEmitter {
     const baseScore = Math.random() * 40 + 40; // 40-80
     
     // Adjust based on last update
+    let adjustedScore = baseScore;
     if (dependency.lastUpdate) {
       const daysSinceUpdate = (Date.now() - dependency.lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
-      if (daysSinceUpdate > 365) baseScore -= 20; // Heavily penalize old packages
-      else if (daysSinceUpdate > 180) baseScore -= 10;
+      if (daysSinceUpdate > 365) adjustedScore -= 20; // Heavily penalize old packages
+      else if (daysSinceUpdate > 180) adjustedScore -= 10;
     }
     
-    return Math.max(0, Math.min(100, baseScore));
+    return Math.max(0, Math.min(100, adjustedScore));
   }
 
   private calculatePackageAgeScore(dependency: Dependency): number {
@@ -708,43 +709,43 @@ export class RiskAssessmentService extends EventEmitter {
     return 40; // Moderate age
   }
 
-  private assessLicenseRisk(licenses: string[]): { score: number; severity: string; description: string } {
+  private assessLicenseRisk(licenses: string[]): { score: number; severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO'; description: string } {
     if (!licenses || licenses.length === 0) {
-      return { score: 30, severity: 'MEDIUM', description: 'No license information available' };
+      return { score: 30, severity: 'MEDIUM' as 'MEDIUM', description: 'No license information available' };
     }
     
     const riskyLicenses = ['GPL-2.0', 'GPL-3.0', 'AGPL-3.0', 'LGPL-2.1', 'LGPL-3.0'];
     const hasRiskyLicense = licenses.some(license => riskyLicenses.includes(license));
     
     if (hasRiskyLicense) {
-      return { score: 60, severity: 'HIGH', description: 'Contains copyleft license with potential commercial restrictions' };
+      return { score: 60, severity: 'HIGH' as 'HIGH', description: 'Contains copyleft license with potential commercial restrictions' };
     }
     
-    return { score: 0, severity: 'LOW', description: 'Acceptable license terms' };
+    return { score: 0, severity: 'LOW' as 'LOW', description: 'Acceptable license terms' };
   }
 
   private mapSeverityToScore(severity: string): number {
-    const scores = { CRITICAL: 100, HIGH: 75, MEDIUM: 50, LOW: 25, INFO: 5 };
+    const scores: Record<string, number> = { CRITICAL: 100, HIGH: 75, MEDIUM: 50, LOW: 25, INFO: 5 };
     return scores[severity] || 25;
   }
 
   private mapEnvironmentToScore(environment: string): number {
-    const scores = { PRODUCTION: 100, STAGING: 75, DEVELOPMENT: 50, TEST: 25 };
+    const scores: Record<string, number> = { PRODUCTION: 100, STAGING: 75, DEVELOPMENT: 50, TEST: 25 };
     return scores[environment] || 50;
   }
 
   private mapDataClassificationToSeverity(classification: string): string {
-    const mapping = { RESTRICTED: 'CRITICAL', CONFIDENTIAL: 'HIGH', INTERNAL: 'MEDIUM', PUBLIC: 'LOW' };
+    const mapping: Record<string, string> = { RESTRICTED: 'CRITICAL', CONFIDENTIAL: 'HIGH', INTERNAL: 'MEDIUM', PUBLIC: 'LOW' };
     return mapping[classification] || 'MEDIUM';
   }
 
   private mapDataClassificationToScore(classification: string): number {
-    const scores = { RESTRICTED: 100, CONFIDENTIAL: 75, INTERNAL: 50, PUBLIC: 25 };
+    const scores: Record<string, number> = { RESTRICTED: 100, CONFIDENTIAL: 75, INTERNAL: 50, PUBLIC: 25 };
     return scores[classification] || 50;
   }
 
   private mapCriticalityToScore(criticality: string): number {
-    const scores = { CRITICAL: 100, HIGH: 75, MEDIUM: 50, LOW: 25 };
+    const scores: Record<string, number> = { CRITICAL: 100, HIGH: 75, MEDIUM: 50, LOW: 25 };
     return scores[criticality] || 50;
   }
 

@@ -87,7 +87,7 @@ class StructuredProductsValuationService {
             return {
                 id: productId,
                 tenantId: 'tenant_001',
-                instrumentId: `inst_${productId}`,
+                securityId: `inst_${productId}`,
                 productName: 'Sample Structured Note',
                 productType: 'STRUCTURED_NOTE',
                 issuer: 'Sample Bank',

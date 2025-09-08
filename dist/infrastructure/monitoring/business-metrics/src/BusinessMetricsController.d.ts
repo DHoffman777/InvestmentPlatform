@@ -145,7 +145,7 @@ export declare class BusinessMetricsController {
     private sendError;
     private generateId;
     getApp(): express.Application;
-    start(): Promise<void>;
+    start(): Promise<any>;
 }
 declare global {
     namespace Express {

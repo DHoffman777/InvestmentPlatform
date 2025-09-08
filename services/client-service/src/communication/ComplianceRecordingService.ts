@@ -419,7 +419,7 @@ export class ComplianceRecordingService extends EventEmitter {
     return recording;
   }
 
-  async pauseRecording(sessionId: string): Promise<void> {
+  async pauseRecording(sessionId: string): Promise<any> {
     const session = this.activeRecordings.get(sessionId);
     if (!session) {
       throw new Error(`Recording session ${sessionId} not found`);
@@ -437,7 +437,7 @@ export class ComplianceRecordingService extends EventEmitter {
     this.emit('recordingPaused', { sessionId });
   }
 
-  async resumeRecording(sessionId: string): Promise<void> {
+  async resumeRecording(sessionId: string): Promise<any> {
     const session = this.activeRecordings.get(sessionId);
     if (!session) {
       throw new Error(`Recording session ${sessionId} not found`);
@@ -699,7 +699,7 @@ export class ComplianceRecordingService extends EventEmitter {
     additionalDays: number,
     reason: string,
     requestedBy: string
-  ): Promise<void> {
+  ): Promise<any> {
     const recording = this.recordingStorage.get(recordingId);
     if (!recording) {
       throw new Error(`Recording ${recordingId} not found`);
@@ -735,7 +735,7 @@ export class ComplianceRecordingService extends EventEmitter {
     recordingId: string,
     reason: string,
     requestedBy: string
-  ): Promise<void> {
+  ): Promise<any> {
     const recording = this.recordingStorage.get(recordingId);
     if (!recording) {
       throw new Error(`Recording ${recordingId} not found`);
@@ -762,7 +762,7 @@ export class ComplianceRecordingService extends EventEmitter {
     recordingId: string,
     reason: string,
     requestedBy: string
-  ): Promise<void> {
+  ): Promise<any> {
     const recording = this.recordingStorage.get(recordingId);
     if (!recording) {
       throw new Error(`Recording ${recordingId} not found`);
@@ -786,7 +786,7 @@ export class ComplianceRecordingService extends EventEmitter {
     this.emit('legalHoldRemoved', { recordingId, reason, requestedBy });
   }
 
-  private async performComplianceMonitoring(): Promise<void> {
+  private async performComplianceMonitoring(): Promise<any> {
     try {
       // Check for policy violations
       await this.checkPolicyViolations();
@@ -801,12 +801,12 @@ export class ComplianceRecordingService extends EventEmitter {
       await this.monitorAccessPatterns();
 
       this.emit('complianceMonitoringCompleted', { timestamp: new Date() });
-    } catch (error) {
-      this.emit('complianceMonitoringError', { error: error.message });
+    } catch (error: any) {
+      this.emit('complianceMonitoringError', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async monitorRecordingRetention(): Promise<void> {
+  private async monitorRecordingRetention(): Promise<any> {
     try {
       const now = new Date();
       const expiringRecordings = Array.from(this.recordingStorage.values())
@@ -846,12 +846,12 @@ export class ComplianceRecordingService extends EventEmitter {
         expiringCount: expiringRecordings.length,
         deletedCount: expiredRecordings.length
       });
-    } catch (error) {
-      this.emit('retentionMonitoringError', { error: error.message });
+    } catch (error: any) {
+      this.emit('retentionMonitoringError', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async monitorRecordingQuality(): Promise<void> {
+  private async monitorRecordingQuality(): Promise<any> {
     try {
       const activeRecordings = Array.from(this.activeRecordings.values());
       
@@ -876,8 +876,8 @@ export class ComplianceRecordingService extends EventEmitter {
       this.emit('qualityMonitoringCompleted', { 
         sessionsMonitored: activeRecordings.length
       });
-    } catch (error) {
-      this.emit('qualityMonitoringError', { error: error.message });
+    } catch (error: any) {
+      this.emit('qualityMonitoringError', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -895,7 +895,7 @@ export class ComplianceRecordingService extends EventEmitter {
   private async validateParticipantConsent(
     participants: RecordingSession['participants'],
     policy: CompliancePolicy
-  ): Promise<void> {
+  ): Promise<any> {
     // Mock implementation
     if (policy.consentRequirements.explicitConsent) {
       for (const participant of participants) {
@@ -909,19 +909,19 @@ export class ComplianceRecordingService extends EventEmitter {
   private async initializeRecordingStreams(
     session: RecordingSession,
     policy: CompliancePolicy
-  ): Promise<void> {
+  ): Promise<any> {
     // Mock implementation - initialize recording streams based on policy
   }
 
-  private async stopRecordingStreams(session: RecordingSession): Promise<void> {
+  private async stopRecordingStreams(session: RecordingSession): Promise<any> {
     // Mock implementation
   }
 
-  private async pauseRecordingStreams(session: RecordingSession): Promise<void> {
+  private async pauseRecordingStreams(session: RecordingSession): Promise<any> {
     // Mock implementation
   }
 
-  private async resumeRecordingStreams(session: RecordingSession): Promise<void> {
+  private async resumeRecordingStreams(session: RecordingSession): Promise<any> {
     // Mock implementation
   }
 
@@ -1042,7 +1042,7 @@ export class ComplianceRecordingService extends EventEmitter {
     return `/exports/compliance_report_${Date.now()}.${format}`;
   }
 
-  private async createAlert(alertData: Omit<ComplianceAlert, 'id' | 'createdAt' | 'updatedAt' | 'escalation' | 'resolution'>): Promise<void> {
+  private async createAlert(alertData: Omit<ComplianceAlert, 'id' | 'createdAt' | 'updatedAt' | 'escalation' | 'resolution'>): Promise<any> {
     const alert: ComplianceAlert = {
       id: randomUUID(),
       ...alertData,
@@ -1056,23 +1056,23 @@ export class ComplianceRecordingService extends EventEmitter {
     this.emit('alertCreated', alert);
   }
 
-  private async checkPolicyViolations(): Promise<void> {
+  private async checkPolicyViolations(): Promise<any> {
     // Mock implementation
   }
 
-  private async monitorStorageCapacity(): Promise<void> {
+  private async monitorStorageCapacity(): Promise<any> {
     // Mock implementation
   }
 
-  private async checkConsentExpiry(): Promise<void> {
+  private async checkConsentExpiry(): Promise<any> {
     // Mock implementation
   }
 
-  private async monitorAccessPatterns(): Promise<void> {
+  private async monitorAccessPatterns(): Promise<any> {
     // Mock implementation
   }
 
-  private async deleteExpiredRecording(recording: ComplianceRecording): Promise<void> {
+  private async deleteExpiredRecording(recording: ComplianceRecording): Promise<any> {
     this.recordingStorage.delete(recording.id);
     this.emit('recordingDeleted', { 
       recordingId: recording.id, 
@@ -1088,7 +1088,7 @@ export class ComplianceRecordingService extends EventEmitter {
     return [];
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     // Clear all intervals
     this.monitoringIntervals.forEach((interval, key) => {
       clearInterval(interval);
@@ -1099,7 +1099,7 @@ export class ComplianceRecordingService extends EventEmitter {
     for (const [sessionId] of this.activeRecordings) {
       try {
         await this.stopRecordingSession(sessionId, 'service_shutdown');
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error stopping recording ${sessionId}:`, error);
       }
     }
@@ -1107,3 +1107,4 @@ export class ComplianceRecordingService extends EventEmitter {
     this.emit('complianceRecordingShutdown');
   }
 }
+

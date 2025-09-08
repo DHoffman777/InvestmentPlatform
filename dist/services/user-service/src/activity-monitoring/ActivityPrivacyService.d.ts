@@ -238,6 +238,7 @@ export declare class ActivityPrivacyService extends EventEmitter {
     private dataFlowMappings;
     private anonymizationCache;
     private pseudonymMappings;
+    private getErrorMessage;
     constructor();
     createPrivacyPolicy(policy: Omit<PrivacyPolicy, 'id' | 'createdAt' | 'updatedAt'>): Promise<PrivacyPolicy>;
     applyPrivacyRules(activity: ActivityData, tenantId: string): Promise<ActivityData>;

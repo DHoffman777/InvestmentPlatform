@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OnboardingStatus = exports.MeetingType = exports.RelationshipType = exports.CommunicationMethod = exports.DocumentDeliveryPreference = exports.LiquidityNeeds = exports.InvestmentExperience = exports.RiskTolerance = exports.ClientStatus = exports.ClientType = void 0;
+exports.OnboardingStatus = exports.MeetingType = exports.RelationshipType = exports.CommunicationMethod = exports.LiquidityNeeds = exports.InvestmentExperience = exports.RiskTolerance = exports.ClientStatus = exports.ClientType = void 0;
 // Client Profile Types
 var ClientType;
 (function (ClientType) {
@@ -42,12 +42,7 @@ var LiquidityNeeds;
     LiquidityNeeds["HIGH"] = "HIGH";
     LiquidityNeeds["IMMEDIATE"] = "IMMEDIATE";
 })(LiquidityNeeds || (exports.LiquidityNeeds = LiquidityNeeds = {}));
-var DocumentDeliveryPreference;
-(function (DocumentDeliveryPreference) {
-    DocumentDeliveryPreference["ELECTRONIC"] = "ELECTRONIC";
-    DocumentDeliveryPreference["PAPER"] = "PAPER";
-    DocumentDeliveryPreference["BOTH"] = "BOTH";
-})(DocumentDeliveryPreference || (exports.DocumentDeliveryPreference = DocumentDeliveryPreference = {}));
+// DocumentDeliveryPreference is now imported from Prisma above
 var CommunicationMethod;
 (function (CommunicationMethod) {
     CommunicationMethod["EMAIL"] = "EMAIL";

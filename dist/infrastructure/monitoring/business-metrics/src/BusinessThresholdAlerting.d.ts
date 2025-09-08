@@ -114,12 +114,12 @@ export declare class BusinessThresholdAlerting extends EventEmitter {
     private notificationChannels;
     private templates;
     private anomalyDetectors;
-    private evaluationTimer;
-    private cleanupTimer;
+    private evaluationTimer?;
+    private cleanupTimer?;
     constructor();
     createAlertRule(rule: Partial<AlertRule>): Promise<AlertRule>;
     updateAlertRule(ruleId: string, updates: Partial<AlertRule>): Promise<AlertRule>;
-    deleteAlertRule(ruleId: string): Promise<void>;
+    deleteAlertRule(ruleId: string): Promise<any>;
     evaluateMetricValue(metricValue: MetricValue): Promise<AlertEvaluation[]>;
     evaluateKPI(kpiId: string, currentValue: number, context: Record<string, any>): Promise<AlertEvaluation[]>;
     private evaluateRule;
@@ -139,8 +139,8 @@ export declare class BusinessThresholdAlerting extends EventEmitter {
     private sendEmailNotification;
     private sendSlackNotification;
     private sendWebhookNotification;
-    resolveAlert(alertId: string, reason: string, userId?: string): Promise<void>;
-    acknowledgeAlert(alertId: string, userId: string, notes?: string): Promise<void>;
+    resolveAlert(alertId: string, reason: string, userId?: string): Promise<any>;
+    acknowledgeAlert(alertId: string, userId: string, notes?: string): Promise<any>;
     private generateAlertMessage;
     private generateKPIAlertMessage;
     private validateAlertRule;

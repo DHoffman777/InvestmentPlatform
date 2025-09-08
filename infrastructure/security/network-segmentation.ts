@@ -187,10 +187,10 @@ export class NetworkSegmentationManager extends EventEmitter {
 
       return newSegment;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('segmentError', {
         operation: 'create',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -222,10 +222,10 @@ export class NetworkSegmentationManager extends EventEmitter {
 
       return newRule;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('firewallRuleError', {
         operation: 'create',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -262,10 +262,10 @@ export class NetworkSegmentationManager extends EventEmitter {
 
       return newPolicy;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('networkPolicyError', {
         operation: 'create',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -331,20 +331,20 @@ export class NetworkSegmentationManager extends EventEmitter {
         reason: 'No applicable policy found - default deny'
       };
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('trafficEvaluationError', {
         sourceIp,
         destinationIp,
         port,
         protocol,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
 
       // Fail closed - deny traffic on evaluation error
       return {
         action: 'deny',
-        reason: `Evaluation error: ${error.message}`
+        reason: `Evaluation error: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   }
@@ -438,7 +438,7 @@ export class NetworkSegmentationManager extends EventEmitter {
   private validateCIDR(cidr: string): void {
     try {
       ipaddr.parseCIDR(cidr);
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Invalid CIDR notation: ${cidr}`);
     }
   }
@@ -450,7 +450,7 @@ export class NetworkSegmentationManager extends EventEmitter {
       const [existingAddr, existingPrefix] = ipaddr.parseCIDR(segment.cidr);
       
       // Check for overlapping subnets
-      if (newAddr.match(existingAddr, existingPrefix) || existingAddr.match(newAddr, newPrefix)) {
+      if ((newAddr as any).match(existingAddr, existingPrefix) || (existingAddr as any).match(newAddr, newPrefix)) {
         throw new Error(`Subnet ${newCidr} overlaps with existing segment ${segment.name} (${segment.cidr})`);
       }
     }
@@ -461,7 +461,7 @@ export class NetworkSegmentationManager extends EventEmitter {
 
     for (const segment of this.segments.values()) {
       const [segmentAddr, prefix] = ipaddr.parseCIDR(segment.cidr);
-      if (addr.match(segmentAddr, prefix)) {
+      if ((addr as any).match(segmentAddr, prefix)) {
         return segment;
       }
     }
@@ -536,7 +536,7 @@ export class NetworkSegmentationManager extends EventEmitter {
       try {
         const [patternAddr, prefix] = ipaddr.parseCIDR(pattern);
         const addr = ipaddr.process(ip);
-        return addr.match(patternAddr, prefix);
+        return (addr as any).match(patternAddr, prefix);
       } catch {
         return false;
       }
@@ -606,7 +606,7 @@ export class NetworkSegmentationManager extends EventEmitter {
     anomalies.push(...portScans);
 
     // Detect unusual traffic volumes
-    const volumeAnomalies = this.detectVolume Anomalies(traffic);
+    const volumeAnomalies = this.detectVolumeAnomalies(traffic);
     anomalies.push(...volumeAnomalies);
 
     // Detect geographic anomalies

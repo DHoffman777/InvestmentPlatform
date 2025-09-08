@@ -126,7 +126,7 @@ class StressTestingService {
         const percentChange = (totalImpact / currentValue) * 100;
         return {
             positionId: position.positionId,
-            instrumentId: position.instrumentId,
+            securityId: position.securityId,
             symbol: position.symbol,
             currentValue,
             stressedValue,
@@ -413,7 +413,7 @@ class StressTestingService {
         return [
             {
                 positionId: 'pos_001',
-                instrumentId: 'AAPL',
+                securityId: 'AAPL',
                 symbol: 'AAPL',
                 marketValue: 1000000,
                 assetClass: 'EQUITY',
@@ -423,7 +423,7 @@ class StressTestingService {
             },
             {
                 positionId: 'pos_002',
-                instrumentId: 'GOOGL',
+                securityId: 'GOOGL',
                 symbol: 'GOOGL',
                 marketValue: 800000,
                 assetClass: 'EQUITY',
@@ -433,7 +433,7 @@ class StressTestingService {
             },
             {
                 positionId: 'pos_003',
-                instrumentId: 'US10Y',
+                securityId: 'US10Y',
                 symbol: 'US10Y',
                 marketValue: 500000,
                 assetClass: 'FIXED_INCOME',

@@ -262,7 +262,6 @@ class NotificationPreferencesService extends events_1.EventEmitter {
         const isValidToken = this.validateVerificationToken(channel, verificationToken);
         if (isValidToken) {
             channel.verificationStatus.isVerified = true;
-            channel.verificationStatus.verifiedAt = new Date();
             channel.verifiedAt = new Date();
             preferences.lastUpdated = new Date();
             preferences.version++;
@@ -351,11 +350,14 @@ class NotificationPreferencesService extends events_1.EventEmitter {
             throw new Error('Notification preferences not found');
         }
         const newSchedule = {
+            ...schedule,
             id: (0, crypto_1.randomUUID)(),
             executionCount: 0,
-            nextExecution: this.calculateNextExecution(schedule),
-            ...schedule
+            lastExecution: undefined,
+            nextExecution: new Date(Date.now() + 24 * 60 * 60 * 1000) // Default 24 hours from now
         };
+        // Update with correct next execution time
+        newSchedule.nextExecution = this.calculateNextExecution(newSchedule);
         preferences.schedules.push(newSchedule);
         preferences.lastUpdated = new Date();
         preferences.version++;
@@ -567,7 +569,7 @@ class NotificationPreferencesService extends events_1.EventEmitter {
         // Simplified validation - would use proper token verification
         const expectedToken = channel.verificationStatus.verificationToken;
         const expiry = channel.verificationStatus.verificationExpiry;
-        return expectedToken === token && expiry && expiry > new Date();
+        return expectedToken === token && (expiry ? expiry > new Date() : false);
     }
     calculateNextExecution(schedule) {
         // Simplified calculation - would use proper cron parsing

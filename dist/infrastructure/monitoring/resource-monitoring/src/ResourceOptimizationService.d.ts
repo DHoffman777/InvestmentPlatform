@@ -159,5 +159,5 @@ export declare class ResourceOptimizationService extends EventEmitter {
     private executePostChecks;
     private executeRecommendation;
     private allChecksPass;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

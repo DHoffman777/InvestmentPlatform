@@ -2,18 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cashRouter = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { query, param, body, validationResult } = require('express-validator');
 const cashService_1 = require("../services/cashService");
 const database_1 = require("../config/database");
 const logger_1 = require("../utils/logger");
 const auth_1 = require("../middleware/auth");
-const decimal_js_1 = require("decimal.js");
 const router = (0, express_1.Router)();
 exports.cashRouter = router;
 const cashService = new cashService_1.CashService(database_1.prisma);
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -24,16 +23,16 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/cash/search - Search cash instruments
 router.get('/search', [
-    (0, express_validator_1.query)('query').optional().isString().trim().isLength({ max: 50 }).withMessage('Query must be max 50 characters'),
-    (0, express_validator_1.query)('assetClass').optional().isIn(['CASH_EQUIVALENT', 'TREASURY']).withMessage('Asset class must be CASH_EQUIVALENT or TREASURY'),
-    (0, express_validator_1.query)('instrumentType').optional().isString().trim().withMessage('Invalid instrument type'),
-    (0, express_validator_1.query)('issuerType').optional().isIn(['GOVERNMENT', 'BANK', 'CORPORATION', 'FEDERAL_AGENCY', 'GSE']).withMessage('Invalid issuer type'),
-    (0, express_validator_1.query)('minYield').optional().isNumeric().withMessage('Min yield must be numeric'),
-    (0, express_validator_1.query)('maxDaysToMaturity').optional().isInt({ min: 0 }).withMessage('Max days to maturity must be non-negative integer'),
-    (0, express_validator_1.query)('creditRating').optional().isString().trim().withMessage('Invalid credit rating'),
-    (0, express_validator_1.query)('riskLevel').optional().isIn(['LOWEST', 'LOW', 'MODERATE']).withMessage('Invalid risk level'),
-    (0, express_validator_1.query)('currency').optional().isString().trim().isLength({ min: 3, max: 3 }).withMessage('Currency must be 3 characters'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('Limit must be between 1 and 100'),
+    query('query').optional().isString().trim().isLength({ max: 50 }).withMessage('Query must be max 50 characters'),
+    query('assetClass').optional().isIn(['CASH_EQUIVALENT', 'TREASURY']).withMessage('Asset class must be CASH_EQUIVALENT or TREASURY'),
+    query('instrumentType').optional().isString().trim().withMessage('Invalid instrument type'),
+    query('issuerType').optional().isIn(['GOVERNMENT', 'BANK', 'CORPORATION', 'FEDERAL_AGENCY', 'GSE']).withMessage('Invalid issuer type'),
+    query('minYield').optional().isNumeric().withMessage('Min yield must be numeric'),
+    query('maxDaysToMaturity').optional().isInt({ min: 0 }).withMessage('Max days to maturity must be non-negative integer'),
+    query('creditRating').optional().isString().trim().withMessage('Invalid credit rating'),
+    query('riskLevel').optional().isIn(['LOWEST', 'LOW', 'MODERATE']).withMessage('Invalid risk level'),
+    query('currency').optional().isString().trim().isLength({ min: 3, max: 3 }).withMessage('Currency must be 3 characters'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('Limit must be between 1 and 100'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const filters = {
@@ -65,7 +64,7 @@ router.get('/search', [
 });
 // GET /api/cash/:symbol - Get detailed cash instrument information
 router.get('/:symbol', [
-    (0, express_validator_1.param)('symbol').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Invalid symbol'),
+    param('symbol').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Invalid symbol'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { symbol } = req.params;
@@ -88,38 +87,38 @@ router.get('/:symbol', [
 });
 // POST /api/cash/cash-equivalent - Create/update cash equivalent
 router.post('/cash-equivalent', [
-    (0, express_validator_1.body)('symbol').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Symbol is required'),
-    (0, express_validator_1.body)('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
-    (0, express_validator_1.body)('instrumentType').isIn(['TREASURY_BILL', 'COMMERCIAL_PAPER', 'CERTIFICATE_OF_DEPOSIT', 'BANKERS_ACCEPTANCE', 'MONEY_MARKET_DEPOSIT', 'REPURCHASE_AGREEMENT', 'FEDERAL_FUNDS']).withMessage('Invalid instrument type'),
-    (0, express_validator_1.body)('currency').isString().isLength({ min: 3, max: 3 }).withMessage('Currency is required and must be 3 characters'),
-    (0, express_validator_1.body)('country').isString().trim().isLength({ min: 2, max: 2 }).withMessage('Country code is required and must be 2 characters'),
-    (0, express_validator_1.body)('minimumDenomination').isNumeric().withMessage('Minimum denomination is required and must be numeric'),
-    (0, express_validator_1.body)('issuer').isString().trim().withMessage('Issuer is required'),
-    (0, express_validator_1.body)('issuerType').isIn(['GOVERNMENT', 'BANK', 'CORPORATION', 'FEDERAL_AGENCY', 'GSE']).withMessage('Invalid issuer type'),
-    (0, express_validator_1.body)('riskLevel').isIn(['LOWEST', 'LOW', 'MODERATE']).withMessage('Invalid risk level'),
-    (0, express_validator_1.body)('liquidityRating').isIn(['DAILY', 'WEEKLY', 'MONTHLY', 'AT_MATURITY']).withMessage('Invalid liquidity rating'),
-    (0, express_validator_1.body)('isMoneyMarketEligible').isBoolean().withMessage('Money market eligible must be boolean'),
-    (0, express_validator_1.body)('maturityDate').optional().isISO8601().toDate().withMessage('Invalid maturity date'),
-    (0, express_validator_1.body)('issueDate').optional().isISO8601().toDate().withMessage('Invalid issue date'),
-    (0, express_validator_1.body)('daysToMaturity').optional().isInt({ min: 0 }).withMessage('Days to maturity must be non-negative integer'),
-    (0, express_validator_1.body)('parValue').optional().isNumeric().withMessage('Par value must be numeric'),
-    (0, express_validator_1.body)('currentYield').optional().isNumeric().withMessage('Current yield must be numeric'),
-    (0, express_validator_1.body)('discountRate').optional().isNumeric().withMessage('Discount rate must be numeric'),
-    (0, express_validator_1.body)('creditRating').optional().isString().trim().withMessage('Invalid credit rating'),
-    (0, express_validator_1.body)('isInsured').optional().isBoolean().withMessage('Is insured must be boolean'),
-    (0, express_validator_1.body)('insuranceProvider').optional().isString().trim().withMessage('Invalid insurance provider'),
+    body('symbol').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Symbol is required'),
+    body('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
+    body('instrumentType').isIn(['TREASURY_BILL', 'COMMERCIAL_PAPER', 'CERTIFICATE_OF_DEPOSIT', 'BANKERS_ACCEPTANCE', 'MONEY_MARKET_DEPOSIT', 'REPURCHASE_AGREEMENT', 'FEDERAL_FUNDS']).withMessage('Invalid instrument type'),
+    body('currency').isString().isLength({ min: 3, max: 3 }).withMessage('Currency is required and must be 3 characters'),
+    body('country').isString().trim().isLength({ min: 2, max: 2 }).withMessage('Country code is required and must be 2 characters'),
+    body('minimumDenomination').isNumeric().withMessage('Minimum denomination is required and must be numeric'),
+    body('issuer').isString().trim().withMessage('Issuer is required'),
+    body('issuerType').isIn(['GOVERNMENT', 'BANK', 'CORPORATION', 'FEDERAL_AGENCY', 'GSE']).withMessage('Invalid issuer type'),
+    body('riskLevel').isIn(['LOWEST', 'LOW', 'MODERATE']).withMessage('Invalid risk level'),
+    body('liquidityRating').isIn(['DAILY', 'WEEKLY', 'MONTHLY', 'AT_MATURITY']).withMessage('Invalid liquidity rating'),
+    body('isMoneyMarketEligible').isBoolean().withMessage('Money market eligible must be boolean'),
+    body('maturityDate').optional().isISO8601().toDate().withMessage('Invalid maturity date'),
+    body('issueDate').optional().isISO8601().toDate().withMessage('Invalid issue date'),
+    body('daysToMaturity').optional().isInt({ min: 0 }).withMessage('Days to maturity must be non-negative integer'),
+    body('parValue').optional().isNumeric().withMessage('Par value must be numeric'),
+    body('currentYield').optional().isNumeric().withMessage('Current yield must be numeric'),
+    body('discountRate').optional().isNumeric().withMessage('Discount rate must be numeric'),
+    body('creditRating').optional().isString().trim().withMessage('Invalid credit rating'),
+    body('isInsured').optional().isBoolean().withMessage('Is insured must be boolean'),
+    body('insuranceProvider').optional().isString().trim().withMessage('Invalid insurance provider'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:write']), async (req, res) => {
     try {
         const cashData = {
             ...req.body,
             securityType: 'CASH_EQUIVALENT',
-            minimumDenomination: new decimal_js_1.Decimal(req.body.minimumDenomination),
-            parValue: req.body.parValue ? new decimal_js_1.Decimal(req.body.parValue) : undefined,
-            currentYield: req.body.currentYield ? new decimal_js_1.Decimal(req.body.currentYield) : undefined,
-            discountRate: req.body.discountRate ? new decimal_js_1.Decimal(req.body.discountRate) : undefined,
-            bankDiscountYield: req.body.bankDiscountYield ? new decimal_js_1.Decimal(req.body.bankDiscountYield) : undefined,
-            bondEquivalentYield: req.body.bondEquivalentYield ? new decimal_js_1.Decimal(req.body.bondEquivalentYield) : undefined,
-            effectiveAnnualRate: req.body.effectiveAnnualRate ? new decimal_js_1.Decimal(req.body.effectiveAnnualRate) : undefined,
+            minimumDenomination: new Decimal(req.body.minimumDenomination),
+            parValue: req.body.parValue ? new Decimal(req.body.parValue) : undefined,
+            currentYield: req.body.currentYield ? new Decimal(req.body.currentYield) : undefined,
+            discountRate: req.body.discountRate ? new Decimal(req.body.discountRate) : undefined,
+            bankDiscountYield: req.body.bankDiscountYield ? new Decimal(req.body.bankDiscountYield) : undefined,
+            bondEquivalentYield: req.body.bondEquivalentYield ? new Decimal(req.body.bondEquivalentYield) : undefined,
+            effectiveAnnualRate: req.body.effectiveAnnualRate ? new Decimal(req.body.effectiveAnnualRate) : undefined,
         };
         const cashEquivalent = await cashService.upsertCashEquivalent(cashData);
         res.status(201).json({
@@ -140,45 +139,45 @@ router.post('/cash-equivalent', [
 });
 // POST /api/cash/treasury - Create/update treasury security
 router.post('/treasury', [
-    (0, express_validator_1.body)('symbol').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Symbol is required'),
-    (0, express_validator_1.body)('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
-    (0, express_validator_1.body)('cusip').isString().trim().isLength({ min: 9, max: 9 }).withMessage('CUSIP is required and must be 9 characters'),
-    (0, express_validator_1.body)('instrumentType').isIn(['TREASURY_BILL', 'TREASURY_NOTE', 'TREASURY_BOND', 'TREASURY_STRIP', 'TIPS']).withMessage('Invalid treasury instrument type'),
-    (0, express_validator_1.body)('maturityDate').isISO8601().toDate().withMessage('Maturity date is required'),
-    (0, express_validator_1.body)('issueDate').isISO8601().toDate().withMessage('Issue date is required'),
-    (0, express_validator_1.body)('parValue').isNumeric().withMessage('Par value is required and must be numeric'),
-    (0, express_validator_1.body)('minimumBid').isNumeric().withMessage('Minimum bid is required and must be numeric'),
-    (0, express_validator_1.body)('bidIncrement').isNumeric().withMessage('Bid increment is required and must be numeric'),
-    (0, express_validator_1.body)('daysToMaturity').isInt({ min: 0 }).withMessage('Days to maturity is required and must be non-negative integer'),
-    (0, express_validator_1.body)('dayCountConvention').isIn(['ACTUAL_ACTUAL', 'ACTUAL_360']).withMessage('Invalid day count convention'),
-    (0, express_validator_1.body)('principalPaymentDate').isISO8601().toDate().withMessage('Principal payment date is required'),
-    (0, express_validator_1.body)('auctionDate').optional().isISO8601().toDate().withMessage('Invalid auction date'),
-    (0, express_validator_1.body)('settlementDate').optional().isISO8601().toDate().withMessage('Invalid settlement date'),
-    (0, express_validator_1.body)('auctionType').optional().isIn(['SINGLE_PRICE', 'MULTIPLE_PRICE']).withMessage('Invalid auction type'),
-    (0, express_validator_1.body)('discountRate').optional().isNumeric().withMessage('Discount rate must be numeric'),
-    (0, express_validator_1.body)('couponRate').optional().isNumeric().withMessage('Coupon rate must be numeric'),
-    (0, express_validator_1.body)('yield').optional().isNumeric().withMessage('Yield must be numeric'),
-    (0, express_validator_1.body)('duration').optional().isNumeric().withMessage('Duration must be numeric'),
-    (0, express_validator_1.body)('convexity').optional().isNumeric().withMessage('Convexity must be numeric'),
+    body('symbol').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Symbol is required'),
+    body('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required'),
+    body('cusip').isString().trim().isLength({ min: 9, max: 9 }).withMessage('CUSIP is required and must be 9 characters'),
+    body('instrumentType').isIn(['TREASURY_BILL', 'TREASURY_NOTE', 'TREASURY_BOND', 'TREASURY_STRIP', 'TIPS']).withMessage('Invalid treasury instrument type'),
+    body('maturityDate').isISO8601().toDate().withMessage('Maturity date is required'),
+    body('issueDate').isISO8601().toDate().withMessage('Issue date is required'),
+    body('parValue').isNumeric().withMessage('Par value is required and must be numeric'),
+    body('minimumBid').isNumeric().withMessage('Minimum bid is required and must be numeric'),
+    body('bidIncrement').isNumeric().withMessage('Bid increment is required and must be numeric'),
+    body('daysToMaturity').isInt({ min: 0 }).withMessage('Days to maturity is required and must be non-negative integer'),
+    body('dayCountConvention').isIn(['ACTUAL_ACTUAL', 'ACTUAL_360']).withMessage('Invalid day count convention'),
+    body('principalPaymentDate').isISO8601().toDate().withMessage('Principal payment date is required'),
+    body('auctionDate').optional().isISO8601().toDate().withMessage('Invalid auction date'),
+    body('settlementDate').optional().isISO8601().toDate().withMessage('Invalid settlement date'),
+    body('auctionType').optional().isIn(['SINGLE_PRICE', 'MULTIPLE_PRICE']).withMessage('Invalid auction type'),
+    body('discountRate').optional().isNumeric().withMessage('Discount rate must be numeric'),
+    body('couponRate').optional().isNumeric().withMessage('Coupon rate must be numeric'),
+    body('yield').optional().isNumeric().withMessage('Yield must be numeric'),
+    body('duration').optional().isNumeric().withMessage('Duration must be numeric'),
+    body('convexity').optional().isNumeric().withMessage('Convexity must be numeric'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:write']), async (req, res) => {
     try {
         const treasuryData = {
             ...req.body,
             securityType: 'TREASURY',
-            parValue: new decimal_js_1.Decimal(req.body.parValue),
-            minimumBid: new decimal_js_1.Decimal(req.body.minimumBid),
-            bidIncrement: new decimal_js_1.Decimal(req.body.bidIncrement),
-            competitiveBidAccepted: req.body.competitiveBidAccepted ? new decimal_js_1.Decimal(req.body.competitiveBidAccepted) : undefined,
-            noncompetitiveBidAccepted: req.body.noncompetitiveBidAccepted ? new decimal_js_1.Decimal(req.body.noncompetitiveBidAccepted) : undefined,
-            totalIssued: req.body.totalIssued ? new decimal_js_1.Decimal(req.body.totalIssued) : undefined,
-            discountRate: req.body.discountRate ? new decimal_js_1.Decimal(req.body.discountRate) : undefined,
-            couponRate: req.body.couponRate ? new decimal_js_1.Decimal(req.body.couponRate) : undefined,
-            yield: req.body.yield ? new decimal_js_1.Decimal(req.body.yield) : undefined,
-            inflationIndexRatio: req.body.inflationIndexRatio ? new decimal_js_1.Decimal(req.body.inflationIndexRatio) : undefined,
-            realYield: req.body.realYield ? new decimal_js_1.Decimal(req.body.realYield) : undefined,
-            breakEvenInflationRate: req.body.breakEvenInflationRate ? new decimal_js_1.Decimal(req.body.breakEvenInflationRate) : undefined,
-            duration: req.body.duration ? new decimal_js_1.Decimal(req.body.duration) : undefined,
-            convexity: req.body.convexity ? new decimal_js_1.Decimal(req.body.convexity) : undefined,
+            parValue: new Decimal(req.body.parValue),
+            minimumBid: new Decimal(req.body.minimumBid),
+            bidIncrement: new Decimal(req.body.bidIncrement),
+            competitiveBidAccepted: req.body.competitiveBidAccepted ? new Decimal(req.body.competitiveBidAccepted) : undefined,
+            noncompetitiveBidAccepted: req.body.noncompetitiveBidAccepted ? new Decimal(req.body.noncompetitiveBidAccepted) : undefined,
+            totalIssued: req.body.totalIssued ? new Decimal(req.body.totalIssued) : undefined,
+            discountRate: req.body.discountRate ? new Decimal(req.body.discountRate) : undefined,
+            couponRate: req.body.couponRate ? new Decimal(req.body.couponRate) : undefined,
+            yield: req.body.yield ? new Decimal(req.body.yield) : undefined,
+            inflationIndexRatio: req.body.inflationIndexRatio ? new Decimal(req.body.inflationIndexRatio) : undefined,
+            realYield: req.body.realYield ? new Decimal(req.body.realYield) : undefined,
+            breakEvenInflationRate: req.body.breakEvenInflationRate ? new Decimal(req.body.breakEvenInflationRate) : undefined,
+            duration: req.body.duration ? new Decimal(req.body.duration) : undefined,
+            convexity: req.body.convexity ? new Decimal(req.body.convexity) : undefined,
         };
         const treasury = await cashService.upsertTreasury(treasuryData);
         res.status(201).json({

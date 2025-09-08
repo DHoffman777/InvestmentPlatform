@@ -48,6 +48,6 @@ export declare class ResourceMonitoringController extends EventEmitter {
     private setupErrorHandling;
     private authenticateRequest;
     private getContentType;
-    start(): Promise<void>;
-    shutdown(): Promise<void>;
+    start(): Promise<any>;
+    shutdown(): Promise<any>;
 }

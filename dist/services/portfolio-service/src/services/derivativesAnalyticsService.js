@@ -18,7 +18,7 @@ class DerivativesAnalyticsService {
         const warnings = [];
         try {
             // Get instrument details
-            const instrument = await this.getDerivativeInstrument(request.instrumentId, tenantId);
+            const instrument = await this.getDerivativeInstrument(request.securityId, tenantId);
             if (!instrument) {
                 throw new Error('Derivative instrument not found');
             }
@@ -67,7 +67,7 @@ class DerivativesAnalyticsService {
             const greeks = {
                 id: this.generateId(),
                 tenantId,
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 calculationDate: new Date(),
                 // Core Greeks
                 delta: greeksResult.delta,
@@ -103,9 +103,9 @@ class DerivativesAnalyticsService {
             await this.storeGreeksCalculation(greeks);
             // Publish event
             await this.publishGreeksCalculatedEvent(greeks, userId);
-            logger_1.logger.info(`Greeks calculated for ${request.instrumentId}`, {
+            logger_1.logger.info(`Greeks calculated for ${request.securityId}`, {
                 tenantId,
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 model,
                 calculationTime: greeks.calculationTime
             });
@@ -244,7 +244,7 @@ class DerivativesAnalyticsService {
     async calculateImpliedVolatility(request, tenantId, userId) {
         const startTime = Date.now();
         try {
-            const instrument = await this.getDerivativeInstrument(request.instrumentId, tenantId);
+            const instrument = await this.getDerivativeInstrument(request.securityId, tenantId);
             if (!instrument || (instrument.derivativeType !== DerivativesAnalytics_1.DerivativeType.CALL_OPTION &&
                 instrument.derivativeType !== DerivativesAnalytics_1.DerivativeType.PUT_OPTION)) {
                 throw new Error('Invalid option instrument');
@@ -260,7 +260,7 @@ class DerivativesAnalyticsService {
             const impliedVol = await this.solveImpliedVolatility(option, marketPrice, underlyingPrice, riskFreeRate, dividendYield, timeToExpiration);
             // Get historical context
             const historicalVol = await this.getHistoricalVolatility(option.underlyingSymbol, 30);
-            const ivHistory = await this.getImpliedVolatilityHistory(request.instrumentId, 252);
+            const ivHistory = await this.getImpliedVolatilityHistory(request.securityId, 252);
             // Calculate percentile ranking
             const ivRank = this.calculatePercentileRank(impliedVol, ivHistory);
             const ivPercentile = ivRank / 100;
@@ -273,7 +273,7 @@ class DerivativesAnalyticsService {
             const analysis = {
                 id: this.generateId(),
                 tenantId,
-                instrumentId: request.instrumentId,
+                securityId: request.securityId,
                 analysisDate: new Date(),
                 impliedVolatility: impliedVol,
                 historicalVolatility: historicalVol,
@@ -387,7 +387,7 @@ class DerivativesAnalyticsService {
         }
     }
     // Mark-to-Market Valuation
-    async calculateMarkToMarket(instrumentId, tenantId, userId) {
+    async calculateMarkToMarket(securityId, tenantId, userId) {
         try {
             const instrument = await this.getDerivativeInstrument(instrumentId, tenantId);
             if (!instrument) {
@@ -588,7 +588,7 @@ class DerivativesAnalyticsService {
         return Math.random().toString(36).substring(2) + Date.now().toString(36);
     }
     // Database and external service methods (placeholder implementations)
-    async getDerivativeInstrument(instrumentId, tenantId) {
+    async getDerivativeInstrument(securityId, tenantId) {
         // Implementation would fetch from database
         return null;
     }
@@ -626,6 +626,67 @@ class DerivativesAnalyticsService {
             userId,
             timestamp: new Date().toISOString()
         });
+    }
+    buildBinomialPriceTree(S, u, d, steps) {
+        const tree = [];
+        for (let i = 0; i <= steps; i++) {
+            tree[i] = [];
+            for (let j = 0; j <= i; j++) {
+                tree[i][j] = S * Math.pow(u, i - j) * Math.pow(d, j);
+            }
+        }
+        return tree;
+    }
+    buildBinomialOptionTree(option, priceTree, r, dt, p, steps) {
+        const tree = [];
+        const strike = option.strikePrice;
+        const isCall = option.optionType === 'CALL';
+        // Initialize final nodes
+        tree[steps] = [];
+        for (let j = 0; j <= steps; j++) {
+            const S = priceTree[steps][j];
+            tree[steps][j] = Math.max(0, isCall ? S - strike : strike - S);
+        }
+        // Work backwards
+        for (let i = steps - 1; i >= 0; i--) {
+            tree[i] = [];
+            for (let j = 0; j <= i; j++) {
+                const continuationValue = Math.exp(-r * dt) * (p * tree[i + 1][j] + (1 - p) * tree[i + 1][j + 1]);
+                const S = priceTree[i][j];
+                const intrinsicValue = Math.max(0, isCall ? S - strike : strike - S);
+                tree[i][j] = option.exerciseStyle === 'AMERICAN'
+                    ? Math.max(continuationValue, intrinsicValue)
+                    : continuationValue;
+            }
+        }
+        return tree;
+    }
+    buildBinomialOptionTreeWithTime(option, S, sigma, r, q, T, steps) {
+        const dt = T / steps;
+        const u = Math.exp(sigma * Math.sqrt(dt));
+        const d = 1 / u;
+        const p = (Math.exp((r - q) * dt) - d) / (u - d);
+        const priceTree = this.buildBinomialPriceTree(S, u, d, steps);
+        const optionTree = this.buildBinomialOptionTree(option, priceTree, r, dt, p, steps);
+        return optionTree[0][0];
+    }
+    buildBinomialOptionTreeWithVol(option, S, sigma, r, q, T, steps) {
+        const dt = T / steps;
+        const u = Math.exp(sigma * Math.sqrt(dt));
+        const d = 1 / u;
+        const p = (Math.exp((r - q) * dt) - d) / (u - d);
+        const priceTree = this.buildBinomialPriceTree(S, u, d, steps);
+        const optionTree = this.buildBinomialOptionTree(option, priceTree, r, dt, p, steps);
+        return optionTree[0][0];
+    }
+    buildBinomialOptionTreeWithRate(option, S, sigma, r, q, T, steps) {
+        const dt = T / steps;
+        const u = Math.exp(sigma * Math.sqrt(dt));
+        const d = 1 / u;
+        const p = (Math.exp((r - q) * dt) - d) / (u - d);
+        const priceTree = this.buildBinomialPriceTree(S, u, d, steps);
+        const optionTree = this.buildBinomialOptionTree(option, priceTree, r, dt, p, steps);
+        return optionTree[0][0];
     }
 }
 exports.DerivativesAnalyticsService = DerivativesAnalyticsService;

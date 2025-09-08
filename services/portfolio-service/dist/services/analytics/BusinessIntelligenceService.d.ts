@@ -1,4 +1,5 @@
 import { BusinessIntelligenceReport } from '../../models/analytics/Analytics';
+import { EventPublisher } from '../../utils/eventPublisher';
 interface ReportGenerationRequest {
     tenantId: string;
     reportType: BusinessIntelligenceReport['reportType'];
@@ -139,7 +140,7 @@ export declare class BusinessIntelligenceService {
     private biIntegrations;
     private reportTemplates;
     private scheduledReports;
-    constructor();
+    constructor(eventPublisher?: EventPublisher);
     generateReport(request: ReportGenerationRequest): Promise<BusinessIntelligenceReport>;
     generateExecutiveSummary(tenantId: string, period: {
         startDate: Date;
@@ -151,13 +152,13 @@ export declare class BusinessIntelligenceService {
         endDate: Date;
     }): Promise<ClientAnalysis>;
     configureBIIntegration(tenantId: string, config: Omit<BIIntegrationConfig, 'lastSync'>): Promise<BIIntegrationConfig>;
-    syncWithBITool(tenantId: string): Promise<void>;
+    syncWithBITool(tenantId: string): Promise<any>;
     scheduleAutomatedReports(tenantId: string, reportConfigs: {
         category: BusinessIntelligenceReport['category'];
         frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly';
         recipients: string[];
         format: BusinessIntelligenceReport['format'];
-    }[]): Promise<void>;
+    }[]): Promise<any>;
     getReportHistory(tenantId: string, category?: BusinessIntelligenceReport['category'], limit?: number): Promise<BusinessIntelligenceReport[]>;
     exportReport(reportId: string, format: 'pdf' | 'excel' | 'json' | 'html'): Promise<{
         content: string;

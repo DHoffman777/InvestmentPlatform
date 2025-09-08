@@ -201,5 +201,5 @@ export declare class ResourceEfficiencyAnalyticsService extends EventEmitter {
     private determineImprovementPriority;
     private estimateEffort;
     private getCostData;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

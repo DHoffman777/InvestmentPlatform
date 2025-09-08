@@ -309,7 +309,7 @@ export interface CategoryConfusion {
   confidence_range: string;
 }
 
-export class CommunicationCategorizationService extends EventEmitter {
+class CommunicationCategorizationService extends EventEmitter {
   private config: CategorizationConfiguration;
   private rules: Map<string, CategorizationRule>;
   private keywordSets: Map<string, KeywordSet>;
@@ -386,7 +386,7 @@ export class CommunicationCategorizationService extends EventEmitter {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error categorizing message ${message.id}:`, error);
       const fallbackResult = this.createFallbackResult(message);
       fallbackResult.processing_time_ms = Date.now() - startTime;
@@ -423,7 +423,7 @@ export class CommunicationCategorizationService extends EventEmitter {
     return results;
   }
 
-  async addRule(rule: CategorizationRule): Promise<void> {
+  async addRule(rule: CategorizationRule): Promise<any> {
     // Validate rule
     this.validateRule(rule);
 
@@ -431,7 +431,7 @@ export class CommunicationCategorizationService extends EventEmitter {
     this.emit('rule_added', rule);
   }
 
-  async updateRule(ruleId: string, updates: Partial<CategorizationRule>): Promise<void> {
+  async updateRule(ruleId: string, updates: Partial<CategorizationRule>): Promise<any> {
     const existingRule = this.rules.get(ruleId);
     if (!existingRule) {
       throw new Error(`Rule ${ruleId} not found`);
@@ -444,7 +444,7 @@ export class CommunicationCategorizationService extends EventEmitter {
     this.emit('rule_updated', updatedRule);
   }
 
-  async deleteRule(ruleId: string): Promise<void> {
+  async deleteRule(ruleId: string): Promise<any> {
     const rule = this.rules.get(ruleId);
     if (rule) {
       this.rules.delete(ruleId);
@@ -452,17 +452,17 @@ export class CommunicationCategorizationService extends EventEmitter {
     }
   }
 
-  async addKeywordSet(keywordSet: KeywordSet): Promise<void> {
+  async addKeywordSet(keywordSet: KeywordSet): Promise<any> {
     this.keywordSets.set(keywordSet.id, keywordSet);
     this.emit('keyword_set_added', keywordSet);
   }
 
-  async addPatternMatcher(pattern: PatternMatcher): Promise<void> {
+  async addPatternMatcher(pattern: PatternMatcher): Promise<any> {
     this.patternMatchers.set(pattern.id, pattern);
     this.emit('pattern_matcher_added', pattern);
   }
 
-  async trainModel(trainingData: TrainingData[]): Promise<void> {
+  async trainModel(trainingData: TrainingData[]): Promise<any> {
     if (!this.config.ml_categorization_enabled) {
       throw new Error('ML categorization is not enabled');
     }
@@ -483,7 +483,7 @@ export class CommunicationCategorizationService extends EventEmitter {
     });
   }
 
-  async recordFeedback(feedback: FeedbackData): Promise<void> {
+  async recordFeedback(feedback: FeedbackData): Promise<any> {
     this.feedbackData.push(feedback);
 
     // Update rule performance if applicable
@@ -1168,3 +1168,4 @@ interface MLPrediction {
 }
 
 export { CommunicationCategorizationService };
+

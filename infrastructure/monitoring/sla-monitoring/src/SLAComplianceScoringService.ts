@@ -731,7 +731,7 @@ export class SLAComplianceScoringService extends EventEmitter {
     return ageMinutes < 15; // Cache valid for 15 minutes
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     this.scores.clear();
     this.scoringCache.clear();
     this.benchmarkData.clear();

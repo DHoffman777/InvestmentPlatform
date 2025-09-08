@@ -1,5 +1,5 @@
 import { PrismaClient, Security } from '@prisma/client';
-import { Decimal } from 'decimal.js';
+import { Prisma } from '@prisma/client';
 export interface ETFData {
     symbol: string;
     name: string;
@@ -11,23 +11,23 @@ export interface ETFData {
     country?: string;
     sector?: string;
     category?: string;
-    managementFee: Decimal;
-    expenseRatio: Decimal;
+    managementFee: Prisma.Decimal;
+    expenseRatio: Prisma.Decimal;
     trackingIndex?: string;
-    aum: Decimal;
-    dividendYield?: Decimal;
+    aum: Prisma.Decimal;
+    dividendYield?: Prisma.Decimal;
     distributionFrequency?: 'ANNUAL' | 'SEMI_ANNUAL' | 'QUARTERLY' | 'MONTHLY';
     fundFamily: string;
     inceptionDate: Date;
     primaryBenchmark?: string;
-    averageDailyVolume?: Decimal;
+    averageDailyVolume?: Prisma.Decimal;
     navFrequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
     assetClass: 'EQUITY_ETF' | 'BOND_ETF' | 'COMMODITY_ETF' | 'CURRENCY_ETF' | 'REAL_ESTATE_ETF' | 'MIXED_ETF';
     investmentStyle?: 'GROWTH' | 'VALUE' | 'BLEND';
     marketCapFocus?: 'LARGE_CAP' | 'MID_CAP' | 'SMALL_CAP' | 'MULTI_CAP';
     geographicFocus?: 'DOMESTIC' | 'INTERNATIONAL' | 'EMERGING_MARKETS' | 'GLOBAL';
-    beta?: Decimal;
-    standardDeviation?: Decimal;
+    beta?: Prisma.Decimal;
+    standardDeviation?: Prisma.Decimal;
     isActive?: boolean;
 }
 export interface MutualFundData {
@@ -40,21 +40,21 @@ export interface MutualFundData {
     country?: string;
     sector?: string;
     category?: string;
-    managementFee: Decimal;
-    expenseRatio: Decimal;
-    frontLoadFee?: Decimal;
-    backLoadFee?: Decimal;
-    redemptionFee?: Decimal;
-    aum: Decimal;
-    dividendYield?: Decimal;
+    managementFee: Prisma.Decimal;
+    expenseRatio: Prisma.Decimal;
+    frontLoadFee?: Prisma.Decimal;
+    backLoadFee?: Prisma.Decimal;
+    redemptionFee?: Prisma.Decimal;
+    aum: Prisma.Decimal;
+    dividendYield?: Prisma.Decimal;
     distributionFrequency?: 'ANNUAL' | 'SEMI_ANNUAL' | 'QUARTERLY' | 'MONTHLY';
     fundFamily: string;
     inceptionDate: Date;
     primaryBenchmark?: string;
     fundManager?: string;
     shareClass: 'A' | 'B' | 'C' | 'I' | 'R' | 'T' | 'Y';
-    minimumInvestment: Decimal;
-    minimumSubsequent?: Decimal;
+    minimumInvestment: Prisma.Decimal;
+    minimumSubsequent?: Prisma.Decimal;
     navFrequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
     cutoffTime: string;
     settlementDays: number;
@@ -62,8 +62,8 @@ export interface MutualFundData {
     investmentStyle?: 'GROWTH' | 'VALUE' | 'BLEND';
     marketCapFocus?: 'LARGE_CAP' | 'MID_CAP' | 'SMALL_CAP' | 'MULTI_CAP';
     geographicFocus?: 'DOMESTIC' | 'INTERNATIONAL' | 'EMERGING_MARKETS' | 'GLOBAL';
-    beta?: Decimal;
-    standardDeviation?: Decimal;
+    beta?: Prisma.Decimal;
+    standardDeviation?: Prisma.Decimal;
     morningstarRating?: 1 | 2 | 3 | 4 | 5;
     isActive?: boolean;
     isClosedToNewInvestors?: boolean;
@@ -74,9 +74,9 @@ export interface FundHolding {
     ticker?: string;
     cusip?: string;
     isin?: string;
-    weight: Decimal;
-    shares?: Decimal;
-    marketValue: Decimal;
+    weight: Prisma.Decimal;
+    shares?: Prisma.Decimal;
+    marketValue: Prisma.Decimal;
     sector?: string;
     country?: string;
     asOfDate: Date;
@@ -84,15 +84,15 @@ export interface FundHolding {
 export interface FundPerformance {
     fundId: string;
     period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' | '3Y' | '5Y' | '10Y' | 'YTD' | 'INCEPTION';
-    totalReturn: Decimal;
-    annualizedReturn?: Decimal;
+    totalReturn: Prisma.Decimal;
+    annualizedReturn?: Prisma.Decimal;
     benchmark?: string;
-    benchmarkReturn?: Decimal;
-    alpha?: Decimal;
-    beta?: Decimal;
-    sharpeRatio?: Decimal;
-    volatility?: Decimal;
-    maxDrawdown?: Decimal;
+    benchmarkReturn?: Prisma.Decimal;
+    alpha?: Prisma.Decimal;
+    beta?: Prisma.Decimal;
+    sharpeRatio?: Prisma.Decimal;
+    volatility?: Prisma.Decimal;
+    maxDrawdown?: Prisma.Decimal;
     asOfDate: Date;
 }
 export declare class FundsService {

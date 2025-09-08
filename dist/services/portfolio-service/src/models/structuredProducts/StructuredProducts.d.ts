@@ -70,7 +70,7 @@ export declare enum RiskLevel {
 export interface StructuredProduct {
     id: string;
     tenantId: string;
-    instrumentId: string;
+    securityId: string;
     productName: string;
     productType: StructuredProductType;
     issuer: string;

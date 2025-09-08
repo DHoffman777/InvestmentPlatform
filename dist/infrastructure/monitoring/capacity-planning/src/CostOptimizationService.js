@@ -42,7 +42,7 @@ class CostOptimizationService extends events_1.EventEmitter {
             return optimization;
         }
         catch (error) {
-            this.emit('analysisFailed', { resourceId, error: error.message });
+            this.emit('analysisFailed', { resourceId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -151,7 +151,7 @@ class CostOptimizationService extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            this.emit('implementationFailed', { resourceId, optimizationId, error: error.message });
+            this.emit('implementationFailed', { resourceId, optimizationId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -486,7 +486,7 @@ class CostOptimizationService extends events_1.EventEmitter {
                 await this.performScheduledAnalysis();
             }
             catch (error) {
-                this.emit('scheduledAnalysisError', { error: error.message });
+                this.emit('scheduledAnalysisError', { error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }, this.config.analysisInterval);
     }

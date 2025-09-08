@@ -35,7 +35,7 @@ class DocumentFilingService {
                     autoClassificationResult = await this.performAutoClassification(request.document, request.extractedData);
                 }
                 catch (error) {
-                    errors.push(`Auto-classification failed: ${error.message}`);
+                    errors.push(`Auto-classification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                     filingStatus = 'PARTIAL';
                 }
             }
@@ -45,7 +45,7 @@ class DocumentFilingService {
                     tagGenerationResult = await this.generateTags(request.document, request.extractedData);
                 }
                 catch (error) {
-                    errors.push(`Tag generation failed: ${error.message}`);
+                    errors.push(`Tag generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                     filingStatus = 'PARTIAL';
                 }
             }
@@ -75,7 +75,7 @@ class DocumentFilingService {
                     }
                 }
                 catch (error) {
-                    errors.push(`Rule execution failed for ${rule.name}: ${error.message}`);
+                    errors.push(`Rule execution failed for ${rule.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
                     filingStatus = 'PARTIAL';
                 }
             }
@@ -85,7 +85,7 @@ class DocumentFilingService {
                 await this.moveDocumentToPath(request.document, filingPath);
             }
             catch (error) {
-                errors.push(`Document move failed: ${error.message}`);
+                errors.push(`Document move failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 filingStatus = 'FAILED';
             }
             const generatedTags = [
@@ -134,7 +134,7 @@ class DocumentFilingService {
         catch (error) {
             this.logger.error('Document filing failed', {
                 documentId: request.documentId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             throw error;
@@ -156,7 +156,7 @@ class DocumentFilingService {
             };
         }
         catch (error) {
-            this.logger.warn('ML classification failed, falling back to rule-based', { error: error.message });
+            this.logger.warn('ML classification failed, falling back to rule-based', { error: error instanceof Error ? error.message : 'Unknown error' });
             return this.performRuleBasedClassification(document, extractedData);
         }
     }
@@ -216,7 +216,7 @@ class DocumentFilingService {
                 tags.push(...nlpTags);
             }
             catch (error) {
-                this.logger.warn('NLP tag generation failed', { error: error.message });
+                this.logger.warn('NLP tag generation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }
         const uniqueTags = this.deduplicateTags(tags);
@@ -343,7 +343,7 @@ class DocumentFilingService {
             }
         }
         catch (error) {
-            this.logger.warn('NLP tag generation failed', { error: error.message });
+            this.logger.warn('NLP tag generation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
         return tags;
     }
@@ -617,7 +617,7 @@ class DocumentFilingService {
             });
         }
         catch (error) {
-            this.logger.error('Failed to initialize filing service', { error: error.message });
+            this.logger.error('Failed to initialize filing service', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async loadDefaultFilingRules() {
@@ -720,7 +720,7 @@ class DocumentFilingService {
             };
         }
         catch (error) {
-            this.logger.warn('Failed to initialize classification/tagging engines', { error: error.message });
+            this.logger.warn('Failed to initialize classification/tagging engines', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async publishFilingEvent(documentId, tenantId, result) {

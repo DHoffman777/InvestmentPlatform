@@ -323,8 +323,8 @@ export class SettlementFailurePredictionService extends EventEmitter {
 
       return prediction;
 
-    } catch (error) {
-      this.emit('predictionError', { instructionId: input.instructionId, error: error.message });
+    } catch (error: any) {
+      this.emit('predictionError', { instructionId: input.instructionId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -357,7 +357,7 @@ export class SettlementFailurePredictionService extends EventEmitter {
     const priorityMap = { 'LOW': 0.25, 'MEDIUM': 0.5, 'HIGH': 0.75, 'CRITICAL': 1.0 };
     features.set('priority_score', priorityMap[input.priority]);
     
-    const methodMap = { 'DVP': 0.8, 'FOP': 0.6, 'RVP': 0.7, 'CASH': 0.9 };
+    const methodMap: Record<string, number> = { 'DVP': 0.8, 'FOP': 0.6, 'RVP': 0.7, 'CASH': 0.9 };
     features.set('settlement_method_score', methodMap[input.settlementMethod] || 0.5);
 
     // Market stress level
@@ -781,7 +781,7 @@ export class SettlementFailurePredictionService extends EventEmitter {
     ];
   }
 
-  public async updatePredictionAccuracy(instructionId: string, actualOutcome: 'SUCCESS' | 'FAILURE', actualDelayDays?: number): Promise<void> {
+  public async updatePredictionAccuracy(instructionId: string, actualOutcome: 'SUCCESS' | 'FAILURE', actualDelayDays?: number): Promise<any> {
     const predictions = this.predictionHistory.get(instructionId) || [];
     if (predictions.length === 0) return;
 
@@ -808,7 +808,7 @@ export class SettlementFailurePredictionService extends EventEmitter {
     prediction: PredictionResult, 
     actualFailure: boolean, 
     actualDelay?: number
-  ): Promise<void> {
+  ): Promise<any> {
     const modelVersion = prediction.modelVersion;
     let metrics = this.performanceMetrics.get(modelVersion);
 
@@ -966,3 +966,4 @@ export class SettlementFailurePredictionService extends EventEmitter {
     };
   }
 }
+

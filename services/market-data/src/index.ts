@@ -63,7 +63,7 @@ app.use(morgan('combined', {
 }));
 
 // Request ID middleware
-app.use((req, res, next) => {
+app.use((req: any, res: any, next: any) => {
   const requestId = req.headers['x-request-id'] as string || 
     Math.random().toString(36).substring(2, 15);
   req.headers['x-request-id'] = requestId;
@@ -72,7 +72,7 @@ app.use((req, res, next) => {
 });
 
 // Request logging
-app.use((req, res, next) => {
+app.use((req: any, res: any, next: any) => {
   logger.info('Request received', {
     method: req.method,
     path: req.path,
@@ -102,7 +102,7 @@ app.get('/metrics', async (req, res) => {
     res.set('Content-Type', register.contentType);
     const metrics = await register.metrics();
     res.send(metrics);
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error generating metrics:', error);
     res.status(500).send('Error generating metrics');
   }
@@ -134,20 +134,25 @@ app.get('/', (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
+// Server instance
+let serverInstance: any = null;
+
 // Graceful shutdown handler
 const gracefulShutdown = async (signal: string) => {
   logger.info(`Received ${signal}, shutting down gracefully...`);
   
   // Close server
-  server.close(() => {
-    logger.info('HTTP server closed');
-  });
+  if (serverInstance) {
+    serverInstance.close(() => {
+      logger.info('HTTP server closed');
+    });
+  }
 
   // Close database connection
   try {
     await prisma.$disconnect();
     logger.info('Database connection closed');
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error closing database connection:', error);
   }
 
@@ -155,7 +160,7 @@ const gracefulShutdown = async (signal: string) => {
   try {
     const { closeRedis } = await import('./config/redis');
     await closeRedis();
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error closing Redis connection:', error);
   }
 
@@ -175,7 +180,7 @@ const startServer = async () => {
     logger.info('Database connected successfully');
 
     // Start server
-    const server = app.listen(PORT, () => {
+    serverInstance = app.listen(PORT, () => {
       logger.info(`Market Data Service started successfully`, {
         port: PORT,
         environment: process.env.NODE_ENV || 'development',
@@ -188,14 +193,15 @@ const startServer = async () => {
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-    return server;
-  } catch (error) {
+    return serverInstance;
+  } catch (error: any) {
     logger.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
 // Start the server
-const server = startServer();
+startServer();
 
 export default app;
+

@@ -10,17 +10,34 @@
   ],
   "scripts": {
     "dev": "docker-compose up -d",
-    "build": "lerna run build",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 lerna run build",
+    "build:auth": "cross-env NODE_OPTIONS=--max-old-space-size=4096 lerna run build --scope=@investment-platform/auth-service",
+    "build:portfolio": "cross-env NODE_OPTIONS=--max-old-space-size=4096 lerna run build --scope=portfolio-service",
     "test": "lerna run test",
     "lint": "lerna run lint",
     "clean": "lerna clean",
     "bootstrap": "lerna bootstrap"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/d3-array": "^3.2.1",
+    "@types/d3-scale": "^4.0.9",
+    "@types/d3-shape": "^3.1.7",
     "@types/dockerode": "^3.3.42",
+    "@types/express-validator": "^2.20.33",
+    "@types/helmet": "^0.0.48",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/lodash": "^4.17.20",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^20.0.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react-native-vector-icons": "^6.4.18",
+    "@types/speakeasy": "^2.0.10",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "cross-env": "^10.0.0",
     "eslint": "^8.0.0",
     "lerna": "^8.2.3",
     "prettier": "^3.0.0",
@@ -28,5 +45,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@types/cron": "^2.0.1",
+    "cron": "^4.3.3"
   }
 }

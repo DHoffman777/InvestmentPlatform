@@ -174,5 +174,5 @@ export declare class ErrorRecoveryService extends EventEmitter {
     getActiveRecoveries(): RecoveryExecution[];
     getRecoveryHistory(errorId?: string): Promise<RecoveryExecution[]>;
     cancelRecovery(executionId: string, cancelledBy: string): Promise<boolean>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

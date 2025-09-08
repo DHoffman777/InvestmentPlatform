@@ -1,14 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateRequest = void 0;
-const expressValidator = require('express-validator');
-const { validationResult } = expressValidator;
+const express_validator_1 = require("express-validator");
 const logger_1 = require("../config/logger");
 const validateRequest = (validations) => {
     return async (req, res, next) => {
         // Run all validations
         await Promise.all(validations.map(validation => validation.run(req)));
-        const errors = validationResult(req);
+        const errors = (0, express_validator_1.validationResult)(req);
         if (!errors.isEmpty()) {
             logger_1.logger.warn('Validation failed:', {
                 path: req.path,

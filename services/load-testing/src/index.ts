@@ -55,10 +55,10 @@ loadTestService.on('testCompleted', ({ testId, result }) => {
   console.log(`  Throughput: ${result.summary.throughput.toFixed(2)} RPS`);
   
   // Log threshold results
-  const failedThresholds = result.thresholdResults.filter(t => !t.passed);
+  const failedThresholds = result.thresholdResults.filter((t: any) => !t.passed);
   if (failedThresholds.length > 0) {
     console.log('  Failed thresholds:');
-    failedThresholds.forEach(t => {
+    failedThresholds.forEach((t: any) => {
       console.log(`    ${t.name}: ${t.actual} (threshold: ${t.threshold})`);
     });
   }
@@ -66,7 +66,7 @@ loadTestService.on('testCompleted', ({ testId, result }) => {
   // Log recommendations
   if (result.recommendations.length > 0) {
     console.log('  Recommendations:');
-    result.recommendations.forEach(r => {
+    result.recommendations.forEach((r: any) => {
       console.log(`    [${r.priority}] ${r.title}: ${r.description}`);
     });
   }
@@ -96,7 +96,7 @@ const shutdown = async (signal: string) => {
     await loadTestService.shutdown();
     console.log('Shutdown completed successfully');
     process.exit(0);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error during shutdown:', error);
     process.exit(1);
   }

@@ -91,7 +91,7 @@ export interface TradeConfirmation {
     tradeId: string;
     orderId: string;
     executionId: string;
-    instrumentId: string;
+    securityId: string;
     quantity: number;
     price: number;
     grossAmount: number;
@@ -127,7 +127,7 @@ export interface SettlementInstruction {
     instructionType: SettlementInstructionType;
     instructionStatus: SettlementInstructionStatus;
     settlementDate: Date;
-    instrumentId: string;
+    securityId: string;
     quantity: number;
     settlementAmount: number;
     settlementCurrency: string;

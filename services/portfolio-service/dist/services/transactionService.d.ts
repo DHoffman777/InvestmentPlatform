@@ -1,18 +1,17 @@
-import { PrismaClient } from '@prisma/client';
-import { Decimal } from 'decimal.js';
+import { PrismaClient, Prisma } from '@prisma/client';
 export interface TradeCapture {
     source: 'MANUAL' | 'BROKER_API' | 'FIX_FEED' | 'FILE_UPLOAD' | 'CUSTODIAN_FEED';
     externalTradeId: string;
     portfolioId: string;
     securityId: string;
     transactionType: 'BUY' | 'SELL';
-    quantity: Decimal;
-    price: Decimal;
+    quantity: Prisma.Decimal;
+    price: Prisma.Decimal;
     tradeDate: Date;
     settleDate?: Date;
-    fees?: Decimal;
-    taxes?: Decimal;
-    commission?: Decimal;
+    fees?: Prisma.Decimal;
+    taxes?: Prisma.Decimal;
+    commission?: Prisma.Decimal;
     counterparty?: string;
     orderId?: string;
     executionId?: string;
@@ -34,7 +33,7 @@ export interface SettlementInstruction {
     transactionId: string;
     instructionType: 'DVP' | 'FREE_DELIVERY' | 'CASH_SETTLEMENT';
     deliveryDate: Date;
-    settlementAmount: Decimal;
+    settlementAmount: Prisma.Decimal;
     custodian: string;
     account: string;
     status: 'PENDING' | 'SENT' | 'CONFIRMED' | 'SETTLED' | 'FAILED';
@@ -90,14 +89,14 @@ export declare class TransactionService {
         startDate: Date;
         endDate: Date;
     }): Promise<{
-        totalCashIn: Decimal;
-        totalCashOut: Decimal;
-        netCashFlow: Decimal;
+        totalCashIn: Prisma.Decimal;
+        totalCashOut: Prisma.Decimal;
+        netCashFlow: Prisma.Decimal;
         transactions: Array<{
             transactionId: string;
             date: Date;
             type: string;
-            amount: Decimal;
+            amount: Prisma.Decimal;
             description: string;
         }>;
     }>;

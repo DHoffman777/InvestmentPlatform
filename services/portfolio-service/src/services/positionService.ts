@@ -1,26 +1,25 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { logger } from '../utils/logger';
-import { Decimal } from 'decimal.js';
 
 export interface PositionAggregation {
   portfolioId: string;
   securityId: string;
-  totalQuantity: Decimal;
-  averageCostBasis: Decimal;
-  totalCostBasis: Decimal;
-  currentMarketValue: Decimal;
-  unrealizedGainLoss: Decimal;
-  unrealizedGainLossPercentage: Decimal;
-  dayChange: Decimal;
-  dayChangePercentage: Decimal;
+  totalQuantity: Prisma.Decimal;
+  averageCostBasis: Prisma.Decimal;
+  totalCostBasis: Prisma.Decimal;
+  currentMarketValue: Prisma.Decimal;
+  unrealizedGainLoss: Prisma.Decimal;
+  unrealizedGainLossPercentage: Prisma.Decimal;
+  dayChange: Prisma.Decimal;
+  dayChangePercentage: Prisma.Decimal;
   taxLots: any[];
 }
 
 export interface TaxLotMethod {
   method: 'FIFO' | 'LIFO' | 'HIFO' | 'SPECIFIC_ID' | 'AVERAGE_COST';
-  quantity: Decimal;
-  costBasis: Decimal;
-  realizedGainLoss?: Decimal;
+  quantity: Prisma.Decimal;
+  costBasis: Prisma.Decimal;
+  realizedGainLoss?: Prisma.Decimal;
 }
 
 export class PositionService {
@@ -102,7 +101,7 @@ export class PositionService {
           
           aggregatedMap.set(key, {
             portfolioId: position.portfolioId,
-            securityId: position.securityId,
+            securityId: position.securityId || '',
             totalQuantity: quantity,
             averageCostBasis: costBasis,
             totalCostBasis,
@@ -121,7 +120,7 @@ export class PositionService {
       });
 
       return Array.from(aggregatedMap.values());
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting aggregated positions:', { tenantId, portfolioIds, error });
       throw error;
     }
@@ -130,7 +129,7 @@ export class PositionService {
   // Calculate tax lots for a sale using specified method
   async calculateTaxLots(
     positionId: string,
-    sellQuantity: Decimal,
+    sellQuantity: Prisma.Decimal,
     method: TaxLotMethod['method'] = 'FIFO'
   ): Promise<TaxLotMethod[]> {
     try {
@@ -176,7 +175,7 @@ export class PositionService {
       }
 
       return selectedLots;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating tax lots:', { positionId, sellQuantity, method, error });
       throw error;
     }
@@ -214,7 +213,7 @@ export class PositionService {
       const discrepancies: any[] = [];
       const missing: any[] = [];
       const custodianMap = new Map(custodianPositions.map(p => [p.symbol, p]));
-      const currentMap = new Map(currentPositions.map(p => [p.security.symbol, p]));
+      const currentMap = new Map(currentPositions.map(p => [p.security?.symbol || '', p]));
 
       // Check for matches and discrepancies
       for (const [symbol, custodianPos] of custodianMap) {
@@ -230,7 +229,7 @@ export class PositionService {
           });
         } else {
           const quantityDiff = new Prisma.Decimal(custodianPos.quantity).sub(currentPos.quantity);
-          const valueDiff = new Prisma.Decimal(custodianPos.marketValue).sub(currentPos.marketValue || 0);
+          const valueDiff = new Prisma.Decimal(custodianPos.marketValue).sub(currentPos.marketValue?.toNumber() || 0);
           
           if (quantityDiff.abs().gte(new Prisma.Decimal(0.01)) || valueDiff.abs().gte(new Prisma.Decimal(0.01))) {
             discrepancies.push({
@@ -254,9 +253,9 @@ export class PositionService {
 
       // Check for extra positions in system
       const extra = currentPositions
-        .filter(pos => !custodianMap.has(pos.security.symbol))
+        .filter(pos => !custodianMap.has(pos.security?.symbol || ''))
         .map(pos => ({
-          symbol: pos.security.symbol,
+          symbol: pos.security?.symbol || '',
           systemQuantity: pos.quantity.toNumber(),
           systemMarketValue: pos.marketValue?.toNumber() || 0,
           custodianQuantity: 0,
@@ -264,7 +263,7 @@ export class PositionService {
         }));
 
       return { matches, discrepancies, missing, extra };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error reconciling positions:', { portfolioId, error });
       throw error;
     }
@@ -276,11 +275,11 @@ export class PositionService {
     startDate: Date,
     endDate: Date
   ): Promise<{
-    realizedPnL: Decimal;
-    unrealizedPnL: Decimal;
-    totalPnL: Decimal;
-    dividends: Decimal;
-    fees: Decimal;
+    realizedPnL: Prisma.Decimal;
+    unrealizedPnL: Prisma.Decimal;
+    totalPnL: Prisma.Decimal;
+    dividends: Prisma.Decimal;
+    fees: Prisma.Decimal;
     transactions: any[];
   }> {
     try {
@@ -331,14 +330,14 @@ export class PositionService {
         fees,
         transactions: position.transactions
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating position P&L:', { positionId, startDate, endDate, error });
       throw error;
     }
   }
 
   // Update position with latest market data
-  async updatePositionMarketValue(positionId: string, marketPrice: Decimal): Promise<any> {
+  async updatePositionMarketValue(positionId: string, marketPrice: Prisma.Decimal): Promise<any> {
     try {
       const position = await this.prisma.position.findUnique({
         where: { id: positionId }
@@ -364,7 +363,6 @@ export class PositionService {
           gainLoss,
           gainLossPercentage,
           dayChange,
-          dayChangePercentage,
           updatedAt: new Date(),
         }
       });
@@ -377,9 +375,10 @@ export class PositionService {
       });
 
       return updatedPosition;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating position market value:', { positionId, marketPrice, error });
       throw error;
     }
   }
 }
+

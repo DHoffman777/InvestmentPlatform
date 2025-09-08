@@ -129,7 +129,7 @@ export declare class CommunicationSystem {
     private deepMerge;
     private initializeServices;
     private setupServiceIntegrations;
-    initialize(): Promise<void>;
+    initialize(): Promise<any>;
     getCommunicationService(): CommunicationService;
     getAnalyticsService(): CommunicationAnalyticsService | undefined;
     getRecordingService(): ComplianceRecordingService | undefined;
@@ -155,7 +155,7 @@ export declare class CommunicationSystem {
             timeline?: any;
         };
     }>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 export { CommunicationService, CommunicationAnalyticsService, ComplianceRecordingService, CommunicationTimelineService, CommunicationController };
 export * from './CommunicationService';

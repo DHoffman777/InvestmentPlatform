@@ -138,10 +138,17 @@ export class ActivityRetentionService extends EventEmitter {
   private complianceRequirements: Map<string, ComplianceRequirement> = new Map();
   private dataSubjectRequests: Map<string, DataSubjectRequest> = new Map();
   private retentionJobs: Map<string, RetentionJob> = new Map();
-  private scheduledJobs: NodeJS.Timer[] = [];
+  private scheduledJobs: NodeJS.Timeout[] = [];
   private compressionProvider: any; // Would use actual compression library
   private encryptionProvider: any; // Would use actual encryption library
   private storageProvider: any; // Would use actual storage provider
+
+  private getErrorMessage(error: unknown): string {
+    if ((error as any) instanceof Error) {
+      return this.getErrorMessage(error);
+    }
+    return String(error);
+  }
 
   constructor() {
     super();
@@ -206,7 +213,12 @@ export class ActivityRetentionService extends EventEmitter {
     deleted: number;
     errors: string[];
   }> {
-    const results = {
+    const results: {
+      processed: number;
+      archived: number;
+      deleted: number;
+      errors: string[];
+    } = {
       processed: 0,
       archived: 0,
       deleted: 0,
@@ -237,8 +249,8 @@ export class ActivityRetentionService extends EventEmitter {
             if (rule.action === RetentionAction.DELETE) results.deleted++;
           });
         }
-      } catch (error) {
-        results.errors.push(`Error processing activity ${activity.id}: ${error.message}`);
+      } catch (error: any) {
+        results.errors.push(`Error processing activity ${activity.id}: ${this.getErrorMessage(error)}`);
       }
     }
 
@@ -320,8 +332,8 @@ export class ActivityRetentionService extends EventEmitter {
 
       this.emit('activityRetrieved', archiveEntry);
       return data;
-    } catch (error) {
-      this.emit('retrievalError', { archiveId, error: error.message });
+    } catch (error: any) {
+      this.emit('retrievalError', { archiveId, error: this.getErrorMessage(error) });
       return null;
     }
   }
@@ -454,7 +466,7 @@ export class ActivityRetentionService extends EventEmitter {
     return job;
   }
 
-  private async validatePolicyCompliance(policy: RetentionPolicy): Promise<void> {
+  private async validatePolicyCompliance(policy: RetentionPolicy): Promise<any> {
     const complianceReqs = Array.from(this.complianceRequirements.values())
       .filter(req => req.jurisdiction === 'GLOBAL' || req.jurisdiction === 'US'); // Simplified
 
@@ -533,7 +545,7 @@ export class ActivityRetentionService extends EventEmitter {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
-  private async applyPolicyToActivity(activity: ActivityData, policy: RetentionPolicy): Promise<void> {
+  private async applyPolicyToActivity(activity: ActivityData, policy: RetentionPolicy): Promise<any> {
     for (const rule of policy.rules) {
       if (this.evaluateRetentionCondition(rule.condition, activity)) {
         await this.executeRetentionAction(activity, rule, policy.id);
@@ -541,7 +553,7 @@ export class ActivityRetentionService extends EventEmitter {
     }
   }
 
-  private async executeRetentionAction(activity: ActivityData, rule: RetentionRule, policyId: string): Promise<void> {
+  private async executeRetentionAction(activity: ActivityData, rule: RetentionRule, policyId: string): Promise<any> {
     switch (rule.action) {
       case RetentionAction.ARCHIVE:
         await this.archiveActivity(activity, rule.archiveLocation || 'default', policyId);
@@ -569,7 +581,7 @@ export class ActivityRetentionService extends EventEmitter {
     }
   }
 
-  private async deleteActivity(activity: ActivityData, policyId: string): Promise<void> {
+  private async deleteActivity(activity: ActivityData, policyId: string): Promise<any> {
     // Check compliance before deletion
     const canDelete = await this.canDeleteActivity(activity);
     
@@ -581,7 +593,7 @@ export class ActivityRetentionService extends EventEmitter {
     this.emit('activityDeleted', { activityId: activity.id, policyId, timestamp: new Date() });
   }
 
-  private async anonymizeActivity(activity: ActivityData, policyId: string): Promise<void> {
+  private async anonymizeActivity(activity: ActivityData, policyId: string): Promise<any> {
     // Apply anonymization rules
     const anonymized = { ...activity };
     
@@ -598,7 +610,7 @@ export class ActivityRetentionService extends EventEmitter {
     this.emit('activityAnonymized', { original: activity.id, anonymized, policyId });
   }
 
-  private async compressActivity(activity: ActivityData, policyId: string): Promise<void> {
+  private async compressActivity(activity: ActivityData, policyId: string): Promise<any> {
     const compressed = await this.compressData(activity);
     this.emit('activityCompressed', { 
       activityId: activity.id, 
@@ -609,13 +621,13 @@ export class ActivityRetentionService extends EventEmitter {
     });
   }
 
-  private async migrateActivity(activity: ActivityData, destination: string, policyId: string): Promise<void> {
+  private async migrateActivity(activity: ActivityData, destination: string, policyId: string): Promise<any> {
     // Migrate to different storage tier or location
     await this.storeArchivedData(activity.id, activity, destination);
     this.emit('activityMigrated', { activityId: activity.id, destination, policyId });
   }
 
-  private async backupActivity(activity: ActivityData, policyId: string): Promise<void> {
+  private async backupActivity(activity: ActivityData, policyId: string): Promise<any> {
     // Create backup copy
     const backupLocation = `backup/${new Date().toISOString().split('T')[0]}`;
     await this.storeArchivedData(`backup_${activity.id}`, activity, backupLocation);
@@ -630,7 +642,7 @@ export class ActivityRetentionService extends EventEmitter {
     return applicableReqs.every(req => req.deletionAllowed);
   }
 
-  private async processDataSubjectRequestAsync(requestId: string): Promise<void> {
+  private async processDataSubjectRequestAsync(requestId: string): Promise<any> {
     const request = this.dataSubjectRequests.get(requestId);
     if (!request) return;
 
@@ -653,15 +665,15 @@ export class ActivityRetentionService extends EventEmitter {
 
       request.status = RequestStatus.COMPLETED;
       request.processedAt = new Date();
-    } catch (error) {
-      request.status = RequestStatus.FAILED;
-      request.processingNotes.push(`Error: ${error.message}`);
+    } catch (error: any) {
+      request.status = RequestStatus.REJECTED;
+      request.processingNotes.push(`Error: ${this.getErrorMessage(error)}`);
     }
 
     this.emit('dataSubjectRequestStatusChanged', request);
   }
 
-  private async processAccessRequest(request: DataSubjectRequest): Promise<void> {
+  private async processAccessRequest(request: DataSubjectRequest): Promise<any> {
     // Collect all data for the user
     const archivedData = await this.getArchivedActivities({ userId: request.userId });
     
@@ -672,7 +684,7 @@ export class ActivityRetentionService extends EventEmitter {
     this.emit('dataExportReady', { requestId: request.id, recordCount: archivedData.length });
   }
 
-  private async processErasureRequest(request: DataSubjectRequest): Promise<void> {
+  private async processErasureRequest(request: DataSubjectRequest): Promise<any> {
     // Find and delete/anonymize user data
     const archivedData = await this.getArchivedActivities({ userId: request.userId });
     
@@ -690,7 +702,7 @@ export class ActivityRetentionService extends EventEmitter {
     }
   }
 
-  private async processPortabilityRequest(request: DataSubjectRequest): Promise<void> {
+  private async processPortabilityRequest(request: DataSubjectRequest): Promise<any> {
     // Export user data in portable format
     const archivedData = await this.getArchivedActivities({ userId: request.userId });
     
@@ -704,7 +716,7 @@ export class ActivityRetentionService extends EventEmitter {
     this.emit('portableDataReady', { requestId: request.id, exportData });
   }
 
-  private async executeRetentionJobAsync(jobId: string): Promise<void> {
+  private async executeRetentionJobAsync(jobId: string): Promise<any> {
     const job = this.retentionJobs.get(jobId);
     if (!job) return;
 
@@ -731,8 +743,8 @@ export class ActivityRetentionService extends EventEmitter {
           // Update progress
           job.progress = Math.round((i + 1) / activitiesToProcess.length * 100);
           
-        } catch (error) {
-          job.errors.push(`Error processing activity ${activity.id}: ${error.message}`);
+        } catch (error: any) {
+          job.errors.push(`Error processing activity ${activity.id}: ${this.getErrorMessage(error)}`);
         }
       }
 
@@ -740,9 +752,9 @@ export class ActivityRetentionService extends EventEmitter {
       job.completedAt = new Date();
       job.progress = 100;
 
-    } catch (error) {
+    } catch (error: any) {
       job.status = JobStatus.FAILED;
-      job.errors.push(error.message);
+      job.errors.push(this.getErrorMessage(error));
     }
 
     this.emit('retentionJobCompleted', job);
@@ -757,7 +769,7 @@ export class ActivityRetentionService extends EventEmitter {
     this.scheduledJobs.push(schedulerInterval);
   }
 
-  private async checkScheduledRetention(): Promise<void> {
+  private async checkScheduledRetention(): Promise<any> {
     // Check policies that need to be applied
     for (const policy of this.retentionPolicies.values()) {
       if (policy.isActive && this.shouldRunPolicy(policy)) {
@@ -888,7 +900,7 @@ export class ActivityRetentionService extends EventEmitter {
     return randomUUID();
   }
 
-  private async storeArchivedData(id: string, data: any, location: string): Promise<void> {
+  private async storeArchivedData(id: string, data: any, location: string): Promise<any> {
     // Placeholder for actual storage implementation
     console.log(`Storing ${id} to ${location}`);
   }
@@ -916,3 +928,4 @@ export class ActivityRetentionService extends EventEmitter {
     this.scheduledJobs = [];
   }
 }
+

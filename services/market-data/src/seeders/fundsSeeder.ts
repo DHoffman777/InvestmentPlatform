@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { FundsService, ETFData, MutualFundData } from '../services/fundsService';
 import { logger } from '../utils/logger';
 import { Decimal } from 'decimal.js';
@@ -358,7 +358,7 @@ export async function seedFunds() {
       })),
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error during funds seeding:', {
       error: error instanceof Error ? error.message : String(error),
     });
@@ -381,3 +381,4 @@ if (require.main === module) {
       await prisma.$disconnect();
     });
 }
+

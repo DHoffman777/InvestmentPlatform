@@ -248,7 +248,7 @@ export declare class IntrusionDetectionSystem extends EventEmitter {
     /**
      * Manual incident response actions
      */
-    respondToIncident(incidentId: string, action: 'block_ip' | 'quarantine_user' | 'isolate_system' | 'escalate' | 'resolve', parameters?: Record<string, any>): Promise<void>;
+    respondToIncident(incidentId: string, action: 'block_ip' | 'quarantine_user' | 'isolate_system' | 'escalate' | 'resolve', parameters?: Record<string, any>): Promise<any>;
     private applySignatureRules;
     private applyBehavioralAnalysis;
     private checkThreatIntelligence;

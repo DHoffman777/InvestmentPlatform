@@ -1,6 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import { getKafkaService } from '../../utils/kafka-mock';
-import { StructuredProduct, CreateStructuredProductRequest, StructuredProductSearchRequest, StructuredProductSearchResponse, StructuredProductValuationRequest, StructuredProductValuationResponse, BarrierMonitoringRequest, BarrierMonitoringResponse, StructuredProductPosition, IssuerCreditRisk, StructuredProductType } from '../../models/structuredProducts/StructuredProducts';
+type StructuredProduct = any;
+type CreateStructuredProductRequest = any;
+type StructuredProductSearchRequest = any;
+type StructuredProductSearchResponse = any;
+type StructuredProductValuationRequest = any;
+type StructuredProductValuationResponse = any;
+type BarrierMonitoringRequest = any;
+type BarrierMonitoringResponse = any;
+type StructuredProductPosition = any;
+type IssuerCreditRisk = any;
+type StructuredProductType = any;
 export declare class StructuredProductsService {
     private prisma;
     private kafkaService;
@@ -60,5 +70,6 @@ export declare class StructuredProductsService {
     private publishPositionEvent;
     private getEmptyAnalytics;
     batchValuateProducts(productIds: string[], valuationDate: Date, tenantId: string): Promise<StructuredProductValuationResponse[]>;
-    startRealTimeMonitoring(tenantId: string): Promise<void>;
+    startRealTimeMonitoring(tenantId: string): Promise<any>;
 }
+export {};

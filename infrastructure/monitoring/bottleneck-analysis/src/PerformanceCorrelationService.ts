@@ -336,18 +336,18 @@ export class PerformanceCorrelationService extends EventEmitter {
 
       return correlations;
 
-    } catch (error) {
+    } catch (error: any) {
       const job = this.activeAnalyses.get(analysisId);
       if (job) {
         job.status = 'failed';
-        job.error = error.message;
+        job.error = error instanceof Error ? error.message : 'Unknown error';
         job.end_time = new Date();
       }
 
       this.emit('correlationAnalysisError', {
         analysisId,
         profileId: profile.id,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
 
@@ -405,8 +405,8 @@ export class PerformanceCorrelationService extends EventEmitter {
         if (patternCorrelation) {
           correlations.push(patternCorrelation);
         }
-      } catch (error) {
-        console.warn(`Failed to analyze correlation pattern ${patternId}:`, error.message);
+      } catch (error: any) {
+        console.warn(`Failed to analyze correlation pattern ${patternId}:`, error instanceof Error ? error.message : 'Unknown error');
       }
     }
 
@@ -571,7 +571,7 @@ export class PerformanceCorrelationService extends EventEmitter {
     return anomalies;
   }
 
-  private async analyzeCausality(correlations: CorrelationAnalysis[], profile: PerformanceProfile): Promise<void> {
+  private async analyzeCausality(correlations: CorrelationAnalysis[], profile: PerformanceProfile): Promise<any> {
     for (const correlation of correlations) {
       // Simplified causality analysis using Granger causality concept
       // In a real implementation, this would use more sophisticated methods
@@ -822,7 +822,7 @@ export class PerformanceCorrelationService extends EventEmitter {
   }
 
   private calculateMetricUXImpact(metric1: PerformanceMetric, metric2: PerformanceMetric, correlation: number): number {
-    const impactFactors = {
+    const impactFactors: Record<string, number> = {
       [PerformanceMetricType.RESPONSE_TIME]: 30,
       [PerformanceMetricType.ERROR_RATE]: 40,
       [PerformanceMetricType.THROUGHPUT]: 20,
@@ -837,7 +837,7 @@ export class PerformanceCorrelationService extends EventEmitter {
   }
 
   private calculateMetricOperationalImpact(metric1: PerformanceMetric, metric2: PerformanceMetric, correlation: number): number {
-    const categoryImpacts = {
+    const categoryImpacts: Record<string, number> = {
       [PerformanceCategory.CPU]: 25,
       [PerformanceCategory.MEMORY]: 25,
       [PerformanceCategory.DATABASE]: 30,
@@ -1055,7 +1055,7 @@ export class PerformanceCorrelationService extends EventEmitter {
     return `anomaly_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     // Cleanup resources
     this.correlationCache.clear();
     this.historicalCorrelations.clear();
@@ -1083,3 +1083,5 @@ interface CorrelationAnalysisJob {
   progress: number;
   error?: string;
 }
+
+

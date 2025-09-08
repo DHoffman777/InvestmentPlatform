@@ -131,7 +131,7 @@ const reconciliationRequestSchema = {
 router.post('/connections', 
   authMiddleware, 
   validateRequest(custodianConnectionSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -166,7 +166,7 @@ router.post('/connections',
         message: 'Custodian connection created successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating custodian connection:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -183,7 +183,7 @@ router.post('/connections',
  */
 router.get('/connections/:connectionId', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -209,7 +209,7 @@ router.get('/connections/:connectionId',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching custodian connection:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -226,7 +226,7 @@ router.get('/connections/:connectionId',
  */
 router.get('/connections', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const { status, custodianType, page = 1, limit = 50 } = req.query;
@@ -253,7 +253,7 @@ router.get('/connections',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error listing custodian connections:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -271,7 +271,7 @@ router.get('/connections',
 router.post('/connections/:connectionId/data-feed', 
   authMiddleware,
   validateRequest(dataFeedRequestSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -313,7 +313,7 @@ router.post('/connections/:connectionId/data-feed',
         message: 'Data feed processing initiated'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing custodian data feed:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -330,7 +330,7 @@ router.post('/connections/:connectionId/data-feed',
  */
 router.get('/connections/:connectionId/data-feeds', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -358,7 +358,7 @@ router.get('/connections/:connectionId/data-feeds',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching data feed history:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -376,7 +376,7 @@ router.get('/connections/:connectionId/data-feeds',
 router.post('/connections/:connectionId/reconciliation', 
   authMiddleware,
   validateRequest(reconciliationRequestSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -392,7 +392,7 @@ router.post('/connections/:connectionId/reconciliation',
         custodianConnectionId: connectionId,
         ...req.body,
         asOfDate: new Date(req.body.asOfDate),
-        tolerance: new Decimal(req.body.tolerance || 0.01)
+        tolerance: new (Decimal as any)(req.body.tolerance || 0.01)
       };
 
       logger.info('Performing custodian reconciliation', { 
@@ -413,7 +413,7 @@ router.post('/connections/:connectionId/reconciliation',
         message: 'Reconciliation completed'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing custodian reconciliation:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -430,7 +430,7 @@ router.post('/connections/:connectionId/reconciliation',
  */
 router.get('/connections/:connectionId/reconciliations', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -458,7 +458,7 @@ router.get('/connections/:connectionId/reconciliations',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching reconciliation history:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -475,7 +475,7 @@ router.get('/connections/:connectionId/reconciliations',
  */
 router.post('/connections/:connectionId/orders', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -510,7 +510,7 @@ router.post('/connections/:connectionId/orders',
         message: 'Orders submitted to custodian'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting orders to custodian:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -527,7 +527,7 @@ router.post('/connections/:connectionId/orders',
  */
 router.post('/connections/:connectionId/documents', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -569,7 +569,7 @@ router.post('/connections/:connectionId/documents',
         message: 'Document retrieval initiated'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving documents from custodian:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -586,7 +586,7 @@ router.post('/connections/:connectionId/documents',
  */
 router.get('/connections/:connectionId/performance', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -621,7 +621,7 @@ router.get('/connections/:connectionId/performance',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching custodian performance metrics:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -638,7 +638,7 @@ router.get('/connections/:connectionId/performance',
  */
 router.get('/connections/:connectionId/alerts', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -666,7 +666,7 @@ router.get('/connections/:connectionId/alerts',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching custodian alerts:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -683,7 +683,7 @@ router.get('/connections/:connectionId/alerts',
  */
 router.post('/connections/:connectionId/test', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { connectionId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -728,7 +728,7 @@ router.post('/connections/:connectionId/test',
         message: 'Connection test completed'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error testing custodian connection:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -739,3 +739,4 @@ router.post('/connections/:connectionId/test',
 );
 
 export default router;
+

@@ -199,11 +199,11 @@ export class ContainerSecurityScanner extends EventEmitter {
 
       return scanResult;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('scanError', {
         imageName,
         tag,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -539,7 +539,7 @@ export class ContainerSecurityScanner extends EventEmitter {
     return recommendations;
   }
 
-  private async applyPolicyChecks(scanResult: ScanResult, policyId: string): Promise<void> {
+  private async applyPolicyChecks(scanResult: ScanResult, policyId: string): Promise<any> {
     const policy = this.scanPolicies.get(policyId);
     if (!policy || !policy.enabled) return;
 
@@ -575,7 +575,7 @@ export class ContainerSecurityScanner extends EventEmitter {
     policy: ScanPolicy,
     scanResult: ScanResult,
     violations: string[]
-  ): Promise<void> {
+  ): Promise<any> {
     for (const notification of policy.notifications) {
       try {
         await this.sendNotification(notification, {
@@ -584,18 +584,18 @@ export class ContainerSecurityScanner extends EventEmitter {
           violations,
           scanResult
         });
-      } catch (error) {
+      } catch (error: any) {
         this.emit('notificationError', {
           notificationType: notification.type,
           endpoint: notification.endpoint,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
     }
   }
 
-  private async sendNotification(config: NotificationConfig, data: any): Promise<void> {
+  private async sendNotification(config: NotificationConfig, data: any): Promise<any> {
     // In production, implement actual notification sending
     console.log(`Sending ${config.type} notification to ${config.endpoint}:`, data);
   }
@@ -727,7 +727,7 @@ export class ContainerSecurityScanner extends EventEmitter {
   }
 
   private getSeverityScore(severity: string): number {
-    const scores = {
+    const scores: Record<string, number> = {
       critical: 10,
       high: 7.5,
       medium: 5,
@@ -773,3 +773,4 @@ export class ContainerSecurityScanner extends EventEmitter {
 }
 
 export default ContainerSecurityScanner;
+

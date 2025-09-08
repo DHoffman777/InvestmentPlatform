@@ -13,7 +13,7 @@ class ReportingEngineService {
     constructor() {
         this.templateService = new ReportTemplateService_1.ReportTemplateService();
         this.generationService = new ReportGenerationService_1.ReportGenerationService();
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('ReportingEngineService');
     }
     // Template Management
     async createReportTemplate(tenantId, templateData, userId) {

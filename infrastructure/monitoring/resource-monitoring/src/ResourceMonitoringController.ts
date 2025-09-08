@@ -61,7 +61,7 @@ export class ResourceMonitoringController extends EventEmitter {
 
     // CORS
     if (this.config.enableCors) {
-      this.app.use((req, res, next) => {
+      this.app.use((req: any, res: any, next: any) => {
         const origin = req.headers.origin as string;
         if (this.config.allowedOrigins.includes('*') || this.config.allowedOrigins.includes(origin)) {
           res.header('Access-Control-Allow-Origin', origin || '*');
@@ -96,7 +96,7 @@ export class ResourceMonitoringController extends EventEmitter {
     this.app.use(limiter);
 
     // Request logging
-    this.app.use((req, res, next) => {
+    this.app.use((req: any, res: any, next: any) => {
       const start = Date.now();
       
       res.on('finish', () => {
@@ -115,7 +115,7 @@ export class ResourceMonitoringController extends EventEmitter {
 
     // Authentication middleware
     if (this.config.authenticationRequired) {
-      this.app.use(this.authenticateRequest.bind(this));
+      this.app.use(this.authenticateRequest.bind(this) as any);
     }
   }
 
@@ -214,8 +214,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const snapshot = await this.services.utilizationService.generateSnapshot(resourceId);
         res.json(snapshot);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -227,8 +227,8 @@ export class ResourceMonitoringController extends EventEmitter {
           resourceIds.map((id: string) => this.services.utilizationService.generateSnapshot(id))
         );
         res.json({ snapshots });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -238,8 +238,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const dataSource: ResourceDataSource = req.body;
         await this.services.utilizationService.addDataSource(dataSource);
         res.status(201).json({ message: 'Data source added successfully', id: dataSource.id });
-      } catch (error) {
-        res.status(400).json({ error: error.message });
+      } catch (error: any) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -249,8 +249,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { dataSourceId } = req.params;
         await this.services.utilizationService.removeDataSource(dataSourceId);
         res.json({ message: 'Data source removed successfully' });
-      } catch (error) {
-        res.status(400).json({ error: error.message });
+      } catch (error: any) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -260,8 +260,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const metrics = await this.services.utilizationService.collectMetrics([resourceId]);
         res.json({ metrics, count: metrics.length });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -280,8 +280,8 @@ export class ResourceMonitoringController extends EventEmitter {
         };
         
         res.json(historicalData);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
   }
@@ -294,8 +294,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const snapshot = await this.services.utilizationService.generateSnapshot(resourceId);
         const efficiency = await this.services.efficiencyService.analyzeResourceEfficiency(snapshot);
         res.json(efficiency);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -305,8 +305,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const insights = this.services.efficiencyService.getInsights(resourceId);
         res.json({ insights });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -316,8 +316,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const wasteAnalyses = this.services.efficiencyService.getWasteAnalyses(resourceId);
         res.json({ waste_analyses: wasteAnalyses });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -327,8 +327,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const opportunities = this.services.efficiencyService.getOptimizationOpportunities(resourceId);
         res.json({ opportunities });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -346,8 +346,8 @@ export class ResourceMonitoringController extends EventEmitter {
           ).filter(b => b !== undefined);
           res.json({ benchmarks });
         }
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -359,8 +359,8 @@ export class ResourceMonitoringController extends EventEmitter {
         
         // Implementation would update benchmark
         res.json({ message: 'Benchmark updated successfully' });
-      } catch (error) {
-        res.status(400).json({ error: error.message });
+      } catch (error: any) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
   }
@@ -372,8 +372,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const recommendations = this.services.optimizationService.getRecommendations(resourceId);
         res.json({ recommendations });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -382,8 +382,8 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         const { resourceId } = req.params;
         const snapshot = await this.services.utilizationService.generateSnapshot(resourceId);
-        const historicalData = []; // Would fetch historical data
-        const anomalies = []; // Would fetch anomalies
+        const historicalData: any[] = []; // Would fetch historical data
+        const anomalies: any[] = []; // Would fetch anomalies
         const insights = this.services.efficiencyService.getInsights(resourceId);
         const opportunities = this.services.efficiencyService.getOptimizationOpportunities(resourceId);
 
@@ -397,8 +397,8 @@ export class ResourceMonitoringController extends EventEmitter {
 
         const recommendations = await this.services.optimizationService.generateRecommendations(context);
         res.json({ recommendations, count: recommendations.length });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -426,8 +426,8 @@ export class ResourceMonitoringController extends EventEmitter {
 
         const result = await this.services.optimizationService.applyRecommendation(recommendation, context);
         res.json(result);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -437,8 +437,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const results = this.services.optimizationService.getResults(resourceId);
         res.json({ results });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -447,8 +447,8 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         const engines = this.services.optimizationService.getEngines();
         res.json({ engines });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -457,8 +457,8 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         const templates = this.services.optimizationService.getTemplates();
         res.json({ templates });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
   }
@@ -470,8 +470,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const allocationRequest = req.body;
         const response = await this.services.allocationService.requestAllocation(allocationRequest);
         res.status(response.status === 'approved' ? 201 : 202).json(response);
-      } catch (error) {
-        res.status(400).json({ error: error.message });
+      } catch (error: any) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -491,8 +491,8 @@ export class ResourceMonitoringController extends EventEmitter {
         }
         
         res.json({ allocations, count: allocations.length });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -512,8 +512,8 @@ export class ResourceMonitoringController extends EventEmitter {
         }
         
         res.status(404).json({ error: 'Allocation not found' });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -530,8 +530,8 @@ export class ResourceMonitoringController extends EventEmitter {
         } else {
           res.status(400).json({ error: 'Failed to release allocation' });
         }
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -541,8 +541,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const metrics = this.services.allocationService.getAllocationMetrics(resourceId);
         res.json(metrics || { message: 'No metrics available' });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -552,8 +552,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const optimizations = this.services.allocationService.getOptimizations(resourceId);
         res.json({ optimizations });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -562,8 +562,8 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         const policies = this.services.allocationService.getPolicies();
         res.json({ policies });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
   }
@@ -575,8 +575,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const correlation = this.services.costAnalysisService.getCostCorrelation(resourceId);
         res.json(correlation || { message: 'No cost correlation data available' });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -585,7 +585,7 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         const { resourceId } = req.params;
         const snapshot = await this.services.utilizationService.generateSnapshot(resourceId);
-        const historicalData = []; // Would fetch historical data
+        const historicalData: any[] = []; // Would fetch historical data
         
         const correlation = await this.services.costAnalysisService.analyzeCostCorrelations(
           resourceId,
@@ -594,8 +594,8 @@ export class ResourceMonitoringController extends EventEmitter {
         );
         
         res.json(correlation);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -605,8 +605,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { resourceId } = req.params;
         const alerts = this.services.costAnalysisService.getCostAlerts(resourceId);
         res.json({ alerts });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -615,8 +615,8 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         const models = this.services.costAnalysisService.getCostModels();
         res.json({ models });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -626,8 +626,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const modelData = req.body;
         // Implementation would create cost model
         res.status(201).json({ message: 'Cost model created successfully', id: modelData.id });
-      } catch (error) {
-        res.status(400).json({ error: error.message });
+      } catch (error: any) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -638,8 +638,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const modelData = req.body;
         // Implementation would update cost model
         res.json({ message: 'Cost model updated successfully' });
-      } catch (error) {
-        res.status(400).json({ error: error.message });
+      } catch (error: any) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -649,8 +649,8 @@ export class ResourceMonitoringController extends EventEmitter {
         const { modelId } = req.params;
         // Implementation would delete cost model
         res.json({ message: 'Cost model deleted successfully' });
-      } catch (error) {
-        res.status(400).json({ error: error.message });
+      } catch (error: any) {
+        res.status(400).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
   }
@@ -682,8 +682,8 @@ export class ResourceMonitoringController extends EventEmitter {
         );
         
         res.json(dashboard);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -698,8 +698,8 @@ export class ResourceMonitoringController extends EventEmitter {
         }
         
         res.json(dashboard);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -714,8 +714,8 @@ export class ResourceMonitoringController extends EventEmitter {
         res.setHeader('Content-Type', this.getContentType(exportConfig.format));
         res.setHeader('Content-Disposition', `attachment; filename=dashboard_${dashboardId}.${exportConfig.format}`);
         res.send(exportData);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -724,8 +724,8 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         const widgets = this.services.dashboardService.getWidgetConfigs();
         res.json({ widgets });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -734,8 +734,8 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         const metrics = this.services.dashboardService.getCustomMetrics();
         res.json({ metrics });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
   }
@@ -767,8 +767,8 @@ export class ResourceMonitoringController extends EventEmitter {
         };
         
         res.json(metrics);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -791,8 +791,8 @@ export class ResourceMonitoringController extends EventEmitter {
         };
         
         res.json(config);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -806,8 +806,8 @@ export class ResourceMonitoringController extends EventEmitter {
           await this.shutdown();
           process.exit(0);
         }, 1000);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
 
@@ -816,8 +816,8 @@ export class ResourceMonitoringController extends EventEmitter {
       try {
         // Implementation would clear service caches
         res.json({ message: 'Caches cleared successfully' });
-      } catch (error) {
-        res.status(500).json({ error: error.message });
+      } catch (error: any) {
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
       }
     });
   }
@@ -901,8 +901,9 @@ export class ResourceMonitoringController extends EventEmitter {
         const decoded = jwt.verify(token, this.config.jwtSecret);
         (req as any).user = decoded;
         return next();
-      } catch (error) {
-        return res.status(401).json({ error: 'Invalid token' });
+      } catch (error: any) {
+        res.status(401).json({ error: 'Invalid token' });
+        return;
       }
     }
 
@@ -921,7 +922,7 @@ export class ResourceMonitoringController extends EventEmitter {
     return contentTypes[format] || 'application/octet-stream';
   }
 
-  public async start(): Promise<void> {
+  public async start(): Promise<any> {
     return new Promise((resolve, reject) => {
       try {
         this.server = this.app.listen(this.config.port, () => {
@@ -932,9 +933,9 @@ export class ResourceMonitoringController extends EventEmitter {
           }
           
           this.emit('started', { port: this.config.port, timestamp: new Date() });
-          resolve();
+          resolve(undefined);
         });
-      } catch (error) {
+      } catch (error: any) {
         reject(error);
       }
     });
@@ -946,11 +947,13 @@ export class ResourceMonitoringController extends EventEmitter {
         this.server.close(() => {
           console.log('Resource Monitoring API server stopped');
           this.emit('stopped', { timestamp: new Date() });
-          resolve();
+          resolve(undefined);
         });
       } else {
-        resolve();
+        resolve(undefined);
       }
     });
   }
 }
+
+

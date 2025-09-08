@@ -114,8 +114,8 @@ class PerformanceProfilingService extends events_1.EventEmitter {
                 await this.collectMetricsForProfile(profileId, configuration);
             }
             catch (error) {
-                console.error(`Metrics collection failed for profile ${profileId}:`, error.message);
-                this.emit('metricsCollectionError', { profileId, error: error.message, timestamp: new Date() });
+                console.error(`Metrics collection failed for profile ${profileId}:`, error instanceof Error ? error.message : 'Unknown error');
+                this.emit('metricsCollectionError', { profileId, error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date() });
             }
         }, 1000 / configuration.sampling_rate);
         this.profilingIntervals.set(profileId, interval);
@@ -147,7 +147,7 @@ class PerformanceProfilingService extends events_1.EventEmitter {
                 metrics.push(...sourceMetrics);
             }
             catch (error) {
-                console.warn(`Failed to collect metrics from ${source}:`, error.message);
+                console.warn(`Failed to collect metrics from ${source}:`, error instanceof Error ? error.message : 'Unknown error');
             }
         }
         // Add metrics to profile
@@ -251,7 +251,7 @@ class PerformanceProfilingService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            console.warn('Failed to collect system metrics:', error.message);
+            console.warn('Failed to collect system metrics:', error instanceof Error ? error.message : 'Unknown error');
         }
         return metrics;
     }
@@ -432,7 +432,7 @@ class PerformanceProfilingService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            console.error('Auto-profiling trigger check failed:', error.message);
+            console.error('Auto-profiling trigger check failed:', error instanceof Error ? error.message : 'Unknown error');
         }
     }
     async collectCurrentSystemMetrics() {
@@ -518,7 +518,7 @@ class PerformanceProfilingService extends events_1.EventEmitter {
                 await this.stopProfiling(profileId);
             }
             catch (error) {
-                console.error(`Failed to stop profile ${profileId}:`, error.message);
+                console.error(`Failed to stop profile ${profileId}:`, error instanceof Error ? error.message : 'Unknown error');
             }
         }
         // Clear intervals

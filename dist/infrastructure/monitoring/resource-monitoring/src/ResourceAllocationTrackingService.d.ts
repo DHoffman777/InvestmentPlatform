@@ -176,7 +176,7 @@ export declare class ResourceAllocationTrackingService extends EventEmitter {
     constructor(config: AllocationTrackingConfig);
     requestAllocation(request: AllocationRequest): Promise<AllocationResponse>;
     releaseAllocation(allocationId: string, reason?: string): Promise<boolean>;
-    trackAllocationUsage(resourceId: string, snapshot: ResourceUtilizationSnapshot): Promise<void>;
+    trackAllocationUsage(resourceId: string, snapshot: ResourceUtilizationSnapshot): Promise<any>;
     private updateAllocationUsage;
     private validateAllocationRequest;
     private checkResourceAvailability;
@@ -220,5 +220,5 @@ export declare class ResourceAllocationTrackingService extends EventEmitter {
     private identifySchedulingOpportunity;
     private updateAllResourceMetrics;
     private cleanupOldData;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

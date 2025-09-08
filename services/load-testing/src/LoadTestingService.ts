@@ -40,9 +40,9 @@ export interface LoadTestingServiceConfig {
 
 export class LoadTestingService extends EventEmitter {
   private app: express.Application;
-  private executor: LoadTestExecutor;
-  private capacityService: CapacityPlanningService;
-  private redis: Redis;
+  private executor!: LoadTestExecutor;
+  private capacityService!: CapacityPlanningService;
+  private redis!: Redis;
   private scheduledTests: Map<string, NodeJS.Timeout> = new Map();
   private benchmarkResults: Map<string, BenchmarkResult> = new Map();
   
@@ -119,7 +119,7 @@ export class LoadTestingService extends EventEmitter {
     this.app.use(express.urlencoded({ extended: true }));
 
     // Request logging middleware
-    this.app.use((req, res, next) => {
+    this.app.use((req: any, res: any, next: any) => {
       console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
       next();
     });
@@ -127,7 +127,7 @@ export class LoadTestingService extends EventEmitter {
     // Error handling middleware
     this.app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
       console.error('API Error:', error);
-      res.status(500).json({ error: 'Internal server error', details: error.message });
+      res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' });
     });
   }
 
@@ -138,7 +138,7 @@ export class LoadTestingService extends EventEmitter {
         const config: LoadTestConfig = req.body;
         const validation = this.validateTestConfig(config);
         res.json(validation);
-      } catch (error) {
+      } catch (error: any) {
         res.status(400).json({ error: 'Validation failed', details: (error as Error).message });
       }
     });
@@ -166,7 +166,7 @@ export class LoadTestingService extends EventEmitter {
 
         const testId = await this.executor.executeLoadTest(config);
         res.json({ testId, status: 'RUNNING' });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Test execution failed', details: (error as Error).message });
       }
     });
@@ -192,7 +192,7 @@ export class LoadTestingService extends EventEmitter {
         }
 
         res.json(result);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get test result', details: (error as Error).message });
       }
     });
@@ -208,7 +208,7 @@ export class LoadTestingService extends EventEmitter {
         } else {
           res.status(404).json({ error: 'Test not found or not running' });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to cancel test', details: (error as Error).message });
       }
     });
@@ -219,7 +219,7 @@ export class LoadTestingService extends EventEmitter {
         const { status, limit = 20, offset = 0 } = req.query;
         const tests = await this.listTests(status as string, parseInt(limit as string), parseInt(offset as string));
         res.json(tests);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to list tests', details: (error as Error).message });
       }
     });
@@ -230,7 +230,7 @@ export class LoadTestingService extends EventEmitter {
         const { config, schedule } = req.body;
         const scheduleId = await this.scheduleTest(config, schedule);
         res.json({ scheduleId, message: 'Test scheduled successfully' });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to schedule test', details: (error as Error).message });
       }
     });
@@ -241,7 +241,7 @@ export class LoadTestingService extends EventEmitter {
         const benchmarkConfig: BenchmarkConfig = req.body;
         const benchmarkId = await this.executeBenchmark(benchmarkConfig);
         res.json({ benchmarkId, status: 'RUNNING' });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Benchmark execution failed', details: (error as Error).message });
       }
     });
@@ -257,7 +257,7 @@ export class LoadTestingService extends EventEmitter {
         }
 
         res.json(result);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get benchmark result', details: (error as Error).message });
       }
     });
@@ -268,7 +268,7 @@ export class LoadTestingService extends EventEmitter {
         const config: CapacityPlanningConfig = req.body;
         const planId = await this.capacityService.generateCapacityPlan(config);
         res.json({ planId, status: 'GENERATED' });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Capacity planning failed', details: (error as Error).message });
       }
     });
@@ -284,7 +284,7 @@ export class LoadTestingService extends EventEmitter {
         }
 
         res.json(plan);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get capacity plan', details: (error as Error).message });
       }
     });
@@ -303,7 +303,7 @@ export class LoadTestingService extends EventEmitter {
         } else {
           res.status(400).json({ error: 'Unsupported export format' });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Export failed', details: (error as Error).message });
       }
     });
@@ -327,7 +327,7 @@ export class LoadTestingService extends EventEmitter {
 
         const analysis = await this.capacityService.analyzeLoadTestResults(results, currentCapacity);
         res.json(analysis);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Analysis failed', details: (error as Error).message });
       }
     });
@@ -337,7 +337,7 @@ export class LoadTestingService extends EventEmitter {
       try {
         const stats = await this.getSystemStats();
         res.json(stats);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get statistics', details: (error as Error).message });
       }
     });
@@ -347,7 +347,7 @@ export class LoadTestingService extends EventEmitter {
       try {
         const health = await this.getHealthStatus();
         res.json(health);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Health check failed', details: (error as Error).message });
       }
     });
@@ -366,7 +366,7 @@ export class LoadTestingService extends EventEmitter {
         console.log('Running cleanup of old test results...');
         try {
           await this.cleanupOldTests();
-        } catch (error) {
+        } catch (error: any) {
           console.error('Cleanup failed:', error);
         }
       });
@@ -382,7 +382,7 @@ export class LoadTestingService extends EventEmitter {
             await this.sendNotification('environment_warning', 'Test environment issues detected', validation);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Environment validation failed:', error);
       }
     });
@@ -480,15 +480,15 @@ export class LoadTestingService extends EventEmitter {
     };
   }
 
-  private async storeTestMetadata(testId: string, metadata: any): Promise<void> {
+  private async storeTestMetadata(testId: string, metadata: any): Promise<any> {
     await this.redis.setex(`test:${testId}:metadata`, 3600 * 24 * this.config.defaultTestSettings.retentionDays, JSON.stringify(metadata));
   }
 
-  private async storeTestResults(testId: string, result: LoadTestResult): Promise<void> {
+  private async storeTestResults(testId: string, result: LoadTestResult): Promise<any> {
     await this.redis.setex(`test:${testId}:result`, 3600 * 24 * this.config.defaultTestSettings.retentionDays, JSON.stringify(result));
   }
 
-  private async updateTestProgress(testId: string, progress: any): Promise<void> {
+  private async updateTestProgress(testId: string, progress: any): Promise<any> {
     await this.redis.setex(`test:${testId}:progress`, 300, JSON.stringify(progress)); // 5 minute expiry
   }
 
@@ -497,7 +497,7 @@ export class LoadTestingService extends EventEmitter {
     return stored ? JSON.parse(stored) : null;
   }
 
-  private async storeCapacityPlan(planId: string, plan: CapacityPlanningResult): Promise<void> {
+  private async storeCapacityPlan(planId: string, plan: CapacityPlanningResult): Promise<any> {
     await this.redis.setex(`plan:${planId}`, 3600 * 24 * 30, JSON.stringify(plan)); // 30 days
   }
 
@@ -533,7 +533,7 @@ export class LoadTestingService extends EventEmitter {
         console.log(`Executing scheduled test: ${config.name}`);
         try {
           await this.executor.executeLoadTest(config);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Scheduled test failed:', error);
         }
       }, {
@@ -551,7 +551,7 @@ export class LoadTestingService extends EventEmitter {
       }));
 
       return scheduleId;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Invalid cron schedule: ${schedule}`);
     }
   }
@@ -620,7 +620,7 @@ export class LoadTestingService extends EventEmitter {
       this.benchmarkResults.set(benchmarkId, result);
       return benchmarkId;
 
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Benchmark execution failed: ${(error as Error).message}`);
     }
   }
@@ -723,7 +723,7 @@ export class LoadTestingService extends EventEmitter {
     return summary;
   }
 
-  private async sendNotification(type: string, message: string, data?: any): Promise<void> {
+  private async sendNotification(type: string, message: string, data?: any): Promise<any> {
     try {
       if (this.config.notifications.webhookUrl) {
         // Send webhook notification (implementation depends on webhook format)
@@ -734,12 +734,12 @@ export class LoadTestingService extends EventEmitter {
         // Send Slack notification (would require Slack SDK)
         console.log(`Slack notification [${type}]: ${message}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send notification:', error);
     }
   }
 
-  private async cleanupOldTests(): Promise<void> {
+  private async cleanupOldTests(): Promise<any> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - this.config.defaultTestSettings.retentionDays);
 
@@ -753,7 +753,7 @@ export class LoadTestingService extends EventEmitter {
           await this.redis.del(key);
           deletedCount++;
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to cleanup key ${key}:`, error);
       }
     }
@@ -927,7 +927,7 @@ export class LoadTestingService extends EventEmitter {
     });
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     console.log('Shutting down Load Testing Service...');
     
     // Cancel all scheduled tests
@@ -951,3 +951,4 @@ export class LoadTestingService extends EventEmitter {
     return this.app;
   }
 }
+

@@ -158,6 +158,8 @@ export interface CallRisk {
         [date: string]: number;
     };
     reinvestmentRisk: number;
+    negativeCashflows: number;
+    optionValue: number;
 }
 export interface GeographicDistribution {
     states: {

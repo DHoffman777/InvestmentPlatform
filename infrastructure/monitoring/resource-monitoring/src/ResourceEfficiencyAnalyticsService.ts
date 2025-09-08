@@ -8,7 +8,9 @@ import {
   ResourceRecommendation,
   ResourceAnomaly,
   ResourceCost,
-  CostDetail
+  CostDetail,
+  ResourceUtilization,
+  ResourceHealth
 } from './ResourceDataModel';
 
 export interface EfficiencyAnalyticsConfig {
@@ -872,13 +874,13 @@ export class ResourceEfficiencyAnalyticsService extends EventEmitter {
     this.analysisScheduler = setInterval(async () => {
       try {
         await this.runScheduledAnalysis();
-      } catch (error) {
-        console.error('Scheduled efficiency analysis failed:', error.message);
+      } catch (error: any) {
+        console.error('Scheduled efficiency analysis failed:', error instanceof Error ? error.message : 'Unknown error');
       }
     }, this.config.analysisInterval);
   }
 
-  private async runScheduledAnalysis(): Promise<void> {
+  private async runScheduledAnalysis(): Promise<any> {
     // Update benchmarks
     if (this.config.enableBenchmarking) {
       await this.updateBenchmarks();
@@ -894,7 +896,7 @@ export class ResourceEfficiencyAnalyticsService extends EventEmitter {
     });
   }
 
-  private async updateBenchmarks(): Promise<void> {
+  private async updateBenchmarks(): Promise<any> {
     // Implementation for updating industry and internal benchmarks
     for (const [resourceType, benchmark] of this.benchmarks) {
       // Simulate benchmark updates
@@ -907,7 +909,7 @@ export class ResourceEfficiencyAnalyticsService extends EventEmitter {
     }
   }
 
-  private async cleanupExpiredInsights(): Promise<void> {
+  private async cleanupExpiredInsights(): Promise<any> {
     const now = new Date();
     
     for (const [resourceId, insights] of this.insights) {
@@ -1008,7 +1010,7 @@ export class ResourceEfficiencyAnalyticsService extends EventEmitter {
     return null;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     if (this.analysisScheduler) {
       clearInterval(this.analysisScheduler);
     }
@@ -1016,3 +1018,4 @@ export class ResourceEfficiencyAnalyticsService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { createHash } from 'crypto';
 import { Logger } from 'winston';
 import { createLogger, format, transports } from 'winston';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 
 export interface ErrorMetadata {
   userId?: string;
@@ -260,7 +260,7 @@ export class ErrorTrackingService extends EventEmitter {
     const structuredError: StructuredError = {
       id: this.generateErrorId(),
       fingerprint,
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
       category,
       severity,
       errorType: error.constructor.name,
@@ -311,7 +311,7 @@ export class ErrorTrackingService extends EventEmitter {
   private generateFingerprint(error: Error, context: ErrorContext): string {
     const components = [
       error.constructor.name,
-      error.message.replace(/\d+/g, 'N'), // Replace numbers with N
+      error instanceof Error ? error.message : 'Unknown error'.replace(/\d+/g, 'N'), // Replace numbers with N
       context.service,
       context.environment,
       this.extractStackSignature(error.stack)
@@ -331,7 +331,7 @@ export class ErrorTrackingService extends EventEmitter {
   }
 
   private categorizeError(error: Error): ErrorCategory {
-    const message = error.message.toLowerCase();
+    const message = error instanceof Error ? error.message : 'Unknown error'.toLowerCase();
     const stack = (error.stack || '').toLowerCase();
     const combined = `${message} ${stack}`;
 
@@ -377,7 +377,7 @@ export class ErrorTrackingService extends EventEmitter {
   ): ErrorSeverity {
     // Check if error matches a pattern with predefined severity
     for (const pattern of this.errorPatterns.values()) {
-      if (pattern.pattern.test(error.message) || 
+      if (pattern.pattern.test(error instanceof Error ? error.message : 'Unknown error') || 
           (error.stack && pattern.pattern.test(error.stack))) {
         return pattern.severity;
       }
@@ -409,7 +409,7 @@ export class ErrorTrackingService extends EventEmitter {
   }
 
   private matchErrorPattern(error: Error): ErrorPattern | null {
-    const combined = `${error.message} ${error.stack || ''}`;
+    const combined = `${error instanceof Error ? error.message : 'Unknown error'} ${error.stack || ''}`;
     
     for (const pattern of this.errorPatterns.values()) {
       if (pattern.pattern.test(combined)) {
@@ -436,7 +436,7 @@ export class ErrorTrackingService extends EventEmitter {
     return `err_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
   }
 
-  private async storeError(error: StructuredError): Promise<void> {
+  private async storeError(error: StructuredError): Promise<any> {
     try {
       // Check if error with same fingerprint exists
       const existingError = await this.prisma.error.findFirst({
@@ -464,7 +464,7 @@ export class ErrorTrackingService extends EventEmitter {
           data: {
             id: error.id,
             fingerprint: error.fingerprint,
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown error',
             category: error.category,
             severity: error.severity,
             errorType: error.errorType,
@@ -476,9 +476,9 @@ export class ErrorTrackingService extends EventEmitter {
             lastSeen: error.lastSeen,
             resolved: error.resolved,
             tags: error.tags,
-            affectedUsers: error.affectedUsers,
-            relatedErrors: error.relatedErrors
-          }
+            affectedUsers: error.affectedUsers
+            // Remove relatedErrors from here - it should be handled separately via relations
+          } as any
         });
       }
     } catch (dbError) {
@@ -489,7 +489,7 @@ export class ErrorTrackingService extends EventEmitter {
     }
   }
 
-  private async updateAggregation(error: StructuredError): Promise<void> {
+  private async updateAggregation(error: StructuredError): Promise<any> {
     const existing = this.aggregationCache.get(error.fingerprint);
     
     if (existing) {
@@ -520,7 +520,7 @@ export class ErrorTrackingService extends EventEmitter {
     }, this.aggregationWindow);
   }
 
-  private async processAggregations(): Promise<void> {
+  private async processAggregations(): Promise<any> {
     for (const [fingerprint, aggregation] of this.aggregationCache.entries()) {
       try {
         await this.prisma.errorAggregation.upsert({
@@ -546,7 +546,7 @@ export class ErrorTrackingService extends EventEmitter {
             topAffectedUsers: aggregation.topAffectedUsers as any
           }
         });
-      } catch (error) {
+      } catch (error: any) {
         this.logger.error('Failed to update aggregation', {
           fingerprint,
           error: error.message
@@ -562,7 +562,7 @@ export class ErrorTrackingService extends EventEmitter {
       });
       
       return error as StructuredError | null;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get error by ID', {
         errorId,
         error: error.message
@@ -578,8 +578,8 @@ export class ErrorTrackingService extends EventEmitter {
         orderBy: { lastSeen: 'desc' }
       });
       
-      return errors as StructuredError[];
-    } catch (error) {
+      return errors as unknown as StructuredError[];
+    } catch (error: any) {
       this.logger.error('Failed to get errors by fingerprint', {
         fingerprint,
         error: error.message
@@ -605,8 +605,8 @@ export class ErrorTrackingService extends EventEmitter {
         take: limit
       });
       
-      return errors as StructuredError[];
-    } catch (error) {
+      return errors as unknown as StructuredError[];
+    } catch (error: any) {
       this.logger.error('Failed to get recent errors', {
         limit,
         severity,
@@ -635,7 +635,7 @@ export class ErrorTrackingService extends EventEmitter {
       
       this.emit('errorResolved', { errorId, resolvedBy, resolution });
       return true;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to resolve error', {
         errorId,
         resolvedBy,
@@ -667,7 +667,7 @@ export class ErrorTrackingService extends EventEmitter {
         timeRange,
         since
       };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get error statistics', {
         timeRange,
         error: error.message
@@ -717,9 +717,10 @@ export class ErrorTrackingService extends EventEmitter {
     return Array.from(this.errorPatterns.values());
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     this.logger.info('Shutting down error tracking service');
     await this.processAggregations(); // Final aggregation update
     this.removeAllListeners();
   }
 }
+

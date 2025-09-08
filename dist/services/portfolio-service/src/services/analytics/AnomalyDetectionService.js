@@ -24,8 +24,8 @@ class AnomalyDetectionService {
         minDataPoints: 30,
         alertThreshold: 0.7
     };
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    constructor(eventPublisher) {
+        this.eventPublisher = eventPublisher || new eventPublisher_1.EventPublisher('AnomalyDetectionService');
         this.initializeDefaultConfigs();
     }
     async detectAnomalies(request) {
@@ -556,7 +556,7 @@ class AnomalyDetectionService {
             eventType: 'anomaly_detected',
             metricType: anomaly.metricType,
             entityId: anomaly.entityId,
-            entityType: anomaly.entityType,
+            entityType: anomaly.entityType === 'market' ? 'tenant' : anomaly.entityType,
             timestamp: new Date(),
             data: {
                 anomalyId: anomaly.id,
@@ -568,6 +568,8 @@ class AnomalyDetectionService {
                 deviation: anomaly.deviation
             },
             severity: anomaly.severity,
+            processed: false,
+            createdAt: new Date(),
             acknowledged: false
         };
         await this.eventPublisher.publish('analytics.realtime.anomaly', event);

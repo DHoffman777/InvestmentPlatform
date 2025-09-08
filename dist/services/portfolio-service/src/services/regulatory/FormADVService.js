@@ -10,7 +10,7 @@ class FormADVService {
     forms = new Map();
     filings = new Map();
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('FormADV');
     }
     async prepareFormADV(data) {
         try {

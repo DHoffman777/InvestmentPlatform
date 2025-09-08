@@ -97,7 +97,7 @@ export declare class MultiJurisdictionComplianceService {
     constructor();
     createComplianceAssessment(tenantId: string, scope: ComplianceAssessment['scope'], assessedBy: string): Promise<ComplianceAssessment>;
     identifyJurisdictionConflicts(jurisdictions: RegulatoryJurisdiction[], businessActivities: string[]): Promise<CrossJurisdictionConflict[]>;
-    updateComplianceStatus(requirementId: string, jurisdiction: RegulatoryJurisdiction, status: JurisdictionRequirement['compliance']['status'], evidence: string[], updatedBy: string): Promise<void>;
+    updateComplianceStatus(requirementId: string, jurisdiction: RegulatoryJurisdiction, status: JurisdictionRequirement['compliance']['status'], evidence: string[], updatedBy: string): Promise<any>;
     generateComplianceReport(tenantId: string, jurisdictions: RegulatoryJurisdiction[], reportType: 'summary' | 'detailed' | 'executive'): Promise<{
         summary: {
             totalRequirements: number;

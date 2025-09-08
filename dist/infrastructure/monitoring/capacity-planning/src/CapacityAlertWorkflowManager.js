@@ -57,7 +57,7 @@ class CapacityAlertWorkflowManager extends events_1.EventEmitter {
                 this.emit('workflowStartFailed', {
                     workflowId: workflow.id,
                     alertId: alert.id,
-                    error: error.message
+                    error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
         }
@@ -87,7 +87,7 @@ class CapacityAlertWorkflowManager extends events_1.EventEmitter {
         }
         catch (error) {
             execution.status = WorkflowExecutionStatus.FAILED;
-            this.emit('workflowFailed', { executionId, error: error.message });
+            this.emit('workflowFailed', { executionId, error: error instanceof Error ? error.message : 'Unknown error' });
         }
         return execution;
     }
@@ -129,7 +129,7 @@ class CapacityAlertWorkflowManager extends events_1.EventEmitter {
                 });
             }
             catch (error) {
-                stepExecution.error = error.message;
+                stepExecution.error = error instanceof Error ? error.message : 'Unknown error';
                 stepExecution.status = WorkflowExecutionStatus.FAILED;
                 stepExecution.completedAt = new Date();
                 if (step.onFailure === 'stop') {
@@ -144,7 +144,7 @@ class CapacityAlertWorkflowManager extends events_1.EventEmitter {
                 this.emit('stepFailed', {
                     executionId: execution.id,
                     stepId: step.id,
-                    error: error.message
+                    error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
         }

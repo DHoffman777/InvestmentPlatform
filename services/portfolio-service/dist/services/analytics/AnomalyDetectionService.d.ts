@@ -1,4 +1,5 @@
 import { AnomalyDetection, AnalyticsMetricType, AnalyticsDataPoint } from '../../models/analytics/Analytics';
+import { EventPublisher } from '../../utils/eventPublisher';
 interface AnomalyDetectionRequest {
     tenantId: string;
     entityId: string;
@@ -55,7 +56,7 @@ export declare class AnomalyDetectionService {
     private detectionConfigs;
     private modelCache;
     private defaultConfig;
-    constructor();
+    constructor(eventPublisher?: EventPublisher);
     detectAnomalies(request: AnomalyDetectionRequest): Promise<AnomalyDetection[]>;
     runStatisticalAnomalyDetection(data: AnalyticsDataPoint[], sensitivity?: 'low' | 'medium' | 'high'): Promise<StatisticalAnomalyResult>;
     runIsolationForestDetection(data: AnalyticsDataPoint[], features?: string[], contamination?: number): Promise<IsolationForestResult>;

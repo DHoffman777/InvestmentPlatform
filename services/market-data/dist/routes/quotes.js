@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.quotesRouter = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { query, param, validationResult } = require('express-validator');
 const marketDataService_1 = require("../services/marketDataService");
 const database_1 = require("../config/database");
 const logger_1 = require("../utils/logger");
@@ -12,7 +12,7 @@ exports.quotesRouter = router;
 const marketDataService = new marketDataService_1.MarketDataService(database_1.prisma);
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -23,7 +23,7 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/quotes/:symbol - Get real-time quote for a symbol
 router.get('/:symbol', [
-    (0, express_validator_1.param)('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
+    param('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { symbol } = req.params;
@@ -61,7 +61,7 @@ router.get('/:symbol', [
 });
 // GET /api/quotes - Get multiple quotes
 router.get('/', [
-    (0, express_validator_1.query)('symbols').isString().withMessage('Symbols parameter is required'),
+    query('symbols').isString().withMessage('Symbols parameter is required'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { symbols } = req.query;

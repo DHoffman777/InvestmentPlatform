@@ -187,14 +187,8 @@ class InvestmentObjectivesService {
                 id: obj.id,
                 objective: obj.objective,
                 priority: obj.priority,
-                targetAllocation: obj.targetAllocation,
-                description: obj.description,
-                timeHorizon: obj.timeHorizon,
-                expectedReturn: obj.expectedReturn,
-                riskLevel: obj.riskLevel,
-                isActive: obj.isActive,
-                createdAt: obj.createdAt,
-                updatedAt: obj.updatedAt
+                targetAllocation: obj.targetAllocation || undefined,
+                description: obj.description || undefined
             }));
         }
         catch (error) {
@@ -224,7 +218,7 @@ class InvestmentObjectivesService {
                 appliesTo: res.appliesTo,
                 isActive: res.isActive,
                 effectiveDate: res.effectiveDate,
-                expirationDate: res.expirationDate,
+                expirationDate: res.expirationDate || undefined,
                 threshold: res.threshold,
                 violationAction: res.violationAction,
                 createdAt: res.createdAt,
@@ -280,20 +274,14 @@ class InvestmentObjectivesService {
             });
             // Trigger suitability reassessment if significant changes
             if (updates.riskLevel || updates.timeHorizon || updates.expectedReturn) {
-                await this.triggerSuitabilityReview(existingObjective.clientProfileId, tenantId, 'OBJECTIVE_MODIFIED');
+                await this.triggerSuitabilityReview(existingObjective.clientId, tenantId, 'OBJECTIVE_MODIFIED');
             }
             return {
                 id: updatedObjective.id,
                 objective: updatedObjective.objective,
                 priority: updatedObjective.priority,
-                targetAllocation: updatedObjective.targetAllocation,
-                description: updatedObjective.description,
-                timeHorizon: updatedObjective.timeHorizon,
-                expectedReturn: updatedObjective.expectedReturn,
-                riskLevel: updatedObjective.riskLevel,
-                isActive: updatedObjective.isActive,
-                createdAt: updatedObjective.createdAt,
-                updatedAt: updatedObjective.updatedAt
+                targetAllocation: updatedObjective.targetAllocation || undefined,
+                description: updatedObjective.description || undefined
             };
         }
         catch (error) {
@@ -351,11 +339,7 @@ class InvestmentObjectivesService {
                 appliesTo: updatedRestriction.appliesTo,
                 isActive: updatedRestriction.isActive,
                 effectiveDate: updatedRestriction.effectiveDate,
-                expirationDate: updatedRestriction.expirationDate,
-                threshold: updatedRestriction.threshold,
-                violationAction: updatedRestriction.violationAction,
-                createdAt: updatedRestriction.createdAt,
-                updatedAt: updatedRestriction.updatedAt
+                expirationDate: updatedRestriction.expirationDate || undefined
             };
         }
         catch (error) {
@@ -513,7 +497,7 @@ class InvestmentObjectivesService {
             const activeRestrictions = restrictions.filter(res => res.isActive);
             // Count restrictions by type
             const restrictionsByType = {};
-            Object.values(ClientRelationship_1.RestrictionType).forEach(type => {
+            ['ASSET_CLASS_LIMIT', 'SECTOR_LIMIT', 'SECURITY_BLACKLIST', 'ESG_CRITERIA'].forEach(type => {
                 restrictionsByType[type] = activeRestrictions.filter(res => res.restrictionType === type).length;
             });
             // Find upcoming expirations (next 30 days)
@@ -639,7 +623,7 @@ class InvestmentObjectivesService {
         const restrictedUniversePercentage = new library_1.Decimal(restrictions.length * 5); // Rough estimate
         const estimatedPortfolioImpact = restrictedUniversePercentage.div(100).mul(10); // Impact on returns
         const diversificationConstraints = restrictions
-            .filter(res => res.restrictionType === ClientRelationship_1.RestrictionType.ASSET_CLASS_LIMIT)
+            .filter(res => res.restrictionType === 'ASSET_CLASS_LIMIT')
             .map(res => `Limited ${res.appliesTo} exposure`);
         return {
             estimatedPortfolioImpact,

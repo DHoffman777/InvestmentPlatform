@@ -307,7 +307,7 @@ router.get('/relationships/types', auth_1.authMiddleware, async (req, res) => {
         const relationshipTypes = Object.values(ClientRelationship_1.RelationshipType).map(type => ({
             value: type,
             label: type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-            description: this.getRelationshipTypeDescription(type)
+            description: getRelationshipTypeDescription(type)
         }));
         res.json({
             success: true,

@@ -83,5 +83,5 @@ export declare class RegulatoryFilingService extends EventEmitter {
     private groupFilingsByDeadline;
     private calculateWeeklyWorkload;
     private getWeekString;
-    cleanup(): Promise<void>;
+    cleanup(): Promise<any>;
 }

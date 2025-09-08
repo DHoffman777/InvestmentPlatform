@@ -58,7 +58,7 @@ export class FormADVService {
   private filings: Map<string, RegulatoryFiling> = new Map();
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('FormADV');
   }
 
   async prepareFormADV(data: FormADVPreparationData): Promise<FormADV> {
@@ -190,7 +190,7 @@ export class FormADVService {
 
       return formADV;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error preparing Form ADV:', error);
       throw error;
     }
@@ -299,7 +299,7 @@ export class FormADVService {
 
       return validationResult;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error validating Form ADV:', error);
       throw error;
     }
@@ -407,7 +407,7 @@ export class FormADVService {
 
       return filing;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting Form ADV:', error);
       throw error;
     }
@@ -521,7 +521,7 @@ export class FormADVService {
 
       return amendmentForm;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating Form ADV amendment:', error);
       throw error;
     }
@@ -576,7 +576,7 @@ export class FormADVService {
         filingHistory
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating Form ADV report:', error);
       throw error;
     }

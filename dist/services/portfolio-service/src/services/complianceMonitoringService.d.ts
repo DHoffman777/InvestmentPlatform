@@ -26,4 +26,7 @@ export declare class ComplianceMonitoringService {
     private logComplianceCheck;
     private publishComplianceEvent;
     private publishSuitabilityEvent;
+    private buildRuleContext;
+    private evaluateRule;
+    private getConcentrationRules;
 }

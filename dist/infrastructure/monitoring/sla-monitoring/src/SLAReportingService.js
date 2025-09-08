@@ -64,7 +64,7 @@ class SLAReportingService extends events_1.EventEmitter {
             }
             catch (error) {
                 report.deliveryStatus[format] = 'failed';
-                this.emit('reportExportFailed', { reportId: report.id, format, error: error.message });
+                this.emit('reportExportFailed', { reportId: report.id, format, error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }
         this.emit('reportGenerated', { reportId: report.id, report });
@@ -118,8 +118,8 @@ class SLAReportingService extends events_1.EventEmitter {
                 widgetData[widget.id] = await this.getWidgetData(widget);
             }
             catch (error) {
-                console.warn(`Failed to load data for widget ${widget.id}:`, error.message);
-                widgetData[widget.id] = { error: error.message };
+                console.warn(`Failed to load data for widget ${widget.id}:`, error instanceof Error ? error.message : 'Unknown error');
+                widgetData[widget.id] = { error: error instanceof Error ? error.message : 'Unknown error' };
             }
         }
         return { dashboard, widgetData };
@@ -157,7 +157,7 @@ class SLAReportingService extends events_1.EventEmitter {
                 await this.generateScheduledReport(templateId, recipients);
             }
             catch (error) {
-                this.emit('scheduledReportFailed', { templateId, error: error.message });
+                this.emit('scheduledReportFailed', { templateId, error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }, interval);
         this.scheduledJobs.set(templateId, job);

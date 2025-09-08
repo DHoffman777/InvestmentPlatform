@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
+import { KafkaService } from '../../utils/kafka-mock';
 import {
   Document,
   DocumentVersion,
@@ -265,11 +265,11 @@ export class DocumentVersionControlService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Version control operation failed', {
         documentId: request.documentId,
         action: request.action,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack
       });
       throw error;
@@ -528,9 +528,9 @@ export class DocumentVersionControlService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to retrieve audit trail', {
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack
       });
       throw error;
@@ -587,7 +587,7 @@ export class DocumentVersionControlService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Version comparison failed', {
         documentId: request.documentId,
         error: error.message
@@ -816,7 +816,7 @@ export class DocumentVersionControlService {
     return `--- Version ${version1.versionNumber}\n+++ Version ${version2.versionNumber}\n@@ -1,3 +1,3 @@\n-Old content\n+New content\n Changes detected`;
   }
 
-  private async applyRetentionPolicy(document: Document): Promise<void> {
+  private async applyRetentionPolicy(document: Document): Promise<any> {
     const policy = this.retentionPolicies.get('DEFAULT')!;
     await policy.apply(document);
   }
@@ -827,14 +827,14 @@ export class DocumentVersionControlService {
       tenantId,
       versions: [],
       filePath: '/path/to/document'
-    } as Document;
+    } as unknown as Document;
   }
 
-  private async saveDocument(document: Document): Promise<void> {
+  private async saveDocument(document: Document): Promise<any> {
     this.logger.info('Saving document', { documentId: document.id });
   }
 
-  private async saveAuditEntry(entry: DocumentAuditLog): Promise<void> {
+  private async saveAuditEntry(entry: DocumentAuditLog): Promise<any> {
     this.logger.info('Saving audit entry', { entryId: entry.id });
   }
 
@@ -846,15 +846,15 @@ export class DocumentVersionControlService {
     return `checksum_${Date.now()}`;
   }
 
-  private async initializeVersionControl(): Promise<void> {
+  private async initializeVersionControl(): Promise<any> {
     try {
       this.initializeVersioningStrategies();
       this.initializeStorageStrategies();
       this.initializeRetentionPolicies();
 
       this.logger.info('Document version control service initialized');
-    } catch (error) {
-      this.logger.error('Failed to initialize version control', { error: error.message });
+    } catch (error: any) {
+      this.logger.error('Failed to initialize version control', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -880,7 +880,7 @@ export class DocumentVersionControlService {
     documentId: string,
     tenantId: string,
     result: VersionControlResult
-  ): Promise<void> {
+  ): Promise<any> {
     const event = {
       eventType: 'VERSION_CONTROL_OPERATION',
       documentId,
@@ -900,13 +900,13 @@ interface VersioningStrategy {
 }
 
 interface StorageStrategy {
-  storeVersion(version: DocumentVersion, document: Document): Promise<void>;
-  deleteVersion(version: DocumentVersion): Promise<void>;
-  restoreVersion(sourceVersion: DocumentVersion, targetVersion: DocumentVersion): Promise<void>;
+  storeVersion(version: DocumentVersion, document: Document): Promise<any>;
+  deleteVersion(version: DocumentVersion): Promise<any>;
+  restoreVersion(sourceVersion: DocumentVersion, targetVersion: DocumentVersion): Promise<any>;
 }
 
 interface RetentionPolicy {
-  apply(document: Document): Promise<void>;
+  apply(document: Document): Promise<any>;
 }
 
 class SemanticVersioningStrategy implements VersioningStrategy {
@@ -934,49 +934,49 @@ class TimestampVersioningStrategy implements VersioningStrategy {
 }
 
 class FullCopyStorageStrategy implements StorageStrategy {
-  async storeVersion(version: DocumentVersion, document: Document): Promise<void> {
+  async storeVersion(version: DocumentVersion, document: Document): Promise<any> {
     console.log(`Storing full copy of version ${version.versionNumber}`);
   }
 
-  async deleteVersion(version: DocumentVersion): Promise<void> {
+  async deleteVersion(version: DocumentVersion): Promise<any> {
     console.log(`Deleting version ${version.versionNumber}`);
   }
 
-  async restoreVersion(sourceVersion: DocumentVersion, targetVersion: DocumentVersion): Promise<void> {
+  async restoreVersion(sourceVersion: DocumentVersion, targetVersion: DocumentVersion): Promise<any> {
     console.log(`Restoring from ${sourceVersion.versionNumber} to ${targetVersion.versionNumber}`);
   }
 }
 
 class DeltaStorageStrategy implements StorageStrategy {
-  async storeVersion(version: DocumentVersion, document: Document): Promise<void> {
+  async storeVersion(version: DocumentVersion, document: Document): Promise<any> {
     console.log(`Storing delta for version ${version.versionNumber}`);
   }
 
-  async deleteVersion(version: DocumentVersion): Promise<void> {
+  async deleteVersion(version: DocumentVersion): Promise<any> {
     console.log(`Deleting delta for version ${version.versionNumber}`);
   }
 
-  async restoreVersion(sourceVersion: DocumentVersion, targetVersion: DocumentVersion): Promise<void> {
+  async restoreVersion(sourceVersion: DocumentVersion, targetVersion: DocumentVersion): Promise<any> {
     console.log(`Restoring delta from ${sourceVersion.versionNumber} to ${targetVersion.versionNumber}`);
   }
 }
 
 class CompressedStorageStrategy implements StorageStrategy {
-  async storeVersion(version: DocumentVersion, document: Document): Promise<void> {
+  async storeVersion(version: DocumentVersion, document: Document): Promise<any> {
     console.log(`Storing compressed version ${version.versionNumber}`);
   }
 
-  async deleteVersion(version: DocumentVersion): Promise<void> {
+  async deleteVersion(version: DocumentVersion): Promise<any> {
     console.log(`Deleting compressed version ${version.versionNumber}`);
   }
 
-  async restoreVersion(sourceVersion: DocumentVersion, targetVersion: DocumentVersion): Promise<void> {
+  async restoreVersion(sourceVersion: DocumentVersion, targetVersion: DocumentVersion): Promise<any> {
     console.log(`Restoring compressed version from ${sourceVersion.versionNumber} to ${targetVersion.versionNumber}`);
   }
 }
 
 class DefaultRetentionPolicy implements RetentionPolicy {
-  async apply(document: Document): Promise<void> {
+  async apply(document: Document): Promise<any> {
     const maxVersions = 10;
     if (document.versions.length > maxVersions) {
       const versionsToDelete = document.versions
@@ -989,7 +989,7 @@ class DefaultRetentionPolicy implements RetentionPolicy {
 }
 
 class ComplianceRetentionPolicy implements RetentionPolicy {
-  async apply(document: Document): Promise<void> {
+  async apply(document: Document): Promise<any> {
     const retentionYears = 7;
     const cutoffDate = new Date();
     cutoffDate.setFullYear(cutoffDate.getFullYear() - retentionYears);
@@ -1001,7 +1001,7 @@ class ComplianceRetentionPolicy implements RetentionPolicy {
 }
 
 class AggressiveRetentionPolicy implements RetentionPolicy {
-  async apply(document: Document): Promise<void> {
+  async apply(document: Document): Promise<any> {
     const maxVersions = 3;
     if (document.versions.length > maxVersions) {
       const versionsToKeep = document.versions
@@ -1044,3 +1044,4 @@ class AuditAnalyzer {
     return flags;
   }
 }
+

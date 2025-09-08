@@ -116,7 +116,7 @@ export class StructuredProductsValuationService {
 
       return response;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in structured product valuation:', error);
       throw error;
     }
@@ -130,7 +130,7 @@ export class StructuredProductsValuationService {
       return {
         id: productId,
         tenantId: 'tenant_001',
-        instrumentId: `inst_${productId}`,
+        securityId: `inst_${productId}`,
         productName: 'Sample Structured Note',
         productType: 'STRUCTURED_NOTE' as any,
         issuer: 'Sample Bank',
@@ -186,7 +186,7 @@ export class StructuredProductsValuationService {
         createdBy: 'system',
         updatedBy: 'system'
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching product details:', error);
       return null;
     }
@@ -223,7 +223,7 @@ export class StructuredProductsValuationService {
         riskFreeRate: 0.05, // 5% risk-free rate
         dividendYields
       };
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching market data:', error);
       throw error;
     }
@@ -327,7 +327,7 @@ export class StructuredProductsValuationService {
         default:
           throw new Error(`Unsupported valuation model: ${model.modelType}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in valuation execution:', error);
       throw error;
     }
@@ -722,7 +722,7 @@ export class StructuredProductsValuationService {
     valuationDate: Date,
     modelResults: any,
     marketData: StructuredProductMarketData
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       // In a real implementation, this would store in database
       logger.debug('Storing valuation result', {
@@ -730,7 +730,7 @@ export class StructuredProductsValuationService {
         valuationDate,
         theoreticalValue: modelResults.theoreticalValue
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error storing valuation result:', error);
     }
   }
@@ -739,7 +739,7 @@ export class StructuredProductsValuationService {
   private async publishValuationEvent(
     productId: string,
     modelResults: any
-  ): Promise<void> {
+  ): Promise<any> {
     await this.kafkaService.publishEvent('structured-products.valuation.completed', {
       productId,
       theoreticalValue: modelResults.theoreticalValue,
@@ -809,7 +809,7 @@ export class StructuredProductsValuationService {
 
       return results;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in portfolio valuation:', error);
       throw error;
     }
@@ -899,9 +899,10 @@ export class StructuredProductsValuationService {
         stressResults
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in stress testing:', error);
       throw error;
     }
   }
 }
+

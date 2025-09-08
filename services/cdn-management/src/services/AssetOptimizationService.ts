@@ -52,7 +52,7 @@ export class AssetOptimizationService extends EventEmitter {
     contentType: string,
     request: AssetUploadRequest
   ): Promise<OptimizationResult> {
-    const optimizationConfig = { ...this.config, ...request.optimizations };
+    const optimizationConfig = { ...this.config, ...request.optimizations } as AssetOptimizationConfig;
     
     try {
       if (this.isImageType(contentType)) {
@@ -72,7 +72,7 @@ export class AssetOptimizationService extends EventEmitter {
           },
         };
       }
-    } catch (error) {
+    } catch (error: any) {
       this.emit('optimizationError', { contentType, error });
       
       // Return original buffer if optimization fails
@@ -118,7 +118,7 @@ export class AssetOptimizationService extends EventEmitter {
 
     // Strip metadata if enabled
     if (config.stripMetadata) {
-      sharpImage = sharpImage.withMetadata(false);
+      sharpImage = sharpImage.withMetadata();
     }
 
     const result: OptimizationResult = {
@@ -184,7 +184,7 @@ export class AssetOptimizationService extends EventEmitter {
           size: webpBuffer.length,
           quality: config.compressionQuality,
         };
-      } catch (error) {
+      } catch (error: any) {
         this.emit('webpOptimizationFailed', error);
       }
     }
@@ -208,7 +208,7 @@ export class AssetOptimizationService extends EventEmitter {
           size: avifBuffer.length,
           quality: config.compressionQuality,
         };
-      } catch (error) {
+      } catch (error: any) {
         this.emit('avifOptimizationFailed', error);
       }
     }
@@ -262,7 +262,7 @@ export class AssetOptimizationService extends EventEmitter {
           percentage: ((originalSize - compressed.length) / originalSize) * 100,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       this.emit('textOptimizationFailed', error);
       
       return {
@@ -309,7 +309,7 @@ export class AssetOptimizationService extends EventEmitter {
           buffer: resized,
           size: resized.length,
         });
-      } catch (error) {
+      } catch (error: any) {
         this.emit('responsiveVersionFailed', { width, error });
       }
     }

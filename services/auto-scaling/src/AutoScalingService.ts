@@ -80,7 +80,7 @@ export class AutoScalingService extends EventEmitter {
           await this.storeScalingDecision(data.decision);
           await this.storeScalingEvent(scalingEvent);
           
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Failed to execute scaling for ${data.serviceName}:`, error);
           this.emit('scalingError', { serviceName: data.serviceName, error });
         }
@@ -112,7 +112,7 @@ export class AutoScalingService extends EventEmitter {
     });
   }
 
-  private async evaluateScalingDecision(serviceName: string, metrics: any): Promise<void> {
+  private async evaluateScalingDecision(serviceName: string, metrics: any): Promise<any> {
     try {
       const allMetrics = this.metricsCollector.getAllMetrics();
       const decision = await this.decisionEngine.makeScalingDecision(serviceName, metrics, allMetrics);
@@ -122,7 +122,7 @@ export class AutoScalingService extends EventEmitter {
       // Emit decision event (will be handled by event handler above)
       this.decisionEngine.emit('decisionMade', { serviceName, decision });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to evaluate scaling decision for ${serviceName}:`, error);
       this.emit('decisionError', { serviceName, error });
     }
@@ -133,7 +133,7 @@ export class AutoScalingService extends EventEmitter {
     this.app.use(express.urlencoded({ extended: true }));
 
     // Request logging
-    this.app.use((req, res, next) => {
+    this.app.use((req: any, res: any, next: any) => {
       console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
       next();
     });
@@ -141,7 +141,7 @@ export class AutoScalingService extends EventEmitter {
     // Error handling
     this.app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
       console.error('API Error:', error);
-      res.status(500).json({ error: 'Internal server error', details: error.message });
+      res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' });
     });
   }
 
@@ -151,7 +151,7 @@ export class AutoScalingService extends EventEmitter {
       try {
         const health = await this.getHealthStatus();
         res.json(health);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Health check failed', details: (error as Error).message });
       }
     });
@@ -161,7 +161,7 @@ export class AutoScalingService extends EventEmitter {
       try {
         const status = await this.getScalingStatus();
         res.json(status);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get status', details: (error as Error).message });
       }
     });
@@ -177,7 +177,7 @@ export class AutoScalingService extends EventEmitter {
         }
         
         res.json(metrics);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get metrics', details: (error as Error).message });
       }
     });
@@ -189,7 +189,7 @@ export class AutoScalingService extends EventEmitter {
         const { limit = 20 } = req.query;
         const decisions = this.decisionEngine.getDecisionHistory(serviceName, parseInt(limit as string));
         res.json(decisions);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get decisions', details: (error as Error).message });
       }
     });
@@ -201,7 +201,7 @@ export class AutoScalingService extends EventEmitter {
         const { limit = 20 } = req.query;
         const events = this.scalingExecutor.getScalingHistory(serviceName, parseInt(limit as string));
         res.json(events);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get events', details: (error as Error).message });
       }
     });
@@ -240,7 +240,7 @@ export class AutoScalingService extends EventEmitter {
         const scalingEvent = await this.scalingExecutor.executeScalingDecision(decision);
         res.json({ decision, event: scalingEvent });
         
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Manual scaling failed', details: (error as Error).message });
       }
     });
@@ -254,7 +254,7 @@ export class AutoScalingService extends EventEmitter {
         const scalingEvent = await this.scalingExecutor.emergencyScaleDown(serviceName, emergencyInstances);
         res.json({ event: scalingEvent });
         
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Emergency scale-down failed', details: (error as Error).message });
       }
     });
@@ -271,7 +271,7 @@ export class AutoScalingService extends EventEmitter {
         
         res.json({ event: scalingEvent });
         
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Rollback failed', details: (error as Error).message });
       }
     });
@@ -285,7 +285,7 @@ export class AutoScalingService extends EventEmitter {
         const prediction = await this.decisionEngine.generatePrediction(serviceName, parseInt(timeHorizon as string));
         res.json(prediction);
         
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Prediction generation failed', details: (error as Error).message });
       }
     });
@@ -301,7 +301,7 @@ export class AutoScalingService extends EventEmitter {
         );
         res.json(report);
         
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Report generation failed', details: (error as Error).message });
       }
     });
@@ -313,7 +313,7 @@ export class AutoScalingService extends EventEmitter {
         await this.updateConfiguration(newConfig);
         res.json({ message: 'Configuration updated successfully' });
         
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Configuration update failed', details: (error as Error).message });
       }
     });
@@ -327,7 +327,7 @@ export class AutoScalingService extends EventEmitter {
         const testResult = await this.scalingExecutor.testScalingOperation(serviceName, targetInstances);
         res.json(testResult);
         
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Scaling test failed', details: (error as Error).message });
       }
     });
@@ -404,17 +404,17 @@ export class AutoScalingService extends EventEmitter {
     };
   }
 
-  private async storeScalingDecision(decision: AutoScalingDecision): Promise<void> {
+  private async storeScalingDecision(decision: AutoScalingDecision): Promise<any> {
     const key = `decision:${decision.serviceName}:${decision.timestamp.toISOString()}`;
     await this.redis.setex(key, 86400 * 7, JSON.stringify(decision)); // 7 days retention
   }
 
-  private async storeScalingEvent(event: ScalingEvent): Promise<void> {
+  private async storeScalingEvent(event: ScalingEvent): Promise<any> {
     const key = `event:${event.id}`;
     await this.redis.setex(key, 86400 * 30, JSON.stringify(event)); // 30 days retention
   }
 
-  private async sendAlert(type: string, message: string, data?: any): Promise<void> {
+  private async sendAlert(type: string, message: string, data?: any): Promise<any> {
     try {
       console.log(`Alert [${type}]: ${message}`);
       
@@ -431,7 +431,7 @@ export class AutoScalingService extends EventEmitter {
         // Send email notification
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send alert:', error);
     }
   }
@@ -527,7 +527,7 @@ export class AutoScalingService extends EventEmitter {
     };
   }
 
-  private async updateConfiguration(newConfig: Partial<AutoScalingServiceConfig>): Promise<void> {
+  private async updateConfiguration(newConfig: Partial<AutoScalingServiceConfig>): Promise<any> {
     // Update configuration (in production, this would validate and persist changes)
     Object.assign(this.config, newConfig);
     
@@ -538,7 +538,7 @@ export class AutoScalingService extends EventEmitter {
     }
   }
 
-  public async start(port: number = 3011): Promise<void> {
+  public async start(port: number = 3011): Promise<any> {
     if (this.isRunning) {
       console.log('Auto-scaling service is already running');
       return;
@@ -558,7 +558,7 @@ export class AutoScalingService extends EventEmitter {
           const report = await this.generateScalingReport(startDate, endDate);
           console.log(`Daily report generated: ${report.id}`);
           this.emit('reportGenerated', report);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Scheduled report generation failed:', error);
         }
       });
@@ -572,7 +572,7 @@ export class AutoScalingService extends EventEmitter {
     });
   }
 
-  public async stop(): Promise<void> {
+  public async stop(): Promise<any> {
     if (!this.isRunning) {
       console.log('Auto-scaling service is not running');
       return;
@@ -606,3 +606,4 @@ export class AutoScalingService extends EventEmitter {
     return this.app;
   }
 }
+

@@ -46,8 +46,8 @@ class PredictiveModelingService {
                 patience: 10
             }]
     ]);
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    constructor(eventPublisher) {
+        this.eventPublisher = eventPublisher || new eventPublisher_1.EventPublisher('PredictiveModelingService');
         this.initializePredefinedModels();
     }
     async trainModel(request) {

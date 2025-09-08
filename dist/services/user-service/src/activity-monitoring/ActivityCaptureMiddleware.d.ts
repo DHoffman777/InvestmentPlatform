@@ -1,12 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import { ActivityTrackingService, ActivitySeverity } from './ActivityTrackingService';
+declare global {
+    namespace Express {
+        interface User {
+            id: string;
+            tenantId: string;
+            roles: string[];
+            permissions: string[];
+        }
+    }
+}
 export interface AuthenticatedRequest extends Request {
-    user?: {
-        id: string;
-        tenantId: string;
-        roles: string[];
-        permissions: string[];
-    };
+    user?: any;
     sessionId?: string;
     activityContext?: ActivityContext;
 }

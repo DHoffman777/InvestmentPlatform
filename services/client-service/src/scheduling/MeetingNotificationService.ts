@@ -51,11 +51,11 @@ export interface NotificationChannel {
     replyTo?: string;
     
     // SMS config
-    provider?: 'twilio' | 'aws_sns' | 'nexmo';
+    smsProvider?: 'twilio' | 'aws_sns' | 'nexmo';
     fromNumber?: string;
     
     // Push config
-    provider?: 'firebase' | 'apns' | 'web_push';
+    pushProvider?: 'firebase' | 'apns' | 'web_push';
     appId?: string;
     
     // Slack/Teams config
@@ -678,7 +678,7 @@ export class MeetingNotificationService extends EventEmitter {
     tenantId: string;
     meetingData: any;
     timestamp: Date;
-  }): Promise<void> {
+  }): Promise<any> {
     const applicableRules = Array.from(this.rules.values())
       .filter(rule => 
         rule.enabled &&
@@ -692,7 +692,7 @@ export class MeetingNotificationService extends EventEmitter {
         if (this.evaluateRuleConditions(rule, event.meetingData)) {
           await this.executeRule(rule, event);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error executing rule ${rule.id}:`, error);
       }
     }
@@ -737,7 +737,7 @@ export class MeetingNotificationService extends EventEmitter {
     return value;
   }
 
-  private async executeRule(rule: NotificationRule, event: any): Promise<void> {
+  private async executeRule(rule: NotificationRule, event: any): Promise<any> {
     for (const action of rule.actions) {
       switch (action.type) {
         case 'send_notification':
@@ -755,7 +755,7 @@ export class MeetingNotificationService extends EventEmitter {
     }
   }
 
-  private async scheduleNotification(rule: NotificationRule, action: any, event: any): Promise<void> {
+  private async scheduleNotification(rule: NotificationRule, action: any, event: any): Promise<any> {
     if (!action.templateId) {
       throw new Error('Template ID required for send_notification action');
     }
@@ -955,7 +955,7 @@ export class MeetingNotificationService extends EventEmitter {
   }
 
   // Notification job processing
-  private async processNotificationJobs(): Promise<void> {
+  private async processNotificationJobs(): Promise<any> {
     const now = new Date();
     const pendingJobs = Array.from(this.jobs.values())
       .filter(job => 
@@ -972,14 +972,14 @@ export class MeetingNotificationService extends EventEmitter {
     for (const job of pendingJobs) {
       try {
         await this.processNotificationJob(job);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error processing job ${job.id}:`, error);
-        await this.handleJobFailure(job, error.message);
+        await this.handleJobFailure(job, error instanceof Error ? error.message : 'Unknown error');
       }
     }
   }
 
-  private async processNotificationJob(job: NotificationJob): Promise<void> {
+  private async processNotificationJob(job: NotificationJob): Promise<any> {
     job.status = 'processing';
     job.attempts++;
     job.lastAttempt = new Date();
@@ -1048,7 +1048,7 @@ export class MeetingNotificationService extends EventEmitter {
     return { messageId: `${channel}_${randomUUID()}` };
   }
 
-  private async handleJobFailure(job: NotificationJob, error: string): Promise<void> {
+  private async handleJobFailure(job: NotificationJob, error: string): Promise<any> {
     job.error = error;
     job.status = job.attempts >= job.maxAttempts ? 'failed' : 'pending';
     
@@ -1060,12 +1060,12 @@ export class MeetingNotificationService extends EventEmitter {
     this.jobs.set(job.id, job);
   }
 
-  private async createFollowUpTask(rule: NotificationRule, action: any, event: any): Promise<void> {
+  private async createFollowUpTask(rule: NotificationRule, action: any, event: any): Promise<any> {
     // Mock task creation
     console.log(`Creating follow-up task for meeting ${event.meetingId}`);
   }
 
-  private async sendWebhook(rule: NotificationRule, action: any, event: any): Promise<void> {
+  private async sendWebhook(rule: NotificationRule, action: any, event: any): Promise<any> {
     // Mock webhook sending
     console.log(`Sending webhook for rule ${rule.id} and meeting ${event.meetingId}`);
   }
@@ -1112,7 +1112,7 @@ export class MeetingNotificationService extends EventEmitter {
     }, delay);
   }
 
-  private async processReminder(reminderId: string): Promise<void> {
+  private async processReminder(reminderId: string): Promise<any> {
     const reminder = this.reminders.get(reminderId);
     if (!reminder || reminder.status !== 'active') return;
 
@@ -1129,21 +1129,21 @@ export class MeetingNotificationService extends EventEmitter {
         await this.scheduleRecurringReminder(reminder);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       reminder.status = 'failed';
-      reminder.error = error.message;
+      reminder.error = error instanceof Error ? error.message : 'Unknown error';
       reminder.updatedAt = new Date();
     }
 
     this.reminders.set(reminderId, reminder);
   }
 
-  private async sendReminderNotification(reminder: MeetingReminder): Promise<void> {
+  private async sendReminderNotification(reminder: MeetingReminder): Promise<any> {
     // Mock reminder notification sending
     console.log(`Sending ${reminder.type} reminder for meeting ${reminder.meetingId} to user ${reminder.userId}`);
   }
 
-  private async scheduleRecurringReminder(originalReminder: MeetingReminder): Promise<void> {
+  private async scheduleRecurringReminder(originalReminder: MeetingReminder): Promise<any> {
     if (!originalReminder.timing.recurring) return;
 
     const nextReminder: MeetingReminder = {
@@ -1292,7 +1292,7 @@ export class MeetingNotificationService extends EventEmitter {
     };
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     console.log('Shutting down Meeting Notification Service...');
     
     if (this.processingTimer) {
@@ -1319,3 +1319,4 @@ export class MeetingNotificationService extends EventEmitter {
 }
 
 export default MeetingNotificationService;
+

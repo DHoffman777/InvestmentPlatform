@@ -158,5 +158,5 @@ export declare class ErrorCorrelationService extends EventEmitter {
     getCorrelationRules(): CorrelationRule[];
     getCorrelationPatterns(): CorrelationPattern[];
     getCorrelationsForError(errorId: string): Promise<ErrorCorrelation[]>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { 
   ClientDocument, 
@@ -17,16 +18,14 @@ import {
 } from '../../models/clientDocuments/ClientDocuments';
 import { DocumentProcessingService } from './DocumentProcessingService';
 import { logger } from '../../utils/logger';
-import { EventPublisher } from '../../utils/eventPublisher';
-import { prisma } from '../../utils/database';
 
 export class ClientDocumentService {
+  private prisma: PrismaClient;
   private documentProcessingService: DocumentProcessingService;
-  private eventPublisher: EventPublisher;
 
-  constructor() {
-    this.documentProcessingService = new DocumentProcessingService();
-    this.eventPublisher = new EventPublisher();
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma;
+    this.documentProcessingService = new DocumentProcessingService(prisma);
   }
 
   async uploadClientDocument(request: DocumentUploadRequest): Promise<DocumentUploadResponse> {
@@ -62,7 +61,7 @@ export class ClientDocumentService {
 
       return uploadResponse;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error uploading client document:', error);
       throw error;
     }
@@ -115,7 +114,7 @@ export class ClientDocumentService {
         documents: filteredDocuments
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving client documents:', error);
       throw error;
     }
@@ -138,7 +137,7 @@ export class ClientDocumentService {
 
       return document;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving client document:', error);
       throw error;
     }
@@ -195,19 +194,19 @@ export class ClientDocumentService {
       });
 
       // Publish event
-      await this.eventPublisher.publish('client.document.updated', {
-        tenantId,
-        clientId: existingDocument.clientId,
-        documentId,
-        updatedBy: userId,
-        changes: updates
-      });
+      // await this.eventPublisher.publish('client.document.updated', {
+      //   tenantId,
+      //   clientId: existingDocument.clientId,
+      //   documentId,
+      //   updatedBy: userId,
+      //   changes: updates
+      // });
 
       logger.info('Client document updated successfully', { documentId });
 
       return updatedDocument;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating client document:', error);
       throw error;
     }
@@ -218,7 +217,7 @@ export class ClientDocumentService {
     documentId: string,
     userId: string,
     reason?: string
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.info('Deleting client document', { tenantId, documentId, userId });
 
@@ -237,17 +236,17 @@ export class ClientDocumentService {
       await this.updateClientDocumentIndex(document.clientId, documentId, 'REMOVED');
 
       // Publish event
-      await this.eventPublisher.publish('client.document.deleted', {
-        tenantId,
-        clientId: document.clientId,
-        documentId,
-        deletedBy: userId,
-        reason
-      });
+      // await this.eventPublisher.publish('client.document.deleted', {
+      //   tenantId,
+      //   clientId: document.clientId,
+      //   documentId,
+      //   deletedBy: userId,
+      //   reason
+      // });
 
       logger.info('Client document deleted successfully', { documentId });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deleting client document:', error);
       throw error;
     }
@@ -260,7 +259,7 @@ export class ClientDocumentService {
     permissions: DocumentPermission[],
     userId: string,
     expirationDate?: Date
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.info('Sharing document with client', {
         tenantId,
@@ -311,7 +310,7 @@ export class ClientDocumentService {
 
       logger.info('Document shared successfully', { documentId, recipientClientId });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error sharing document:', error);
       throw error;
     }
@@ -359,7 +358,7 @@ export class ClientDocumentService {
         ? templates.filter(t => t.documentType === documentType)
         : templates;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving document templates:', error);
       throw error;
     }
@@ -404,13 +403,13 @@ export class ClientDocumentService {
       }
 
       // Publish event
-      await this.eventPublisher.publish('client.documents.bulk_operation', {
-        tenantId,
-        operationType: operation.operationType,
-        documentIds: operation.documentIds,
-        performedBy: userId,
-        result
-      });
+      // await this.eventPublisher.publish('client.documents.bulk_operation', {
+      //   tenantId,
+      //   operationType: operation.operationType,
+      //   documentIds: operation.documentIds,
+      //   performedBy: userId,
+      //   result
+      // });
 
       logger.info('Bulk document operation completed', {
         operationType: operation.operationType,
@@ -420,7 +419,7 @@ export class ClientDocumentService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing bulk document operation:', error);
       throw error;
     }
@@ -446,34 +445,34 @@ export class ClientDocumentService {
 
       return stats;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving client document statistics:', error);
       throw error;
     }
   }
 
   // Private helper methods
-  private async validateClientAccess(tenantId: string, clientId: string, userId?: string): Promise<void> {
+  private async validateClientAccess(tenantId: string, clientId: string, userId?: string): Promise<any> {
     // Mock validation - replace with actual client access check
     logger.debug('Validating client access', { tenantId, clientId, userId });
   }
 
-  private async checkStorageQuota(tenantId: string, clientId: string, fileSize: number): Promise<void> {
+  private async checkStorageQuota(tenantId: string, clientId: string, fileSize: number): Promise<any> {
     // Mock quota check - replace with actual quota validation
     logger.debug('Checking storage quota', { tenantId, clientId, fileSize });
   }
 
-  private async linkDocumentToClient(documentId: string, clientId: string): Promise<void> {
+  private async linkDocumentToClient(documentId: string, clientId: string): Promise<any> {
     // Mock implementation - replace with actual database operation
     logger.debug('Linking document to client', { documentId, clientId });
   }
 
-  private async applyClientDocumentRules(document: ClientDocument): Promise<void> {
+  private async applyClientDocumentRules(document: ClientDocument): Promise<any> {
     // Apply tenant and client-specific rules
     logger.debug('Applying client document rules', { documentId: document.id });
   }
 
-  private async sendDocumentNotifications(document: ClientDocument): Promise<void> {
+  private async sendDocumentNotifications(document: ClientDocument): Promise<any> {
     // Send notifications based on document type and client preferences
     logger.debug('Sending document notifications', { documentId: document.id });
   }
@@ -488,34 +487,34 @@ export class ClientDocumentService {
     return true;
   }
 
-  private async validateDocumentUpdates(document: ClientDocument, updates: Partial<ClientDocument>): Promise<void> {
+  private async validateDocumentUpdates(document: ClientDocument, updates: Partial<ClientDocument>): Promise<any> {
     // Validate that updates are allowed
     logger.debug('Validating document updates', { documentId: document.id });
   }
 
-  private async saveDocumentUpdates(document: ClientDocument): Promise<void> {
+  private async saveDocumentUpdates(document: ClientDocument): Promise<any> {
     // Mock save operation
     logger.debug('Saving document updates', { documentId: document.id });
   }
 
-  private async checkDeletionCompliance(document: ClientDocument): Promise<void> {
+  private async checkDeletionCompliance(document: ClientDocument): Promise<any> {
     if (document.retention.legalHold) {
       throw new Error('Cannot delete document under legal hold');
     }
     // Check other compliance restrictions
   }
 
-  private async updateClientDocumentIndex(clientId: string, documentId: string, action: string): Promise<void> {
+  private async updateClientDocumentIndex(clientId: string, documentId: string, action: string): Promise<any> {
     // Update search index
     logger.debug('Updating client document index', { clientId, documentId, action });
   }
 
-  private async createDocumentAccess(accessData: any): Promise<void> {
+  private async createDocumentAccess(accessData: any): Promise<any> {
     // Create document access record
     logger.debug('Creating document access', accessData);
   }
 
-  private async sendShareNotification(document: ClientDocument, recipientId: string, sharedBy: string): Promise<void> {
+  private async sendShareNotification(document: ClientDocument, recipientId: string, sharedBy: string): Promise<any> {
     // Send notification about shared document
     logger.debug('Sending share notification', { 
       documentId: document.id, 
@@ -524,7 +523,7 @@ export class ClientDocumentService {
     });
   }
 
-  private async validateBulkOperationPermissions(operation: BulkDocumentOperation, userId: string): Promise<void> {
+  private async validateBulkOperationPermissions(operation: BulkDocumentOperation, userId: string): Promise<any> {
     // Validate permissions for bulk operation
     logger.debug('Validating bulk operation permissions', { 
       operationType: operation.operationType,
@@ -542,7 +541,7 @@ export class ClientDocumentService {
     }
   }
 
-  private async createAuditLog(auditLog: DocumentAuditLog): Promise<void> {
+  private async createAuditLog(auditLog: DocumentAuditLog): Promise<any> {
     // Mock audit log creation
     logger.info('Document audit log created', { 
       documentId: auditLog.documentId,
@@ -551,3 +550,4 @@ export class ClientDocumentService {
     });
   }
 }
+

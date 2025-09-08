@@ -3,15 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BusinessContinuityManager = void 0;
 const events_1 = require("events");
 const crypto_1 = require("crypto");
-activeProced;
-ures: string[];
-pendingProcedures: string[];
-resources: ResourceAllocation;
-timeline: ExecutionTimeline;
-issues: RecoveryIssue[];
-communications: CommunicationLog[];
-costs: ActualCosts;
-metrics: RecoveryMetrics;
 /**
  * Business Continuity Management System
  * Provides comprehensive business continuity planning, risk assessment, and disaster recovery
@@ -52,7 +43,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('planError', {
                 operation: 'create',
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -92,7 +83,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('riskAssessmentError', {
                 planId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -131,7 +122,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('biaError', {
                 planId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -173,7 +164,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
         catch (error) {
             this.emit('disasterResponseError', {
                 planId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -205,7 +196,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
                 stepResults.push(stepResult);
                 if (!stepResult.success) {
                     // Handle step failure
-                    await this.handleStepFailure(execution, procedure, step, stepResult.error);
+                    await this.handleStepFailure(execution, procedure, step, stepResult.error || 'Unknown error');
                     break;
                 }
             }
@@ -225,8 +216,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
             // Update execution status
             if (success) {
                 execution.completedProcedures.push(procedureId);
-                execution.activeProc;
-                edures = execution.activeProcedures.filter(p => p !== procedureId);
+                execution.activeProcedures = execution.activeProcedures.filter(p => p !== procedureId);
             }
             execution.timeline.events.push({
                 timestamp: new Date(),
@@ -251,7 +241,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
             this.emit('procedureExecutionError', {
                 executionId,
                 procedureId,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -297,7 +287,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
             this.emit('testSchedulingError', {
                 planId,
                 testType,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             throw error;
@@ -708,7 +698,7 @@ class BusinessContinuityManager extends events_1.EventEmitter {
                         responsibilities: ['Overall incident coordination', 'Decision making'],
                         expertise: ['Risk Management', 'Business Continuity'],
                         location: 'Primary Office',
-                        availability: { hours: '24/7', timeZone: 'EST' }
+                        availability: { hours: '24/7', timeZone: 'EST', holidays: true, backup: 'Deputy Commander' }
                     },
                     deputies: [],
                     functionalLeads: [],

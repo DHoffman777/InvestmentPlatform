@@ -538,10 +538,10 @@ export class UserProfileService extends EventEmitter {
           AuditSource.WEB_PORTAL
         );
 
-      } catch (error) {
+      } catch (error: any) {
         errors.push({
           field: update.field,
-          message: error.message,
+          message: this.getErrorMessage(error),
           code: 'UPDATE_ERROR',
           severity: 'error'
         });
@@ -702,10 +702,10 @@ export class UserProfileService extends EventEmitter {
             severity: rule.severity
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         errors.push({
           field: rule.field,
-          message: `Validation error: ${error.message}`,
+          message: `Validation error: ${this.getErrorMessage(error)}`,
           code: 'VALIDATION_EXCEPTION',
           severity: 'error'
         });
@@ -889,6 +889,13 @@ export class UserProfileService extends EventEmitter {
     ];
 
     this.complianceRules.set('default', basicRules);
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if ((error as any) instanceof Error) {
+      return (error as Error).message;
+    }
+    return String(error);
   }
 }
 

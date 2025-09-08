@@ -188,7 +188,7 @@ regulatoryValidatorService.on('batchValidationCompleted', ({ request, result }) 
 });
 
 regulatoryValidatorService.on('batchValidationFailed', ({ request, error }) => {
-  console.error(`Batch validation failed: ${request.requestId} - ${error.message}`);
+  console.error(`Batch validation failed: ${request.requestId} - ${error instanceof Error ? error.message : 'Unknown error'}`);
 });
 
 regulatoryValidatorService.on('error', (error) => {
@@ -203,7 +203,7 @@ const shutdown = async (signal: string) => {
     await regulatoryValidatorService.stop();
     console.log('Shutdown completed successfully');
     process.exit(0);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error during shutdown:', error);
     process.exit(1);
   }

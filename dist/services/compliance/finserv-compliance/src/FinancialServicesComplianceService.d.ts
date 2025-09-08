@@ -16,6 +16,6 @@ export declare class FinancialServicesComplianceService extends EventEmitter {
     private getClientAMLChecks;
     private generateComplianceReport;
     private generateReportId;
-    start(): Promise<void>;
-    cleanup(): Promise<void>;
+    start(): Promise<any>;
+    cleanup(): Promise<any>;
 }

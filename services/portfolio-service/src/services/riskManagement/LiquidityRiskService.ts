@@ -101,7 +101,7 @@ export class LiquidityRiskService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error assessing liquidity risk:', error);
       throw error;
     }
@@ -175,7 +175,7 @@ export class LiquidityRiskService {
 
     return {
       positionId: position.positionId,
-      instrumentId: position.instrumentId,
+      securityId: position.securityId,
       symbol: position.symbol,
       marketValue: position.marketValue,
       liquidityCategory,
@@ -535,7 +535,7 @@ export class LiquidityRiskService {
     stressScenario: any,
     request: LiquidityRiskRequest
   ): Promise<PositionLiquidity[]> {
-    return positionLiquidity.map(position => {
+    return Promise.all(positionLiquidity.map(async position => {
       // Apply volume reduction
       const stressedVolume = position.averageDailyVolume * stressScenario.volumeReduction;
       
@@ -550,7 +550,7 @@ export class LiquidityRiskService {
       );
 
       // Recalculate liquidation cost
-      const stressedLiquidationCost = this.calculateLiquidationCost(
+      const stressedLiquidationCost = await this.calculateLiquidationCost(
         position.marketValue,
         stressedVolume,
         stressedSpread,
@@ -566,7 +566,7 @@ export class LiquidityRiskService {
         averageDailyVolume: stressedVolume,
         bidAskSpread: stressedSpread
       } as PositionLiquidity;
-    });
+    }));
   }
 
   // Helper methods
@@ -575,7 +575,7 @@ export class LiquidityRiskService {
     return [
       {
         positionId: 'pos_001',
-        instrumentId: 'AAPL',
+        securityId: 'AAPL',
         symbol: 'AAPL',
         marketValue: 1000000,
         assetClass: 'EQUITY',
@@ -583,7 +583,7 @@ export class LiquidityRiskService {
       },
       {
         positionId: 'pos_002',
-        instrumentId: 'GOOGL',
+        securityId: 'GOOGL',
         symbol: 'GOOGL',
         marketValue: 800000,
         assetClass: 'EQUITY',
@@ -591,7 +591,7 @@ export class LiquidityRiskService {
       },
       {
         positionId: 'pos_003',
-        instrumentId: 'BND',
+        securityId: 'BND',
         symbol: 'BND',
         marketValue: 500000,
         assetClass: 'FIXED_INCOME',
@@ -599,7 +599,7 @@ export class LiquidityRiskService {
       },
       {
         positionId: 'pos_004',
-        instrumentId: 'VNQ',
+        securityId: 'VNQ',
         symbol: 'VNQ',
         marketValue: 300000,
         assetClass: 'ALTERNATIVES',
@@ -664,12 +664,12 @@ export class LiquidityRiskService {
     return baseSpread[position.assetClass] || baseSpread['EQUITY'];
   }
 
-  private async storeLiquidityRiskResult(result: LiquidityRiskResult): Promise<void> {
+  private async storeLiquidityRiskResult(result: LiquidityRiskResult): Promise<any> {
     logger.debug('Storing liquidity risk result', { liquidityRiskId: result.id });
     // Implement database storage
   }
 
-  private async publishLiquidityRiskEvent(eventType: string, result: LiquidityRiskResult): Promise<void> {
+  private async publishLiquidityRiskEvent(eventType: string, result: LiquidityRiskResult): Promise<any> {
     try {
       await this.kafkaService.publishEvent('risk-management', {
         eventType,
@@ -679,8 +679,10 @@ export class LiquidityRiskService {
         timestamp: new Date(),
         data: result
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing liquidity risk event:', error);
     }
   }
 }
+
+

@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Static export mode - removed dynamic directives
+// export const dynamic = 'force-dynamic';
+// export const revalidate = 0;
 
 export default function GlobalError({
   error,

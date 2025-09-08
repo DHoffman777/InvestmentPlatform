@@ -4,7 +4,6 @@ const express_1 = require("express");
 const kafka_mock_1 = require("../utils/kafka-mock");
 const logger_1 = require("../utils/logger");
 const InvestmentObjectivesService_1 = require("../services/clientRelationship/InvestmentObjectivesService");
-const ClientRelationship_1 = require("../models/clientRelationship/ClientRelationship");
 const auth_1 = require("../middleware/auth");
 const validation_1 = require("../middleware/validation");
 const library_1 = require("@prisma/client/runtime/library");
@@ -60,7 +59,7 @@ const investmentObjectiveSchema = {
     },
     riskLevel: {
         required: false,
-        enum: Object.values(ClientRelationship_1.RiskTolerance),
+        enum: ['CONSERVATIVE', 'MODERATE', 'AGGRESSIVE', 'VERY_AGGRESSIVE'],
         message: 'Valid risk level is required'
     }
 };
@@ -72,7 +71,7 @@ const investmentRestrictionSchema = {
     },
     restrictionType: {
         required: true,
-        enum: Object.values(ClientRelationship_1.RestrictionType),
+        enum: ['POSITION_LIMIT', 'SECTOR_LIMIT', 'ISSUER_LIMIT', 'ESG_RESTRICTION'],
         message: 'Valid restriction type is required'
     },
     description: {
@@ -459,7 +458,7 @@ router.get('/clients/:clientId/restrictions/analysis', auth_1.authMiddleware, as
  */
 router.get('/restriction-types', auth_1.authMiddleware, async (req, res) => {
     try {
-        const restrictionTypes = Object.values(ClientRelationship_1.RestrictionType).map(type => ({
+        const restrictionTypes = ['POSITION_LIMIT', 'SECTOR_LIMIT', 'ISSUER_LIMIT', 'ESG_RESTRICTION'].map(type => ({
             value: type,
             label: type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
             description: getRestrictionTypeDescription(type)
@@ -484,9 +483,9 @@ router.get('/restriction-types', auth_1.authMiddleware, async (req, res) => {
  */
 router.get('/risk-levels', auth_1.authMiddleware, async (req, res) => {
     try {
-        const riskLevels = Object.values(ClientRelationship_1.RiskTolerance).map(level => ({
+        const riskLevels = ['CONSERVATIVE', 'MODERATE', 'AGGRESSIVE', 'VERY_AGGRESSIVE'].map((level) => ({
             value: level,
-            label: level.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+            label: level.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase()),
             description: getRiskLevelDescription(level),
             numericValue: getRiskLevelNumber(level)
         }));
@@ -506,35 +505,29 @@ router.get('/risk-levels', auth_1.authMiddleware, async (req, res) => {
 // Helper functions
 function getRestrictionTypeDescription(type) {
     const descriptions = {
-        [ClientRelationship_1.RestrictionType.SECURITY_RESTRICTION]: 'Restriction on specific securities or instruments',
-        [ClientRelationship_1.RestrictionType.SECTOR_RESTRICTION]: 'Limitation on sector exposure or investment',
-        [ClientRelationship_1.RestrictionType.ASSET_CLASS_LIMIT]: 'Maximum allocation limit for asset class',
-        [ClientRelationship_1.RestrictionType.GEOGRAPHIC_RESTRICTION]: 'Restriction on geographic regions or countries',
-        [ClientRelationship_1.RestrictionType.ESG_SCREENING]: 'Environmental, Social, and Governance screening criteria',
-        [ClientRelationship_1.RestrictionType.CONCENTRATION_LIMIT]: 'Maximum concentration in single position',
-        [ClientRelationship_1.RestrictionType.LIQUIDITY_REQUIREMENT]: 'Minimum liquidity requirements for investments',
-        [ClientRelationship_1.RestrictionType.CREDIT_QUALITY]: 'Minimum credit quality or rating requirements'
+        'POSITION_LIMIT': 'Maximum position size limit',
+        'SECTOR_LIMIT': 'Limitation on sector exposure or investment',
+        'ISSUER_LIMIT': 'Maximum allocation limit for single issuer',
+        'ESG_RESTRICTION': 'Environmental, Social, and Governance screening criteria'
     };
     return descriptions[type] || 'Investment restriction';
 }
 function getRiskLevelDescription(level) {
     const descriptions = {
-        [ClientRelationship_1.RiskTolerance.CONSERVATIVE]: 'Low risk, focus on capital preservation',
-        [ClientRelationship_1.RiskTolerance.MODERATE_CONSERVATIVE]: 'Below-average risk, some growth potential',
-        [ClientRelationship_1.RiskTolerance.MODERATE]: 'Balanced approach to risk and return',
-        [ClientRelationship_1.RiskTolerance.MODERATE_AGGRESSIVE]: 'Above-average risk for higher returns',
-        [ClientRelationship_1.RiskTolerance.AGGRESSIVE]: 'High risk, maximum growth potential'
+        'CONSERVATIVE': 'Low risk, focus on capital preservation',
+        'MODERATE': 'Balanced approach to risk and return',
+        'AGGRESSIVE': 'Higher risk, seeking higher returns',
+        'VERY_AGGRESSIVE': 'Maximum risk for maximum potential returns'
     };
     return descriptions[level] || 'Risk tolerance level';
 }
 function getRiskLevelNumber(level) {
     const riskMap = {
-        [ClientRelationship_1.RiskTolerance.CONSERVATIVE]: 1,
-        [ClientRelationship_1.RiskTolerance.MODERATE_CONSERVATIVE]: 2,
-        [ClientRelationship_1.RiskTolerance.MODERATE]: 3,
-        [ClientRelationship_1.RiskTolerance.MODERATE_AGGRESSIVE]: 4,
-        [ClientRelationship_1.RiskTolerance.AGGRESSIVE]: 5
+        'CONSERVATIVE': 1,
+        'MODERATE': 2,
+        'AGGRESSIVE': 3,
+        'VERY_AGGRESSIVE': 4
     };
-    return riskMap[level] || 3;
+    return riskMap[level] || 2;
 }
 exports.default = router;

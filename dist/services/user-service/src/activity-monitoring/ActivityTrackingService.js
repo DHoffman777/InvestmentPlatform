@@ -239,9 +239,14 @@ class ActivityTrackingService extends events_1.EventEmitter {
             [ActivityType.PORTFOLIO_ACCESS]: 0.2,
             [ActivityType.PORTFOLIO_MODIFICATION]: 0.5,
             [ActivityType.TRADING]: 0.7,
+            [ActivityType.REPORTING]: 0.3,
+            [ActivityType.DOCUMENT_ACCESS]: 0.4,
             [ActivityType.SYSTEM_ADMIN]: 0.8,
+            [ActivityType.COMPLIANCE]: 0.4,
+            [ActivityType.COMMUNICATION]: 0.2,
             [ActivityType.DATA_EXPORT]: 0.6,
-            [ActivityType.SECURITY]: 0.9
+            [ActivityType.SECURITY]: 0.9,
+            [ActivityType.API_ACCESS]: 0.5
         };
         score += typeRisk[activity.activityType] || 0.1;
         // Severity impact

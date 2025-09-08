@@ -8,7 +8,7 @@ export declare function getPrismaClient(): PrismaClient;
  * Manually disconnect the shared Prisma client
  * Use this for graceful shutdown
  */
-export declare function disconnectPrisma(): Promise<void>;
+export declare function disconnectPrisma(): Promise<any>;
 /**
  * Test database connection
  */

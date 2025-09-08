@@ -263,7 +263,7 @@ export declare class CommunicationTimelineService extends EventEmitter {
     private initializeService;
     addTimelineEntry(entryData: Omit<TimelineEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<TimelineEntry>;
     updateTimelineEntry(entryId: string, updates: Partial<TimelineEntry>): Promise<TimelineEntry>;
-    deleteTimelineEntry(entryId: string, reason: string, deletedBy: string): Promise<void>;
+    deleteTimelineEntry(entryId: string, reason: string, deletedBy: string): Promise<any>;
     createTimelineView(clientId: string, tenantId: string, viewConfig: Partial<TimelineView>): Promise<TimelineView>;
     getTimelineView(viewId: string): Promise<TimelineView>;
     createTimelineTemplate(tenantId: string, templateData: Omit<TimelineTemplate, 'id' | 'usage' | 'createdAt' | 'updatedAt'>): Promise<TimelineTemplate>;
@@ -355,5 +355,5 @@ export declare class CommunicationTimelineService extends EventEmitter {
     private performMaintenanceCleanup;
     private processAlertQueue;
     private monitorForAlertConditions;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

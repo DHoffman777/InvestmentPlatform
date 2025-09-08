@@ -166,7 +166,7 @@ export function validateRequest(schema: ValidationSchema) {
       }
 
       next();
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in validation middleware:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -200,7 +200,7 @@ export function validateQuery(schema: ValidationSchema) {
       }
 
       next();
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in query validation middleware:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -234,7 +234,7 @@ export function validateParams(schema: ValidationSchema) {
       }
 
       next();
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in params validation middleware:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -245,3 +245,4 @@ export function validateParams(schema: ValidationSchema) {
 }
 
 export default validateRequest;
+

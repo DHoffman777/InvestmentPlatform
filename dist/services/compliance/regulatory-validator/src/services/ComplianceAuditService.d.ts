@@ -18,12 +18,12 @@ export declare class ComplianceAuditService extends EventEmitter {
         ipAddress?: string;
         userAgent?: string;
         sessionId?: string;
-    }): Promise<void>;
+    }): Promise<any>;
     recordValidationAudit(result: ComplianceValidationResult, triggeredBy: string, metadata?: {
         ipAddress?: string;
         userAgent?: string;
         sessionId?: string;
-    }): Promise<void>;
+    }): Promise<any>;
     createException(exception: Omit<ComplianceException, 'id'>): Promise<ComplianceException>;
     updateException(exceptionId: string, updates: Partial<ComplianceException>, updatedBy: string): Promise<ComplianceException | null>;
     getException(exceptionId: string): Promise<ComplianceException | null>;
@@ -50,5 +50,5 @@ export declare class ComplianceAuditService extends EventEmitter {
         openAlerts: number;
         auditEvents: number;
     }>;
-    cleanup(): Promise<void>;
+    cleanup(): Promise<any>;
 }

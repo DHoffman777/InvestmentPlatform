@@ -133,6 +133,7 @@ router.post('/questionnaire', auth_1.authMiddleware, (0, validation_1.validateRe
         const questionnaire = {
             clientId: req.body.clientId,
             questionnaireVersion: req.body.questionnaireVersion,
+            completedBy: userId,
             responses: req.body.responses.map((response) => ({
                 questionId: response.questionId,
                 questionText: response.questionText,

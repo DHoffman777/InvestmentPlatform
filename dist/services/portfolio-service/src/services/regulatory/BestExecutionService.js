@@ -10,7 +10,7 @@ class BestExecutionService {
     reports = new Map();
     filings = new Map();
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('BestExecution');
     }
     async createBestExecutionReport(data) {
         try {

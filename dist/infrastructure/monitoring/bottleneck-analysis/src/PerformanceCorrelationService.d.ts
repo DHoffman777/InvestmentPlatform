@@ -184,7 +184,7 @@ export declare class PerformanceCorrelationService extends EventEmitter {
     private generateAnalysisId;
     private generateCorrelationId;
     private generateAnomalyId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 interface CorrelationAnalysisJob {
     id: string;

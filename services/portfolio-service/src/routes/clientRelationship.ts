@@ -197,7 +197,7 @@ const suitabilityAssessmentSchema = {
 router.post('/profiles', 
   authMiddleware, 
   validateRequest(clientProfileSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -229,7 +229,7 @@ router.post('/profiles',
         message: 'Client profile created successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating client profile:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -246,7 +246,7 @@ router.post('/profiles',
  */
 router.get('/profiles/:clientId', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -267,7 +267,7 @@ router.get('/profiles/:clientId',
         data: result
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving client profile:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -284,7 +284,7 @@ router.get('/profiles/:clientId',
  */
 router.put('/profiles/:clientId', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -314,7 +314,7 @@ router.put('/profiles/:clientId',
         message: 'Client profile updated successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating client profile:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -331,7 +331,7 @@ router.put('/profiles/:clientId',
  */
 router.get('/profiles', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const { 
@@ -370,7 +370,7 @@ router.get('/profiles',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error listing client profiles:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -388,7 +388,7 @@ router.get('/profiles',
 router.post('/meetings', 
   authMiddleware,
   validateRequest(meetingRequestSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -427,7 +427,7 @@ router.post('/meetings',
         message: 'Meeting scheduled successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error scheduling meeting:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -444,7 +444,7 @@ router.post('/meetings',
  */
 router.get('/meetings', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const { 
@@ -483,7 +483,7 @@ router.get('/meetings',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving meetings:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -501,7 +501,7 @@ router.get('/meetings',
 router.post('/communications', 
   authMiddleware,
   validateRequest(communicationRequestSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -538,7 +538,7 @@ router.post('/communications',
         message: 'Communication recorded successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error recording communication:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -555,7 +555,7 @@ router.post('/communications',
  */
 router.get('/communications/:clientId', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -595,7 +595,7 @@ router.get('/communications/:clientId',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving communication history:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -613,7 +613,7 @@ router.get('/communications/:clientId',
 router.post('/suitability-assessments', 
   authMiddleware,
   validateRequest(suitabilityAssessmentSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -627,8 +627,8 @@ router.post('/suitability-assessments',
 
       const assessmentRequest: SuitabilityAssessmentRequest = {
         ...req.body,
-        netWorth: new Decimal(req.body.netWorth),
-        annualIncome: new Decimal(req.body.annualIncome),
+        netWorth: new (Decimal as any)(req.body.netWorth),
+        annualIncome: new (Decimal as any)(req.body.annualIncome),
         investmentObjectives: req.body.investmentObjectives || [],
         liquidityNeeds: req.body.liquidityNeeds || LiquidityNeeds.MODERATE,
         investmentExperience: req.body.investmentExperience || InvestmentExperience.MODERATE
@@ -653,7 +653,7 @@ router.post('/suitability-assessments',
         message: 'Suitability assessment created successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating suitability assessment:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -670,7 +670,7 @@ router.post('/suitability-assessments',
  */
 router.get('/suitability-assessments/:clientId', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -703,7 +703,7 @@ router.get('/suitability-assessments/:clientId',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving suitability assessments:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -720,7 +720,7 @@ router.get('/suitability-assessments/:clientId',
  */
 router.get('/onboarding/:clientId', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -749,7 +749,7 @@ router.get('/onboarding/:clientId',
         }
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving onboarding workflow:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -766,7 +766,7 @@ router.get('/onboarding/:clientId',
  */
 router.put('/onboarding/:workflowId/steps/:stepNumber', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { workflowId, stepNumber } = req.params;
       const tenantId = req.user?.tenantId;
@@ -801,7 +801,7 @@ router.put('/onboarding/:workflowId/steps/:stepNumber',
         message: 'Onboarding step updated successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating onboarding step:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -818,7 +818,7 @@ router.put('/onboarding/:workflowId/steps/:stepNumber',
  */
 router.get('/analytics/:clientId', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -839,7 +839,7 @@ router.get('/analytics/:clientId',
         data: result
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating client analytics:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -856,7 +856,7 @@ router.get('/analytics/:clientId',
  */
 router.get('/segmentation', 
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
 
@@ -876,7 +876,7 @@ router.get('/segmentation',
         data: result
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating client segmentation:', error);
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -887,3 +887,4 @@ router.get('/segmentation',
 );
 
 export default router;
+

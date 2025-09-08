@@ -189,10 +189,10 @@ export class ModelPortfolioService extends EventEmitter {
 
       return newTemplate;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('templateError', {
         operation: 'create',
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date()
       });
       throw error;
@@ -238,11 +238,11 @@ export class ModelPortfolioService extends EventEmitter {
 
       return updatedTemplate;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('templateError', {
         templateId,
         operation: 'update',
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date()
       });
       throw error;
@@ -290,11 +290,11 @@ export class ModelPortfolioService extends EventEmitter {
 
       return replication;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('replicationError', {
         templateId,
         targetPortfolioId,
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date()
       });
       throw error;
@@ -324,7 +324,7 @@ export class ModelPortfolioService extends EventEmitter {
       for (const modelHolding of template.holdings) {
         const currentHolding = currentHoldings.find(h => h.securityId === modelHolding.securityId);
         const targetValue = totalValue * (modelHolding.targetWeight / 100);
-        const currentValue = currentHolding?.marketValue || 0;
+        const currentValue = currentHolding?.marketValue?.toNumber() || 0;
         const difference = targetValue - currentValue;
 
         if (Math.abs(difference) > totalValue * (template.rebalancingThreshold / 100)) {
@@ -379,11 +379,11 @@ export class ModelPortfolioService extends EventEmitter {
 
       return rebalancingResult;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('rebalancingError', {
         portfolioId,
         templateId,
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date()
       });
       throw error;
@@ -464,11 +464,11 @@ export class ModelPortfolioService extends EventEmitter {
 
       return await this.createTemplate(clonedTemplate);
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('templateError', {
         sourceTemplateId,
         operation: 'clone',
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date()
       });
       throw error;
@@ -477,7 +477,7 @@ export class ModelPortfolioService extends EventEmitter {
 
   // Private helper methods
 
-  private async processReplication(replicationId: string): Promise<void> {
+  private async processReplication(replicationId: string): Promise<any> {
     try {
       const replication = this.replications.get(replicationId);
       if (!replication) return;
@@ -501,17 +501,17 @@ export class ModelPortfolioService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       const replication = this.replications.get(replicationId);
       if (replication) {
         replication.status = 'failed';
-        replication.errors = [error.message];
+        replication.errors = [(error as Error).message];
         this.replications.set(replicationId, replication);
       }
 
       this.emit('replicationFailed', {
         replicationId,
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date()
       });
     }
@@ -636,3 +636,4 @@ export class ModelPortfolioService extends EventEmitter {
 }
 
 export default ModelPortfolioService;
+

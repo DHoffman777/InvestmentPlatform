@@ -61,7 +61,7 @@ export declare enum StrategyType {
 export interface DerivativeInstrument {
     id: string;
     tenantId: string;
-    instrumentId: string;
+    securityId: string;
     symbol: string;
     underlyingSymbol: string;
     underlyingInstrumentId: string;
@@ -132,7 +132,7 @@ export interface FutureContract extends DerivativeInstrument {
 export interface GreeksCalculation {
     id: string;
     tenantId: string;
-    instrumentId: string;
+    securityId: string;
     calculationDate: Date;
     delta: number;
     deltaCash?: number;
@@ -162,7 +162,7 @@ export interface GreeksCalculation {
 export interface ImpliedVolatilityAnalysis {
     id: string;
     tenantId: string;
-    instrumentId: string;
+    securityId: string;
     analysisDate: Date;
     impliedVolatility: number;
     bidIV?: number;
@@ -222,7 +222,7 @@ export interface OptionStrategy {
 }
 export interface StrategyLeg {
     id: string;
-    instrumentId: string;
+    securityId: string;
     side: 'BUY' | 'SELL';
     quantity: number;
     strikePrice?: number;
@@ -249,7 +249,7 @@ export interface MarginCalculationRequest {
     scenarioShifts?: MarginScenario[];
 }
 export interface MarginPosition {
-    instrumentId: string;
+    securityId: string;
     quantity: number;
     price: number;
     side: 'LONG' | 'SHORT';
@@ -281,7 +281,7 @@ export interface MarginCalculationResult {
     warnings?: string[];
 }
 export interface PositionMargin {
-    instrumentId: string;
+    securityId: string;
     initialMargin: number;
     maintenanceMargin: number;
     riskContribution: number;
@@ -290,7 +290,7 @@ export interface PositionMargin {
 export interface ExerciseEvent {
     id: string;
     tenantId: string;
-    instrumentId: string;
+    securityId: string;
     portfolioId: string;
     exerciseDate: Date;
     exercisePrice: number;
@@ -306,7 +306,7 @@ export interface ExerciseEvent {
 export interface AssignmentEvent {
     id: string;
     tenantId: string;
-    instrumentId: string;
+    securityId: string;
     portfolioId: string;
     assignmentDate: Date;
     assignmentPrice: number;
@@ -322,7 +322,7 @@ export interface AssignmentEvent {
 export interface MarkToMarketValuation {
     id: string;
     tenantId: string;
-    instrumentId: string;
+    securityId: string;
     valuationDate: Date;
     marketPrice: number;
     theoreticalPrice: number;
@@ -398,7 +398,7 @@ export interface ExpirationBucket {
     rollRisk: number;
 }
 export interface GreeksCalculationRequest {
-    instrumentId: string;
+    securityId: string;
     underlyingPrice?: number;
     volatility?: number;
     riskFreeRate?: number;
@@ -406,7 +406,7 @@ export interface GreeksCalculationRequest {
     calculationMethod?: VolatilityModel;
 }
 export interface ImpliedVolatilityRequest {
-    instrumentId: string;
+    securityId: string;
     optionPrice: number;
     underlyingPrice?: number;
     timeToExpiration?: number;

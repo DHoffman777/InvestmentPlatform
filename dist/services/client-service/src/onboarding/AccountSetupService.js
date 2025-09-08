@@ -449,10 +449,10 @@ class AccountSetupService extends events_1.EventEmitter {
         }
         catch (error) {
             step.status = StepStatus.FAILED;
-            step.errors.push(error.message);
+            step.errors.push(error instanceof Error ? error.message : 'Unknown error');
             setup.errors.push({
                 code: 'STEP_EXECUTION_FAILED',
-                message: `Step "${step.name}" failed: ${error.message}`,
+                message: `Step "${step.name}" failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 severity: 'high',
                 stepId: step.id,
                 timestamp: new Date(),

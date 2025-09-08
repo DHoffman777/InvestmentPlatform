@@ -62,7 +62,7 @@ export const authenticate = async (
     console.error('Biometric authentication error:', error);
     return {
       success: false,
-      error: error.message || 'Biometric authentication failed',
+      error: error instanceof Error ? error.message : 'Unknown error' || 'Biometric authentication failed',
     };
   }
 };
@@ -83,7 +83,7 @@ export const createKeys = async (): Promise<{success: boolean; error?: string}> 
     console.error('Error creating biometric keys:', error);
     return {
       success: false,
-      error: error.message || 'Failed to create biometric keys',
+      error: error instanceof Error ? error.message : 'Unknown error' || 'Failed to create biometric keys',
     };
   }
 };
@@ -104,7 +104,7 @@ export const deleteKeys = async (): Promise<{success: boolean; error?: string}> 
     console.error('Error deleting biometric keys:', error);
     return {
       success: false,
-      error: error.message || 'Failed to delete biometric keys',
+      error: error instanceof Error ? error.message : 'Unknown error' || 'Failed to delete biometric keys',
     };
   }
 };
@@ -134,7 +134,7 @@ export const createSignature = async (
     console.error('Error creating biometric signature:', error);
     return {
       success: false,
-      error: error.message || 'Failed to create biometric signature',
+      error: error instanceof Error ? error.message : 'Unknown error' || 'Failed to create biometric signature',
     };
   }
 };
@@ -182,7 +182,7 @@ export const promptBiometricEnrollment = async (): Promise<{
     console.error('Error prompting biometric enrollment:', error);
     return {
       success: false,
-      error: error.message || 'Failed to prompt biometric enrollment',
+      error: error instanceof Error ? error.message : 'Unknown error' || 'Failed to prompt biometric enrollment',
     };
   }
 };

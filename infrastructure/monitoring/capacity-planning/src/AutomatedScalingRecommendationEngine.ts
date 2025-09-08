@@ -70,7 +70,7 @@ export interface RecommendationScore {
 
 export class AutomatedScalingRecommendationEngine extends EventEmitter {
   private recommendations: Map<string, ScalingRecommendation> = new Map();
-  private evaluationTimer: NodeJS.Timeout;
+  private evaluationTimer!: NodeJS.Timeout;
   private config: RecommendationEngineConfig;
   private decisionEngine: DecisionEngine;
   private riskAssessor: RiskAssessor;
@@ -121,8 +121,8 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
       });
 
       return finalRecommendations;
-    } catch (error) {
-      this.emit('recommendationGenerationFailed', { resourceId, error: error.message });
+    } catch (error: any) {
+      this.emit('recommendationGenerationFailed', { resourceId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -198,7 +198,7 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
       wouldRecommendAgain: boolean;
       submittedBy: string;
     }
-  ): Promise<void> {
+  ): Promise<any> {
     const recommendation = this.recommendations.get(recommendationId);
     if (!recommendation) {
       throw new Error(`Recommendation ${recommendationId} not found`);
@@ -272,7 +272,7 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
           resourceId: context.resourceId,
           type: RecommendationType.PROACTIVE_SCALING,
           action: {
-            type: 'scale_up',
+            type: 'scale_up' as 'scale_up' | 'scale_down' | 'optimize' | 'migrate' | 'reallocate',
             target: { instances: targetCapacity },
             constraints: {
               timeWindow: {
@@ -293,21 +293,21 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
               description: 'Schedule proactive scaling',
               action: 'schedule_scaling',
               estimatedDuration: 300000,
-              risk: 'low'
+              risk: 'low' as 'low' | 'medium' | 'high'
             }],
             shortTerm: [{
               order: 1,
               description: 'Execute scaling operation',
               action: 'scale_up',
               estimatedDuration: 600000,
-              risk: 'medium'
+              risk: 'medium' as 'low' | 'medium' | 'high'
             }],
             longTerm: [{
               order: 1,
               description: 'Monitor performance',
               action: 'monitor',
               estimatedDuration: 3600000,
-              risk: 'low'
+              risk: 'low' as 'low' | 'medium' | 'high'
             }]
           },
           priority: maxPredicted > 90 ? 'critical' : 'high',
@@ -341,7 +341,7 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
         resourceId: context.resourceId,
         type: RecommendationType.REACTIVE_SCALING,
         action: {
-          type: 'scale_up',
+          type: 'scale_up' as 'scale_up' | 'scale_down' | 'optimize' | 'migrate' | 'reallocate',
           target: { instances: targetCapacity },
           constraints: {}
         },
@@ -357,7 +357,7 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
             description: 'Execute emergency scaling',
             action: 'emergency_scale_up',
             estimatedDuration: 300000,
-            risk: 'medium'
+            risk: 'medium' as 'low' | 'medium' | 'high'
           }],
           shortTerm: [],
           longTerm: []
@@ -379,7 +379,7 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
           resourceId: context.resourceId,
           type: RecommendationType.REACTIVE_SCALING,
           action: {
-            type: 'scale_down',
+            type: 'scale_down' as 'scale_up' | 'scale_down' | 'optimize' | 'migrate' | 'reallocate',
             target: { instances: targetCapacity },
             constraints: {}
           },
@@ -396,14 +396,14 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
               description: 'Plan scale down operation',
               action: 'plan_scale_down',
               estimatedDuration: 300000,
-              risk: 'low'
+              risk: 'low' as 'low' | 'medium' | 'high'
             }],
             longTerm: [{
               order: 1,
               description: 'Execute scale down',
               action: 'scale_down',
               estimatedDuration: 600000,
-              risk: 'medium'
+              risk: 'medium' as 'low' | 'medium' | 'high'
             }]
           },
           priority: 'medium',
@@ -466,7 +466,7 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
         resourceId: context.resourceId,
         type: RecommendationType.PERFORMANCE_TUNING,
         action: {
-          type: bottleneck.recommendedAction,
+          type: bottleneck.recommendedAction as 'scale_up' | 'scale_down' | 'migrate' | 'optimize' | 'reallocate',
           target: bottleneck.target,
           constraints: {}
         },
@@ -647,7 +647,7 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
   private async updateRecommendationModels(
     recommendation: ScalingRecommendation,
     feedback: any
-  ): Promise<void> {
+  ): Promise<any> {
     await this.decisionEngine.updateModel(recommendation, feedback);
   }
 
@@ -706,13 +706,13 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
     this.evaluationTimer = setInterval(async () => {
       try {
         await this.performScheduledEvaluation();
-      } catch (error) {
-        this.emit('scheduledEvaluationError', { error: error.message });
+      } catch (error: any) {
+        this.emit('scheduledEvaluationError', { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }, this.config.evaluationInterval);
   }
 
-  private async performScheduledEvaluation(): Promise<void> {
+  private async performScheduledEvaluation(): Promise<any> {
     console.log('Performing scheduled recommendation evaluation...');
     
     const expiredRecommendations = Array.from(this.recommendations.values())
@@ -740,7 +740,7 @@ export class AutomatedScalingRecommendationEngine extends EventEmitter {
     return Array.from(this.recommendations.values());
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     if (this.evaluationTimer) {
       clearInterval(this.evaluationTimer);
     }
@@ -757,7 +757,7 @@ class DecisionEngine {
     this.config = config;
   }
 
-  async updateModel(recommendation: ScalingRecommendation, feedback: any): Promise<void> {
+  async updateModel(recommendation: ScalingRecommendation, feedback: any): Promise<any> {
     console.log(`Updating decision model based on feedback for recommendation ${recommendation.id}`);
   }
 }
@@ -778,7 +778,7 @@ class RiskAssessor {
       baseRisk *= 1.5;
     }
     
-    const riskMultipliers = { low: 1.2, medium: 1.0, high: 0.8 };
+    const riskMultipliers: Record<string, number> = { low: 1.2, medium: 1.0, high: 0.8 };
     return Math.min(1.0, baseRisk * riskMultipliers[this.riskTolerance]);
   }
 }
@@ -814,7 +814,7 @@ class CostOptimizer {
           description: 'Analyze historical CPU patterns',
           action: 'analyze_patterns',
           estimatedDuration: 300000,
-          risk: 'low'
+          risk: 'low' as 'low' | 'medium' | 'high'
         }]
       });
     }
@@ -858,14 +858,14 @@ class PerformanceAnalyzer {
           description: 'Monitor CPU hotspots',
           action: 'monitor_cpu',
           estimatedDuration: 300000,
-          risk: 'low'
+          risk: 'low' as 'low' | 'medium' | 'high'
         }],
         shortTermSteps: [{
           order: 1,
           description: 'Scale CPU resources',
           action: 'scale_cpu',
           estimatedDuration: 600000,
-          risk: 'medium'
+          risk: 'medium' as 'low' | 'medium' | 'high'
         }],
         longTermSteps: []
       });
@@ -874,3 +874,4 @@ class PerformanceAnalyzer {
     return { bottlenecks };
   }
 }
+

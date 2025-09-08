@@ -62,6 +62,7 @@ export class BottleneckDetectionService extends EventEmitter {
   private historicalProfiles: PerformanceProfile[] = [];
   private detectedBottlenecks: Map<string, PerformanceBottleneck[]> = new Map();
   private anomalyBaselines: Map<string, AnomalyBaseline> = new Map();
+  private activeBottlenecks: Map<string, PerformanceBottleneck> = new Map();
 
   constructor(private config: BottleneckDetectionConfig) {
     super();
@@ -176,7 +177,7 @@ export class BottleneckDetectionService extends EventEmitter {
           if (!bottleneck.context) {
             bottleneck.context = {};
           }
-          bottleneck.context.detection_algorithm = algorithmId;
+          (bottleneck.context as any).detection_algorithm = algorithmId;
         });
 
         allBottlenecks.push(...bottlenecks);
@@ -187,12 +188,12 @@ export class BottleneckDetectionService extends EventEmitter {
           bottlenecksFound: bottlenecks.length,
           timestamp: new Date()
         });
-      } catch (error) {
-        console.error(`Bottleneck detection algorithm ${algorithmId} failed:`, error.message);
+      } catch (error: any) {
+        console.error(`Bottleneck detection algorithm ${algorithmId} failed:`, error instanceof Error ? error.message : 'Unknown error');
         this.emit('algorithmError', {
           algorithmId,
           profileId: profile.id,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
@@ -425,7 +426,7 @@ export class BottleneckDetectionService extends EventEmitter {
               current_value: currentAvg,
               sample_size: historicalAverages.length
             }
-          },
+          } as any,
           detected_at: new Date(),
           confidence: Math.min(zScore / 3, 0.95)
         };
@@ -486,7 +487,7 @@ export class BottleneckDetectionService extends EventEmitter {
         }],
         context: {
           trend_analysis: responseTimeTrend
-        },
+        } as any,
         detected_at: new Date(),
         confidence: responseTimeTrend.correlation
       };
@@ -550,7 +551,7 @@ export class BottleneckDetectionService extends EventEmitter {
             response_time: avgResponseTime,
             pattern_type: 'lock_contention'
           }
-        },
+        } as any,
         detected_at: new Date(),
         confidence: 0.7
       };
@@ -613,7 +614,7 @@ export class BottleneckDetectionService extends EventEmitter {
             memory_variability: memoryVariability,
             pattern_type: 'resource_starvation'
           }
-        },
+        } as any,
         detected_at: new Date(),
         confidence: 0.8
       };
@@ -679,7 +680,7 @@ export class BottleneckDetectionService extends EventEmitter {
             metric_1: 'response_time',
             metric_2: 'cpu_usage'
           }
-        },
+        } as any,
         detected_at: new Date(),
         confidence: Math.abs(correlation)
       };
@@ -754,7 +755,7 @@ export class BottleneckDetectionService extends EventEmitter {
             baseline_variance: baseline.variance,
             current_signature: profileSignature
           }
-        },
+        } as any,
         detected_at: new Date(),
         confidence: Math.min(anomalyScore / 3, 0.95)
       };
@@ -1190,13 +1191,16 @@ export class BottleneckDetectionService extends EventEmitter {
     return `rootcause_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     // Cleanup resources
     this.historicalProfiles.length = 0;
     this.detectedBottlenecks.clear();
     this.anomalyBaselines.clear();
     
     console.log('Bottleneck Detection Service shutdown complete');
+  }
+  public getBottlenecks(): any[] {
+    return Array.from(this.activeBottlenecks.values());
   }
 }
 
@@ -1206,3 +1210,4 @@ interface AnomalyBaseline {
   variance: number;
   lastUpdated: Date;
 }
+

@@ -135,8 +135,8 @@ export class BusinessIntelligenceService {
   private reportTemplates: Map<string, any> = new Map();
   private scheduledReports: Map<string, NodeJS.Timeout> = new Map();
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(eventPublisher?: EventPublisher) {
+    this.eventPublisher = eventPublisher || new EventPublisher('BusinessIntelligenceService');
     this.initializeReportTemplates();
     this.initializeBIIntegrations();
   }
@@ -191,7 +191,7 @@ export class BusinessIntelligenceService {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating BI report:', error);
       throw error;
     }
@@ -241,7 +241,7 @@ export class BusinessIntelligenceService {
 
       return summary;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating executive summary:', error);
       throw error;
     }
@@ -269,7 +269,7 @@ export class BusinessIntelligenceService {
 
       return intelligence;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating market intelligence:', error);
       throw error;
     }
@@ -296,7 +296,7 @@ export class BusinessIntelligenceService {
 
       return analysis;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating client analysis:', error);
       throw error;
     }
@@ -329,13 +329,13 @@ export class BusinessIntelligenceService {
 
       return fullConfig;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error configuring BI integration:', error);
       throw error;
     }
   }
 
-  async syncWithBITool(tenantId: string): Promise<void> {
+  async syncWithBITool(tenantId: string): Promise<any> {
     try {
       const config = this.biIntegrations.get(tenantId);
       if (!config || !config.enabled) {
@@ -361,7 +361,7 @@ export class BusinessIntelligenceService {
         syncTime: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error syncing with BI tool:', error);
       throw error;
     }
@@ -375,7 +375,7 @@ export class BusinessIntelligenceService {
       recipients: string[];
       format: BusinessIntelligenceReport['format'];
     }[]
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.info('Scheduling automated reports', { tenantId, configCount: reportConfigs.length });
 
@@ -402,7 +402,7 @@ export class BusinessIntelligenceService {
         reportCount: reportConfigs.length
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error scheduling automated reports:', error);
       throw error;
     }
@@ -469,7 +469,7 @@ export class BusinessIntelligenceService {
 
       return { content, mimeType, filename };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error exporting report:', error);
       throw error;
     }
@@ -870,7 +870,7 @@ export class BusinessIntelligenceService {
     };
   }
 
-  private async pushDataToBITool(config: BIIntegrationConfig, data: any): Promise<void> {
+  private async pushDataToBITool(config: BIIntegrationConfig, data: any): Promise<any> {
     // Mock data push to BI tool
     logger.info('Pushing data to BI tool', { provider: config.provider, records: data.totalRecords });
   }
@@ -882,10 +882,10 @@ export class BusinessIntelligenceService {
       monthly: 30 * 24 * 60 * 60 * 1000, // 30 days
       quarterly: 90 * 24 * 60 * 60 * 1000 // 90 days
     };
-    return intervals[frequency] || intervals.monthly;
+    return (intervals as any)[frequency] || intervals.monthly;
   }
 
-  private async generateScheduledReport(tenantId: string, config: any): Promise<void> {
+  private async generateScheduledReport(tenantId: string, config: any): Promise<any> {
     try {
       const now = new Date();
       const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
@@ -902,12 +902,12 @@ export class BusinessIntelligenceService {
       };
 
       await this.generateReport(request);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating scheduled report:', error);
     }
   }
 
-  private async scheduleReportDelivery(report: BusinessIntelligenceReport): Promise<void> {
+  private async scheduleReportDelivery(report: BusinessIntelligenceReport): Promise<any> {
     // Mock report delivery scheduling
     logger.info('Scheduling report delivery', { reportId: report.id, recipients: report.recipients.length });
   }
@@ -965,3 +965,4 @@ export class BusinessIntelligenceService {
     });
   }
 }
+

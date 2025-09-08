@@ -101,7 +101,7 @@ export declare class SchedulingSystem {
     constructor(config?: Partial<SchedulingSystemConfig>);
     private mergeDefaultConfig;
     private deepMerge;
-    initialize(): Promise<void>;
+    initialize(): Promise<any>;
     private initializeCalendarService;
     private initializeAvailabilityService;
     private initializeBookingService;
@@ -128,9 +128,9 @@ export declare class SchedulingSystem {
         timestamp: Date;
         uptime: number;
     }>;
-    startAPI(): Promise<void>;
-    stopAPI(): Promise<void>;
-    shutdown(): Promise<void>;
+    startAPI(): Promise<any>;
+    stopAPI(): Promise<any>;
+    shutdown(): Promise<any>;
 }
 export { CalendarIntegrationService, MeetingBookingService, AvailabilityManagementService, MeetingNotificationService, MeetingNotesService, VideoConferencingService, MeetingAnalyticsService, SchedulingController };
 export * from './CalendarIntegrationService';

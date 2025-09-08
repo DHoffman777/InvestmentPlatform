@@ -2,12 +2,12 @@ export interface AssetClass {
     id: string;
     name: string;
     code: string;
-    description: string;
-    parentClassId?: string;
+    description: string | null;
+    parentClassId?: string | null;
     level: number;
-    assetType: 'EQUITY' | 'FIXED_INCOME' | 'CASH_EQUIVALENT' | 'ALTERNATIVE' | 'DERIVATIVE';
-    riskLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH';
-    liquidityTier: 'T0' | 'T1' | 'T2' | 'T3' | 'ILLIQUID';
+    assetType: 'EQUITY' | 'FIXED_INCOME' | 'CASH_EQUIVALENT' | 'ALTERNATIVE' | 'DERIVATIVE' | 'STRUCTURED_PRODUCT' | 'COMMODITY' | 'REAL_ESTATE';
+    riskLevel: 'CONSERVATIVE' | 'MODERATE_CONSERVATIVE' | 'MODERATE' | 'MODERATE_AGGRESSIVE' | 'AGGRESSIVE';
+    liquidityTier: 'TIER_1' | 'TIER_2' | 'TIER_3' | 'TIER_4';
     regulatoryCategory?: string;
     secClassification?: string;
     minimumInvestment?: number;
@@ -21,7 +21,7 @@ export interface AssetSubClass {
     assetClassId: string;
     name: string;
     code: string;
-    description: string;
+    description: string | null;
     characteristics: AssetCharacteristics;
     primaryBenchmark?: string;
     secondaryBenchmarks?: string[];
@@ -56,6 +56,7 @@ export interface AssetCharacteristics {
 export interface InstrumentClassification {
     id: string;
     instrumentId: string;
+    securityId?: string | null;
     symbol?: string;
     instrumentName: string;
     assetClassId: string;
@@ -79,6 +80,11 @@ export interface InstrumentClassification {
     accreditedInvestorOnly: boolean;
     institutionalOnly: boolean;
     retailSuitable: boolean;
+    primaryExchange?: string;
+    currency: string;
+    reviewFrequency: 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
+    tenantId: string;
+    emergingMarket?: boolean;
     classificationDate: Date;
     lastReviewDate: Date;
     isActive: boolean;
@@ -130,6 +136,7 @@ export interface AllocationConstraint {
 }
 export interface ClassifyInstrumentRequest {
     instrumentId: string;
+    securityId?: string;
     symbol?: string;
     instrumentName: string;
     instrumentType: string;
@@ -139,6 +146,7 @@ export interface ClassifyInstrumentRequest {
 }
 export interface UpdateClassificationRequest {
     instrumentId: string;
+    securityId?: string;
     assetClassId?: string;
     assetSubClassId?: string;
     classifications?: ClassificationDimension[];

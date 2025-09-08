@@ -364,7 +364,7 @@ class ComplianceRecordingService extends events_1.EventEmitter {
             this.emit('complianceMonitoringCompleted', { timestamp: new Date() });
         }
         catch (error) {
-            this.emit('complianceMonitoringError', { error: error.message });
+            this.emit('complianceMonitoringError', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async monitorRecordingRetention() {
@@ -401,7 +401,7 @@ class ComplianceRecordingService extends events_1.EventEmitter {
             });
         }
         catch (error) {
-            this.emit('retentionMonitoringError', { error: error.message });
+            this.emit('retentionMonitoringError', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async monitorRecordingQuality() {
@@ -428,7 +428,7 @@ class ComplianceRecordingService extends events_1.EventEmitter {
             });
         }
         catch (error) {
-            this.emit('qualityMonitoringError', { error: error.message });
+            this.emit('qualityMonitoringError', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     // Private helper methods - mock implementations

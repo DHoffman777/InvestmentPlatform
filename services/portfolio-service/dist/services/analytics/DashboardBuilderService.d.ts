@@ -1,4 +1,5 @@
 import { AnalyticsDashboard, AnalyticsDashboardVisualization, AnalyticsFilter, VisualizationType, AnalyticsMetricType } from '../../models/analytics/Analytics';
+import { EventPublisher } from '../../utils/eventPublisher';
 interface DashboardTemplate {
     id: string;
     name: string;
@@ -58,7 +59,7 @@ interface DashboardUpdateRequest {
 export declare class DashboardBuilderService {
     private eventPublisher;
     private defaultTemplates;
-    constructor();
+    constructor(eventPublisher?: EventPublisher);
     createDashboard(request: DashboardCreationRequest): Promise<AnalyticsDashboard>;
     updateDashboard(dashboardId: string, updates: DashboardUpdateRequest, userId: string): Promise<AnalyticsDashboard>;
     addVisualizationToDashboard(dashboardId: string, visualization: DashboardVisualizationTemplate, userId: string): Promise<AnalyticsDashboard>;
@@ -84,5 +85,10 @@ export declare class DashboardBuilderService {
     private getDashboard;
     private saveDashboard;
     private saveTemplate;
+    getUserDashboards(tenantId: string, userId: string, options?: {
+        includeShared?: boolean;
+        includeTemplates?: boolean;
+        category?: string;
+    }): Promise<AnalyticsDashboard[]>;
 }
 export {};

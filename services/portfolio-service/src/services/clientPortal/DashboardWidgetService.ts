@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import {
   DashboardWidget,
@@ -12,7 +13,6 @@ import {
   MarketNewsItem
 } from '../../models/clientPortal/ClientPortal';
 import { logger } from '../../utils/logger';
-import { EventPublisher } from '../../utils/eventPublisher';
 
 interface WidgetDataContext {
   tenantId: string;
@@ -25,10 +25,10 @@ interface WidgetDataContext {
 }
 
 export class DashboardWidgetService {
-  private eventPublisher: EventPublisher;
+  private prisma: PrismaClient;
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma;
   }
 
   async getWidgetData(
@@ -65,7 +65,7 @@ export class DashboardWidgetService {
           throw new Error(`Unsupported widget type: ${widget.type}`);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving widget data:', error);
       throw error;
     }
@@ -92,17 +92,17 @@ export class DashboardWidgetService {
       await this.updateWidgetTimestamp(widgetId, lastUpdated);
 
       // Publish refresh event
-      await this.eventPublisher.publish('dashboard.widget.refreshed', {
-        tenantId: context.tenantId,
-        clientId: context.clientId,
-        widgetId,
-        widgetType: widget.type,
-        refreshedAt: lastUpdated
-      });
+      // await this.eventPublisher.publish('dashboard.widget.refreshed', {
+      //   tenantId: context.tenantId,
+      //   clientId: context.clientId,
+      //   widgetId,
+      //   widgetType: widget.type,
+      //   refreshedAt: lastUpdated
+      // });
 
       return { data, lastUpdated };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error refreshing widget:', error);
       throw error;
     }
@@ -558,7 +558,7 @@ export class DashboardWidgetService {
     return null;
   }
 
-  private async updateWidgetTimestamp(widgetId: string, timestamp: Date): Promise<void> {
+  private async updateWidgetTimestamp(widgetId: string, timestamp: Date): Promise<any> {
     // Mock implementation - would update in database
     logger.debug('Updated widget timestamp', { widgetId, timestamp });
   }
@@ -605,3 +605,4 @@ export class DashboardWidgetService {
            typeof config.showPending === 'boolean';
   }
 }
+

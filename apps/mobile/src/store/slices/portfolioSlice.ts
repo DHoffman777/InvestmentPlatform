@@ -142,7 +142,7 @@ const portfolioSlice = createSlice({
       })
       .addCase(fetchPortfolios.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Failed to fetch portfolios';
+        state.error = action.error instanceof Error ? error.message : 'Unknown error' || 'Failed to fetch portfolios';
       })
       .addCase(fetchPortfolioDetails.pending, state => {
         state.isLoading = true;
@@ -163,7 +163,7 @@ const portfolioSlice = createSlice({
       })
       .addCase(fetchPortfolioDetails.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Failed to fetch portfolio details';
+        state.error = action.error instanceof Error ? error.message : 'Unknown error' || 'Failed to fetch portfolio details';
       })
       .addCase(fetchPortfolioPositions.pending, state => {
         state.isLoading = true;
@@ -176,7 +176,7 @@ const portfolioSlice = createSlice({
       })
       .addCase(fetchPortfolioPositions.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Failed to fetch positions';
+        state.error = action.error instanceof Error ? error.message : 'Unknown error' || 'Failed to fetch positions';
       })
       .addCase(fetchPortfolioPerformance.fulfilled, (state, action) => {
         state.performance = action.payload;
@@ -200,7 +200,7 @@ const portfolioSlice = createSlice({
       })
       .addCase(refreshPortfolioData.rejected, (state, action) => {
         state.isRefreshing = false;
-        state.error = action.error.message || 'Failed to refresh portfolio data';
+        state.error = action.error instanceof Error ? error.message : 'Unknown error' || 'Failed to refresh portfolio data';
       });
   },
 });

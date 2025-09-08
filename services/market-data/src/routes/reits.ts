@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { query, param, body, validationResult } from 'express-validator';
+const { query, param, body, validationResult } = require('express-validator');
 import { REITsService, REITData, MLPData } from '../services/reitsService';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { authenticateJWT, requirePermission } from '../middleware/auth';
-import { Decimal } from 'decimal.js';
+import { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 const router = Router();
 const reitsService = new REITsService(prisma);
@@ -39,7 +40,7 @@ router.get('/search',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const filters = {
         query: req.query.query as string,
@@ -63,7 +64,7 @@ router.get('/search',
         filters,
         count: results.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error searching REITs/MLPs:', { filters: req.query, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -81,7 +82,7 @@ router.get('/:symbol',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
 
@@ -95,7 +96,7 @@ router.get('/:symbol',
       }
 
       res.json({ details });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching REIT/MLP details:', { symbol: req.params.symbol, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -130,25 +131,25 @@ router.post('/reit',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const reitData: REITData = {
         ...req.body,
         securityType: 'REIT',
-        marketCap: new Decimal(req.body.marketCap),
-        dividendYield: req.body.dividendYield ? new Decimal(req.body.dividendYield) : undefined,
-        fundsFromOperations: req.body.fundsFromOperations ? new Decimal(req.body.fundsFromOperations) : undefined,
-        adjustedFFO: req.body.adjustedFFO ? new Decimal(req.body.adjustedFFO) : undefined,
-        netAssetValue: req.body.netAssetValue ? new Decimal(req.body.netAssetValue) : undefined,
-        priceToFFO: req.body.priceToFFO ? new Decimal(req.body.priceToFFO) : undefined,
-        debtToEquityRatio: req.body.debtToEquityRatio ? new Decimal(req.body.debtToEquityRatio) : undefined,
-        occupancyRate: req.body.occupancyRate ? new Decimal(req.body.occupancyRate) : undefined,
-        totalSquareFootage: req.body.totalSquareFootage ? new Decimal(req.body.totalSquareFootage) : undefined,
-        totalReturn1Y: req.body.totalReturn1Y ? new Decimal(req.body.totalReturn1Y) : undefined,
-        totalReturn3Y: req.body.totalReturn3Y ? new Decimal(req.body.totalReturn3Y) : undefined,
-        totalReturn5Y: req.body.totalReturn5Y ? new Decimal(req.body.totalReturn5Y) : undefined,
-        beta: req.body.beta ? new Decimal(req.body.beta) : undefined,
-        standardDeviation: req.body.standardDeviation ? new Decimal(req.body.standardDeviation) : undefined,
+        marketCap: new (Decimal as any)(req.body.marketCap),
+        dividendYield: req.body.dividendYield ? new (Decimal as any)(req.body.dividendYield) : undefined,
+        fundsFromOperations: req.body.fundsFromOperations ? new (Decimal as any)(req.body.fundsFromOperations) : undefined,
+        adjustedFFO: req.body.adjustedFFO ? new (Decimal as any)(req.body.adjustedFFO) : undefined,
+        netAssetValue: req.body.netAssetValue ? new (Decimal as any)(req.body.netAssetValue) : undefined,
+        priceToFFO: req.body.priceToFFO ? new (Decimal as any)(req.body.priceToFFO) : undefined,
+        debtToEquityRatio: req.body.debtToEquityRatio ? new (Decimal as any)(req.body.debtToEquityRatio) : undefined,
+        occupancyRate: req.body.occupancyRate ? new (Decimal as any)(req.body.occupancyRate) : undefined,
+        totalSquareFootage: req.body.totalSquareFootage ? new (Decimal as any)(req.body.totalSquareFootage) : undefined,
+        totalReturn1Y: req.body.totalReturn1Y ? new (Decimal as any)(req.body.totalReturn1Y) : undefined,
+        totalReturn3Y: req.body.totalReturn3Y ? new (Decimal as any)(req.body.totalReturn3Y) : undefined,
+        totalReturn5Y: req.body.totalReturn5Y ? new (Decimal as any)(req.body.totalReturn5Y) : undefined,
+        beta: req.body.beta ? new (Decimal as any)(req.body.beta) : undefined,
+        standardDeviation: req.body.standardDeviation ? new (Decimal as any)(req.body.standardDeviation) : undefined,
       };
 
       const reit = await reitsService.upsertREIT(reitData);
@@ -160,7 +161,7 @@ router.post('/reit',
         },
         message: 'REIT created/updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating/updating REIT:', { reitData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -197,29 +198,29 @@ router.post('/mlp',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const mlpData: MLPData = {
         ...req.body,
         securityType: 'MLP',
-        marketCap: new Decimal(req.body.marketCap),
-        distributionYield: req.body.distributionYield ? new Decimal(req.body.distributionYield) : undefined,
-        distributionCoverage: req.body.distributionCoverage ? new Decimal(req.body.distributionCoverage) : undefined,
-        distributionGrowthRate: req.body.distributionGrowthRate ? new Decimal(req.body.distributionGrowthRate) : undefined,
-        distributableCashFlow: req.body.distributableCashFlow ? new Decimal(req.body.distributableCashFlow) : undefined,
-        ebitda: req.body.ebitda ? new Decimal(req.body.ebitda) : undefined,
-        debtToEbitda: req.body.debtToEbitda ? new Decimal(req.body.debtToEbitda) : undefined,
-        returnOnInvestedCapital: req.body.returnOnInvestedCapital ? new Decimal(req.body.returnOnInvestedCapital) : undefined,
-        pipelineMiles: req.body.pipelineMiles ? new Decimal(req.body.pipelineMiles) : undefined,
-        storageCapacity: req.body.storageCapacity ? new Decimal(req.body.storageCapacity) : undefined,
-        processingCapacity: req.body.processingCapacity ? new Decimal(req.body.processingCapacity) : undefined,
-        managementFee: req.body.managementFee ? new Decimal(req.body.managementFee) : undefined,
-        qualifiedIncome: req.body.qualifiedIncome ? new Decimal(req.body.qualifiedIncome) : undefined,
-        totalReturn1Y: req.body.totalReturn1Y ? new Decimal(req.body.totalReturn1Y) : undefined,
-        totalReturn3Y: req.body.totalReturn3Y ? new Decimal(req.body.totalReturn3Y) : undefined,
-        totalReturn5Y: req.body.totalReturn5Y ? new Decimal(req.body.totalReturn5Y) : undefined,
-        beta: req.body.beta ? new Decimal(req.body.beta) : undefined,
-        standardDeviation: req.body.standardDeviation ? new Decimal(req.body.standardDeviation) : undefined,
+        marketCap: new (Decimal as any)(req.body.marketCap),
+        distributionYield: req.body.distributionYield ? new (Decimal as any)(req.body.distributionYield) : undefined,
+        distributionCoverage: req.body.distributionCoverage ? new (Decimal as any)(req.body.distributionCoverage) : undefined,
+        distributionGrowthRate: req.body.distributionGrowthRate ? new (Decimal as any)(req.body.distributionGrowthRate) : undefined,
+        distributableCashFlow: req.body.distributableCashFlow ? new (Decimal as any)(req.body.distributableCashFlow) : undefined,
+        ebitda: req.body.ebitda ? new (Decimal as any)(req.body.ebitda) : undefined,
+        debtToEbitda: req.body.debtToEbitda ? new (Decimal as any)(req.body.debtToEbitda) : undefined,
+        returnOnInvestedCapital: req.body.returnOnInvestedCapital ? new (Decimal as any)(req.body.returnOnInvestedCapital) : undefined,
+        pipelineMiles: req.body.pipelineMiles ? new (Decimal as any)(req.body.pipelineMiles) : undefined,
+        storageCapacity: req.body.storageCapacity ? new (Decimal as any)(req.body.storageCapacity) : undefined,
+        processingCapacity: req.body.processingCapacity ? new (Decimal as any)(req.body.processingCapacity) : undefined,
+        managementFee: req.body.managementFee ? new (Decimal as any)(req.body.managementFee) : undefined,
+        qualifiedIncome: req.body.qualifiedIncome ? new (Decimal as any)(req.body.qualifiedIncome) : undefined,
+        totalReturn1Y: req.body.totalReturn1Y ? new (Decimal as any)(req.body.totalReturn1Y) : undefined,
+        totalReturn3Y: req.body.totalReturn3Y ? new (Decimal as any)(req.body.totalReturn3Y) : undefined,
+        totalReturn5Y: req.body.totalReturn5Y ? new (Decimal as any)(req.body.totalReturn5Y) : undefined,
+        beta: req.body.beta ? new (Decimal as any)(req.body.beta) : undefined,
+        standardDeviation: req.body.standardDeviation ? new (Decimal as any)(req.body.standardDeviation) : undefined,
       };
 
       const mlp = await reitsService.upsertMLP(mlpData);
@@ -231,7 +232,7 @@ router.post('/mlp',
         },
         message: 'MLP created/updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating/updating MLP:', { mlpData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -245,7 +246,7 @@ router.post('/mlp',
 router.get('/property-types',
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const propertyTypes = {
         residential: {
@@ -291,7 +292,7 @@ router.get('/property-types',
       };
 
       res.json({ propertyTypes });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching property types:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -305,7 +306,7 @@ router.get('/property-types',
 router.get('/mlp-sectors',
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const mlpSectors = {
         energy: {
@@ -335,7 +336,7 @@ router.get('/mlp-sectors',
       };
 
       res.json({ mlpSectors });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching MLP sectors:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -346,3 +347,4 @@ router.get('/mlp-sectors',
 );
 
 export { router as reitsRouter };
+

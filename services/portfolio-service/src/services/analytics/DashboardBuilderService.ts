@@ -225,8 +225,8 @@ export class DashboardBuilderService {
     }
   ];
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(eventPublisher?: EventPublisher) {
+    this.eventPublisher = eventPublisher || new EventPublisher('DashboardBuilderService');
   }
 
   async createDashboard(request: DashboardCreationRequest): Promise<AnalyticsDashboard> {
@@ -283,7 +283,7 @@ export class DashboardBuilderService {
 
       return dashboard;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating dashboard:', error);
       throw error;
     }
@@ -321,7 +321,7 @@ export class DashboardBuilderService {
 
       return updatedDashboard;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating dashboard:', error);
       throw error;
     }
@@ -363,7 +363,7 @@ export class DashboardBuilderService {
 
       return dashboard;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error adding visualization to dashboard:', error);
       throw error;
     }
@@ -396,7 +396,7 @@ export class DashboardBuilderService {
 
       return dashboard;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error removing visualization from dashboard:', error);
       throw error;
     }
@@ -443,7 +443,7 @@ export class DashboardBuilderService {
 
       return clonedDashboard;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error cloning dashboard:', error);
       throw error;
     }
@@ -463,7 +463,7 @@ export class DashboardBuilderService {
         throw new Error('Dashboard not found');
       }
 
-      dashboard.sharedWith = [...new Set([...dashboard.sharedWith, ...shareWithUserIds])];
+      dashboard.sharedWith = [...new Set([...(dashboard.sharedWith || []), ...(shareWithUserIds || [])])];
       dashboard.updatedAt = new Date();
 
       await this.saveDashboard(dashboard);
@@ -478,7 +478,7 @@ export class DashboardBuilderService {
 
       return dashboard;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error sharing dashboard:', error);
       throw error;
     }
@@ -496,7 +496,7 @@ export class DashboardBuilderService {
 
       return templates.sort((a, b) => b.rating - a.rating);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving templates:', error);
       throw error;
     }
@@ -554,7 +554,7 @@ export class DashboardBuilderService {
 
       return template;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating template:', error);
       throw error;
     }
@@ -653,11 +653,67 @@ export class DashboardBuilderService {
     return null;
   }
 
-  private async saveDashboard(dashboard: AnalyticsDashboard): Promise<void> {
+  private async saveDashboard(dashboard: AnalyticsDashboard): Promise<any> {
     logger.debug('Saving dashboard', { dashboardId: dashboard.id });
   }
 
-  private async saveTemplate(template: DashboardTemplate): Promise<void> {
+  private async saveTemplate(template: DashboardTemplate): Promise<any> {
     logger.debug('Saving dashboard template', { templateId: template.id });
   }
+
+  async getUserDashboards(
+    tenantId: string, 
+    userId: string, 
+    options?: { 
+      includeShared?: boolean; 
+      includeTemplates?: boolean;
+      category?: string;
+    }
+  ): Promise<AnalyticsDashboard[]> {
+    try {
+      logger.info('Retrieving user dashboards', {
+        tenantId,
+        userId,
+        options
+      });
+
+      // Mock implementation - replace with actual database query
+      const mockDashboards: AnalyticsDashboard[] = [
+        {
+          id: randomUUID(),
+          tenantId,
+          name: 'Portfolio Overview',
+          description: 'Personal portfolio dashboard',
+          isDefault: true,
+          isTemplate: false,
+          visualizations: [],
+          layout: { rows: 3, columns: 4, gridSize: 12 },
+          filters: [],
+          refreshInterval: 300000,
+          createdBy: userId,
+          sharedWith: [],
+          permissions: {
+            canEdit: true,
+            canShare: true,
+            canDelete: false
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+
+      await this.eventPublisher.publish('analytics.dashboards.retrieved', {
+        tenantId,
+        userId,
+        dashboardCount: mockDashboards.length
+      });
+
+      return mockDashboards;
+
+    } catch (error: any) {
+      logger.error('Error retrieving user dashboards:', error);
+      throw error;
+    }
+  }
 }
+

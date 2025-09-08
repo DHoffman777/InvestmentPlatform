@@ -91,7 +91,7 @@ export class AlternativeInvestmentsService {
 
       return investment;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating alternative investment:', error);
       throw error;
     }
@@ -106,7 +106,7 @@ export class AlternativeInvestmentsService {
       // For now, return null to indicate not found
       return null;
       
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving alternative investment:', error);
       throw error;
     }
@@ -140,7 +140,7 @@ export class AlternativeInvestmentsService {
 
       return updatedInvestment;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating alternative investment:', error);
       throw error;
     }
@@ -175,7 +175,7 @@ export class AlternativeInvestmentsService {
 
       return searchResults;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error searching alternative investments:', error);
       throw error;
     }
@@ -231,7 +231,7 @@ export class AlternativeInvestmentsService {
 
       return capitalCall;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing capital call:', error);
       throw error;
     }
@@ -274,7 +274,7 @@ export class AlternativeInvestmentsService {
 
       return updatedCall;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error funding capital call:', error);
       throw error;
     }
@@ -340,7 +340,7 @@ export class AlternativeInvestmentsService {
 
       return distribution;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing distribution:', error);
       throw error;
     }
@@ -403,7 +403,7 @@ export class AlternativeInvestmentsService {
 
       return navUpdate;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating NAV:', error);
       throw error;
     }
@@ -470,7 +470,7 @@ export class AlternativeInvestmentsService {
 
       return jCurveAnalysis;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating J-curve analysis:', error);
       throw error;
     }
@@ -507,7 +507,7 @@ export class AlternativeInvestmentsService {
 
       return portfolioCompany;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error adding portfolio company:', error);
       throw error;
     }
@@ -564,7 +564,7 @@ export class AlternativeInvestmentsService {
 
       return position;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating alternative investment position:', error);
       throw error;
     }
@@ -606,7 +606,7 @@ export class AlternativeInvestmentsService {
 
       return analytics;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating fund analytics:', error);
       throw error;
     }
@@ -643,7 +643,7 @@ export class AlternativeInvestmentsService {
 
       return analytics;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating portfolio analytics:', error);
       throw error;
     }
@@ -671,14 +671,14 @@ export class AlternativeInvestmentsService {
 
       return esgMetrics;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating ESG metrics:', error);
       throw error;
     }
   }
 
   // Private helper methods
-  private async validateInvestmentData(data: any): Promise<void> {
+  private async validateInvestmentData(data: any): Promise<any> {
     if (!data.investmentName || data.investmentName.trim().length === 0) {
       throw new Error('Investment name is required');
     }
@@ -696,44 +696,44 @@ export class AlternativeInvestmentsService {
     }
   }
 
-  private async storeInvestment(investment: AlternativeInvestment): Promise<void> {
+  private async storeInvestment(investment: AlternativeInvestment): Promise<any> {
     // Simulate database storage
     logger.debug('Storing alternative investment', { investmentId: investment.id });
   }
 
-  private async storeCapitalCall(capitalCall: CapitalCall): Promise<void> {
+  private async storeCapitalCall(capitalCall: CapitalCall): Promise<any> {
     logger.debug('Storing capital call', { callId: capitalCall.id });
   }
 
-  private async storeDistribution(distribution: Distribution): Promise<void> {
+  private async storeDistribution(distribution: Distribution): Promise<any> {
     logger.debug('Storing distribution', { distributionId: distribution.id });
   }
 
-  private async storeNAVUpdate(navUpdate: NAVUpdate): Promise<void> {
+  private async storeNAVUpdate(navUpdate: NAVUpdate): Promise<any> {
     logger.debug('Storing NAV update', { navId: navUpdate.id });
   }
 
-  private async storeJCurveAnalysis(analysis: JCurveAnalysis): Promise<void> {
+  private async storeJCurveAnalysis(analysis: JCurveAnalysis): Promise<any> {
     logger.debug('Storing J-curve analysis', { analysisId: analysis.id });
   }
 
-  private async storePortfolioCompany(company: PortfolioCompany): Promise<void> {
+  private async storePortfolioCompany(company: PortfolioCompany): Promise<any> {
     logger.debug('Storing portfolio company', { companyId: company.id });
   }
 
-  private async storePosition(position: AlternativeInvestmentPosition): Promise<void> {
+  private async storePosition(position: AlternativeInvestmentPosition): Promise<any> {
     logger.debug('Storing alternative investment position', { positionId: position.id });
   }
 
-  private async storeESGMetrics(metrics: ESGMetrics): Promise<void> {
+  private async storeESGMetrics(metrics: ESGMetrics): Promise<any> {
     logger.debug('Storing ESG metrics', { investmentId: metrics.investmentId });
   }
 
-  private async setupFundMonitoring(investment: AlternativeInvestment): Promise<void> {
+  private async setupFundMonitoring(investment: AlternativeInvestment): Promise<any> {
     logger.debug('Setting up fund monitoring', { investmentId: investment.id });
   }
 
-  private async publishInvestmentEvent(eventType: string, investment: AlternativeInvestment): Promise<void> {
+  private async publishInvestmentEvent(eventType: string, investment: AlternativeInvestment): Promise<any> {
     try {
       await this.kafkaService.publishEvent('alternative-investments', {
         eventType,
@@ -742,12 +742,12 @@ export class AlternativeInvestmentsService {
         timestamp: new Date(),
         data: investment
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing investment event:', error);
     }
   }
 
-  private async publishCapitalCallEvent(eventType: string, capitalCall: CapitalCall): Promise<void> {
+  private async publishCapitalCallEvent(eventType: string, capitalCall: CapitalCall): Promise<any> {
     try {
       await this.kafkaService.publishEvent('capital-calls', {
         eventType,
@@ -757,12 +757,12 @@ export class AlternativeInvestmentsService {
         timestamp: new Date(),
         data: capitalCall
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing capital call event:', error);
     }
   }
 
-  private async publishDistributionEvent(eventType: string, distribution: Distribution): Promise<void> {
+  private async publishDistributionEvent(eventType: string, distribution: Distribution): Promise<any> {
     try {
       await this.kafkaService.publishEvent('distributions', {
         eventType,
@@ -772,12 +772,12 @@ export class AlternativeInvestmentsService {
         timestamp: new Date(),
         data: distribution
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing distribution event:', error);
     }
   }
 
-  private async publishNAVEvent(eventType: string, navUpdate: NAVUpdate): Promise<void> {
+  private async publishNAVEvent(eventType: string, navUpdate: NAVUpdate): Promise<any> {
     try {
       await this.kafkaService.publishEvent('nav-updates', {
         eventType,
@@ -787,12 +787,12 @@ export class AlternativeInvestmentsService {
         timestamp: new Date(),
         data: navUpdate
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing NAV event:', error);
     }
   }
 
-  private async publishPortfolioCompanyEvent(eventType: string, company: PortfolioCompany): Promise<void> {
+  private async publishPortfolioCompanyEvent(eventType: string, company: PortfolioCompany): Promise<any> {
     try {
       await this.kafkaService.publishEvent('portfolio-companies', {
         eventType,
@@ -802,12 +802,12 @@ export class AlternativeInvestmentsService {
         timestamp: new Date(),
         data: company
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing portfolio company event:', error);
     }
   }
 
-  private async publishPositionEvent(eventType: string, position: AlternativeInvestmentPosition): Promise<void> {
+  private async publishPositionEvent(eventType: string, position: AlternativeInvestmentPosition): Promise<any> {
     try {
       await this.kafkaService.publishEvent('alternative-positions', {
         eventType,
@@ -818,12 +818,12 @@ export class AlternativeInvestmentsService {
         timestamp: new Date(),
         data: position
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing position event:', error);
     }
   }
 
-  private async publishESGEvent(eventType: string, metrics: ESGMetrics): Promise<void> {
+  private async publishESGEvent(eventType: string, metrics: ESGMetrics): Promise<any> {
     try {
       await this.kafkaService.publishEvent('esg-metrics', {
         eventType,
@@ -831,7 +831,7 @@ export class AlternativeInvestmentsService {
         timestamp: new Date(),
         data: metrics
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing ESG event:', error);
     }
   }
@@ -950,31 +950,32 @@ export class AlternativeInvestmentsService {
   }
 
   // Additional helper methods for updating investment totals
-  private async updateInvestmentCallTotals(investmentId: string, callAmount: number): Promise<void> {
+  private async updateInvestmentCallTotals(investmentId: string, callAmount: number): Promise<any> {
     logger.debug('Updating investment call totals', { investmentId, callAmount });
   }
 
-  private async updateInvestmentFundedTotals(investmentId: string, fundedAmount: number): Promise<void> {
+  private async updateInvestmentFundedTotals(investmentId: string, fundedAmount: number): Promise<any> {
     logger.debug('Updating investment funded totals', { investmentId, fundedAmount });
   }
 
-  private async updateInvestmentDistributionTotals(investmentId: string, distributionAmount: number): Promise<void> {
+  private async updateInvestmentDistributionTotals(investmentId: string, distributionAmount: number): Promise<any> {
     logger.debug('Updating investment distribution totals', { investmentId, distributionAmount });
   }
 
-  private async updateInvestmentCurrentNAV(investmentId: string, nav: number): Promise<void> {
+  private async updateInvestmentCurrentNAV(investmentId: string, nav: number): Promise<any> {
     logger.debug('Updating investment current NAV', { investmentId, nav });
   }
 
-  private async recalculatePositionValues(investmentId: string, nav: number): Promise<void> {
+  private async recalculatePositionValues(investmentId: string, nav: number): Promise<any> {
     logger.debug('Recalculating position values', { investmentId, nav });
   }
 
-  private async processDistributionToPositions(distribution: Distribution): Promise<void> {
+  private async processDistributionToPositions(distribution: Distribution): Promise<any> {
     logger.debug('Processing distribution to positions', { distributionId: distribution.id });
   }
 
-  private async notifyCapitalCall(capitalCall: CapitalCall): Promise<void> {
+  private async notifyCapitalCall(capitalCall: CapitalCall): Promise<any> {
     logger.debug('Notifying capital call', { callId: capitalCall.id });
   }
 }
+

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.portfolioRoutes = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const client_1 = require("@prisma/client");
 const portfolioService_1 = require("../services/portfolioService");
 const logger_1 = require("../utils/logger");
@@ -13,7 +13,7 @@ const prisma = new client_1.PrismaClient();
 const portfolioService = new portfolioService_1.PortfolioService(prisma);
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -24,11 +24,11 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/portfolios - List portfolios for authenticated user
 router.get('/', [
-    (0, express_validator_1.query)('page').optional().isInt({ min: 1 }).toInt(),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
-    (0, express_validator_1.query)('status').optional().isIn(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'CLOSED', 'PENDING_APPROVAL']),
-    (0, express_validator_1.query)('portfolioType').optional().isIn(['MANAGED', 'ADVISORY', 'DISCRETIONARY', 'MODEL_BASED', 'CUSTOM']),
-    (0, express_validator_1.query)('search').optional().isString().trim(),
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('status').optional().isIn(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'CLOSED', 'PENDING_APPROVAL']),
+    query('portfolioType').optional().isIn(['MANAGED', 'ADVISORY', 'DISCRETIONARY', 'MODEL_BASED', 'CUSTOM']),
+    query('search').optional().isString().trim(),
 ], validateRequest, auth_1.requireTenantAccess, async (req, res) => {
     try {
         const { page = 1, limit = 20, status, portfolioType, search, } = req.query;
@@ -53,7 +53,7 @@ router.get('/', [
 });
 // GET /api/portfolios/:id - Get specific portfolio
 router.get('/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid portfolio ID'),
+    param('id').isUUID().withMessage('Invalid portfolio ID'),
 ], validateRequest, auth_1.requireTenantAccess, async (req, res) => {
     try {
         const { id } = req.params;
@@ -76,35 +76,35 @@ router.get('/:id', [
 });
 // POST /api/portfolios - Create new portfolio
 router.post('/', [
-    (0, express_validator_1.body)('name')
+    body('name')
         .isString()
         .trim()
         .isLength({ min: 1, max: 255 })
         .withMessage('Name is required and must be between 1 and 255 characters'),
-    (0, express_validator_1.body)('description')
+    body('description')
         .optional()
         .isString()
         .trim()
         .isLength({ max: 1000 })
         .withMessage('Description must be less than 1000 characters'),
-    (0, express_validator_1.body)('portfolioType')
+    body('portfolioType')
         .isIn(['MANAGED', 'ADVISORY', 'DISCRETIONARY', 'MODEL_BASED', 'CUSTOM'])
         .withMessage('Invalid portfolio type'),
-    (0, express_validator_1.body)('baseCurrency')
+    body('baseCurrency')
         .optional()
         .isString()
         .isLength({ min: 3, max: 3 })
         .withMessage('Base currency must be 3 characters'),
-    (0, express_validator_1.body)('riskProfile')
+    body('riskProfile')
         .isIn(['CONSERVATIVE', 'MODERATE_CONSERVATIVE', 'MODERATE', 'MODERATE_AGGRESSIVE', 'AGGRESSIVE'])
         .withMessage('Invalid risk profile'),
-    (0, express_validator_1.body)('investmentObjective')
+    body('investmentObjective')
         .optional()
         .isString()
         .trim()
         .isLength({ max: 1000 })
         .withMessage('Investment objective must be less than 1000 characters'),
-    (0, express_validator_1.body)('minCashPercentage')
+    body('minCashPercentage')
         .optional()
         .isDecimal({ decimal_digits: '0,2' })
         .custom((value) => {
@@ -112,7 +112,7 @@ router.post('/', [
         return num >= 0 && num <= 100;
     })
         .withMessage('Min cash percentage must be between 0 and 100'),
-    (0, express_validator_1.body)('maxCashPercentage')
+    body('maxCashPercentage')
         .optional()
         .isDecimal({ decimal_digits: '0,2' })
         .custom((value) => {
@@ -156,30 +156,30 @@ router.post('/', [
 });
 // PUT /api/portfolios/:id - Update portfolio
 router.put('/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.body)('name')
+    param('id').isUUID().withMessage('Invalid portfolio ID'),
+    body('name')
         .optional()
         .isString()
         .trim()
         .isLength({ min: 1, max: 255 })
         .withMessage('Name must be between 1 and 255 characters'),
-    (0, express_validator_1.body)('description')
+    body('description')
         .optional()
         .isString()
         .trim()
         .isLength({ max: 1000 })
         .withMessage('Description must be less than 1000 characters'),
-    (0, express_validator_1.body)('riskProfile')
+    body('riskProfile')
         .optional()
         .isIn(['CONSERVATIVE', 'MODERATE_CONSERVATIVE', 'MODERATE', 'MODERATE_AGGRESSIVE', 'AGGRESSIVE'])
         .withMessage('Invalid risk profile'),
-    (0, express_validator_1.body)('investmentObjective')
+    body('investmentObjective')
         .optional()
         .isString()
         .trim()
         .isLength({ max: 1000 })
         .withMessage('Investment objective must be less than 1000 characters'),
-    (0, express_validator_1.body)('minCashPercentage')
+    body('minCashPercentage')
         .optional()
         .isDecimal({ decimal_digits: '0,2' })
         .custom((value) => {
@@ -187,7 +187,7 @@ router.put('/:id', [
         return num >= 0 && num <= 100;
     })
         .withMessage('Min cash percentage must be between 0 and 100'),
-    (0, express_validator_1.body)('maxCashPercentage')
+    body('maxCashPercentage')
         .optional()
         .isDecimal({ decimal_digits: '0,2' })
         .custom((value) => {
@@ -226,7 +226,7 @@ router.put('/:id', [
 });
 // DELETE /api/portfolios/:id - Delete portfolio
 router.delete('/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid portfolio ID'),
+    param('id').isUUID().withMessage('Invalid portfolio ID'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['portfolio:delete']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -254,7 +254,7 @@ router.delete('/:id', [
 });
 // GET /api/portfolios/:id/summary - Get portfolio summary
 router.get('/:id/summary', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid portfolio ID'),
+    param('id').isUUID().withMessage('Invalid portfolio ID'),
 ], validateRequest, auth_1.requireTenantAccess, async (req, res) => {
     try {
         const { id } = req.params;
@@ -277,7 +277,7 @@ router.get('/:id/summary', [
 });
 // GET /api/portfolios/:id/allocations - Get portfolio allocations
 router.get('/:id/allocations', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid portfolio ID'),
+    param('id').isUUID().withMessage('Invalid portfolio ID'),
 ], validateRequest, auth_1.requireTenantAccess, async (req, res) => {
     try {
         const { id } = req.params;

@@ -168,7 +168,7 @@ export class ClientRegulatoryReportsService {
   private reports: Map<string, ClientRegulatoryReport> = new Map();
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('ClientRegulatoryReports');
   }
 
   async generateCRSReport(
@@ -224,7 +224,7 @@ export class ClientRegulatoryReportsService {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating CRS report:', error);
       throw error;
     }
@@ -283,7 +283,7 @@ export class ClientRegulatoryReportsService {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating FATCA report:', error);
       throw error;
     }
@@ -341,7 +341,7 @@ export class ClientRegulatoryReportsService {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating QIB certification:', error);
       throw error;
     }
@@ -399,7 +399,7 @@ export class ClientRegulatoryReportsService {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating AML summary:', error);
       throw error;
     }
@@ -457,7 +457,7 @@ export class ClientRegulatoryReportsService {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating suitability assessment:', error);
       throw error;
     }
@@ -533,7 +533,7 @@ export class ClientRegulatoryReportsService {
         complianceChecks
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error validating client regulatory report:', error);
       throw error;
     }
@@ -582,7 +582,7 @@ export class ClientRegulatoryReportsService {
 
       return report;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error delivering client regulatory report:', error);
       throw error;
     }
@@ -680,7 +680,7 @@ export class ClientRegulatoryReportsService {
 
       return reports;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating bulk client reports:', error);
       throw error;
     }
@@ -810,7 +810,7 @@ export class ClientRegulatoryReportsService {
   private async processReportDelivery(
     report: ClientRegulatoryReport,
     deliveryOptions: ClientReportGenerationOptions['deliveryOptions']
-  ): Promise<void> {
+  ): Promise<any> {
     // Mock delivery process
     logger.info('Processing report delivery', {
       reportId: report.id,
@@ -880,3 +880,4 @@ export class ClientRegulatoryReportsService {
     }
   }
 }
+

@@ -164,8 +164,8 @@ export declare class CapacityPlanningSystem {
     getCostOptimizationService(): CostOptimizationService;
     getWorkflowManager(): CapacityAlertWorkflowManager;
     getAPIController(): CapacityPlanningController;
-    start(): Promise<void>;
-    shutdown(): Promise<void>;
+    start(): Promise<any>;
+    shutdown(): Promise<any>;
 }
 export declare const createCapacityPlanningSystem: (config: CapacityPlanningSystemConfig) => CapacityPlanningSystem;
 export declare const getDefaultConfig: () => CapacityPlanningSystemConfig;

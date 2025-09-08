@@ -293,5 +293,5 @@ export declare class ResourceCostAnalysisService extends EventEmitter {
     private generateOpportunityId;
     private generateRecommendationId;
     private generateAlertId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

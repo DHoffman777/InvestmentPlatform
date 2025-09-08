@@ -56,7 +56,7 @@ export declare class LoadTestingService extends EventEmitter {
     private getHealthStatus;
     private getTestTemplates;
     start(port?: number): void;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
     getApp(): express.Application;
 }
 //# sourceMappingURL=LoadTestingService.d.ts.map

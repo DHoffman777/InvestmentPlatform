@@ -2,20 +2,19 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.transactionManagementRouter = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const client_1 = require("@prisma/client");
 const transactionService_1 = require("../services/transactionService");
 const logger_1 = require("../utils/logger");
 const auth_1 = require("../middleware/auth");
 const metrics_1 = require("../middleware/metrics");
-const decimal_js_1 = require("decimal.js");
 const router = (0, express_1.Router)();
 exports.transactionManagementRouter = router;
 const prisma = new client_1.PrismaClient();
 const transactionService = new transactionService_1.TransactionService(prisma);
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -26,22 +25,22 @@ const validateRequest = (req, res, next) => {
 };
 // POST /api/transaction-management/capture - Capture trade from external source
 router.post('/capture', [
-    (0, express_validator_1.body)('source').isIn(['MANUAL', 'BROKER_API', 'FIX_FEED', 'FILE_UPLOAD', 'CUSTODIAN_FEED']).withMessage('Invalid trade source'),
-    (0, express_validator_1.body)('externalTradeId').isString().trim().isLength({ min: 1, max: 100 }).withMessage('External trade ID is required'),
-    (0, express_validator_1.body)('portfolioId').isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.body)('securityId').isUUID().withMessage('Invalid security ID'),
-    (0, express_validator_1.body)('transactionType').isIn(['BUY', 'SELL']).withMessage('Invalid transaction type'),
-    (0, express_validator_1.body)('quantity').isNumeric().withMessage('Quantity must be numeric'),
-    (0, express_validator_1.body)('price').isNumeric().withMessage('Price must be numeric'),
-    (0, express_validator_1.body)('tradeDate').isISO8601().toDate().withMessage('Invalid trade date'),
-    (0, express_validator_1.body)('settleDate').optional().isISO8601().toDate().withMessage('Invalid settle date'),
-    (0, express_validator_1.body)('fees').optional().isNumeric().withMessage('Fees must be numeric'),
-    (0, express_validator_1.body)('taxes').optional().isNumeric().withMessage('Taxes must be numeric'),
-    (0, express_validator_1.body)('commission').optional().isNumeric().withMessage('Commission must be numeric'),
-    (0, express_validator_1.body)('counterparty').optional().isString().trim(),
-    (0, express_validator_1.body)('orderId').optional().isString().trim(),
-    (0, express_validator_1.body)('executionId').optional().isString().trim(),
-    (0, express_validator_1.body)('venue').optional().isString().trim(),
+    body('source').isIn(['MANUAL', 'BROKER_API', 'FIX_FEED', 'FILE_UPLOAD', 'CUSTODIAN_FEED']).withMessage('Invalid trade source'),
+    body('externalTradeId').isString().trim().isLength({ min: 1, max: 100 }).withMessage('External trade ID is required'),
+    body('portfolioId').isUUID().withMessage('Invalid portfolio ID'),
+    body('securityId').isUUID().withMessage('Invalid security ID'),
+    body('transactionType').isIn(['BUY', 'SELL']).withMessage('Invalid transaction type'),
+    body('quantity').isNumeric().withMessage('Quantity must be numeric'),
+    body('price').isNumeric().withMessage('Price must be numeric'),
+    body('tradeDate').isISO8601().toDate().withMessage('Invalid trade date'),
+    body('settleDate').optional().isISO8601().toDate().withMessage('Invalid settle date'),
+    body('fees').optional().isNumeric().withMessage('Fees must be numeric'),
+    body('taxes').optional().isNumeric().withMessage('Taxes must be numeric'),
+    body('commission').optional().isNumeric().withMessage('Commission must be numeric'),
+    body('counterparty').optional().isString().trim(),
+    body('orderId').optional().isString().trim(),
+    body('executionId').optional().isString().trim(),
+    body('venue').optional().isString().trim(),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:create']), async (req, res) => {
     try {
         const { source, externalTradeId, portfolioId, securityId, transactionType, quantity, price, tradeDate, settleDate, fees, taxes, commission, counterparty, orderId, executionId, venue, rawData, } = req.body;
@@ -52,14 +51,7 @@ router.post('/capture', [
                 tenantId: req.user.tenantId,
                 OR: [
                     { ownerId: req.user.sub },
-                    {
-                        managers: {
-                            some: {
-                                userId: req.user.sub,
-                                status: 'ACTIVE'
-                            }
-                        }
-                    }
+                    { managerId: req.user.sub }
                 ]
             }
         });
@@ -75,13 +67,13 @@ router.post('/capture', [
             portfolioId,
             securityId,
             transactionType,
-            quantity: new decimal_js_1.Decimal(quantity),
-            price: new decimal_js_1.Decimal(price),
+            quantity: new Decimal(quantity),
+            price: new Decimal(price),
             tradeDate,
             settleDate,
-            fees: fees ? new decimal_js_1.Decimal(fees) : undefined,
-            taxes: taxes ? new decimal_js_1.Decimal(taxes) : undefined,
-            commission: commission ? new decimal_js_1.Decimal(commission) : undefined,
+            fees: fees ? new Decimal(fees) : undefined,
+            taxes: taxes ? new Decimal(taxes) : undefined,
+            commission: commission ? new Decimal(commission) : undefined,
             counterparty,
             orderId,
             executionId,
@@ -112,34 +104,27 @@ router.post('/capture', [
 });
 // POST /api/transaction-management/bulk-capture - Bulk trade capture
 router.post('/bulk-capture', [
-    (0, express_validator_1.body)('trades').isArray({ min: 1, max: 1000 }).withMessage('Trades array is required (max 1000)'),
-    (0, express_validator_1.body)('trades.*.source').isIn(['MANUAL', 'BROKER_API', 'FIX_FEED', 'FILE_UPLOAD', 'CUSTODIAN_FEED']),
-    (0, express_validator_1.body)('trades.*.externalTradeId').isString().trim().isLength({ min: 1 }),
-    (0, express_validator_1.body)('trades.*.portfolioId').isUUID(),
-    (0, express_validator_1.body)('trades.*.securityId').isUUID(),
-    (0, express_validator_1.body)('trades.*.transactionType').isIn(['BUY', 'SELL']),
-    (0, express_validator_1.body)('trades.*.quantity').isNumeric(),
-    (0, express_validator_1.body)('trades.*.price').isNumeric(),
-    (0, express_validator_1.body)('trades.*.tradeDate').isISO8601().toDate(),
+    body('trades').isArray({ min: 1, max: 1000 }).withMessage('Trades array is required (max 1000)'),
+    body('trades.*.source').isIn(['MANUAL', 'BROKER_API', 'FIX_FEED', 'FILE_UPLOAD', 'CUSTODIAN_FEED']),
+    body('trades.*.externalTradeId').isString().trim().isLength({ min: 1 }),
+    body('trades.*.portfolioId').isUUID(),
+    body('trades.*.securityId').isUUID(),
+    body('trades.*.transactionType').isIn(['BUY', 'SELL']),
+    body('trades.*.quantity').isNumeric(),
+    body('trades.*.price').isNumeric(),
+    body('trades.*.tradeDate').isISO8601().toDate(),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:create', 'transaction:bulk']), async (req, res) => {
     try {
         const { trades } = req.body;
         // Validate all portfolios belong to the tenant
-        const portfolioIds = [...new Set(trades.map((t) => t.portfolioId))];
+        const portfolioIds = [...new Set(trades.map((t) => t.portfolioId).filter(Boolean))];
         const portfolios = await prisma.portfolio.findMany({
             where: {
                 id: { in: portfolioIds },
                 tenantId: req.user.tenantId,
                 OR: [
                     { ownerId: req.user.sub },
-                    {
-                        managers: {
-                            some: {
-                                userId: req.user.sub,
-                                status: 'ACTIVE'
-                            }
-                        }
-                    }
+                    { managerId: req.user.sub }
                 ]
             }
         });
@@ -156,13 +141,13 @@ router.post('/bulk-capture', [
             portfolioId: trade.portfolioId,
             securityId: trade.securityId,
             transactionType: trade.transactionType,
-            quantity: new decimal_js_1.Decimal(trade.quantity),
-            price: new decimal_js_1.Decimal(trade.price),
+            quantity: new Decimal(trade.quantity),
+            price: new Decimal(trade.price),
             tradeDate: trade.tradeDate,
             settleDate: trade.settleDate,
-            fees: trade.fees ? new decimal_js_1.Decimal(trade.fees) : undefined,
-            taxes: trade.taxes ? new decimal_js_1.Decimal(trade.taxes) : undefined,
-            commission: trade.commission ? new decimal_js_1.Decimal(trade.commission) : undefined,
+            fees: trade.fees ? new Decimal(trade.fees) : undefined,
+            taxes: trade.taxes ? new Decimal(trade.taxes) : undefined,
+            commission: trade.commission ? new Decimal(trade.commission) : undefined,
             counterparty: trade.counterparty,
             orderId: trade.orderId,
             executionId: trade.executionId,
@@ -190,15 +175,15 @@ router.post('/bulk-capture', [
 });
 // POST /api/transaction-management/portfolios/:id/match - Match transactions with external data
 router.post('/portfolios/:id/match', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.body)('externalTransactions').isArray({ min: 1 }).withMessage('External transactions array is required'),
-    (0, express_validator_1.body)('startDate').isISO8601().toDate().withMessage('Invalid start date'),
-    (0, express_validator_1.body)('endDate').isISO8601().toDate().withMessage('Invalid end date'),
-    (0, express_validator_1.body)('externalTransactions.*.symbol').isString().trim(),
-    (0, express_validator_1.body)('externalTransactions.*.quantity').isNumeric(),
-    (0, express_validator_1.body)('externalTransactions.*.price').isNumeric(),
-    (0, express_validator_1.body)('externalTransactions.*.tradeDate').isISO8601().toDate(),
-    (0, express_validator_1.body)('externalTransactions.*.transactionType').isIn(['BUY', 'SELL']),
+    param('id').isUUID().withMessage('Invalid portfolio ID'),
+    body('externalTransactions').isArray({ min: 1 }).withMessage('External transactions array is required'),
+    body('startDate').isISO8601().toDate().withMessage('Invalid start date'),
+    body('endDate').isISO8601().toDate().withMessage('Invalid end date'),
+    body('externalTransactions.*.symbol').isString().trim(),
+    body('externalTransactions.*.quantity').isNumeric(),
+    body('externalTransactions.*.price').isNumeric(),
+    body('externalTransactions.*.tradeDate').isISO8601().toDate(),
+    body('externalTransactions.*.transactionType').isIn(['BUY', 'SELL']),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:reconcile']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -210,14 +195,7 @@ router.post('/portfolios/:id/match', [
                 tenantId: req.user.tenantId,
                 OR: [
                     { ownerId: req.user.sub },
-                    {
-                        managers: {
-                            some: {
-                                userId: req.user.sub,
-                                status: 'ACTIVE'
-                            }
-                        }
-                    }
+                    { managerId: req.user.sub }
                 ]
             }
         });
@@ -247,15 +225,15 @@ router.post('/portfolios/:id/match', [
 });
 // POST /api/transaction-management/settlement-instructions - Create settlement instruction
 router.post('/settlement-instructions', [
-    (0, express_validator_1.body)('transactionId').isUUID().withMessage('Invalid transaction ID'),
-    (0, express_validator_1.body)('instructionType').isIn(['DVP', 'FREE_DELIVERY', 'CASH_SETTLEMENT']).withMessage('Invalid instruction type'),
-    (0, express_validator_1.body)('deliveryDate').isISO8601().toDate().withMessage('Invalid delivery date'),
-    (0, express_validator_1.body)('settlementAmount').isNumeric().withMessage('Settlement amount must be numeric'),
-    (0, express_validator_1.body)('custodian').isString().trim().isLength({ min: 1 }).withMessage('Custodian is required'),
-    (0, express_validator_1.body)('account').isString().trim().isLength({ min: 1 }).withMessage('Account is required'),
-    (0, express_validator_1.body)('dtcNumber').optional().isString().trim(),
-    (0, express_validator_1.body)('contraParty').optional().isString().trim(),
-    (0, express_validator_1.body)('specialInstructions').optional().isString().trim().isLength({ max: 1000 }),
+    body('transactionId').isUUID().withMessage('Invalid transaction ID'),
+    body('instructionType').isIn(['DVP', 'FREE_DELIVERY', 'CASH_SETTLEMENT']).withMessage('Invalid instruction type'),
+    body('deliveryDate').isISO8601().toDate().withMessage('Invalid delivery date'),
+    body('settlementAmount').isNumeric().withMessage('Settlement amount must be numeric'),
+    body('custodian').isString().trim().isLength({ min: 1 }).withMessage('Custodian is required'),
+    body('account').isString().trim().isLength({ min: 1 }).withMessage('Account is required'),
+    body('dtcNumber').optional().isString().trim(),
+    body('contraParty').optional().isString().trim(),
+    body('specialInstructions').optional().isString().trim().isLength({ max: 1000 }),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:settle']), async (req, res) => {
     try {
         const { transactionId, instructionType, deliveryDate, settlementAmount, custodian, account, dtcNumber, contraParty, specialInstructions, } = req.body;
@@ -267,14 +245,7 @@ router.post('/settlement-instructions', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             }
@@ -289,7 +260,7 @@ router.post('/settlement-instructions', [
             transactionId,
             instructionType,
             deliveryDate,
-            settlementAmount: new decimal_js_1.Decimal(settlementAmount),
+            settlementAmount: new Decimal(settlementAmount),
             custodian,
             account,
             status: 'PENDING',
@@ -317,9 +288,9 @@ router.post('/settlement-instructions', [
 });
 // PUT /api/transaction-management/settlement-instructions/:id/status - Update settlement status
 router.put('/settlement-instructions/:id/status', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid instruction ID'),
-    (0, express_validator_1.body)('status').isIn(['PENDING', 'SENT', 'CONFIRMED', 'SETTLED', 'FAILED']).withMessage('Invalid status'),
-    (0, express_validator_1.body)('notes').optional().isString().trim().isLength({ max: 1000 }).withMessage('Notes too long'),
+    param('id').isUUID().withMessage('Invalid instruction ID'),
+    body('status').isIn(['PENDING', 'SENT', 'CONFIRMED', 'SETTLED', 'FAILED']).withMessage('Invalid status'),
+    body('notes').optional().isString().trim().isLength({ max: 1000 }).withMessage('Notes too long'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:settle']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -333,14 +304,7 @@ router.put('/settlement-instructions/:id/status', [
                         tenantId: req.user.tenantId,
                         OR: [
                             { ownerId: req.user.sub },
-                            {
-                                managers: {
-                                    some: {
-                                        userId: req.user.sub,
-                                        status: 'ACTIVE'
-                                    }
-                                }
-                            }
+                            { managerId: req.user.sub }
                         ]
                     }
                 }
@@ -370,16 +334,16 @@ router.put('/settlement-instructions/:id/status', [
 });
 // POST /api/transaction-management/failed-trades - Create failed trade record
 router.post('/failed-trades', [
-    (0, express_validator_1.body)('transactionId').isUUID().withMessage('Invalid transaction ID'),
-    (0, express_validator_1.body)('failureReason').isIn([
+    body('transactionId').isUUID().withMessage('Invalid transaction ID'),
+    body('failureReason').isIn([
         'INSUFFICIENT_CASH', 'INSUFFICIENT_SECURITIES', 'SYSTEM_ERROR',
         'COMPLIANCE_VIOLATION', 'SETTLEMENT_FAIL', 'PRICING_ERROR'
     ]).withMessage('Invalid failure reason'),
-    (0, express_validator_1.body)('failureDate').isISO8601().toDate().withMessage('Invalid failure date'),
-    (0, express_validator_1.body)('resolutionActions').isArray({ min: 1 }).withMessage('Resolution actions are required'),
-    (0, express_validator_1.body)('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Invalid priority'),
-    (0, express_validator_1.body)('assignedTo').optional().isString().trim(),
-    (0, express_validator_1.body)('notes').optional().isString().trim().isLength({ max: 2000 }),
+    body('failureDate').isISO8601().toDate().withMessage('Invalid failure date'),
+    body('resolutionActions').isArray({ min: 1 }).withMessage('Resolution actions are required'),
+    body('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Invalid priority'),
+    body('assignedTo').optional().isString().trim(),
+    body('notes').optional().isString().trim().isLength({ max: 2000 }),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:manage-failures']), async (req, res) => {
     try {
         const { transactionId, failureReason, failureDate, resolutionActions, priority, assignedTo, notes, } = req.body;
@@ -391,14 +355,7 @@ router.post('/failed-trades', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             }
@@ -439,9 +396,9 @@ router.post('/failed-trades', [
 });
 // GET /api/transaction-management/portfolios/:id/cash-impact - Get cash impact analysis
 router.get('/portfolios/:id/cash-impact', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.query)('startDate').isISO8601().toDate().withMessage('Invalid start date'),
-    (0, express_validator_1.query)('endDate').isISO8601().toDate().withMessage('Invalid end date'),
+    param('id').isUUID().withMessage('Invalid portfolio ID'),
+    query('startDate').isISO8601().toDate().withMessage('Invalid start date'),
+    query('endDate').isISO8601().toDate().withMessage('Invalid end date'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:read']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -453,14 +410,7 @@ router.get('/portfolios/:id/cash-impact', [
                 tenantId: req.user.tenantId,
                 OR: [
                     { ownerId: req.user.sub },
-                    {
-                        managers: {
-                            some: {
-                                userId: req.user.sub,
-                                status: 'ACTIVE'
-                            }
-                        }
-                    }
+                    { managerId: req.user.sub }
                 ]
             }
         });
@@ -502,10 +452,10 @@ router.get('/portfolios/:id/cash-impact', [
 });
 // GET /api/transaction-management/settlement-instructions - Get settlement instructions
 router.get('/settlement-instructions', [
-    (0, express_validator_1.query)('portfolioId').optional().isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.query)('status').optional().isIn(['PENDING', 'SENT', 'CONFIRMED', 'SETTLED', 'FAILED']),
-    (0, express_validator_1.query)('page').optional().isInt({ min: 1 }).toInt(),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('portfolioId').optional().isUUID().withMessage('Invalid portfolio ID'),
+    query('status').optional().isIn(['PENDING', 'SENT', 'CONFIRMED', 'SETTLED', 'FAILED']),
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['transaction:read']), async (req, res) => {
     try {
         const { portfolioId, status, page = 1, limit = 20 } = req.query;
@@ -516,14 +466,7 @@ router.get('/settlement-instructions', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             }
@@ -542,13 +485,15 @@ router.get('/settlement-instructions', [
                 orderBy: { deliveryDate: 'desc' },
                 include: {
                     transaction: {
-                        include: {
-                            security: {
-                                select: { symbol: true, name: true }
-                            },
-                            portfolio: {
-                                select: { id: true, name: true }
-                            }
+                        select: {
+                            id: true,
+                            transactionType: true,
+                            transactionDate: true,
+                            quantity: true,
+                            price: true,
+                            netAmount: true,
+                            portfolioId: true,
+                            // securityId: true // Field doesn't exist in schema
                         }
                     }
                 }

@@ -14,7 +14,6 @@ export const initializeRedis = async (): Promise<RedisClientType> => {
     url: redisUrl,
     socket: {
       connectTimeout: 5000,
-      lazyConnect: true,
     },
   });
 
@@ -38,7 +37,7 @@ export const initializeRedis = async (): Promise<RedisClientType> => {
     await redisClient.connect();
     logger.info('Connected to Redis');
     return redisClient;
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Failed to connect to Redis:', error);
     throw error;
   }
@@ -51,7 +50,7 @@ export const getRedisClient = (): RedisClientType => {
   return redisClient;
 };
 
-export const closeRedis = async (): Promise<void> => {
+export const closeRedis = async (): Promise<any> => {
   if (redisClient) {
     await redisClient.disconnect();
     redisClient = null;
@@ -64,7 +63,7 @@ export const cacheGet = async (key: string): Promise<string | null> => {
   try {
     const client = getRedisClient();
     return await client.get(key);
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Cache get error:', { key, error });
     return null;
   }
@@ -79,7 +78,7 @@ export const cacheSet = async (key: string, value: string, ttlSeconds?: number):
       await client.set(key, value);
     }
     return true;
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Cache set error:', { key, error });
     return false;
   }
@@ -90,7 +89,7 @@ export const cacheDelete = async (key: string): Promise<boolean> => {
     const client = getRedisClient();
     const result = await client.del(key);
     return result > 0;
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Cache delete error:', { key, error });
     return false;
   }
@@ -100,7 +99,7 @@ export const cacheGetJSON = async <T>(key: string): Promise<T | null> => {
   try {
     const value = await cacheGet(key);
     return value ? JSON.parse(value) : null;
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Cache get JSON error:', { key, error });
     return null;
   }
@@ -109,8 +108,9 @@ export const cacheGetJSON = async <T>(key: string): Promise<T | null> => {
 export const cacheSetJSON = async <T>(key: string, value: T, ttlSeconds?: number): Promise<boolean> => {
   try {
     return await cacheSet(key, JSON.stringify(value), ttlSeconds);
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Cache set JSON error:', { key, error });
     return false;
   }
 };
+

@@ -462,7 +462,7 @@ class ErrorDashboardService extends events_1.EventEmitter {
         });
         return errors.map(error => ({
             fingerprint: error.fingerprint,
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown error',
             category: error.category,
             severity: error.severity,
             count: error.count,

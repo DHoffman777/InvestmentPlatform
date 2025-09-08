@@ -661,7 +661,7 @@ export interface HookAction {
   parameters: Record<string, any>;
 }
 
-export interface PrerequisiteType {
+export enum PrerequisiteType {
   SYSTEM_CHECK = 'system_check',
   DATA_VALIDATION = 'data_validation',
   APPROVAL_CHECK = 'approval_check',
@@ -1533,7 +1533,7 @@ export class AccountClosureService extends EventEmitter {
     return true;
   }
 
-  private async processNextStep(requestId: string): Promise<void> {
+  private async processNextStep(requestId: string): Promise<any> {
     const request = this.closureRequests.get(requestId);
     if (!request) return;
 
@@ -1599,13 +1599,13 @@ export class AccountClosureService extends EventEmitter {
       // Process next step
       await this.processNextStep(requestId);
 
-    } catch (error) {
+    } catch (error: any) {
       nextStep.status = StepStatus.FAILED;
       nextStep.endTime = new Date();
       nextStep.errorCount++;
 
       this.addAuditEntry(request, ClosureAction.STEP_FAILED, 'system',
-        `Step failed: ${nextStep.name} - ${error.message}`, undefined, undefined, 'system', 'system');
+        `Step failed: ${nextStep.name} - ${this.getErrorMessage(error)}`, undefined, undefined, 'system', 'system');
 
       // Handle step failure
       if (nextStep.retryCount < nextStep.maxRetries) {
@@ -1614,12 +1614,12 @@ export class AccountClosureService extends EventEmitter {
         setTimeout(() => this.processNextStep(requestId), 60000); // Retry in 1 minute
       } else {
         request.status = ClosureStatus.FAILED;
-        this.emit('closureFailed', { request, error: error.message });
+        this.emit('closureFailed', { request, error: this.getErrorMessage(error) });
       }
     }
   }
 
-  private async executeStep(request: AccountClosureRequest, step: WorkflowStep): Promise<void> {
+  private async executeStep(request: AccountClosureRequest, step: WorkflowStep): Promise<any> {
     switch (step.type) {
       case StepType.AUTOMATED:
         await this.executeAutomatedStep(request, step);
@@ -1644,7 +1644,7 @@ export class AccountClosureService extends EventEmitter {
     }
   }
 
-  private async executeAutomatedStep(request: AccountClosureRequest, step: WorkflowStep): Promise<void> {
+  private async executeAutomatedStep(request: AccountClosureRequest, step: WorkflowStep): Promise<any> {
     // Execute automated actions
     for (const action of step.actions) {
       await this.executeStepAction(request, action);
@@ -1656,7 +1656,7 @@ export class AccountClosureService extends EventEmitter {
     }
   }
 
-  private async executeManualStep(request: AccountClosureRequest, step: WorkflowStep): Promise<void> {
+  private async executeManualStep(request: AccountClosureRequest, step: WorkflowStep): Promise<any> {
     // Manual steps require human intervention
     // This would typically involve creating tasks for operators
     console.log(`Manual step execution required: ${step.name}`);
@@ -1665,7 +1665,7 @@ export class AccountClosureService extends EventEmitter {
     // In a real system, this would wait for manual completion
   }
 
-  private async executeApprovalStep(request: AccountClosureRequest, step: WorkflowStep): Promise<void> {
+  private async executeApprovalStep(request: AccountClosureRequest, step: WorkflowStep): Promise<any> {
     // Approval steps are handled by the approval process
     // This method would send approval requests to relevant parties
     const stepApprovals = request.approvals.filter(a => a.stepId === step.id);
@@ -1677,7 +1677,7 @@ export class AccountClosureService extends EventEmitter {
     }
   }
 
-  private async executeNotificationStep(request: AccountClosureRequest, step: WorkflowStep): Promise<void> {
+  private async executeNotificationStep(request: AccountClosureRequest, step: WorkflowStep): Promise<any> {
     // Send notifications based on the step configuration
     const stepNotifications = request.notifications.filter(n => 
       n.trigger === NotificationTrigger.STEP_COMPLETION
@@ -1688,7 +1688,7 @@ export class AccountClosureService extends EventEmitter {
     }
   }
 
-  private async executeDataProcessingStep(request: AccountClosureRequest, step: WorkflowStep): Promise<void> {
+  private async executeDataProcessingStep(request: AccountClosureRequest, step: WorkflowStep): Promise<any> {
     // Process data according to the data handling plan
     switch (step.name) {
       case 'Data Backup':
@@ -1706,14 +1706,14 @@ export class AccountClosureService extends EventEmitter {
     }
   }
 
-  private async executeComplianceCheckStep(request: AccountClosureRequest, step: WorkflowStep): Promise<void> {
+  private async executeComplianceCheckStep(request: AccountClosureRequest, step: WorkflowStep): Promise<any> {
     // Execute compliance checks
     for (const check of request.dataHandling.complianceChecks) {
       await this.executeComplianceCheck(request, check);
     }
   }
 
-  private async executeStepAction(request: AccountClosureRequest, action: StepAction): Promise<void> {
+  private async executeStepAction(request: AccountClosureRequest, action: StepAction): Promise<any> {
     switch (action.type) {
       case ActionType.API_CALL:
         await this.executeApiCall(action);
@@ -1729,7 +1729,7 @@ export class AccountClosureService extends EventEmitter {
     }
   }
 
-  private async executeStepValidation(request: AccountClosureRequest, validation: StepValidation): Promise<void> {
+  private async executeStepValidation(request: AccountClosureRequest, validation: StepValidation): Promise<any> {
     // Execute validation logic
     console.log(`Executing validation: ${validation.type} - ${validation.description}`);
     
@@ -1751,7 +1751,7 @@ export class AccountClosureService extends EventEmitter {
     }
   }
 
-  private async executeRollbackStep(request: AccountClosureRequest, rollbackStep: RollbackStep): Promise<void> {
+  private async executeRollbackStep(request: AccountClosureRequest, rollbackStep: RollbackStep): Promise<any> {
     console.log(`Executing rollback step: ${rollbackStep.name}`);
     
     for (const action of rollbackStep.actions) {
@@ -1764,82 +1764,82 @@ export class AccountClosureService extends EventEmitter {
   }
 
   // Helper methods for specific operations
-  private async executeApiCall(action: StepAction): Promise<void> {
+  private async executeApiCall(action: StepAction): Promise<any> {
     console.log(`API Call: ${action.description}`);
     await this.delay(1000);
   }
 
-  private async executeDatabaseOperation(action: StepAction): Promise<void> {
+  private async executeDatabaseOperation(action: StepAction): Promise<any> {
     console.log(`Database Operation: ${action.description}`);
     await this.delay(2000);
   }
 
-  private async executeNotificationAction(request: AccountClosureRequest, action: StepAction): Promise<void> {
+  private async executeNotificationAction(request: AccountClosureRequest, action: StepAction): Promise<any> {
     console.log(`Notification: ${action.description}`);
     await this.delay(500);
   }
 
-  private async executeDataBackup(request: AccountClosureRequest): Promise<void> {
+  private async executeDataBackup(request: AccountClosureRequest): Promise<any> {
     console.log('Executing data backup...');
     await this.delay(5000);
   }
 
-  private async executeDataTransfer(request: AccountClosureRequest): Promise<void> {
+  private async executeDataTransfer(request: AccountClosureRequest): Promise<any> {
     console.log('Executing data transfer...');
     await this.delay(3000);
   }
 
-  private async executeDataDeletion(request: AccountClosureRequest): Promise<void> {
+  private async executeDataDeletion(request: AccountClosureRequest): Promise<any> {
     console.log('Executing data deletion...');
     await this.delay(4000);
   }
 
-  private async executeDataAnonymization(request: AccountClosureRequest): Promise<void> {
+  private async executeDataAnonymization(request: AccountClosureRequest): Promise<any> {
     console.log('Executing data anonymization...');
     await this.delay(6000);
   }
 
-  private async executeComplianceCheck(request: AccountClosureRequest, check: DataComplianceCheck): Promise<void> {
+  private async executeComplianceCheck(request: AccountClosureRequest, check: DataComplianceCheck): Promise<any> {
     console.log(`Compliance check: ${check.regulation} - ${check.requirement}`);
     await this.delay(2000);
   }
 
-  private async executeRollbackVerification(verification: RollbackVerification): Promise<void> {
+  private async executeRollbackVerification(verification: RollbackVerification): Promise<any> {
     console.log(`Rollback verification: ${verification.type}`);
     await this.delay(1000);
   }
 
-  private async sendApprovalRequest(request: AccountClosureRequest, approval: ApprovalRequirement): Promise<void> {
+  private async sendApprovalRequest(request: AccountClosureRequest, approval: ApprovalRequirement): Promise<any> {
     console.log(`Sending approval request: ${approval.type} to ${approval.approverRole}`);
     approval.status = ApprovalStatus.REQUESTED;
     approval.requestedAt = new Date();
   }
 
-  private async sendNotification(request: AccountClosureRequest, notification: NotificationPlan): Promise<void> {
+  private async sendNotification(request: AccountClosureRequest, notification: NotificationPlan): Promise<any> {
     console.log(`Sending notification: ${notification.type} to ${notification.recipient}`);
   }
 
-  private async sendInitialNotifications(request: AccountClosureRequest): Promise<void> {
+  private async sendInitialNotifications(request: AccountClosureRequest): Promise<any> {
     console.log(`Sending initial notifications for request ${request.id}`);
   }
 
-  private async sendCancellationNotifications(request: AccountClosureRequest, reason: string): Promise<void> {
+  private async sendCancellationNotifications(request: AccountClosureRequest, reason: string): Promise<any> {
     console.log(`Sending cancellation notifications for request ${request.id}: ${reason}`);
   }
 
-  private async sendRejectionNotifications(request: AccountClosureRequest, reason: string): Promise<void> {
+  private async sendRejectionNotifications(request: AccountClosureRequest, reason: string): Promise<any> {
     console.log(`Sending rejection notifications for request ${request.id}: ${reason}`);
   }
 
-  private async sendCompletionNotifications(request: AccountClosureRequest): Promise<void> {
+  private async sendCompletionNotifications(request: AccountClosureRequest): Promise<any> {
     console.log(`Sending completion notifications for request ${request.id}`);
   }
 
-  private async sendRollbackNotifications(request: AccountClosureRequest, reason: string): Promise<void> {
+  private async sendRollbackNotifications(request: AccountClosureRequest, reason: string): Promise<any> {
     console.log(`Sending rollback notifications for request ${request.id}: ${reason}`);
   }
 
-  private delay(ms: number): Promise<void> {
+  private delay(ms: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -1849,7 +1849,7 @@ export class AccountClosureService extends EventEmitter {
     tenantId: string,
     closureType: ClosureType,
     reason: ClosureReason
-  ): Promise<void> {
+  ): Promise<any> {
     // Check for existing pending requests
     const existingRequests = Array.from(this.closureRequests.values())
       .filter(req => 
@@ -2714,8 +2714,6 @@ export class AccountClosureService extends EventEmitter {
                 actions: ['email_notification']
               }
             ],
-            timeouts: [30, 60, 120],
-            recipients: ['management'],
             enabled: true
           },
           templates: [
@@ -2725,11 +2723,7 @@ export class AccountClosureService extends EventEmitter {
               body: 'Step {{stepName}} failed for request {{requestId}}',
               variables: ['stepName', 'requestId']
             }
-          ],
-          metricsCollection: true,
-          logAggregation: true,
-          realTimeAlerts: true,
-          dashboard: true
+          ]
         },
         escalation: {
           levels: [
@@ -2769,7 +2763,8 @@ export class AccountClosureService extends EventEmitter {
           timeoutMinutes: 120,
           action: {
             type: ActionType.NOTIFICATION,
-            parameters: { escalate: true }
+            parameters: { escalate: true },
+            notification: true
           },
           notification: {
             recipients: ['operations_manager'],
@@ -2851,4 +2846,12 @@ export class AccountClosureService extends EventEmitter {
       }
     }, 60 * 60 * 1000); // 1 hour
   }
+
+  private getErrorMessage(error: unknown): string {
+    if ((error as any) instanceof Error) {
+      return (error as Error).message;
+    }
+    return String(error);
+  }
 }
+

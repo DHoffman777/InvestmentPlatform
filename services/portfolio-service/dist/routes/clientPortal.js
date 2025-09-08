@@ -4,7 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const express_validator_1 = require("express-validator");
+const client_1 = require("@prisma/client");
+const { body, param, query, validationResult } = require('express-validator');
 const ClientPortalService_1 = require("../services/clientPortal/ClientPortalService");
 const DashboardWidgetService_1 = require("../services/clientPortal/DashboardWidgetService");
 const auth_1 = require("../middleware/auth");
@@ -12,40 +13,41 @@ const validation_1 = require("../middleware/validation");
 const ClientPortal_1 = require("../models/clientPortal/ClientPortal");
 const logger_1 = require("../utils/logger");
 const router = express_1.default.Router();
-const clientPortalService = new ClientPortalService_1.ClientPortalService();
-const dashboardWidgetService = new DashboardWidgetService_1.DashboardWidgetService();
+const prisma = new client_1.PrismaClient();
+const clientPortalService = new ClientPortalService_1.ClientPortalService(prisma);
+const dashboardWidgetService = new DashboardWidgetService_1.DashboardWidgetService(prisma);
 // Validation schemas
 const dashboardLayoutUpdateSchema = [
-    (0, express_validator_1.body)('name').optional().isLength({ min: 1, max: 255 }).withMessage('Name must be 1-255 characters'),
-    (0, express_validator_1.body)('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
-    (0, express_validator_1.body)('widgets').optional().isArray().withMessage('Widgets must be an array'),
-    (0, express_validator_1.body)('theme').optional().isObject().withMessage('Theme must be an object'),
-    (0, express_validator_1.body)('theme.primaryColor').optional().matches(/^#[0-9A-F]{6}$/i).withMessage('Invalid primary color format'),
-    (0, express_validator_1.body)('theme.secondaryColor').optional().matches(/^#[0-9A-F]{6}$/i).withMessage('Invalid secondary color format'),
-    (0, express_validator_1.body)('theme.backgroundColor').optional().matches(/^#[0-9A-F]{6}$/i).withMessage('Invalid background color format')
+    body('name').optional().isLength({ min: 1, max: 255 }).withMessage('Name must be 1-255 characters'),
+    body('description').optional().isLength({ max: 1000 }).withMessage('Description must be less than 1000 characters'),
+    body('widgets').optional().isArray().withMessage('Widgets must be an array'),
+    body('theme').optional().isObject().withMessage('Theme must be an object'),
+    body('theme.primaryColor').optional().matches(/^#[0-9A-F]{6}$/i).withMessage('Invalid primary color format'),
+    body('theme.secondaryColor').optional().matches(/^#[0-9A-F]{6}$/i).withMessage('Invalid secondary color format'),
+    body('theme.backgroundColor').optional().matches(/^#[0-9A-F]{6}$/i).withMessage('Invalid background color format')
 ];
 const dashboardDataSchema = [
-    (0, express_validator_1.body)('widgetTypes').isArray({ min: 1 }).withMessage('At least one widget type required'),
-    (0, express_validator_1.body)('widgetTypes.*').isIn(Object.values(ClientPortal_1.DashboardWidgetType)).withMessage('Invalid widget type'),
-    (0, express_validator_1.body)('dateRange').optional().isObject().withMessage('Date range must be an object'),
-    (0, express_validator_1.body)('dateRange.startDate').optional().isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.body)('dateRange.endDate').optional().isISO8601().withMessage('Invalid end date'),
-    (0, express_validator_1.body)('portfolioIds').optional().isArray().withMessage('Portfolio IDs must be an array'),
-    (0, express_validator_1.body)('portfolioIds.*').optional().isUUID().withMessage('Invalid portfolio ID format')
+    body('widgetTypes').isArray({ min: 1 }).withMessage('At least one widget type required'),
+    body('widgetTypes.*').isIn(Object.values(ClientPortal_1.DashboardWidgetType)).withMessage('Invalid widget type'),
+    body('dateRange').optional().isObject().withMessage('Date range must be an object'),
+    body('dateRange.startDate').optional().isISO8601().withMessage('Invalid start date'),
+    body('dateRange.endDate').optional().isISO8601().withMessage('Invalid end date'),
+    body('portfolioIds').optional().isArray().withMessage('Portfolio IDs must be an array'),
+    body('portfolioIds.*').optional().isUUID().withMessage('Invalid portfolio ID format')
 ];
 const preferencesUpdateSchema = [
-    (0, express_validator_1.body)('theme').optional().isIn(['LIGHT', 'DARK', 'AUTO']).withMessage('Invalid theme'),
-    (0, express_validator_1.body)('language').optional().isString().withMessage('Language must be a string'),
-    (0, express_validator_1.body)('timezone').optional().isString().withMessage('Timezone must be a string'),
-    (0, express_validator_1.body)('currency').optional().isString().withMessage('Currency must be a string'),
-    (0, express_validator_1.body)('dateFormat').optional().isString().withMessage('Date format must be a string'),
-    (0, express_validator_1.body)('emailNotifications').optional().isObject().withMessage('Email notifications must be an object'),
-    (0, express_validator_1.body)('pushNotifications').optional().isObject().withMessage('Push notifications must be an object'),
-    (0, express_validator_1.body)('sessionTimeout').optional().isInt({ min: 300, max: 7200 }).withMessage('Session timeout must be 5-120 minutes')
+    body('theme').optional().isIn(['LIGHT', 'DARK', 'AUTO']).withMessage('Invalid theme'),
+    body('language').optional().isString().withMessage('Language must be a string'),
+    body('timezone').optional().isString().withMessage('Timezone must be a string'),
+    body('currency').optional().isString().withMessage('Currency must be a string'),
+    body('dateFormat').optional().isString().withMessage('Date format must be a string'),
+    body('emailNotifications').optional().isObject().withMessage('Email notifications must be an object'),
+    body('pushNotifications').optional().isObject().withMessage('Push notifications must be an object'),
+    body('sessionTimeout').optional().isInt({ min: 300, max: 7200 }).withMessage('Session timeout must be 5-120 minutes')
 ];
 // Dashboard Routes
 // Get dashboard layout
-router.get('/dashboard/layout', auth_1.authMiddleware, [(0, express_validator_1.query)('layoutId').optional().isUUID().withMessage('Invalid layout ID')], validation_1.validateRequest, async (req, res) => {
+router.get('/dashboard/layout', auth_1.authMiddleware, [query('layoutId').optional().isUUID().withMessage('Invalid layout ID')], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         const clientId = req.user?.clientId;
@@ -73,7 +75,7 @@ router.get('/dashboard/layout', auth_1.authMiddleware, [(0, express_validator_1.
     }
 });
 // Update dashboard layout
-router.put('/dashboard/layout/:layoutId', auth_1.authMiddleware, [(0, express_validator_1.param)('layoutId').isUUID().withMessage('Valid layout ID required')], dashboardLayoutUpdateSchema, validation_1.validateRequest, async (req, res) => {
+router.put('/dashboard/layout/:layoutId', auth_1.authMiddleware, [param('layoutId').isUUID().withMessage('Valid layout ID required')], dashboardLayoutUpdateSchema, validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         const clientId = req.user?.clientId;
@@ -141,7 +143,7 @@ router.post('/dashboard/data', auth_1.authMiddleware, dashboardDataSchema, valid
     }
 });
 // Refresh widget data
-router.post('/dashboard/widgets/:widgetId/refresh', auth_1.authMiddleware, [(0, express_validator_1.param)('widgetId').isUUID().withMessage('Valid widget ID required')], validation_1.validateRequest, async (req, res) => {
+router.post('/dashboard/widgets/:widgetId/refresh', auth_1.authMiddleware, [param('widgetId').isUUID().withMessage('Valid widget ID required')], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         const clientId = req.user?.clientId;
@@ -175,10 +177,10 @@ router.post('/dashboard/widgets/:widgetId/refresh', auth_1.authMiddleware, [(0, 
 // Messages Routes
 // Get client messages
 router.get('/messages', auth_1.authMiddleware, [
-    (0, express_validator_1.query)('status').optional().isIn(Object.values(ClientPortal_1.MessageStatus)).withMessage('Invalid message status'),
-    (0, express_validator_1.query)('type').optional().isIn(Object.values(ClientPortal_1.MessageType)).withMessage('Invalid message type'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
-    (0, express_validator_1.query)('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
+    query('status').optional().isIn(Object.values(ClientPortal_1.MessageStatus)).withMessage('Invalid message status'),
+    query('type').optional().isIn(Object.values(ClientPortal_1.MessageType)).withMessage('Invalid message type'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+    query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
@@ -212,7 +214,7 @@ router.get('/messages', auth_1.authMiddleware, [
     }
 });
 // Mark message as read
-router.put('/messages/:messageId/read', auth_1.authMiddleware, [(0, express_validator_1.param)('messageId').isUUID().withMessage('Valid message ID required')], validation_1.validateRequest, async (req, res) => {
+router.put('/messages/:messageId/read', auth_1.authMiddleware, [param('messageId').isUUID().withMessage('Valid message ID required')], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
         const clientId = req.user?.clientId;
@@ -296,8 +298,8 @@ router.put('/preferences', auth_1.authMiddleware, preferencesUpdateSchema, valid
 // Analytics Routes
 // Get portal analytics
 router.get('/analytics', auth_1.authMiddleware, [
-    (0, express_validator_1.query)('startDate').optional().isISO8601().withMessage('Invalid start date'),
-    (0, express_validator_1.query)('endDate').optional().isISO8601().withMessage('Invalid end date')
+    query('startDate').optional().isISO8601().withMessage('Invalid start date'),
+    query('endDate').optional().isISO8601().withMessage('Invalid end date')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;
@@ -335,9 +337,9 @@ router.get('/analytics', auth_1.authMiddleware, [
 // Session Management Routes
 // Create portal session (login)
 router.post('/session', auth_1.authMiddleware, [
-    (0, express_validator_1.body)('deviceInfo').isObject().withMessage('Device info is required'),
-    (0, express_validator_1.body)('deviceInfo.userAgent').isString().withMessage('User agent is required'),
-    (0, express_validator_1.body)('deviceInfo.deviceType').isIn(['DESKTOP', 'MOBILE', 'TABLET']).withMessage('Invalid device type')
+    body('deviceInfo').isObject().withMessage('Device info is required'),
+    body('deviceInfo.userAgent').isString().withMessage('User agent is required'),
+    body('deviceInfo.deviceType').isIn(['DESKTOP', 'MOBILE', 'TABLET']).withMessage('Invalid device type')
 ], validation_1.validateRequest, async (req, res) => {
     try {
         const tenantId = req.user?.tenantId;

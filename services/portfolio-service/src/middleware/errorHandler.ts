@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
-import { ValidationError } from 'express-validator';
 import { logger } from '../utils/logger';
 
 export interface CustomError extends Error {
@@ -24,13 +23,14 @@ export const errorHandler = (
     stack: error.stack,
     url: req.url,
     method: req.method,
-    userId: req.user?.sub,
-    tenantId: req.user?.tenantId,
+    userId: (req as any).user?.sub,
+    tenantId: (req as any).user?.tenantId,
   });
 
   // Handle Prisma errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (error.code) {
+  if ((error as any) instanceof Prisma.PrismaClientKnownRequestError) {
+    const prismaError = error as Prisma.PrismaClientKnownRequestError;
+    switch (prismaError.code) {
       case 'P2000':
         statusCode = 400;
         message = 'The provided value for the column is too long for the column type';
@@ -158,48 +158,48 @@ export const errorHandler = (
     }
   }
   // Handle Prisma Client Initialization errors
-  else if (error instanceof Prisma.PrismaClientInitializationError) {
+  else if ((error as any) instanceof Prisma.PrismaClientInitializationError) {
     statusCode = 503;
     message = 'Database connection failed';
     code = 'DATABASE_CONNECTION_FAILED';
   }
   // Handle Prisma Client Request errors
-  else if (error instanceof Prisma.PrismaClientRequestError) {
+  else if ((error as any) instanceof Prisma.PrismaClientKnownRequestError) {
     statusCode = 500;
     message = 'Database request failed';
     code = 'DATABASE_REQUEST_FAILED';
   }
   // Handle Prisma Client Validation errors
-  else if (error instanceof Prisma.PrismaClientValidationError) {
+  else if ((error as any) instanceof Prisma.PrismaClientValidationError) {
     statusCode = 400;
     message = 'Invalid query parameters';
     code = 'INVALID_QUERY_PARAMETERS';
   }
   // Handle custom errors
-  else if (error instanceof Error && 'statusCode' in error) {
+  else if ((error as any) instanceof Error && 'statusCode' in error) {
     statusCode = (error as CustomError).statusCode || 500;
     message = error.message;
     code = (error as CustomError).code || 'CUSTOM_ERROR';
   }
   // Handle validation errors
-  else if (error instanceof Error && error.name === 'ValidationError') {
+  else if ((error as any) instanceof Error && error.name === 'ValidationError') {
     statusCode = 400;
     message = 'Validation failed';
     code = 'VALIDATION_ERROR';
   }
   // Handle JWT errors
-  else if (error instanceof Error && error.name === 'JsonWebTokenError') {
+  else if ((error as any) instanceof Error && error.name === 'JsonWebTokenError') {
     statusCode = 401;
     message = 'Invalid token';
     code = 'INVALID_TOKEN';
   }
-  else if (error instanceof Error && error.name === 'TokenExpiredError') {
+  else if ((error as any) instanceof Error && error.name === 'TokenExpiredError') {
     statusCode = 401;
     message = 'Token expired';
     code = 'TOKEN_EXPIRED';
   }
   // Handle generic errors
-  else if (error instanceof Error) {
+  else if ((error as any) instanceof Error) {
     message = error.message;
     
     // Check for specific error messages to determine status code
@@ -229,8 +229,8 @@ export const errorHandler = (
     ...(process.env.NODE_ENV === 'development' && {
       stack: error.stack,
       details: error instanceof Prisma.PrismaClientKnownRequestError ? {
-        prismaCode: error.code,
-        meta: error.meta
+        prismaCode: (error as Prisma.PrismaClientKnownRequestError).code,
+        meta: (error as Prisma.PrismaClientKnownRequestError).meta
       } : undefined
     })
   });
@@ -263,3 +263,4 @@ export const asyncHandler = (fn: Function) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
+

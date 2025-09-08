@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { CashService, CashEquivalentData, TreasuryData } from '../services/cashService';
 import { logger } from '../utils/logger';
 import { Decimal } from 'decimal.js';
@@ -333,7 +333,7 @@ export async function seedCashInstruments() {
       })),
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error during cash instruments seeding:', {
       error: error instanceof Error ? error.message : String(error),
     });
@@ -356,3 +356,4 @@ if (require.main === module) {
       await prisma.$disconnect();
     });
 }
+

@@ -38,7 +38,7 @@ class MultiCurrencyService extends events_1.EventEmitter {
             this.emit('currencyError', {
                 operation: 'add_currency',
                 currencyCode: currency.code,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
             throw error;
@@ -143,7 +143,7 @@ class MultiCurrencyService extends events_1.EventEmitter {
                 fromCurrency,
                 toCurrency,
                 amount,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
             throw error;
@@ -191,7 +191,7 @@ class MultiCurrencyService extends events_1.EventEmitter {
                 operation: 'create_forward',
                 fromCurrency,
                 toCurrency,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
             throw error;
@@ -252,7 +252,7 @@ class MultiCurrencyService extends events_1.EventEmitter {
         }
         catch (error) {
             this.emit('rateUpdateError', {
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
                 timestamp: new Date()
             });
         }

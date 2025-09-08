@@ -236,5 +236,5 @@ export declare class ResourcePlanningDashboardService extends EventEmitter {
     private exportToExcel;
     private exportToPDF;
     private exportToPNG;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

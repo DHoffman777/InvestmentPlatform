@@ -6,7 +6,7 @@ export declare class PershingIntegrationService {
     private apiVersion;
     constructor();
     private setupInterceptors;
-    validateConfig(config: CustodianConnectionConfig): Promise<void>;
+    validateConfig(config: CustodianConnectionConfig): Promise<any>;
     testConnection(config: CustodianConnectionConfig): Promise<ConnectionTestResult[]>;
     private testApiAuthentication;
     private testApiConnectivity;

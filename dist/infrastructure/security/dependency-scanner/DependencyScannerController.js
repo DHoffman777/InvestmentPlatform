@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DependencyScannerController = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const events_1 = require("events");
 class DependencyScannerController extends events_1.EventEmitter {
     inventoryService;
@@ -127,343 +127,343 @@ class DependencyScannerController extends events_1.EventEmitter {
     // Validation middleware
     validateScanProject() {
         return [
-            (0, express_validator_1.body)('projectPath').isString().notEmpty(),
-            (0, express_validator_1.body)('projectName').isString().notEmpty(),
-            (0, express_validator_1.body)('options').isObject().optional(),
+            body('projectPath').isString().notEmpty(),
+            body('projectName').isString().notEmpty(),
+            body('options').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateInventoryId() {
         return [
-            (0, express_validator_1.param)('inventoryId').isString().notEmpty(),
+            param('inventoryId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateGetInventories() {
         return [
-            (0, express_validator_1.query)('limit').isInt({ min: 1, max: 100 }).optional(),
-            (0, express_validator_1.query)('offset').isInt({ min: 0 }).optional(),
+            query('limit').isInt({ min: 1, max: 100 }).optional(),
+            query('offset').isInt({ min: 0 }).optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateGetDependencies() {
         return [
-            (0, express_validator_1.param)('inventoryId').isString().notEmpty(),
-            (0, express_validator_1.query)('ecosystem').isString().optional(),
-            (0, express_validator_1.query)('type').isIn(['direct', 'transitive']).optional(),
-            (0, express_validator_1.query)('scope').isIn(['production', 'development', 'optional', 'peer']).optional(),
-            (0, express_validator_1.query)('search').isString().optional(),
+            param('inventoryId').isString().notEmpty(),
+            query('ecosystem').isString().optional(),
+            query('type').isIn(['direct', 'transitive']).optional(),
+            query('scope').isIn(['production', 'development', 'optional', 'peer']).optional(),
+            query('search').isString().optional(),
             this.handleValidationErrors
         ];
     }
     validateVulnerabilityScan() {
         return [
-            (0, express_validator_1.body)('inventoryId').isString().notEmpty(),
-            (0, express_validator_1.body)('options').isObject().optional(),
+            body('inventoryId').isString().notEmpty(),
+            body('options').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateScanId() {
         return [
-            (0, express_validator_1.param)('scanId').isString().notEmpty(),
+            param('scanId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateVulnerabilityId() {
         return [
-            (0, express_validator_1.param)('vulnerabilityId').isString().notEmpty(),
+            param('vulnerabilityId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateGetScans() {
         return [
-            (0, express_validator_1.query)('limit').isInt({ min: 1, max: 100 }).optional(),
+            query('limit').isInt({ min: 1, max: 100 }).optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateRefreshVulnerabilities() {
         return [
-            (0, express_validator_1.body)('packageName').isString().notEmpty(),
-            (0, express_validator_1.body)('ecosystem').isString().notEmpty(),
+            body('packageName').isString().notEmpty(),
+            body('ecosystem').isString().notEmpty(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateCreateSchedule() {
         return [
-            (0, express_validator_1.body)('name').isString().notEmpty(),
-            (0, express_validator_1.body)('projectPaths').isArray().notEmpty(),
-            (0, express_validator_1.body)('cronExpression').isString().notEmpty(),
-            (0, express_validator_1.body)('scanOptions').isObject().optional(),
-            (0, express_validator_1.body)('vulnerabilityScanOptions').isObject().optional(),
-            (0, express_validator_1.body)('notifications').isArray().optional(),
+            body('name').isString().notEmpty(),
+            body('projectPaths').isArray().notEmpty(),
+            body('cronExpression').isString().notEmpty(),
+            body('scanOptions').isObject().optional(),
+            body('vulnerabilityScanOptions').isObject().optional(),
+            body('notifications').isArray().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateScheduleId() {
         return [
-            (0, express_validator_1.param)('scheduleId').isString().notEmpty(),
+            param('scheduleId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateUpdateSchedule() {
         return [
-            (0, express_validator_1.param)('scheduleId').isString().notEmpty(),
-            (0, express_validator_1.body)('name').isString().optional(),
-            (0, express_validator_1.body)('cronExpression').isString().optional(),
-            (0, express_validator_1.body)('enabled').isBoolean().optional(),
+            param('scheduleId').isString().notEmpty(),
+            body('name').isString().optional(),
+            body('cronExpression').isString().optional(),
+            body('enabled').isBoolean().optional(),
             this.handleValidationErrors
         ];
     }
     validateExecutionId() {
         return [
-            (0, express_validator_1.param)('executionId').isString().notEmpty(),
+            param('executionId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateGetExecutions() {
         return [
-            (0, express_validator_1.query)('scheduleId').isString().optional(),
-            (0, express_validator_1.query)('status').isString().optional(),
-            (0, express_validator_1.query)('limit').isInt({ min: 1, max: 100 }).optional(),
+            query('scheduleId').isString().optional(),
+            query('status').isString().optional(),
+            query('limit').isInt({ min: 1, max: 100 }).optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateRiskAssessment() {
         return [
-            (0, express_validator_1.body)('dependencies').isArray().notEmpty(),
-            (0, express_validator_1.body)('vulnerabilities').isArray().optional(),
-            (0, express_validator_1.body)('businessContext').isObject().optional(),
+            body('dependencies').isArray().notEmpty(),
+            body('vulnerabilities').isArray().optional(),
+            body('businessContext').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateAssessmentId() {
         return [
-            (0, express_validator_1.param)('assessmentId').isString().notEmpty(),
+            param('assessmentId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateGetAssessments() {
         return [
-            (0, express_validator_1.query)('riskLevel').isString().optional(),
-            (0, express_validator_1.query)('limit').isInt({ min: 1, max: 100 }).optional(),
+            query('riskLevel').isString().optional(),
+            query('limit').isInt({ min: 1, max: 100 }).optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validatePrioritizeRisk() {
         return [
-            (0, express_validator_1.body)('assessmentIds').isArray().notEmpty(),
+            body('assessmentIds').isArray().notEmpty(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateBusinessContext() {
         return [
-            (0, express_validator_1.body)('applicationCriticality').isIn(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']),
-            (0, express_validator_1.body)('environmentType').isIn(['PRODUCTION', 'STAGING', 'DEVELOPMENT', 'TEST']),
-            (0, express_validator_1.body)('dataClassification').isIn(['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'RESTRICTED']),
-            (0, express_validator_1.body)('regulatoryRequirements').isArray().optional(),
+            body('applicationCriticality').isIn(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']),
+            body('environmentType').isIn(['PRODUCTION', 'STAGING', 'DEVELOPMENT', 'TEST']),
+            body('dataClassification').isIn(['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'RESTRICTED']),
+            body('regulatoryRequirements').isArray().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateGenerateRecommendations() {
         return [
-            (0, express_validator_1.body)('dependencies').isArray().notEmpty(),
-            (0, express_validator_1.body)('vulnerabilities').isArray().optional(),
-            (0, express_validator_1.body)('riskAssessments').isArray().optional(),
-            (0, express_validator_1.body)('businessContext').isObject().optional(),
+            body('dependencies').isArray().notEmpty(),
+            body('vulnerabilities').isArray().optional(),
+            body('riskAssessments').isArray().optional(),
+            body('businessContext').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateRecommendationId() {
         return [
-            (0, express_validator_1.param)('recommendationId').isString().notEmpty(),
+            param('recommendationId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateGetRecommendations() {
         return [
-            (0, express_validator_1.query)('urgency').isString().optional(),
-            (0, express_validator_1.query)('status').isString().optional(),
-            (0, express_validator_1.query)('limit').isInt({ min: 1, max: 100 }).optional(),
+            query('urgency').isString().optional(),
+            query('status').isString().optional(),
+            query('limit').isInt({ min: 1, max: 100 }).optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateRecommendationAction() {
         return [
-            (0, express_validator_1.param)('recommendationId').isString().notEmpty(),
-            (0, express_validator_1.body)('reason').isString().optional(),
+            param('recommendationId').isString().notEmpty(),
+            body('reason').isString().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateCreateBatch() {
         return [
-            (0, express_validator_1.body)('recommendationIds').isArray().notEmpty(),
-            (0, express_validator_1.body)('name').isString().notEmpty(),
-            (0, express_validator_1.body)('description').isString().optional(),
+            body('recommendationIds').isArray().notEmpty(),
+            body('name').isString().notEmpty(),
+            body('description').isString().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateBatchId() {
         return [
-            (0, express_validator_1.param)('batchId').isString().notEmpty(),
+            param('batchId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateUpdateStrategy() {
         return [
-            (0, express_validator_1.body)('strategy').isIn(['AGGRESSIVE', 'BALANCED', 'CONSERVATIVE', 'SECURITY_ONLY']),
-            (0, express_validator_1.body)('autoApprovalRules').isArray().optional(),
-            (0, express_validator_1.body)('testingRequirements').isObject().optional(),
+            body('strategy').isIn(['AGGRESSIVE', 'BALANCED', 'CONSERVATIVE', 'SECURITY_ONLY']),
+            body('autoApprovalRules').isArray().optional(),
+            body('testingRequirements').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateGenerateReport() {
         return [
-            (0, express_validator_1.body)('reportType').isIn(['SECURITY_POSTURE', 'VULNERABILITY_SUMMARY', 'RISK_ASSESSMENT', 'LICENSE_COMPLIANCE', 'REGULATORY_COMPLIANCE', 'EXECUTIVE_SUMMARY']),
-            (0, express_validator_1.body)('scope').isObject(),
-            (0, express_validator_1.body)('templateId').isString().optional(),
-            (0, express_validator_1.body)('options').isObject().optional(),
+            body('reportType').isIn(['SECURITY_POSTURE', 'VULNERABILITY_SUMMARY', 'RISK_ASSESSMENT', 'LICENSE_COMPLIANCE', 'REGULATORY_COMPLIANCE', 'EXECUTIVE_SUMMARY']),
+            body('scope').isObject(),
+            body('templateId').isString().optional(),
+            body('options').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateReportId() {
         return [
-            (0, express_validator_1.param)('reportId').isString().notEmpty(),
+            param('reportId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateGetReports() {
         return [
-            (0, express_validator_1.query)('reportType').isString().optional(),
-            (0, express_validator_1.query)('status').isString().optional(),
-            (0, express_validator_1.query)('limit').isInt({ min: 1, max: 100 }).optional(),
+            query('reportType').isString().optional(),
+            query('status').isString().optional(),
+            query('limit').isInt({ min: 1, max: 100 }).optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateReportAction() {
         return [
-            (0, express_validator_1.param)('reportId').isString().notEmpty(),
-            (0, express_validator_1.body)('approver').isString().notEmpty(),
+            param('reportId').isString().notEmpty(),
+            body('approver').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateScheduleReport() {
         return [
-            (0, express_validator_1.body)('templateId').isString().notEmpty(),
-            (0, express_validator_1.body)('schedule').isObject(),
-            (0, express_validator_1.body)('scope').isObject(),
+            body('templateId').isString().notEmpty(),
+            body('schedule').isObject(),
+            body('scope').isObject(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateCreatePolicy() {
         return [
-            (0, express_validator_1.body)('name').isString().notEmpty(),
-            (0, express_validator_1.body)('description').isString().optional(),
-            (0, express_validator_1.body)('rules').isArray().notEmpty(),
-            (0, express_validator_1.body)('scope').isObject(),
-            (0, express_validator_1.body)('enforcement').isObject().optional(),
+            body('name').isString().notEmpty(),
+            body('description').isString().optional(),
+            body('rules').isArray().notEmpty(),
+            body('scope').isObject(),
+            body('enforcement').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateCreateFromTemplate() {
         return [
-            (0, express_validator_1.body)('templateId').isString().notEmpty(),
-            (0, express_validator_1.body)('customizations').isObject().optional(),
+            body('templateId').isString().notEmpty(),
+            body('customizations').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validatePolicyId() {
         return [
-            (0, express_validator_1.param)('policyId').isString().notEmpty(),
+            param('policyId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateGetPolicies() {
         return [
-            (0, express_validator_1.query)('enabled').isBoolean().optional(),
-            (0, express_validator_1.query)('framework').isString().optional(),
+            query('enabled').isBoolean().optional(),
+            query('framework').isString().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateUpdatePolicy() {
         return [
-            (0, express_validator_1.param)('policyId').isString().notEmpty(),
-            (0, express_validator_1.body)('name').isString().optional(),
-            (0, express_validator_1.body)('enabled').isBoolean().optional(),
-            (0, express_validator_1.body)('rules').isArray().optional(),
+            param('policyId').isString().notEmpty(),
+            body('name').isString().optional(),
+            body('enabled').isBoolean().optional(),
+            body('rules').isArray().optional(),
             this.handleValidationErrors
         ];
     }
     validateEvaluatePolicies() {
         return [
-            (0, express_validator_1.body)('dependencies').isArray().notEmpty(),
-            (0, express_validator_1.body)('context').isObject().optional(),
+            body('dependencies').isArray().notEmpty(),
+            body('context').isObject().optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateTemplateId() {
         return [
-            (0, express_validator_1.param)('templateId').isString().notEmpty(),
+            param('templateId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateViolationId() {
         return [
-            (0, express_validator_1.param)('violationId').isString().notEmpty(),
+            param('violationId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateGetViolations() {
         return [
-            (0, express_validator_1.query)('status').isString().optional(),
-            (0, express_validator_1.query)('severity').isString().optional(),
-            (0, express_validator_1.query)('policyId').isString().optional(),
-            (0, express_validator_1.query)('limit').isInt({ min: 1, max: 100 }).optional(),
+            query('status').isString().optional(),
+            query('severity').isString().optional(),
+            query('policyId').isString().optional(),
+            query('limit').isInt({ min: 1, max: 100 }).optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
     }
     validateResolveViolation() {
         return [
-            (0, express_validator_1.param)('violationId').isString().notEmpty(),
-            (0, express_validator_1.body)('resolution').isString().notEmpty(),
-            (0, express_validator_1.body)('resolvedBy').isString().notEmpty(),
+            param('violationId').isString().notEmpty(),
+            body('resolution').isString().notEmpty(),
+            body('resolvedBy').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateEvaluationId() {
         return [
-            (0, express_validator_1.param)('evaluationId').isString().notEmpty(),
+            param('evaluationId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateAnalyticsQuery() {
         return [
-            (0, express_validator_1.query)('startDate').isISO8601().optional(),
-            (0, express_validator_1.query)('endDate').isISO8601().optional(),
-            (0, express_validator_1.query)('granularity').isIn(['day', 'week', 'month']).optional(),
+            query('startDate').isISO8601().optional(),
+            query('endDate').isISO8601().optional(),
+            query('granularity').isIn(['day', 'week', 'month']).optional(),
             this.validateTenantAccess(),
             this.handleValidationErrors
         ];
@@ -481,7 +481,7 @@ class DependencyScannerController extends events_1.EventEmitter {
         };
     }
     handleValidationErrors(req, res, next) {
-        const errors = (0, express_validator_1.validationResult)(req);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(400).json({
                 success: false,

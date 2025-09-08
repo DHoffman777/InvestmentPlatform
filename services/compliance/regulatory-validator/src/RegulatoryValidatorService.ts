@@ -19,9 +19,9 @@ import { ComplianceReportingService } from './services/ComplianceReportingServic
 
 export class RegulatoryValidatorService extends EventEmitter {
   private app: express.Application;
-  private ruleEngine: RegulatoryRuleEngine;
-  private auditService: ComplianceAuditService;
-  private reportingService: ComplianceReportingService;
+  private ruleEngine!: RegulatoryRuleEngine;
+  private auditService!: ComplianceAuditService;
+  private reportingService!: ComplianceReportingService;
   private scheduledTasks: cron.ScheduledTask[] = [];
   private isRunning = false;
   private validationQueue: ComplianceValidationRequest[] = [];
@@ -54,7 +54,7 @@ export class RegulatoryValidatorService extends EventEmitter {
     this.app.use(express.urlencoded({ extended: true }));
 
     // Request logging
-    this.app.use((req, res, next) => {
+    this.app.use((req: any, res: any, next: any) => {
       console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
       next();
     });
@@ -64,7 +64,7 @@ export class RegulatoryValidatorService extends EventEmitter {
       console.error('API Error:', error);
       res.status(500).json({ 
         error: 'Internal server error', 
-        details: error.message,
+        details: error instanceof Error ? error.message : 'Unknown error',
         requestId: req.headers['x-request-id'] || 'unknown'
       });
     });
@@ -76,7 +76,7 @@ export class RegulatoryValidatorService extends EventEmitter {
       try {
         const health = await this.getHealthStatus();
         res.json(health);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Health check failed', 
           details: (error as Error).message 
@@ -112,7 +112,7 @@ export class RegulatoryValidatorService extends EventEmitter {
             message: 'Validation request queued for batch processing'
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Validation failed', 
           details: (error as Error).message 
@@ -145,7 +145,7 @@ export class RegulatoryValidatorService extends EventEmitter {
           totalRequests: requests.length,
           results 
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Batch validation failed', 
           details: (error as Error).message 
@@ -162,7 +162,7 @@ export class RegulatoryValidatorService extends EventEmitter {
           requestId,
           message: 'Result retrieval not implemented in this demo'
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to retrieve validation result', 
           details: (error as Error).message 
@@ -200,7 +200,7 @@ export class RegulatoryValidatorService extends EventEmitter {
             lastUpdated: rule.lastUpdated,
           }))
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to retrieve rules', 
           details: (error as Error).message 
@@ -218,7 +218,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         }
         
         res.json(rule);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to retrieve rule', 
           details: (error as Error).message 
@@ -249,7 +249,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         );
 
         res.status(201).json(rule);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to create rule', 
           details: (error as Error).message 
@@ -289,7 +289,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         } else {
           res.status(500).json({ error: 'Failed to update rule' });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to update rule', 
           details: (error as Error).message 
@@ -325,7 +325,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         } else {
           res.status(500).json({ error: 'Failed to delete rule' });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to delete rule', 
           details: (error as Error).message 
@@ -354,7 +354,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         } else {
           res.status(404).json({ error: 'Rule not found' });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to enable rule', 
           details: (error as Error).message 
@@ -382,7 +382,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         } else {
           res.status(404).json({ error: 'Rule not found' });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to disable rule', 
           details: (error as Error).message 
@@ -400,7 +400,7 @@ export class RegulatoryValidatorService extends EventEmitter {
 
         const exception = await this.auditService.createException(exceptionData);
         res.status(201).json(exception);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to create exception', 
           details: (error as Error).message 
@@ -426,7 +426,7 @@ export class RegulatoryValidatorService extends EventEmitter {
             error: 'Either entityType+entityId or ruleId must be provided' 
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to retrieve exceptions', 
           details: (error as Error).message 
@@ -451,7 +451,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         } else {
           res.status(404).json({ error: 'Exception not found' });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to update exception', 
           details: (error as Error).message 
@@ -483,7 +483,7 @@ export class RegulatoryValidatorService extends EventEmitter {
 
           res.json({ alerts: filteredAlerts });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to retrieve alerts', 
           details: (error as Error).message 
@@ -504,7 +504,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         } else {
           res.status(404).json({ error: 'Alert not found' });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to update alert', 
           details: (error as Error).message 
@@ -537,7 +537,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         );
 
         res.json(report);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to generate report', 
           details: (error as Error).message 
@@ -556,7 +556,7 @@ export class RegulatoryValidatorService extends EventEmitter {
           reportId,
           format 
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to export report', 
           details: (error as Error).message 
@@ -586,7 +586,7 @@ export class RegulatoryValidatorService extends EventEmitter {
         );
 
         res.json({ auditTrail });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to retrieve audit trail', 
           details: (error as Error).message 
@@ -636,7 +636,7 @@ export class RegulatoryValidatorService extends EventEmitter {
             performance: ruleMetrics,
           }
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to retrieve metrics', 
           details: (error as Error).message 
@@ -657,7 +657,7 @@ export class RegulatoryValidatorService extends EventEmitter {
           status: 'success',
           timestamp: new Date(),
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ 
           error: 'Failed to sync framework', 
           details: (error as Error).message 
@@ -727,7 +727,7 @@ export class RegulatoryValidatorService extends EventEmitter {
 
           console.log(`Daily report generated: ${report.id}`);
           this.emit('scheduledReportGenerated', report);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to generate daily report:', error);
         }
       })
@@ -754,7 +754,7 @@ export class RegulatoryValidatorService extends EventEmitter {
 
           console.log(`Weekly report generated: ${report.id}`);
           this.emit('scheduledReportGenerated', report);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to generate weekly report:', error);
         }
       })
@@ -784,7 +784,7 @@ export class RegulatoryValidatorService extends EventEmitter {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Validation failed for request ${request.requestId}:`, error);
       
       // Create error result
@@ -839,7 +839,7 @@ export class RegulatoryValidatorService extends EventEmitter {
     }
   }
 
-  private async processValidationQueue(): Promise<void> {
+  private async processValidationQueue(): Promise<any> {
     if (this.processingQueue || this.validationQueue.length === 0) {
       return;
     }
@@ -856,7 +856,7 @@ export class RegulatoryValidatorService extends EventEmitter {
             try {
               const result = await this.validateCompliance(request);
               this.emit('batchValidationCompleted', { request, result });
-            } catch (error) {
+            } catch (error: any) {
               console.error(`Batch validation failed for ${request.requestId}:`, error);
               this.emit('batchValidationFailed', { request, error });
             }
@@ -922,7 +922,7 @@ export class RegulatoryValidatorService extends EventEmitter {
     return `rule_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
   }
 
-  public async start(port: number = 3012): Promise<void> {
+  public async start(port: number = 3012): Promise<any> {
     if (this.isRunning) {
       console.log('Regulatory Validator Service is already running');
       return;
@@ -943,7 +943,7 @@ export class RegulatoryValidatorService extends EventEmitter {
     });
   }
 
-  public async stop(): Promise<void> {
+  public async stop(): Promise<any> {
     if (!this.isRunning) {
       console.log('Regulatory Validator Service is not running');
       return;
@@ -971,3 +971,4 @@ export class RegulatoryValidatorService extends EventEmitter {
     return this.app;
   }
 }
+

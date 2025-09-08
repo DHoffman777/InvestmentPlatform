@@ -46,5 +46,5 @@ export declare class PerformanceProfilingService extends EventEmitter {
     getProfilingStatistics(): any;
     private generateProfileId;
     private generateMetricId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

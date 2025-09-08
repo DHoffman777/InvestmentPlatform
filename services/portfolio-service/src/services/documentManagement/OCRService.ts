@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
+import { KafkaService } from '../../utils/kafka-mock';
 import {
   Document,
   OCRResult,
@@ -158,16 +158,16 @@ export class OCRService {
       this.processingQueue.delete(request.documentId);
       return ocrResults;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('OCR processing failed', {
         documentId: request.documentId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack
       });
 
       const job = this.processingQueue.get(request.documentId);
       if (job) {
-        await this.updateJobStatus(job.id, ProcessingStatus.FAILED, { error: error.message });
+        await this.updateJobStatus(job.id, ProcessingStatus.FAILED, { error: error instanceof Error ? error.message : 'Unknown error' });
         this.processingQueue.delete(request.documentId);
       }
 
@@ -216,7 +216,7 @@ export class OCRService {
       const tesseract = require('tesseract.js');
       
       const worker = await tesseract.createWorker({
-        logger: m => this.logger.debug('Tesseract:', m)
+        logger: (m: any) => this.logger.debug('Tesseract:', m)
       });
 
       const language = this.mapToTesseractLanguage(request.language || Language.ENGLISH);
@@ -233,7 +233,7 @@ export class OCRService {
 
       return this.convertTesseractToOCRResult(data, request.documentId, pageNumber, language);
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Tesseract OCR failed', {
         filePath,
         pageNumber,
@@ -265,7 +265,7 @@ export class OCRService {
       const result = await textract.analyzeDocument(params).promise();
       return this.convertTextractToOCRResult(result, request.documentId, pageNumber);
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('AWS Textract OCR failed', {
         filePath,
         pageNumber,
@@ -296,7 +296,7 @@ export class OCRService {
 
       return this.convertGoogleVisionToOCRResult(result, request.documentId, pageNumber);
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Google Vision OCR failed', {
         filePath,
         pageNumber,
@@ -332,7 +332,7 @@ export class OCRService {
 
       return this.convertAzureCognitiveToOCRResult(result, request.documentId, pageNumber);
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Azure Cognitive OCR failed', {
         filePath,
         pageNumber,
@@ -365,11 +365,11 @@ export class OCRService {
         .toBuffer();
 
       const tensor = tf.tensor4d(
-        Array.from(imageBuffer).map(x => x / 255.0),
+        Array.from(imageBuffer).map((x: any) => (x as number) / 255.0),
         [1, 224, 224, 1]
       );
 
-      const predictions = await model.predict(tensor) as tf.Tensor;
+      const predictions = await model.predict(tensor) as any;
       const predictionData = await predictions.data();
 
       return this.convertMLPredictionToOCRResult(
@@ -379,7 +379,7 @@ export class OCRService {
         modelConfig
       );
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Custom ML OCR failed', {
         filePath,
         pageNumber,
@@ -436,7 +436,7 @@ export class OCRService {
       await pipeline.toFile(processedPath);
       return processedPath;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Image preprocessing failed', {
         filePath,
         error: error.message
@@ -448,7 +448,7 @@ export class OCRService {
   private async postprocessOCRResult(
     result: OCRResult,
     options?: PostprocessingOptions
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       if (options?.spellCheck) {
         result.text = await this.performSpellCheck(result.text, result.language);
@@ -481,7 +481,7 @@ export class OCRService {
 
       result.confidence = this.recalculateConfidence(result);
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('OCR postprocessing failed', {
         documentId: result.documentId,
         error: error.message
@@ -502,8 +502,8 @@ export class OCRService {
         return word;
       });
       return correctedWords.join(' ');
-    } catch (error) {
-      this.logger.warn('Spell check failed', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Spell check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       return text;
     }
   }
@@ -515,8 +515,8 @@ export class OCRService {
       const tokens = tokenizer.tokenize(text);
       
       return tokens.join(' ');
-    } catch (error) {
-      this.logger.warn('Language model application failed', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Language model application failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       return text;
     }
   }
@@ -878,7 +878,7 @@ export class OCRService {
     return mapping[tesseractLang] || Language.ENGLISH;
   }
 
-  private async initializeMLModels(): Promise<void> {
+  private async initializeMLModels(): Promise<any> {
     try {
       const defaultModel: MLModelConfig = {
         modelType: 'TRANSFORMER',
@@ -895,8 +895,8 @@ export class OCRService {
       this.logger.info('ML models initialized', {
         models: Array.from(this.mlModels.keys())
       });
-    } catch (error) {
-      this.logger.error('Failed to initialize ML models', { error: error.message });
+    } catch (error: any) {
+      this.logger.error('Failed to initialize ML models', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -928,14 +928,14 @@ export class OCRService {
     jobId: string,
     status: ProcessingStatus,
     results?: Record<string, any>
-  ): Promise<void> {
+  ): Promise<any> {
     this.logger.info('Job status updated', { jobId, status });
     if (results) {
       this.logger.debug('Job results', { jobId, results });
     }
   }
 
-  private async updateJobProgress(jobId: string, progress: number): Promise<void> {
+  private async updateJobProgress(jobId: string, progress: number): Promise<any> {
     this.logger.debug('Job progress updated', { jobId, progress });
   }
 
@@ -947,7 +947,7 @@ export class OCRService {
     } as Document;
   }
 
-  private async storeOCRResults(results: OCRResult[]): Promise<void> {
+  private async storeOCRResults(results: OCRResult[]): Promise<any> {
     this.logger.info('Storing OCR results', { count: results.length });
   }
 
@@ -955,7 +955,7 @@ export class OCRService {
     documentId: string,
     tenantId: string,
     results: OCRResult[]
-  ): Promise<void> {
+  ): Promise<any> {
     const event = {
       eventType: 'OCR_COMPLETED',
       documentId,
@@ -967,3 +967,4 @@ export class OCRService {
     await this.kafkaService.publishEvent('document-processing', event);
   }
 }
+

@@ -389,7 +389,7 @@ class RegulatoryRuleEngine {
         // Placeholder implementation
         return [
             {
-                instrumentId: 'INST_001',
+                securityId: 'INST_001',
                 symbol: 'AAPL',
                 quantity: 1000,
                 marketValue: 150000,
@@ -400,14 +400,14 @@ class RegulatoryRuleEngine {
     }
     // Calculate aggregated metrics
     calculateAggregatedMetrics(portfolioData, positionsData) {
-        const totalValue = portfolioData.totalValue || 0;
+        const totalValue = portfolioData.totalValue?.toNumber() || 0;
         return {
             equityAllocation: ((portfolioData.totalEquity || 0) / totalValue) * 100,
             fixedIncomeAllocation: ((portfolioData.totalFixedIncome || 0) / totalValue) * 100,
             cashAllocation: ((portfolioData.cashBalance || 0) / totalValue) * 100,
             alternativeAllocation: ((portfolioData.totalAlternatives || 0) / totalValue) * 100,
             positionCount: positionsData.length,
-            largestPosition: Math.max(...positionsData.map(p => (p.marketValue || 0) / totalValue * 100)),
+            largestPosition: Math.max(...positionsData.map(p => (p.marketValue?.toNumber() || 0) / totalValue * 100)),
             sectorConcentration: this.calculateSectorConcentration(positionsData, totalValue)
         };
     }
@@ -416,7 +416,7 @@ class RegulatoryRuleEngine {
         const sectorTotals = {};
         for (const position of positions) {
             const sector = position.sector || 'UNKNOWN';
-            const value = position.marketValue || 0;
+            const value = position.marketValue?.toNumber() || 0;
             sectorTotals[sector] = (sectorTotals[sector] || 0) + value;
         }
         const sectorPercentages = {};

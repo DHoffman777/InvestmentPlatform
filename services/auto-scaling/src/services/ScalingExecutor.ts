@@ -44,7 +44,7 @@ export class ScalingExecutor extends EventEmitter {
         // In a real implementation, you'd initialize AWS, Azure, GCP adapters here
         console.log('Cloud provider adapters would be initialized here');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to initialize scaling providers:', error);
       this.emit('error', { type: 'provider_init_failed', error });
     }
@@ -112,7 +112,7 @@ export class ScalingExecutor extends EventEmitter {
 
       return scalingEvent;
 
-    } catch (error) {
+    } catch (error: any) {
       const scalingEvent: ScalingEvent = {
         id: eventId,
         timestamp: new Date(),
@@ -166,7 +166,7 @@ export class ScalingExecutor extends EventEmitter {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
         previousInstances: decision.currentInstances,
@@ -221,7 +221,7 @@ export class ScalingExecutor extends EventEmitter {
         warnings: [],
       };
 
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Kubernetes scaling failed: ${(error as Error).message}`);
     }
   }
@@ -260,7 +260,7 @@ export class ScalingExecutor extends EventEmitter {
         warnings: [],
       };
 
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Docker scaling failed: ${(error as Error).message}`);
     }
   }
@@ -274,7 +274,7 @@ export class ScalingExecutor extends EventEmitter {
     return await adapter.scaleService(serviceName, targetInstances);
   }
 
-  private async executeHooks(phase: 'pre' | 'post', serviceName: string): Promise<void> {
+  private async executeHooks(phase: 'pre' | 'post', serviceName: string): Promise<any> {
     const hooks = phase === 'pre' ? [] : []; // Would be configured from scaling rules
     
     for (const hookUrl of hooks) {
@@ -288,7 +288,7 @@ export class ScalingExecutor extends EventEmitter {
         });
         
         console.log(`${phase}-scaling hook executed successfully: ${hookUrl}`);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`${phase}-scaling hook failed: ${hookUrl}`, error);
         // Don't fail the entire scaling operation for hook failures
         this.emit('hookFailed', { phase, hookUrl, serviceName, error });
@@ -335,7 +335,7 @@ export class ScalingExecutor extends EventEmitter {
             const namespace = process.env.K8S_NAMESPACE || 'default';
             const response = await this.k8sApi.readNamespacedDeployment(serviceName, namespace);
             currentInstances = response.body.spec?.replicas || 0;
-          } catch (error) {
+          } catch (error: any) {
             issues.push(`Service ${serviceName} not found in Kubernetes`);
           }
           break;
@@ -350,7 +350,7 @@ export class ScalingExecutor extends EventEmitter {
             const service = this.docker.getService(serviceName);
             const serviceInfo = await service.inspect();
             currentInstances = serviceInfo.Spec?.Mode?.Replicated?.Replicas || 0;
-          } catch (error) {
+          } catch (error: any) {
             issues.push(`Docker service ${serviceName} not found`);
           }
           break;
@@ -362,7 +362,7 @@ export class ScalingExecutor extends EventEmitter {
           } else {
             try {
               currentInstances = await adapter.getCurrentInstances(serviceName);
-            } catch (error) {
+            } catch (error: any) {
               issues.push(`Failed to get cloud service info: ${(error as Error).message}`);
             }
           }
@@ -377,7 +377,7 @@ export class ScalingExecutor extends EventEmitter {
         issues.push('Service is currently being scaled');
       }
 
-    } catch (error) {
+    } catch (error: any) {
       issues.push(`Validation failed: ${(error as Error).message}`);
     }
 
@@ -526,3 +526,4 @@ export class ScalingExecutor extends EventEmitter {
     return await this.executeScalingDecision(rollbackDecision);
   }
 }
+

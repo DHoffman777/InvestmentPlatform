@@ -6,13 +6,13 @@ import { logger } from './logger';
 class MockKafkaService {
   private connected = false;
 
-  async connect(): Promise<void> {
+  async connect(): Promise<any> {
     logger.info('Mock Kafka service connecting...');
     this.connected = true;
     return Promise.resolve();
   }
 
-  async disconnect(): Promise<void> {
+  async disconnect(): Promise<any> {
     logger.info('Mock Kafka service disconnecting...');
     this.connected = false;
     return Promise.resolve();
@@ -22,22 +22,22 @@ class MockKafkaService {
     return this.connected;
   }
 
-  async publish(topic: string, message: any): Promise<void> {
+  async publish(topic: string, message: any): Promise<any> {
     logger.info('Mock Kafka publish:', { topic, message });
     return Promise.resolve();
   }
 
-  async subscribe(topic: string, handler: (message: any) => void): Promise<void> {
+  async subscribe(topic: string, handler: (message: any) => void): Promise<any> {
     logger.info('Mock Kafka subscribe:', { topic });
     return Promise.resolve();
   }
 
-  async publishEvent(topic: string, message: any): Promise<void> {
+  async publishEvent(topic: string, message: any): Promise<any> {
     logger.info('Mock Kafka publishEvent:', { topic, message });
     return Promise.resolve();
   }
 
-  async publishMessage(topic: string, message: any): Promise<void> {
+  async publishMessage(topic: string, message: any): Promise<any> {
     logger.info('Mock Kafka publishMessage:', { topic, message });
     return Promise.resolve();
   }

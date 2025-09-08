@@ -125,6 +125,12 @@ class ActivityPrivacyService extends events_1.EventEmitter {
     dataFlowMappings = new Map();
     anonymizationCache = new Map();
     pseudonymMappings = new Map();
+    getErrorMessage(error) {
+        if (error instanceof Error) {
+            return error.message;
+        }
+        return String(error);
+    }
     constructor() {
         super();
         this.initializeDefaultPolicies();
@@ -168,7 +174,11 @@ class ActivityPrivacyService extends events_1.EventEmitter {
                 processingMethod: ProcessingOperation.ANALYSIS,
                 accessRequester: 'system',
                 justification: `Activity processing under policy ${policy.name}`,
-                riskAssessment: this.assessRisk(activity, rule)
+                riskAssessment: this.assessRisk(activity, policy.rules[0] || {}),
+                thirdPartiesInvolved: [],
+                crossBorderTransfer: false,
+                destinationCountries: [],
+                safeguards: []
             });
         }
         return processedActivity;
@@ -233,7 +243,11 @@ class ActivityPrivacyService extends events_1.EventEmitter {
             accessRequester: newConsent.userId,
             justification: 'User consent recording',
             consentReference: newConsent.id,
-            riskAssessment: RiskLevel.LOW
+            riskAssessment: RiskLevel.LOW,
+            thirdPartiesInvolved: [],
+            crossBorderTransfer: false,
+            destinationCountries: [],
+            safeguards: []
         });
         return newConsent;
     }
@@ -261,7 +275,11 @@ class ActivityPrivacyService extends events_1.EventEmitter {
             accessRequester: existingConsent.userId,
             justification: `User consent withdrawal: ${reason}`,
             consentReference: existingConsent.id,
-            riskAssessment: RiskLevel.MEDIUM
+            riskAssessment: RiskLevel.MEDIUM,
+            thirdPartiesInvolved: [],
+            crossBorderTransfer: false,
+            destinationCountries: [],
+            safeguards: []
         });
         return true;
     }
@@ -304,7 +322,11 @@ class ActivityPrivacyService extends events_1.EventEmitter {
             processingMethod: ProcessingOperation.ACCESS,
             accessRequester: userId,
             justification: 'GDPR Article 20 - Right to data portability',
-            riskAssessment: RiskLevel.MEDIUM
+            riskAssessment: RiskLevel.MEDIUM,
+            thirdPartiesInvolved: [],
+            crossBorderTransfer: false,
+            destinationCountries: [],
+            safeguards: []
         });
         return {
             personalData,
@@ -658,7 +680,7 @@ class ActivityPrivacyService extends events_1.EventEmitter {
         }
         catch (error) {
             request.status = RightRequestStatus.REJECTED;
-            request.processingNotes.push(`Error: ${error.message}`);
+            request.processingNotes.push(`Error: ${this.getErrorMessage(error)}`);
         }
         this.emit('dataSubjectRightStatusChanged', request);
     }

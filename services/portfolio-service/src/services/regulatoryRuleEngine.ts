@@ -51,7 +51,7 @@ export class RegulatoryRuleEngine {
           // Publish rule evaluation event
           await this.publishRuleEvaluationEvent(rule, result, portfolioId);
           
-        } catch (error) {
+        } catch (error: any) {
           logger.error('Error evaluating rule:', {
             ruleId: rule.id,
             ruleCode: rule.regulationCode,
@@ -87,7 +87,7 @@ export class RegulatoryRuleEngine {
 
       return results;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in regulatory rule evaluation:', error);
       throw error;
     }
@@ -145,7 +145,7 @@ export class RegulatoryRuleEngine {
       
       return result;
       
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error evaluating rule:', {
         ruleId: rule.id,
         ruleCode: rule.regulationCode,
@@ -170,7 +170,7 @@ export class RegulatoryRuleEngine {
         return this.parseSimpleExpression(trimmed);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error parsing rule expression:', { expression, error });
       throw new Error(`Invalid rule expression: ${expression}`);
     }
@@ -293,7 +293,7 @@ export class RegulatoryRuleEngine {
         parameters
       };
       
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error preparing evaluation context:', error);
       throw error;
     }
@@ -327,7 +327,7 @@ export class RegulatoryRuleEngine {
           throw new Error(`Unsupported expression type: ${expression.type}`);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error evaluating rule logic:', error);
       throw error;
     }
@@ -485,12 +485,15 @@ export class RegulatoryRuleEngine {
       whereClause.id = { in: ruleIds };
     }
     
-    return await this.prisma.regulatoryRule.findMany({
+    const rules = await this.prisma.regulatoryRule.findMany({
       where: whereClause,
       orderBy: [
-        { version: 'desc' }
+        // { version: 'desc' } // Field doesn't exist in RegulatoryRuleOrderByWithRelationInput
+        { createdAt: 'desc' }
       ]
     });
+    
+    return rules as unknown as RegulatoryRule[];
   }
 
   // Get portfolio data for evaluation
@@ -513,7 +516,7 @@ export class RegulatoryRuleEngine {
     // Placeholder implementation
     return [
       {
-        instrumentId: 'INST_001',
+        securityId: 'INST_001',
         symbol: 'AAPL',
         quantity: 1000,
         marketValue: 150000,
@@ -528,7 +531,7 @@ export class RegulatoryRuleEngine {
     portfolioData: Record<string, any>,
     positionsData: Record<string, any>[]
   ): Record<string, any> {
-    const totalValue = portfolioData.totalValue || 0;
+    const totalValue = portfolioData.totalValue?.toNumber() || 0;
     
     return {
       equityAllocation: ((portfolioData.totalEquity || 0) / totalValue) * 100,
@@ -536,7 +539,7 @@ export class RegulatoryRuleEngine {
       cashAllocation: ((portfolioData.cashBalance || 0) / totalValue) * 100,
       alternativeAllocation: ((portfolioData.totalAlternatives || 0) / totalValue) * 100,
       positionCount: positionsData.length,
-      largestPosition: Math.max(...positionsData.map(p => (p.marketValue || 0) / totalValue * 100)),
+      largestPosition: Math.max(...positionsData.map(p => (p.marketValue?.toNumber() || 0) / totalValue * 100)),
       sectorConcentration: this.calculateSectorConcentration(positionsData, totalValue)
     };
   }
@@ -550,7 +553,7 @@ export class RegulatoryRuleEngine {
     
     for (const position of positions) {
       const sector = position.sector || 'UNKNOWN';
-      const value = position.marketValue || 0;
+      const value = position.marketValue?.toNumber() || 0;
       sectorTotals[sector] = (sectorTotals[sector] || 0) + value;
     }
     
@@ -588,7 +591,7 @@ export class RegulatoryRuleEngine {
     rule: RegulatoryRule,
     result: RuleEvaluationResult,
     portfolioId: string
-  ): Promise<void> {
+  ): Promise<any> {
     await this.kafkaService.publishEvent('regulatory.rule.evaluated', {
       ruleId: rule.id,
       ruleCode: rule.regulationCode,
@@ -611,20 +614,53 @@ export class RegulatoryRuleEngine {
       
       const rule = await this.prisma.regulatoryRule.create({
         data: {
-          ...ruleData,
+          ruleName: ruleData.regulationName,
+          isActive: ruleData.isActive,
+          jurisdiction: ruleData.jurisdiction,
+          ruleType: 'REGULATORY_LIMIT', // Default value
+          ruleDefinition: {
+            regulationCode: ruleData.regulationCode,
+            regulationName: ruleData.regulationName,
+            regulatoryBody: ruleData.regulatoryBody,
+            ruleExpression: ruleData.ruleExpression,
+            ruleLogic: ruleData.ruleLogic,
+            parameters: ruleData.parameters,
+            version: ruleData.version,
+            effectiveDate: ruleData.effectiveDate?.toISOString(),
+            lastUpdated: ruleData.lastUpdated?.toISOString()
+          },
           tenantId
-        }
+        } as any
       });
       
       logger.info('Regulatory rule created', {
         ruleId: rule.id,
-        ruleCode: rule.regulationCode,
+        ruleCode: (rule as any).ruleDefinition?.regulationCode,
         jurisdiction: rule.jurisdiction
       });
       
-      return rule;
+      // Convert back to RegulatoryRule type
+      const mappedRule: RegulatoryRule = {
+        id: rule.id,
+        tenantId: rule.tenantId,
+        regulationCode: (rule as any).ruleDefinition?.regulationCode || '',
+        regulationName: rule.ruleName,
+        regulatoryBody: (rule as any).ruleDefinition?.regulatoryBody || '',
+        ruleExpression: (rule as any).ruleDefinition?.ruleExpression || '',
+        ruleLogic: (rule as any).ruleDefinition?.ruleLogic || {},
+        parameters: (rule as any).ruleDefinition?.parameters || [],
+        version: (rule as any).ruleDefinition?.version || '1.0',
+        effectiveDate: (rule as any).ruleDefinition?.effectiveDate ? new Date((rule as any).ruleDefinition.effectiveDate) : new Date(),
+        lastUpdated: (rule as any).ruleDefinition?.lastUpdated ? new Date((rule as any).ruleDefinition.lastUpdated) : new Date(),
+        isActive: rule.isActive,
+        jurisdiction: rule.jurisdiction,
+        createdAt: rule.createdAt,
+        updatedAt: rule.updatedAt
+      };
       
-    } catch (error) {
+      return mappedRule;
+      
+    } catch (error: any) {
       logger.error('Error creating regulatory rule:', error);
       throw error;
     }
@@ -642,29 +678,71 @@ export class RegulatoryRuleEngine {
         this.parseRuleExpression(updates.ruleExpression);
       }
       
+      const updateData: any = {};
+      
+      // Map RegulatoryRule fields to Prisma model fields
+      if (updates.regulationName !== undefined) updateData.ruleName = updates.regulationName;
+      if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
+      if (updates.jurisdiction !== undefined) updateData.jurisdiction = updates.jurisdiction;
+      
+      // Build ruleDefinition object for nested fields
+      const ruleDefinitionUpdates: any = {};
+      if (updates.regulationCode !== undefined) ruleDefinitionUpdates.regulationCode = updates.regulationCode;
+      if (updates.regulationName !== undefined) ruleDefinitionUpdates.regulationName = updates.regulationName;
+      if (updates.regulatoryBody !== undefined) ruleDefinitionUpdates.regulatoryBody = updates.regulatoryBody;
+      if (updates.ruleExpression !== undefined) ruleDefinitionUpdates.ruleExpression = updates.ruleExpression;
+      if (updates.ruleLogic !== undefined) ruleDefinitionUpdates.ruleLogic = updates.ruleLogic;
+      if (updates.parameters !== undefined) ruleDefinitionUpdates.parameters = updates.parameters;
+      if (updates.version !== undefined) ruleDefinitionUpdates.version = updates.version;
+      if (updates.effectiveDate !== undefined) ruleDefinitionUpdates.effectiveDate = updates.effectiveDate.toISOString();
+      if (updates.lastUpdated !== undefined) ruleDefinitionUpdates.lastUpdated = updates.lastUpdated.toISOString();
+      
+      if (Object.keys(ruleDefinitionUpdates).length > 0) {
+        updateData.ruleDefinition = ruleDefinitionUpdates;
+      }
+      
       const rule = await this.prisma.regulatoryRule.update({
         where: {
           id: ruleId,
           tenantId
-        },
-        data: updates
+        } as any,
+        data: updateData
       });
       
       logger.info('Regulatory rule updated', {
         ruleId,
-        ruleCode: rule.regulationCode
+        ruleCode: (rule as any).ruleDefinition?.regulationCode
       });
       
-      return rule;
+      // Convert back to RegulatoryRule type
+      const mappedRule: RegulatoryRule = {
+        id: rule.id,
+        tenantId: rule.tenantId,
+        regulationCode: (rule as any).ruleDefinition?.regulationCode || '',
+        regulationName: rule.ruleName,
+        regulatoryBody: (rule as any).ruleDefinition?.regulatoryBody || '',
+        ruleExpression: (rule as any).ruleDefinition?.ruleExpression || '',
+        ruleLogic: (rule as any).ruleDefinition?.ruleLogic || {},
+        parameters: (rule as any).ruleDefinition?.parameters || [],
+        version: (rule as any).ruleDefinition?.version || '1.0',
+        effectiveDate: (rule as any).ruleDefinition?.effectiveDate ? new Date((rule as any).ruleDefinition.effectiveDate) : new Date(),
+        lastUpdated: (rule as any).ruleDefinition?.lastUpdated ? new Date((rule as any).ruleDefinition.lastUpdated) : new Date(),
+        isActive: rule.isActive,
+        jurisdiction: rule.jurisdiction,
+        createdAt: rule.createdAt,
+        updatedAt: rule.updatedAt
+      };
       
-    } catch (error) {
+      return mappedRule;
+      
+    } catch (error: any) {
       logger.error('Error updating regulatory rule:', error);
       throw error;
     }
   }
 
   // Deactivate regulatory rule
-  async deactivateRule(ruleId: string, tenantId: string): Promise<void> {
+  async deactivateRule(ruleId: string, tenantId: string): Promise<any> {
     try {
       await this.prisma.regulatoryRule.update({
         where: {
@@ -679,7 +757,7 @@ export class RegulatoryRuleEngine {
       
       logger.info('Regulatory rule deactivated', { ruleId });
       
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deactivating regulatory rule:', error);
       throw error;
     }
@@ -688,13 +766,36 @@ export class RegulatoryRuleEngine {
   // Get rule by ID
   async getRule(ruleId: string, tenantId: string): Promise<RegulatoryRule | null> {
     try {
-      return await this.prisma.regulatoryRule.findFirst({
+      const rule = await this.prisma.regulatoryRule.findFirst({
         where: {
           id: ruleId,
           tenantId
         }
       });
-    } catch (error) {
+      
+      if (!rule) return null;
+      
+      // Convert to RegulatoryRule type
+      const mappedRule: RegulatoryRule = {
+        id: rule.id,
+        tenantId: rule.tenantId,
+        regulationCode: (rule as any).ruleDefinition?.regulationCode || '',
+        regulationName: rule.ruleName,
+        regulatoryBody: (rule as any).ruleDefinition?.regulatoryBody || '',
+        ruleExpression: (rule as any).ruleDefinition?.ruleExpression || '',
+        ruleLogic: (rule as any).ruleDefinition?.ruleLogic || {},
+        parameters: (rule as any).ruleDefinition?.parameters || [],
+        version: (rule as any).ruleDefinition?.version || '1.0',
+        effectiveDate: (rule as any).ruleDefinition?.effectiveDate ? new Date((rule as any).ruleDefinition.effectiveDate) : new Date(),
+        lastUpdated: (rule as any).ruleDefinition?.lastUpdated ? new Date((rule as any).ruleDefinition.lastUpdated) : new Date(),
+        isActive: rule.isActive,
+        jurisdiction: rule.jurisdiction,
+        createdAt: rule.createdAt,
+        updatedAt: rule.updatedAt
+      };
+      
+      return mappedRule;
+    } catch (error: any) {
       logger.error('Error fetching regulatory rule:', error);
       return null;
     }
@@ -720,24 +821,46 @@ export class RegulatoryRuleEngine {
           whereClause.isActive = filters.isActive;
         }
         if (filters.regulationCode) {
-          whereClause.regulationCode = {
-            contains: filters.regulationCode,
-            mode: 'insensitive'
+          // Search in ruleDefinition JSON field
+          whereClause.ruleDefinition = {
+            path: ['regulationCode'],
+            string_contains: filters.regulationCode
           };
         }
       }
       
-      return await this.prisma.regulatoryRule.findMany({
+      const rules = await this.prisma.regulatoryRule.findMany({
         where: whereClause,
         orderBy: [
           { jurisdiction: 'asc' },
-          { regulationCode: 'asc' },
-          { version: 'desc' }
+          // { regulationCode: 'asc' }, // Field doesn't exist
+          // { version: 'desc' } // Field doesn't exist
+          { createdAt: 'desc' }
         ]
       });
-    } catch (error) {
+      
+      // Convert to RegulatoryRule type
+      return rules.map(rule => ({
+        id: rule.id,
+        tenantId: rule.tenantId,
+        regulationCode: (rule as any).ruleDefinition?.regulationCode || '',
+        regulationName: rule.ruleName,
+        regulatoryBody: (rule as any).ruleDefinition?.regulatoryBody || '',
+        ruleExpression: (rule as any).ruleDefinition?.ruleExpression || '',
+        ruleLogic: (rule as any).ruleDefinition?.ruleLogic || {},
+        parameters: (rule as any).ruleDefinition?.parameters || [],
+        version: (rule as any).ruleDefinition?.version || '1.0',
+        effectiveDate: (rule as any).ruleDefinition?.effectiveDate ? new Date((rule as any).ruleDefinition.effectiveDate) : new Date(),
+        lastUpdated: (rule as any).ruleDefinition?.lastUpdated ? new Date((rule as any).ruleDefinition.lastUpdated) : new Date(),
+        isActive: rule.isActive,
+        jurisdiction: rule.jurisdiction,
+        createdAt: rule.createdAt,
+        updatedAt: rule.updatedAt
+      })) as RegulatoryRule[];
+    } catch (error: any) {
       logger.error('Error fetching regulatory rules:', error);
       return [];
     }
   }
 }
+

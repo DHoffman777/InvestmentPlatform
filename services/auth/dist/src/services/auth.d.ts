@@ -12,9 +12,10 @@ export declare class AuthService {
         tokens: TokenPair;
     }>;
     refreshTokens(refreshToken: string): Promise<TokenPair>;
-    logout(sessionId: string): Promise<void>;
+    logout(sessionId: string): Promise<any>;
     private handleFailedLogin;
     private getUserRoles;
     private getUserPermissions;
     private assignRole;
 }
+

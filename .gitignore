@@ -3,3 +3,5 @@ node_modules
 .Identifier
 .env
 .next
+
+work-log.md

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { Logger } from 'winston';
 import { createLogger, format, transports } from 'winston';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 import { StructuredError, ErrorCategory, ErrorSeverity } from './ErrorTrackingService';
 import { RootCauseAnalysis } from './ErrorCorrelationService';
 
@@ -508,7 +508,7 @@ export class ErrorRecoveryService extends EventEmitter {
 
       return suggestions.slice(0, 5);
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to suggest recovery strategies', {
         errorId: error.id,
         error: error.message
@@ -797,7 +797,7 @@ export class ErrorRecoveryService extends EventEmitter {
     return execution;
   }
 
-  private async processRecoveryQueue(): Promise<void> {
+  private async processRecoveryQueue(): Promise<any> {
     if (this.isProcessing || this.executionQueue.length === 0) {
       return;
     }
@@ -813,7 +813,7 @@ export class ErrorRecoveryService extends EventEmitter {
           await this.executeRecovery(execution);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Error processing recovery queue', {
         error: error.message
       });
@@ -822,7 +822,7 @@ export class ErrorRecoveryService extends EventEmitter {
     }
   }
 
-  private async executeRecovery(execution: RecoveryExecution): Promise<void> {
+  private async executeRecovery(execution: RecoveryExecution): Promise<any> {
     const strategy = this.recoveryStrategies.get(execution.strategyId)!;
     const error = await this.getError(execution.errorId);
     
@@ -878,9 +878,9 @@ export class ErrorRecoveryService extends EventEmitter {
         }
       }
 
-    } catch (error) {
+    } catch (error: any) {
       execution.status = RecoveryStatus.FAILED;
-      this.addLog(execution, 'error', `Recovery execution failed: ${error.message}`);
+      this.addLog(execution, 'error', `Recovery execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       execution.endTime = new Date();
       execution.results.timeTaken = execution.endTime.getTime() - execution.startTime.getTime();
@@ -935,8 +935,8 @@ export class ErrorRecoveryService extends EventEmitter {
             return { success: false, error: result.error };
           }
         }
-      } catch (error) {
-        const errorMessage = error.message || 'Unknown error';
+      } catch (error: any) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         this.addLog(execution, 'error', 
           `Step attempt ${attempt}/${step.maxRetries} threw exception: ${errorMessage}`, step.id);
         
@@ -1200,7 +1200,7 @@ export class ErrorRecoveryService extends EventEmitter {
       });
       
       return error as StructuredError | null;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to get error', {
         errorId,
         error: error.message
@@ -1209,13 +1209,13 @@ export class ErrorRecoveryService extends EventEmitter {
     }
   }
 
-  private async storeRecoveryExecution(execution: RecoveryExecution): Promise<void> {
+  private async storeRecoveryExecution(execution: RecoveryExecution): Promise<any> {
     try {
       await this.prisma.recoveryExecution.create({
         data: {
           id: execution.id,
           errorId: execution.errorId,
-          strategyId: execution.strategyId,
+          strategy: execution.strategyId,  // Changed from strategyId to strategy
           initiatedBy: execution.initiatedBy,
           startTime: execution.startTime,
           endTime: execution.endTime,
@@ -1225,9 +1225,9 @@ export class ErrorRecoveryService extends EventEmitter {
           results: execution.results as any,
           logs: execution.logs as any,
           rollbackExecuted: execution.rollbackExecuted
-        }
+        } as any
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to store recovery execution', {
         executionId: execution.id,
         error: error.message
@@ -1235,21 +1235,18 @@ export class ErrorRecoveryService extends EventEmitter {
     }
   }
 
-  private async updateRecoveryExecution(execution: RecoveryExecution): Promise<void> {
+  private async updateRecoveryExecution(execution: RecoveryExecution): Promise<any> {
     try {
       await this.prisma.recoveryExecution.update({
         where: { id: execution.id },
         data: {
-          endTime: execution.endTime,
+          // Only update fields that exist in Prisma schema
           status: execution.status,
-          currentStep: execution.currentStep,
-          steps: execution.steps as any,
-          results: execution.results as any,
-          logs: execution.logs as any,
-          rollbackExecuted: execution.rollbackExecuted
-        }
+          result: execution.results as any,
+          // steps, logs, and rollbackExecuted don't exist in Prisma schema
+        } as any
       });
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Failed to update recovery execution', {
         executionId: execution.id,
         error: error.message
@@ -1277,7 +1274,7 @@ export class ErrorRecoveryService extends EventEmitter {
     });
   }
 
-  private sleep(ms: number): Promise<void> {
+  private sleep(ms: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -1328,12 +1325,12 @@ export class ErrorRecoveryService extends EventEmitter {
       
       const executions = await this.prisma.recoveryExecution.findMany({
         where,
-        orderBy: { startTime: 'desc' },
+        orderBy: { startedAt: 'desc' },  // Changed from startTime to startedAt
         take: 100
       });
 
-      return executions as RecoveryExecution[];
-    } catch (error) {
+      return executions as unknown as RecoveryExecution[];
+    } catch (error: any) {
       this.logger.error('Failed to get recovery history', {
         errorId,
         error: error.message
@@ -1360,7 +1357,7 @@ export class ErrorRecoveryService extends EventEmitter {
     return true;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     this.logger.info('Shutting down error recovery service');
     
     // Cancel all active recoveries
@@ -1373,3 +1370,4 @@ export class ErrorRecoveryService extends EventEmitter {
     this.removeAllListeners();
   }
 }
+

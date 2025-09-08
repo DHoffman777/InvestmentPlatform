@@ -111,7 +111,7 @@ export class BarrierMonitoringService {
 
       return response;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error in barrier monitoring:', error);
       throw error;
     }
@@ -128,7 +128,7 @@ export class BarrierMonitoringService {
         {
           id: 'sp_001',
           tenantId: 'tenant_001',
-          instrumentId: 'inst_sp_001',
+          securityId: 'inst_sp_001',
           productName: 'AAPL Barrier Note',
           productType: 'STRUCTURED_NOTE' as any,
           issuer: 'Bank ABC',
@@ -211,7 +211,7 @@ export class BarrierMonitoringService {
 
       return filteredProducts.filter(p => p.hasBarrier);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting products to monitor:', error);
       throw error;
     }
@@ -243,7 +243,7 @@ export class BarrierMonitoringService {
 
       return marketData;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting market data:', error);
       throw error;
     }
@@ -345,7 +345,7 @@ export class BarrierMonitoringService {
         hitDate: barrier.hitDate
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error evaluating barrier:', { barrierId: barrier.id, error });
       throw error;
     }
@@ -439,7 +439,7 @@ export class BarrierMonitoringService {
 
       return alerts;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating barrier alerts:', error);
       return [];
     }
@@ -474,7 +474,7 @@ export class BarrierMonitoringService {
   private async updateBarrierHitStatus(
     barrierId: string,
     hitLevel: number
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       // In a real implementation, this would update the database
       logger.info('Barrier hit detected', {
@@ -482,7 +482,7 @@ export class BarrierMonitoringService {
         hitLevel,
         hitTime: new Date()
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating barrier hit status:', error);
     }
   }
@@ -491,20 +491,20 @@ export class BarrierMonitoringService {
   private async storeMonitoringResults(
     barrierStatuses: BarrierStatus[],
     alerts: BarrierAlert[]
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       // In a real implementation, this would store in database
       logger.debug('Storing monitoring results', {
         barrierCount: barrierStatuses.length,
         alertCount: alerts.length
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error storing monitoring results:', error);
     }
   }
 
   // Publish barrier alert to Kafka
-  private async publishBarrierAlert(alert: BarrierAlert): Promise<void> {
+  private async publishBarrierAlert(alert: BarrierAlert): Promise<any> {
     try {
       await this.kafkaService.publishEvent('structured-products.barrier.alert', {
         alertId: alert.id,
@@ -524,7 +524,7 @@ export class BarrierMonitoringService {
         severity: alert.severity
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing barrier alert:', error);
     }
   }
@@ -532,7 +532,7 @@ export class BarrierMonitoringService {
   // Real-time barrier monitoring (called periodically)
   async performRealTimeMonitoring(
     intervalMinutes: number = 5
-  ): Promise<void> {
+  ): Promise<any> {
     logger.info('Starting real-time barrier monitoring', { intervalMinutes });
 
     const monitor = async () => {
@@ -548,7 +548,7 @@ export class BarrierMonitoringService {
           newAlerts: result.alerts.length
         });
 
-      } catch (error) {
+      } catch (error: any) {
         logger.error('Error in real-time monitoring cycle:', error);
       }
     };
@@ -606,7 +606,7 @@ export class BarrierMonitoringService {
         barrierEvents
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting barrier history:', error);
       throw error;
     }
@@ -691,7 +691,7 @@ export class BarrierMonitoringService {
         barrierProbabilities
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating breach probability:', error);
       throw error;
     }
@@ -791,7 +791,7 @@ export class BarrierMonitoringService {
         barrierTypesBreakdown
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting barrier dashboard:', error);
       throw error;
     }
@@ -823,3 +823,4 @@ export class BarrierMonitoringService {
     return Math.min(100, riskScore);
   }
 }
+

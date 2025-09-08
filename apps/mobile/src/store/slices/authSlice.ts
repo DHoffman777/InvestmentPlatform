@@ -126,7 +126,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Login failed';
+        state.error = action.error instanceof Error ? error.message : 'Unknown error' || 'Login failed';
       })
       .addCase(loginWithBiometrics.pending, state => {
         state.isLoading = true;
@@ -144,7 +144,7 @@ const authSlice = createSlice({
       })
       .addCase(loginWithBiometrics.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Biometric login failed';
+        state.error = action.error instanceof Error ? error.message : 'Unknown error' || 'Biometric login failed';
       })
       .addCase(refreshToken.fulfilled, (state, action) => {
         state.token = action.payload.token;

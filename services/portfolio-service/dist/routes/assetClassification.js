@@ -55,7 +55,7 @@ router.post('/asset-classes', async (req, res) => {
                 error: 'Missing required fields: name, code, assetType, riskLevel, liquidityTier'
             });
         }
-        const validAssetTypes = ['EQUITY', 'FIXED_INCOME', 'CASH_EQUIVALENT', 'ALTERNATIVE', 'DERIVATIVE'];
+        const validAssetTypes = ['EQUITY', 'FIXED_INCOME', 'CASH_EQUIVALENT', 'ALTERNATIVE', 'DERIVATIVE', 'STRUCTURED_PRODUCT', 'COMMODITY', 'REAL_ESTATE'];
         if (!validAssetTypes.includes(assetType)) {
             return res.status(400).json({
                 success: false,
@@ -204,7 +204,8 @@ router.post('/instruments/:instrumentId/classify', async (req, res) => {
             });
         }
         const classification = await assetClassificationService.classifyInstrument({
-            instrumentId,
+            instrumentId: instrumentId,
+            securityId: instrumentId,
             symbol,
             instrumentName,
             instrumentType,
@@ -259,7 +260,8 @@ router.put('/instruments/:instrumentId/classification', async (req, res) => {
         const { instrumentId } = req.params;
         const { assetClassId, assetSubClassId, classifications, gicsCode, countryCode, marketCapCategory, styleClassification, creditRating, esgScore } = req.body;
         const classification = await assetClassificationService.updateInstrumentClassification({
-            instrumentId,
+            instrumentId: instrumentId,
+            securityId: instrumentId,
             assetClassId,
             assetSubClassId,
             classifications,
@@ -422,7 +424,8 @@ router.post('/instruments/bulk-classify', async (req, res) => {
         for (const instrument of instruments) {
             try {
                 const classification = await assetClassificationService.classifyInstrument({
-                    instrumentId: instrument.instrumentId,
+                    instrumentId: instrument.securityId,
+                    securityId: instrument.securityId,
                     symbol: instrument.symbol,
                     instrumentName: instrument.instrumentName,
                     instrumentType: instrument.instrumentType,
@@ -434,7 +437,7 @@ router.post('/instruments/bulk-classify', async (req, res) => {
             }
             catch (error) {
                 errors.push({
-                    instrumentId: instrument.instrumentId,
+                    securityId: instrument.securityId,
                     error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }

@@ -131,5 +131,5 @@ export declare class DatabaseMonitor extends EventEmitter {
     acknowledgeAlert(alertId: string): boolean;
     addAlertRule(rule: AlertRule): void;
     removeAlertRule(ruleId: string): boolean;
-    disconnect(): Promise<void>;
+    disconnect(): Promise<any>;
 }

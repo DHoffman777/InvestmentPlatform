@@ -337,7 +337,7 @@ class PasswordSecurityService extends events_1.EventEmitter {
         }
         // Calculate strength score and crack time
         result.score = await this.calculatePasswordStrength(password);
-        result.estimatedCrackTime = this.estimateCrackTime(password);
+        result.estimatedCrackTime = await this.estimateCrackTime(password);
         // Add suggestions
         if (result.score < 70) {
             result.suggestions.push('Consider using a longer password');
@@ -469,8 +469,8 @@ class PasswordSecurityService extends events_1.EventEmitter {
             score -= 15; // Common sequences
         return Math.max(0, Math.min(100, score));
     }
-    estimateCrackTime(password) {
-        const score = this.calculatePasswordStrength(password);
+    async estimateCrackTime(password) {
+        const score = await this.calculatePasswordStrength(password);
         if (score >= 90)
             return 'centuries';
         if (score >= 80)

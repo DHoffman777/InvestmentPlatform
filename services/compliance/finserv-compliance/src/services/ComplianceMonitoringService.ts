@@ -443,17 +443,17 @@ export class ComplianceMonitoringService extends EventEmitter {
     }, 15 * 60 * 1000); // Every 15 minutes
   }
 
-  private async performPeriodicViolationReview(): Promise<void> {
+  private async performPeriodicViolationReview(): Promise<any> {
     // Review open violations and escalate if necessary
     console.log('Performing periodic violation review');
   }
 
-  private async checkTrainingDeadlines(): Promise<void> {
+  private async checkTrainingDeadlines(): Promise<any> {
     // Check for upcoming or overdue training deadlines
     console.log('Checking training deadlines');
   }
 
-  private async checkReportingDeadlines(): Promise<void> {
+  private async checkReportingDeadlines(): Promise<any> {
     // Check for upcoming or overdue reporting deadlines
     console.log('Checking reporting deadlines');
   }
@@ -483,7 +483,7 @@ export class ComplianceMonitoringService extends EventEmitter {
     return `action_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
   }
 
-  private async updateViolationMetrics(violation: ComplianceViolation): Promise<void> {
+  private async updateViolationMetrics(violation: ComplianceViolation): Promise<any> {
     // Update violation metrics in Redis
     const date = new Date().toISOString().split('T')[0];
     await this.redis.incr(`metrics:violations:${date}`);
@@ -492,11 +492,11 @@ export class ComplianceMonitoringService extends EventEmitter {
 
   private requiresImmediateReporting(violation: ComplianceViolation): boolean {
     return violation.severity === 'CRITICAL' || 
-           (violation.reportingRequired && violation.reportingDeadline && 
+           (!!violation.reportingRequired && !!violation.reportingDeadline && 
             violation.reportingDeadline.getTime() - Date.now() < 24 * 60 * 60 * 1000);
   }
 
-  private async triggerImmediateReporting(violation: ComplianceViolation): Promise<void> {
+  private async triggerImmediateReporting(violation: ComplianceViolation): Promise<any> {
     this.emit('immediateReportingRequired', {
       violationId: violation.id,
       severity: violation.severity,
@@ -725,10 +725,10 @@ export class ComplianceMonitoringService extends EventEmitter {
       'EMIR': 'ESMA',
       'MIFID_II': 'Local NCA',
     };
-    return authorities[regime] || 'SEC';
+    return authorities[regime as keyof typeof authorities] || 'SEC';
   }
 
-  private async scheduleAutomaticSubmission(tradeReporting: TradeReporting): Promise<void> {
+  private async scheduleAutomaticSubmission(tradeReporting: TradeReporting): Promise<any> {
     // Schedule automatic submission before deadline
     console.log(`Scheduled automatic submission for ${tradeReporting.id}`);
   }
@@ -738,7 +738,7 @@ export class ComplianceMonitoringService extends EventEmitter {
     return data ? JSON.parse(data) : null;
   }
 
-  public async cleanup(): Promise<void> {
+  public async cleanup(): Promise<any> {
     await this.redis.quit();
   }
 }

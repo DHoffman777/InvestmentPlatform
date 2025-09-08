@@ -357,5 +357,8 @@ export declare class BottleneckReportingService extends EventEmitter {
     getAllReportTemplates(): ReportTemplate[];
     clearCache(): void;
     getReportingStatistics(): any;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
+    exportReport(reportId: string, format: string): Promise<any>;
+    getAvailableDashboards(): any[];
+    getAvailableTemplates(): any[];
 }

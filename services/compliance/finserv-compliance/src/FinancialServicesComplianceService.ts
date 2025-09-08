@@ -48,7 +48,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
     this.app.use(express.urlencoded({ extended: true }));
 
     // Request logging
-    this.app.use((req, res, next) => {
+    this.app.use((req: any, res: any, next: any) => {
       console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
       next();
     });
@@ -107,7 +107,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           violationId: violation.id,
           message: 'Compliance violation recorded successfully',
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to record violation', details: (error as Error).message });
       }
     });
@@ -137,7 +137,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
             pages: Math.ceil(violations.total / violations.limit),
           },
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to retrieve violations', details: (error as Error).message });
       }
     });
@@ -149,7 +149,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           return res.status(404).json({ error: 'Violation not found' });
         }
         res.json(violation);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to retrieve violation', details: (error as Error).message });
       }
     });
@@ -181,7 +181,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           actionId: correctiveAction.id,
           message: 'Corrective action assigned successfully',
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to assign corrective action', details: (error as Error).message });
       }
     });
@@ -212,7 +212,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           determination: assessment.suitabilityDetermination,
           requiresSupervisoryReview: assessment.suitabilityDetermination !== 'SUITABLE',
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to conduct suitability assessment', details: (error as Error).message });
       }
     });
@@ -221,7 +221,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
       try {
         const assessments = await this.getClientSuitabilityAssessments(req.params.clientId);
         res.json({ assessments });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to retrieve assessments', details: (error as Error).message });
       }
     });
@@ -254,7 +254,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           complianceAssessment: analysis.complianceAssessment,
           improvementCount: analysis.improvements.length,
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to perform best execution analysis', details: (error as Error).message });
       }
     });
@@ -284,7 +284,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           decision: amlCheck.complianceDecision,
           requiresEnhancedDueDiligence: amlCheck.dueDiligenceLevel === 'ENHANCED',
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to perform AML check', details: (error as Error).message });
       }
     });
@@ -293,7 +293,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
       try {
         const amlChecks = await this.getClientAMLChecks(req.params.clientId);
         res.json({ amlChecks });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to retrieve AML checks', details: (error as Error).message });
       }
     });
@@ -332,7 +332,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           filingId: filing.id,
           message: 'Filing requirement created successfully',
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to create filing requirement', details: (error as Error).message });
       }
     });
@@ -360,7 +360,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
             warnings: result.validationResults.warnings.length,
           },
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to prepare Form ADV', details: (error as Error).message });
       }
     });
@@ -388,7 +388,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
             warnings: result.validationResults.warnings.length,
           },
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to prepare Form PF', details: (error as Error).message });
       }
     });
@@ -414,7 +414,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           holdingsCount: result.holdingsData.holdings?.length || 0,
           totalValue: result.holdingsData.totalValue || 0,
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to prepare 13F filing', details: (error as Error).message });
       }
     });
@@ -445,7 +445,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
             message: 'Filing submission failed',
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to submit filing', details: (error as Error).message });
       }
     });
@@ -454,7 +454,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
       try {
         const status = await this.regulatoryFiling.getFilingStatus(req.params.filingId);
         res.json(status);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get filing status', details: (error as Error).message });
       }
     });
@@ -474,7 +474,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
         );
 
         res.json(calendar);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get filing calendar', details: (error as Error).message });
       }
     });
@@ -494,7 +494,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
         });
 
         res.json(metrics);
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to get compliance metrics', details: (error as Error).message });
       }
     });
@@ -521,7 +521,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           reportId: report.id,
           message: 'Compliance report generated successfully',
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to generate report', details: (error as Error).message });
       }
     });
@@ -550,7 +550,7 @@ export class FinancialServicesComplianceService extends EventEmitter {
           deadline: tradeReporting.reportingDeadline,
           regime: tradeReporting.reportingRegime,
         });
-      } catch (error) {
+      } catch (error: any) {
         res.status(500).json({ error: 'Failed to schedule trade reporting', details: (error as Error).message });
       }
     });
@@ -711,18 +711,19 @@ export class FinancialServicesComplianceService extends EventEmitter {
     return `report_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
   }
 
-  public async start(): Promise<void> {
+  public async start(): Promise<any> {
     return new Promise((resolve) => {
       this.app.listen(this.config.service.port, this.config.service.host, () => {
         console.log(`Financial Services Compliance Service running on ${this.config.service.host}:${this.config.service.port}`);
-        resolve();
+        resolve(undefined);
       });
     });
   }
 
-  public async cleanup(): Promise<void> {
+  public async cleanup(): Promise<any> {
     await this.complianceMonitoring.cleanup();
     await this.regulatoryFiling.cleanup();
     await this.redis.quit();
   }
 }
+

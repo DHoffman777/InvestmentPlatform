@@ -126,7 +126,7 @@ export class CashEquivalentService {
       logger.info(`Money market position created: ${position.id} for portfolio ${request.portfolioId}`);
       return cashEquivalentPosition;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating money market position:', error);
       throw error;
     }
@@ -198,7 +198,7 @@ export class CashEquivalentService {
       logger.info(`Sweep account created: ${position.id} for portfolio ${request.portfolioId}`);
       return sweepPosition;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating sweep account:', error);
       throw error;
     }
@@ -232,6 +232,7 @@ export class CashEquivalentService {
           price: new Prisma.Decimal(1.0),
           grossAmount: new Prisma.Decimal(Math.abs(request.amount)),
           netAmount: new Prisma.Decimal(Math.abs(request.amount)),
+          transactionDate: new Date(),
           tradeDate: new Date(),
           settlementDate: new Date(), // Immediate settlement for sweeps
           status: 'SETTLED',
@@ -284,7 +285,7 @@ export class CashEquivalentService {
       logger.info(`Sweep executed: ${sweepTransaction.id} for ${request.amount} in portfolio ${request.portfolioId}`);
       return cashEquivalentTransaction;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error executing sweep:', error);
       throw error;
     }
@@ -317,6 +318,7 @@ export class CashEquivalentService {
           price: new Prisma.Decimal(0),
           grossAmount: new Prisma.Decimal(request.amount),
           netAmount: new Prisma.Decimal(request.amount),
+          transactionDate: request.distributionDate,
           tradeDate: request.distributionDate,
           settlementDate: request.distributionDate,
           status: 'SETTLED',
@@ -355,7 +357,7 @@ export class CashEquivalentService {
       logger.info(`Yield distribution processed: ${yieldTransaction.id} for position ${request.positionId}`);
       return distributionTransaction;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing yield distribution:', error);
       throw error;
     }
@@ -424,7 +426,7 @@ export class CashEquivalentService {
       logger.info(`Yield calculated for position ${positionId}: ${(currentYield * 100).toFixed(2)}%`);
       return yieldCalculation;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating yield:', error);
       throw error;
     }
@@ -463,13 +465,13 @@ export class CashEquivalentService {
         lastPriceUpdate: pos.lastPriceDate || pos.updatedAt
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting cash equivalent positions:', error);
       throw error;
     }
   }
 
-  private async updatePortfolioValuation(portfolioId: string, amount: number, operation: 'ADD' | 'SUBTRACT'): Promise<void> {
+  private async updatePortfolioValuation(portfolioId: string, amount: number, operation: 'ADD' | 'SUBTRACT'): Promise<any> {
     const portfolio = await this.prisma.portfolio.findUnique({
       where: { id: portfolioId }
     });
@@ -493,7 +495,7 @@ export class CashEquivalentService {
     });
   }
 
-  private async publishEvent(eventType: string, data: any): Promise<void> {
+  private async publishEvent(eventType: string, data: any): Promise<any> {
     try {
       if (this.kafkaService.isConnected()) {
         await this.kafkaService.publishMessage('cash-equivalent-events', {
@@ -502,8 +504,10 @@ export class CashEquivalentService {
           timestamp: new Date().toISOString()
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error publishing cash equivalent event:', error);
     }
   }
 }
+
+

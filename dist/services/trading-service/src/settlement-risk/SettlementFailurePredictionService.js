@@ -176,7 +176,7 @@ class SettlementFailurePredictionService extends events_1.EventEmitter {
             return prediction;
         }
         catch (error) {
-            this.emit('predictionError', { instructionId: input.instructionId, error: error.message });
+            this.emit('predictionError', { instructionId: input.instructionId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }

@@ -400,7 +400,7 @@ export class RegulatoryRuleEngine extends EventEmitter {
           metrics.successCount++;
         }
 
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error validating rule ${rule.id}:`, error);
         validationResults.push({
           ruleId: rule.id,

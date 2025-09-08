@@ -26,7 +26,7 @@ class SLAHistoricalAnalysisService extends events_1.EventEmitter {
                 this.emit('analysisCompleted', { slaId, analysis });
             }
             catch (error) {
-                this.emit('analysisError', { slaId, error: error.message });
+                this.emit('analysisError', { slaId, error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }
         return analyses;
@@ -197,7 +197,7 @@ class SLAHistoricalAnalysisService extends events_1.EventEmitter {
                     }
                 }
                 catch (error) {
-                    console.warn(`Failed to generate ${model} prediction for ${horizon}h horizon:`, error.message);
+                    console.warn(`Failed to generate ${model} prediction for ${horizon}h horizon:`, error instanceof Error ? error.message : 'Unknown error');
                 }
             }
         }

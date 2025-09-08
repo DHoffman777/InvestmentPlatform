@@ -361,6 +361,6 @@ export declare class MeetingNotesService extends EventEmitter {
         };
         timestamp: Date;
     }>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 export default MeetingNotesService;

@@ -161,7 +161,7 @@ export class AutomatedFilingWorkflowsService {
   private templates: Map<string, WorkflowTemplate> = new Map();
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('AutomatedFilingWorkflows');
     this.initializeWorkflowTemplates();
   }
 
@@ -201,7 +201,7 @@ export class AutomatedFilingWorkflowsService {
 
       return workflow;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating filing workflow:', error);
       throw error;
     }
@@ -288,7 +288,7 @@ export class AutomatedFilingWorkflowsService {
 
       return execution;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error initiating workflow execution:', error);
       throw error;
     }
@@ -401,7 +401,7 @@ export class AutomatedFilingWorkflowsService {
 
       return execution;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing workflow step:', error);
       throw error;
     }
@@ -523,7 +523,7 @@ export class AutomatedFilingWorkflowsService {
         }
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating workflow dashboard:', error);
       throw error;
     }
@@ -657,7 +657,7 @@ export class AutomatedFilingWorkflowsService {
   private async executeAutomatedStep(
     execution: WorkflowExecution,
     step: FilingWorkflow['steps'][0]
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       logger.info('Executing automated step', {
         executionId: execution.id,
@@ -677,7 +677,7 @@ export class AutomatedFilingWorkflowsService {
         execution.stepStatus.set(step.stepId, stepStatus);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error executing automated step:', error);
       
       // Mark step as failed
@@ -685,7 +685,7 @@ export class AutomatedFilingWorkflowsService {
       if (stepStatus) {
         stepStatus.status = 'failed';
         stepStatus.completedAt = new Date();
-        stepStatus.notes = `Automated execution failed: ${error.message}`;
+        stepStatus.notes = `Automated execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
         execution.stepStatus.set(step.stepId, stepStatus);
       }
     }
@@ -704,7 +704,7 @@ export class AutomatedFilingWorkflowsService {
   private async completeWorkflowExecution(
     execution: WorkflowExecution,
     workflow: FilingWorkflow
-  ): Promise<void> {
+  ): Promise<any> {
     // Calculate final metrics
     const totalDuration = execution.actualCompletionDate && execution.initiatedAt
       ? execution.actualCompletionDate.getTime() - execution.initiatedAt.getTime()
@@ -727,7 +727,7 @@ export class AutomatedFilingWorkflowsService {
     execution: WorkflowExecution,
     failedStepId: string,
     reason: string
-  ): Promise<void> {
+  ): Promise<any> {
     await this.eventPublisher.publish('regulatory.workflow.execution_failed', {
       tenantId: execution.tenantId,
       executionId: execution.id,
@@ -740,7 +740,7 @@ export class AutomatedFilingWorkflowsService {
   private async scheduleFilingReminders(
     workflow: FilingWorkflow,
     dueDate: Date
-  ): Promise<void> {
+  ): Promise<any> {
     // Implementation for scheduling reminders
     for (const reminder of workflow.schedule.reminderSchedule) {
       const reminderDate = new Date(dueDate);
@@ -865,3 +865,4 @@ export class AutomatedFilingWorkflowsService {
     this.templates.set(formADVTemplate.id, formADVTemplate);
   }
 }
+

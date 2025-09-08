@@ -22,7 +22,7 @@ class OrderManagementService {
         const order = {
             tenantId,
             portfolioId: request.portfolioId,
-            instrumentId: request.instrumentId,
+            securityId: request.securityId,
             clientOrderId,
             orderType: request.orderType,
             orderSide: request.orderSide,
@@ -38,11 +38,11 @@ class OrderManagementService {
             executionInstructions: request.executionInstructions,
             routingInstructions: request.routingInstructions,
             orderDate: new Date(),
-            expirationDate: request.expirationDate,
+            expirationDate: request.expirationDate ?? undefined,
             tradingSession: request.tradingSession || this.getCurrentTradingSession(),
             preTradeCheckStatus: OrderManagement_1.PreTradeCheckStatus.PENDING,
             allocationMethod: request.allocations ? OrderManagement_1.AllocationMethod.MANUAL : undefined,
-            settlementCurrency: await this.getInstrumentCurrency(request.instrumentId, tenantId),
+            settlementCurrency: await this.getInstrumentCurrency(request.securityId, tenantId),
             tags: request.tags,
             customFields: request.customFields,
             createdBy: userId,
@@ -70,7 +70,7 @@ class OrderManagementService {
             clientOrderId: createdOrder.clientOrderId,
             tenantId,
             portfolioId: request.portfolioId,
-            instrumentId: request.instrumentId,
+            securityId: request.securityId,
             orderType: request.orderType,
             orderSide: request.orderSide,
             quantity: request.quantity,
@@ -100,7 +100,7 @@ class OrderManagementService {
             stopPrice: request.stopPrice,
             limitPrice: request.limitPrice,
             timeInForce: request.timeInForce,
-            expirationDate: request.expirationDate,
+            expirationDate: request.expirationDate ?? undefined,
             executionInstructions: request.executionInstructions,
             routingInstructions: request.routingInstructions,
             modifiedBy: userId,
@@ -246,8 +246,8 @@ class OrderManagementService {
         if (request.portfolioIds && request.portfolioIds.length > 0) {
             where.portfolioId = { in: request.portfolioIds };
         }
-        if (request.instrumentIds && request.instrumentIds.length > 0) {
-            where.instrumentId = { in: request.instrumentIds };
+        if (request.securityIds && request.securityIds.length > 0) {
+            where.securityId = { in: request.securityIds };
         }
         if (request.orderTypes && request.orderTypes.length > 0) {
             where.orderType = { in: request.orderTypes };
@@ -312,7 +312,7 @@ class OrderManagementService {
         // Basic validation
         if (!request.portfolioId)
             errors.push('Portfolio ID is required');
-        if (!request.instrumentId)
+        if (!request.securityId)
             errors.push('Instrument ID is required');
         if (request.quantity <= 0)
             errors.push('Order quantity must be positive');
@@ -335,7 +335,7 @@ class OrderManagementService {
         }
         // Instrument validation
         const instrument = await this.prisma.instrumentMaster.findFirst({
-            where: { instrumentId: request.instrumentId, tenantId }
+            where: { securityId: request.securityId, tenantId }
         });
         if (!instrument) {
             errors.push('Instrument not found');
@@ -352,7 +352,7 @@ class OrderManagementService {
             // Estimate costs
             estimatedCosts = await this.estimateOrderCosts(request, instrument, tenantId);
             // Position limits
-            const currentPosition = await this.getCurrentPosition(request.portfolioId, request.instrumentId, tenantId);
+            const currentPosition = await this.getCurrentPosition(request.portfolioId, request.securityId, tenantId);
             const newPosition = request.orderSide === OrderManagement_1.OrderSide.BUY ?
                 currentPosition + request.quantity : currentPosition - request.quantity;
             if (Math.abs(newPosition) > portfolio.maxPositionSize) {
@@ -386,7 +386,7 @@ class OrderManagementService {
         let checksPassed = true;
         // Restricted list check
         const restrictedInstruments = await this.getRestrictedInstruments(tenantId);
-        if (restrictedInstruments.includes(order.instrumentId)) {
+        if (restrictedInstruments.includes(order.securityId)) {
             complianceFlags.push({
                 type: OrderManagement_1.ComplianceFlagType.RESTRICTED_LIST,
                 severity: OrderManagement_1.ComplianceSeverity.BLOCKING,
@@ -439,7 +439,7 @@ class OrderManagementService {
             throw new Error('Order not found');
         }
         // Get market data for the instrument at order time
-        const marketData = await this.getHistoricalMarketData(order.instrumentId, order.orderDate, tenantId);
+        const marketData = await this.getHistoricalMarketData(order.securityId, order.orderDate, tenantId);
         // Calculate execution quality metrics
         const executionQuality = this.calculateExecutionQuality(order, marketData);
         // Compare against benchmarks
@@ -486,7 +486,7 @@ class OrderManagementService {
             return 'REGULAR';
         }
     }
-    async getInstrumentCurrency(instrumentId, tenantId) {
+    async getInstrumentCurrency(securityId, tenantId) {
         const instrument = await this.prisma.instrumentMaster.findFirst({
             where: { instrumentId, tenantId }
         });
@@ -550,17 +550,17 @@ class OrderManagementService {
             priceImpactBps: request.orderType === OrderManagement_1.OrderType.MARKET ? 20 : 10
         };
     }
-    async getCurrentPosition(portfolioId, instrumentId, tenantId) {
+    async getCurrentPosition(portfolioId, securityId, tenantId) {
         const position = await this.prisma.position.findFirst({
-            where: { portfolioId, instrumentId, tenantId }
+            where: { portfolioId, securityId: instrumentId, tenantId } // using securityId instead of instrumentId
         });
-        return position?.quantity || 0;
+        return position?.quantity?.toNumber() || 0; // convert Decimal to number
     }
     async getPortfolioValue(portfolioId, tenantId) {
         const portfolio = await this.prisma.portfolio.findFirst({
             where: { id: portfolioId, tenantId }
         });
-        return portfolio?.totalValue || 0;
+        return portfolio?.totalValue?.toNumber() || 0; // convert Decimal to number
     }
     async getRestrictedInstruments(tenantId) {
         // This would query a restricted instruments table
@@ -592,7 +592,7 @@ class OrderManagementService {
     async processExecutionAllocations(orderId, execution, tenantId) {
         // Implementation would allocate execution to different portfolios/accounts
     }
-    async getHistoricalMarketData(instrumentId, date, tenantId) {
+    async getHistoricalMarketData(securityId, date, tenantId) {
         // Implementation would retrieve historical market data
         return {};
     }

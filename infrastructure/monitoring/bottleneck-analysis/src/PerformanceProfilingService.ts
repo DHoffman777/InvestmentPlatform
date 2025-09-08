@@ -161,9 +161,9 @@ export class PerformanceProfilingService extends EventEmitter {
     const interval = setInterval(async () => {
       try {
         await this.collectMetricsForProfile(profileId, configuration);
-      } catch (error) {
-        console.error(`Metrics collection failed for profile ${profileId}:`, error.message);
-        this.emit('metricsCollectionError', { profileId, error: error.message, timestamp: new Date() });
+      } catch (error: any) {
+        console.error(`Metrics collection failed for profile ${profileId}:`, error instanceof Error ? error.message : 'Unknown error');
+        this.emit('metricsCollectionError', { profileId, error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date() });
       }
     }, 1000 / configuration.sampling_rate);
 
@@ -178,7 +178,7 @@ export class PerformanceProfilingService extends EventEmitter {
     }
   }
 
-  private async collectMetricsForProfile(profileId: string, configuration: ProfilingConfiguration): Promise<void> {
+  private async collectMetricsForProfile(profileId: string, configuration: ProfilingConfiguration): Promise<any> {
     const profile = this.activeProfiles.get(profileId);
     if (!profile) return;
 
@@ -198,8 +198,8 @@ export class PerformanceProfilingService extends EventEmitter {
       try {
         const sourceMetrics = await collector.collect(context);
         metrics.push(...sourceMetrics);
-      } catch (error) {
-        console.warn(`Failed to collect metrics from ${source}:`, error.message);
+      } catch (error: any) {
+        console.warn(`Failed to collect metrics from ${source}:`, error instanceof Error ? error.message : 'Unknown error');
       }
     }
 
@@ -316,8 +316,8 @@ export class PerformanceProfilingService extends EventEmitter {
           tags: { type: 'system_memory_usage' }
         });
       }
-    } catch (error) {
-      console.warn('Failed to collect system metrics:', error.message);
+    } catch (error: any) {
+      console.warn('Failed to collect system metrics:', error instanceof Error ? error.message : 'Unknown error');
     }
 
     return metrics;
@@ -501,7 +501,7 @@ export class PerformanceProfilingService extends EventEmitter {
     }, 3600000); // Cleanup every hour
   }
 
-  private async checkAutoProfilingTriggers(): Promise<void> {
+  private async checkAutoProfilingTriggers(): Promise<any> {
     try {
       const currentMetrics = await this.collectCurrentSystemMetrics();
       
@@ -521,8 +521,8 @@ export class PerformanceProfilingService extends EventEmitter {
           break; // Only start one auto-profile at a time
         }
       }
-    } catch (error) {
-      console.error('Auto-profiling trigger check failed:', error.message);
+    } catch (error: any) {
+      console.error('Auto-profiling trigger check failed:', error instanceof Error ? error.message : 'Unknown error');
     }
   }
 
@@ -620,14 +620,14 @@ export class PerformanceProfilingService extends EventEmitter {
     return `metric_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     // Stop all active profiling
     const activeProfileIds = Array.from(this.activeProfiles.keys());
     for (const profileId of activeProfileIds) {
       try {
         await this.stopProfiling(profileId);
-      } catch (error) {
-        console.error(`Failed to stop profile ${profileId}:`, error.message);
+      } catch (error: any) {
+        console.error(`Failed to stop profile ${profileId}:`, error instanceof Error ? error.message : 'Unknown error');
       }
     }
 
@@ -645,3 +645,4 @@ interface MetricsCollector {
   collect: (context: PerformanceContext) => Promise<PerformanceMetric[]>;
   enabled: boolean;
 }
+

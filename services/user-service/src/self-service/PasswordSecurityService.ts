@@ -713,7 +713,7 @@ export class PasswordSecurityService extends EventEmitter {
 
     // Calculate strength score and crack time
     result.score = await this.calculatePasswordStrength(password);
-    result.estimatedCrackTime = this.estimateCrackTime(password);
+    result.estimatedCrackTime = await this.estimateCrackTime(password);
 
     // Add suggestions
     if (result.score < 70) {
@@ -899,7 +899,7 @@ export class PasswordSecurityService extends EventEmitter {
     return password.length > 0;
   }
 
-  private async updateUserPassword(userId: string, password: string): Promise<void> {
+  private async updateUserPassword(userId: string, password: string): Promise<any> {
     // Placeholder - would integrate with auth service
     console.log(`Password updated for user ${userId}`);
   }
@@ -928,8 +928,8 @@ export class PasswordSecurityService extends EventEmitter {
     return Math.max(0, Math.min(100, score));
   }
 
-  private estimateCrackTime(password: string): string {
-    const score = this.calculatePasswordStrength(password);
+  private async estimateCrackTime(password: string): Promise<string> {
+    const score = await this.calculatePasswordStrength(password);
     
     if (score >= 90) return 'centuries';
     if (score >= 80) return 'decades';

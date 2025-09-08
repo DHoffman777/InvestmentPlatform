@@ -239,7 +239,7 @@ export declare class MeetingNotificationService extends EventEmitter {
         tenantId: string;
         meetingData: any;
         timestamp: Date;
-    }): Promise<void>;
+    }): Promise<any>;
     private evaluateRuleConditions;
     private getMeetingFieldValue;
     private executeRule;
@@ -286,6 +286,6 @@ export declare class MeetingNotificationService extends EventEmitter {
         };
         timestamp: Date;
     }>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 export default MeetingNotificationService;

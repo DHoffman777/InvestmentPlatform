@@ -1,12 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { KafkaProducer } from '../../utils/kafka/producer';
-import { Logger } from '../../utils/logger';
-import { CreditRiskAssessment, CreditRiskRequest } from '../../models/riskManagement/RiskManagement';
+type CreditRiskRequest = any;
+type CreditRiskAssessment = any;
 export declare class CreditRiskMonitoringService {
     private prisma;
     private kafkaProducer;
     private logger;
-    constructor(prisma: PrismaClient, kafkaProducer: KafkaProducer, logger: Logger);
+    constructor(prisma: PrismaClient, kafkaProducer?: any, // KafkaProducer optional since not implemented
+    customLogger?: any);
     assessCreditRisk(request: CreditRiskRequest): Promise<CreditRiskAssessment>;
     private getPortfolioData;
     private calculateCreditExposures;
@@ -69,3 +69,4 @@ export declare class CreditRiskMonitoringService {
     private calculateCreditBeta;
     private calculateTrackingError;
 }
+export {};

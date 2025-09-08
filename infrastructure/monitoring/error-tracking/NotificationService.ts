@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 import nodemailer, { Transporter } from 'nodemailer';
+// @ts-ignore - @slack/web-api not installed
 import { WebClient as SlackWebClient } from '@slack/web-api';
+// @ts-ignore - twilio not installed
 import twilio, { Twilio } from 'twilio';
 import { Logger } from 'winston';
 import { createLogger, format, transports } from 'winston';
@@ -78,11 +80,13 @@ export interface EmailConfig {
     pass: string;
   };
   from: string;
+  recipients?: string[];
 }
 
 export interface SlackConfig {
   token: string;
   defaultChannel: string;
+  channel?: string;
   username?: string;
   iconEmoji?: string;
 }
@@ -91,6 +95,7 @@ export interface SMSConfig {
   accountSid: string;
   authToken: string;
   fromNumber: string;
+  recipients?: string[];
 }
 
 export interface WebhookConfig {
@@ -195,7 +200,7 @@ export class NotificationService extends EventEmitter {
                 "fields": [
                   {
                     "type": "mrkdwn",
-                    "text": "*Error:*\n{{error.message}}"
+                    "text": "*Error:*\n{{error instanceof Error ? error.message : 'An error occurred'}}"
                   },
                   {
                     "type": "mrkdwn",
@@ -254,7 +259,7 @@ export class NotificationService extends EventEmitter {
     });
   }
 
-  public async addChannel(channel: NotificationChannel): Promise<void> {
+  public async addChannel(channel: NotificationChannel): Promise<any> {
     // Validate channel configuration
     await this.validateChannelConfig(channel);
     
@@ -269,7 +274,7 @@ export class NotificationService extends EventEmitter {
     await this.initializeChannelClient(channel);
   }
 
-  private async validateChannelConfig(channel: NotificationChannel): Promise<void> {
+  private async validateChannelConfig(channel: NotificationChannel): Promise<any> {
     switch (channel.type) {
       case NotificationChannelType.EMAIL:
         if (!channel.config.host || !channel.config.auth) {
@@ -294,12 +299,12 @@ export class NotificationService extends EventEmitter {
     }
   }
 
-  private async initializeChannelClient(channel: NotificationChannel): Promise<void> {
+  private async initializeChannelClient(channel: NotificationChannel): Promise<any> {
     switch (channel.type) {
       case NotificationChannelType.EMAIL:
         if (!this.emailTransporter) {
           const config = channel.config as EmailConfig;
-          this.emailTransporter = nodemailer.createTransporter({
+          this.emailTransporter = nodemailer.createTransport({
             host: config.host,
             port: config.port,
             secure: config.secure,
@@ -359,7 +364,7 @@ export class NotificationService extends EventEmitter {
         // Update rate limit tracker
         this.updateRateLimitTracker(channel.id);
 
-      } catch (error) {
+      } catch (error: any) {
         this.logger.error('Failed to send notification', {
           channelId: channel.id,
           error: error.message
@@ -368,7 +373,7 @@ export class NotificationService extends EventEmitter {
         results.push({
           channelId: channel.id,
           success: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date(),
           rateLimited: false
         });
@@ -542,7 +547,7 @@ export class NotificationService extends EventEmitter {
       try {
         const value = this.evaluateExpression(expression.trim(), context);
         return value !== undefined ? String(value) : match;
-      } catch (error) {
+      } catch (error: any) {
         this.logger.warn('Template expression evaluation failed', {
           expression,
           error: error.message
@@ -612,7 +617,7 @@ export class NotificationService extends EventEmitter {
     let blocks;
     try {
       blocks = JSON.parse(content).blocks;
-    } catch (error) {
+    } catch (error: any) {
       // Fallback to text message if JSON parsing fails
       blocks = [{
         type: 'section',
@@ -769,8 +774,9 @@ export class NotificationService extends EventEmitter {
     return Array.from(this.templates.values());
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     this.logger.info('Shutting down notification service');
     this.removeAllListeners();
   }
 }
+

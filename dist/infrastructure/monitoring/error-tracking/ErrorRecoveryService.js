@@ -680,7 +680,7 @@ class ErrorRecoveryService extends events_1.EventEmitter {
         }
         catch (error) {
             execution.status = RecoveryStatus.FAILED;
-            this.addLog(execution, 'error', `Recovery execution failed: ${error.message}`);
+            this.addLog(execution, 'error', `Recovery execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         finally {
             execution.endTime = new Date();
@@ -726,7 +726,7 @@ class ErrorRecoveryService extends events_1.EventEmitter {
                 }
             }
             catch (error) {
-                const errorMessage = error.message || 'Unknown error';
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                 this.addLog(execution, 'error', `Step attempt ${attempt}/${step.maxRetries} threw exception: ${errorMessage}`, step.id);
                 if (attempt === step.maxRetries) {
                     stepExecution.status = RecoveryStatus.FAILED;

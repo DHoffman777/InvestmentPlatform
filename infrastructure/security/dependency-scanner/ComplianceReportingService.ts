@@ -542,8 +542,8 @@ export class ComplianceReportingService extends EventEmitter {
 
       return report;
 
-    } catch (error) {
-      this.emit('reportGenerationFailed', { reportId, tenantId, error: error.message });
+    } catch (error: any) {
+      this.emit('reportGenerationFailed', { reportId, tenantId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -763,7 +763,7 @@ export class ComplianceReportingService extends EventEmitter {
 
   private async analyzePolicyCompliance(reportData: any): Promise<PolicyCompliance[]> {
     const vulnerabilities = reportData.vulnerabilities || [];
-    const highSeverityCount = vulnerabilities.filter(v => 
+    const highSeverityCount = vulnerabilities.filter((v: any) => 
       v.vulnerability.severity === 'CRITICAL' || v.vulnerability.severity === 'HIGH'
     ).length;
 
@@ -876,7 +876,7 @@ export class ComplianceReportingService extends EventEmitter {
     
     // Security metrics
     const totalVulns = vulnerabilities.length;
-    const vulnerabilitiesByService = vulnerabilities.reduce((acc, v) => {
+    const vulnerabilitiesByseverity = vulnerabilities.reduce((acc: any, v: any) => {
       const severity = v.vulnerability.severity;
       acc[severity] = (acc[severity] || 0) + 1;
       return acc;
@@ -884,7 +884,7 @@ export class ComplianceReportingService extends EventEmitter {
 
     const security: SecurityMetrics = {
       totalVulnerabilities: totalVulns,
-      vulnerabilitiesByService,
+      vulnerabilitiesByseverity,
       meanTimeToRemediation: 7, // Mock data
       vulnerabilityAge: {
         new: Math.floor(totalVulns * 0.3),
@@ -1078,7 +1078,7 @@ export class ComplianceReportingService extends EventEmitter {
       'EXECUTIVE_SUMMARY': 'Executive Security Summary'
     };
 
-    const baseName = typeNames[reportType] || 'Compliance Report';
+    const baseName = typeNames[reportType as keyof typeof typeNames] || 'Compliance Report';
     const dateRange = `${scope.dateRange.from.toISOString().split('T')[0]} to ${scope.dateRange.to.toISOString().split('T')[0]}`;
     
     return `${baseName} (${dateRange})`;
@@ -1094,7 +1094,7 @@ export class ComplianceReportingService extends EventEmitter {
       'EXECUTIVE_SUMMARY': 'High-level overview of security metrics and key performance indicators'
     };
 
-    return descriptions[reportType] || 'Security and compliance analysis report';
+    return descriptions[reportType as keyof typeof descriptions] || 'Security and compliance analysis report';
   }
 
   private getDefaultDistribution(tenantId: string): ReportDistribution {
@@ -1139,7 +1139,7 @@ export class ComplianceReportingService extends EventEmitter {
     };
   }
 
-  private async distributeReport(reportId: string): Promise<void> {
+  private async distributeReport(reportId: string): Promise<any> {
     const report = this.reports.get(reportId);
     if (!report) return;
 
@@ -1168,28 +1168,28 @@ export class ComplianceReportingService extends EventEmitter {
 
       this.emit('reportDistributed', { reportId, channels: report.distribution.channels.length });
 
-    } catch (error) {
-      this.emit('reportDistributionFailed', { reportId, error: error.message });
+    } catch (error: any) {
+      this.emit('reportDistributionFailed', { reportId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
 
-  private async sendEmailReport(report: ComplianceReport, config: any): Promise<void> {
+  private async sendEmailReport(report: ComplianceReport, config: any): Promise<any> {
     // Email distribution implementation
     console.log(`Email report sent: ${report.title}`);
   }
 
-  private async sendSlackReport(report: ComplianceReport, config: any): Promise<void> {
+  private async sendSlackReport(report: ComplianceReport, config: any): Promise<any> {
     // Slack distribution implementation
     console.log(`Slack report sent: ${report.title}`);
   }
 
-  private async sendTeamsReport(report: ComplianceReport, config: any): Promise<void> {
+  private async sendTeamsReport(report: ComplianceReport, config: any): Promise<any> {
     // Teams distribution implementation
     console.log(`Teams report sent: ${report.title}`);
   }
 
-  private async sendWebhookReport(report: ComplianceReport, config: any): Promise<void> {
+  private async sendWebhookReport(report: ComplianceReport, config: any): Promise<any> {
     // Webhook distribution implementation
     console.log(`Webhook report sent: ${report.title}`);
   }
@@ -1322,3 +1322,4 @@ export class ComplianceReportingService extends EventEmitter {
     }, {} as Record<string, number>);
   }
 }
+

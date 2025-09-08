@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.historicalRouter = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { query, param, validationResult } = require('express-validator');
 const marketDataService_1 = require("../services/marketDataService");
 const database_1 = require("../config/database");
 const logger_1 = require("../utils/logger");
@@ -13,7 +13,7 @@ exports.historicalRouter = router;
 const marketDataService = new marketDataService_1.MarketDataService(database_1.prisma);
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -24,11 +24,11 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/historical/:symbol - Get historical data for a symbol
 router.get('/:symbol', [
-    (0, express_validator_1.param)('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
-    (0, express_validator_1.query)('startDate').optional().isISO8601().toDate().withMessage('Invalid start date'),
-    (0, express_validator_1.query)('endDate').optional().isISO8601().toDate().withMessage('Invalid end date'),
-    (0, express_validator_1.query)('period').optional().isIn(['1D', '1W', '1M', '3M', '6M', '1Y', '2Y', '5Y', 'MAX']).withMessage('Invalid period'),
-    (0, express_validator_1.query)('source').optional().isString().trim().withMessage('Invalid source'),
+    param('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
+    query('startDate').optional().isISO8601().toDate().withMessage('Invalid start date'),
+    query('endDate').optional().isISO8601().toDate().withMessage('Invalid end date'),
+    query('period').optional().isIn(['1D', '1W', '1M', '3M', '6M', '1Y', '2Y', '5Y', 'MAX']).withMessage('Invalid period'),
+    query('source').optional().isString().trim().withMessage('Invalid source'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { symbol } = req.params;
@@ -113,9 +113,9 @@ router.get('/:symbol', [
 });
 // GET /api/historical/:symbol/ohlc - Get OHLC data optimized for charts
 router.get('/:symbol/ohlc', [
-    (0, express_validator_1.param)('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
-    (0, express_validator_1.query)('period').optional().isIn(['1D', '1W', '1M', '3M', '6M', '1Y', '2Y', '5Y']).withMessage('Invalid period'),
-    (0, express_validator_1.query)('interval').optional().isIn(['1d', '1w', '1m']).withMessage('Invalid interval'),
+    param('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
+    query('period').optional().isIn(['1D', '1W', '1M', '3M', '6M', '1Y', '2Y', '5Y']).withMessage('Invalid period'),
+    query('interval').optional().isIn(['1d', '1w', '1m']).withMessage('Invalid interval'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { symbol } = req.params;

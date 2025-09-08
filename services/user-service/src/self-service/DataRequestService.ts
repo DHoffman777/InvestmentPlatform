@@ -910,7 +910,7 @@ export class DataRequestService extends EventEmitter {
     return true;
   }
 
-  public async processDataRequest(requestId: string): Promise<void> {
+  public async processDataRequest(requestId: string): Promise<any> {
     const request = this.dataRequests.get(requestId);
     if (!request) {
       throw new Error('Request not found');
@@ -951,12 +951,12 @@ export class DataRequestService extends EventEmitter {
 
       this.emit('dataRequestProcessed', request);
 
-    } catch (error) {
+    } catch (error: any) {
       request.status = RequestStatus.FAILED;
       this.addProcessingError(request, ProcessingStage.DATA_PROCESSING, 'PROCESSING_ERROR', 
-        error.message, ErrorSeverity.CRITICAL);
+        this.getErrorMessage(error), ErrorSeverity.CRITICAL);
       
-      this.emit('dataRequestFailed', { request, error: error.message });
+      this.emit('dataRequestFailed', { request, error: this.getErrorMessage(error) });
     }
   }
 
@@ -1066,7 +1066,11 @@ export class DataRequestService extends EventEmitter {
       complianceStatus: {
         [DataRegulation.GDPR]: true,
         [DataRegulation.CCPA]: true,
-        [DataRegulation.PIPEDA]: false
+        [DataRegulation.PIPEDA]: false,
+        [DataRegulation.LGPD]: false,
+        [DataRegulation.PDPA_SINGAPORE]: false,
+        [DataRegulation.PDPB_INDIA]: false,
+        [DataRegulation.POPIA]: false
       }
     };
   }
@@ -1077,7 +1081,7 @@ export class DataRequestService extends EventEmitter {
     requestType: DataRequestType,
     requestData: RequestData,
     legalBasis: LegalBasis
-  ): Promise<void> {
+  ): Promise<any> {
     // Check user permissions
     if (!await this.hasRequestPermission(userId, tenantId, requestType)) {
       throw new Error('Insufficient permissions for this request type');
@@ -1361,7 +1365,7 @@ export class DataRequestService extends EventEmitter {
     return estimatedSize;
   }
 
-  private async processStage(request: DataRequest, stage: ProcessingStage): Promise<void> {
+  private async processStage(request: DataRequest, stage: ProcessingStage): Promise<any> {
     const stageInfo = request.processingDetails.stages.find(s => s.stage === stage);
     if (!stageInfo) return;
 
@@ -1413,15 +1417,15 @@ export class DataRequestService extends EventEmitter {
       this.addAuditEntry(request, RequestAction.COMPLETED_STAGE, 'system', 
         `Completed stage: ${stage}`, undefined, undefined, 'system', 'system');
 
-    } catch (error) {
+    } catch (error: any) {
       stageInfo.status = StageStatus.FAILED;
       stageInfo.endTime = new Date();
       
       this.addProcessingError(request, stage, 'STAGE_PROCESSING_ERROR', 
-        error.message, ErrorSeverity.HIGH);
+        this.getErrorMessage(error), ErrorSeverity.HIGH);
 
       this.addAuditEntry(request, RequestAction.FAILED_STAGE, 'system', 
-        `Failed stage: ${stage} - ${error.message}`, undefined, undefined, 'system', 'system');
+        `Failed stage: ${stage} - ${this.getErrorMessage(error)}`, undefined, undefined, 'system', 'system');
     }
 
     // Update overall progress
@@ -1429,7 +1433,7 @@ export class DataRequestService extends EventEmitter {
     request.processingDetails.completionPercentage = Math.round((completedStages / request.processingDetails.stages.length) * 100);
   }
 
-  private async processValidationStage(request: DataRequest): Promise<void> {
+  private async processValidationStage(request: DataRequest): Promise<any> {
     // Simulate validation processing
     await this.delay(2000);
     
@@ -1442,7 +1446,7 @@ export class DataRequestService extends EventEmitter {
     }
   }
 
-  private async processDataDiscoveryStage(request: DataRequest): Promise<void> {
+  private async processDataDiscoveryStage(request: DataRequest): Promise<any> {
     await this.delay(3000);
     
     // Mock data discovery results
@@ -1454,7 +1458,7 @@ export class DataRequestService extends EventEmitter {
     request.processingDetails.resourceUsage.memoryUsage += 50;
   }
 
-  private async processLegalReviewStage(request: DataRequest): Promise<void> {
+  private async processLegalReviewStage(request: DataRequest): Promise<any> {
     await this.delay(1500);
     
     // Simulate legal review
@@ -1467,7 +1471,7 @@ export class DataRequestService extends EventEmitter {
     }
   }
 
-  private async processDataExtractionStage(request: DataRequest): Promise<void> {
+  private async processDataExtractionStage(request: DataRequest): Promise<any> {
     await this.delay(5000);
     
     // Simulate data extraction
@@ -1476,7 +1480,7 @@ export class DataRequestService extends EventEmitter {
     request.processingDetails.resourceUsage.cpuTime += 30;
   }
 
-  private async processDataProcessingStage(request: DataRequest): Promise<void> {
+  private async processDataProcessingStage(request: DataRequest): Promise<any> {
     await this.delay(4000);
     
     if (request.type === DataRequestType.DELETION) {
@@ -1487,7 +1491,7 @@ export class DataRequestService extends EventEmitter {
     request.processingDetails.resourceUsage.databaseQueries += request.processingDetails.recordsFound * 0.1;
   }
 
-  private async processAnonymizationStage(request: DataRequest): Promise<void> {
+  private async processAnonymizationStage(request: DataRequest): Promise<any> {
     await this.delay(6000);
     
     if (request.requestData.anonymization) {
@@ -1496,7 +1500,7 @@ export class DataRequestService extends EventEmitter {
     }
   }
 
-  private async processFormattingStage(request: DataRequest): Promise<void> {
+  private async processFormattingStage(request: DataRequest): Promise<any> {
     await this.delay(2500);
     
     // Format-specific processing
@@ -1514,7 +1518,7 @@ export class DataRequestService extends EventEmitter {
     request.processingDetails.recordsExported = request.processingDetails.recordsProcessed;
   }
 
-  private async processQualityCheckStage(request: DataRequest): Promise<void> {
+  private async processQualityCheckStage(request: DataRequest): Promise<any> {
     await this.delay(1000);
     
     // Simulate quality checks
@@ -1526,7 +1530,7 @@ export class DataRequestService extends EventEmitter {
     }
   }
 
-  private async processPackagingStage(request: DataRequest): Promise<void> {
+  private async processPackagingStage(request: DataRequest): Promise<any> {
     await this.delay(1500);
     
     // Package data for delivery
@@ -1536,7 +1540,7 @@ export class DataRequestService extends EventEmitter {
     request.processingDetails.resourceUsage.diskUsage += request.processingDetails.recordsExported * 0.2;
   }
 
-  private async processDeliveryStage(request: DataRequest): Promise<void> {
+  private async processDeliveryStage(request: DataRequest): Promise<any> {
     await this.delay(1000);
     
     // Set up delivery
@@ -1546,14 +1550,14 @@ export class DataRequestService extends EventEmitter {
     request.status = RequestStatus.DELIVERED;
   }
 
-  private async processCleanupStage(request: DataRequest): Promise<void> {
+  private async processCleanupStage(request: DataRequest): Promise<any> {
     await this.delay(500);
     
     // Cleanup temporary resources
     request.processingDetails.resourceUsage.cost = this.calculateProcessingCost(request.processingDetails.resourceUsage);
   }
 
-  private async deliverResults(request: DataRequest): Promise<void> {
+  private async deliverResults(request: DataRequest): Promise<any> {
     switch (request.deliveryDetails.method) {
       case DeliveryMethod.EMAIL:
         await this.sendEmailDelivery(request);
@@ -1675,27 +1679,27 @@ export class DataRequestService extends EventEmitter {
     return true; // In real implementation, would check data access permissions
   }
 
-  private async sendRequestConfirmation(request: DataRequest): Promise<void> {
+  private async sendRequestConfirmation(request: DataRequest): Promise<any> {
     // Mock email sending
     console.log(`Confirmation sent for request ${request.id} to user ${request.userId}`);
   }
 
-  private async sendCancellationNotification(request: DataRequest, reason: string): Promise<void> {
+  private async sendCancellationNotification(request: DataRequest, reason: string): Promise<any> {
     // Mock email sending
     console.log(`Cancellation notification sent for request ${request.id}: ${reason}`);
   }
 
-  private async sendEmailDelivery(request: DataRequest): Promise<void> {
+  private async sendEmailDelivery(request: DataRequest): Promise<any> {
     // Mock email delivery
     console.log(`Results delivered via email for request ${request.id}`);
   }
 
-  private async setupSecureDownload(request: DataRequest): Promise<void> {
+  private async setupSecureDownload(request: DataRequest): Promise<any> {
     // Mock secure download setup
     console.log(`Secure download setup for request ${request.id}`);
   }
 
-  private delay(ms: number): Promise<void> {
+  private delay(ms: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -1761,4 +1765,12 @@ export class DataRequestService extends EventEmitter {
       }
     }, 60 * 60 * 1000);
   }
+
+  private getErrorMessage(error: unknown): string {
+    if ((error as any) instanceof Error) {
+      return (error as Error).message;
+    }
+    return String(error);
+  }
 }
+

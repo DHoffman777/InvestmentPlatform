@@ -50,7 +50,7 @@ class AutomatedScalingRecommendationEngine extends events_1.EventEmitter {
             return finalRecommendations;
         }
         catch (error) {
-            this.emit('recommendationGenerationFailed', { resourceId, error: error.message });
+            this.emit('recommendationGenerationFailed', { resourceId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -504,7 +504,7 @@ class AutomatedScalingRecommendationEngine extends events_1.EventEmitter {
                 await this.performScheduledEvaluation();
             }
             catch (error) {
-                this.emit('scheduledEvaluationError', { error: error.message });
+                this.emit('scheduledEvaluationError', { error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }, this.config.evaluationInterval);
     }

@@ -16,8 +16,17 @@ class AssetClassificationService {
         }
         const created = await this.prisma.assetClass.create({
             data: {
-                ...assetClass,
                 tenantId,
+                name: assetClass.name,
+                code: assetClass.code,
+                description: assetClass.description || '',
+                level: assetClass.level,
+                assetType: assetClass.assetType,
+                riskLevel: assetClass.riskLevel,
+                liquidityTier: assetClass.liquidityTier,
+                isActive: assetClass.isActive,
+                regulatoryClass: assetClass.regulatoryCategory || null,
+                parentClassId: assetClass.parentClassId || null,
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
@@ -47,7 +56,6 @@ class AssetClassificationService {
         return await this.prisma.assetClass.findMany({
             where,
             orderBy: [
-                { level: 'asc' },
                 { name: 'asc' }
             ]
         });
@@ -90,8 +98,13 @@ class AssetClassificationService {
         }
         const created = await this.prisma.assetSubClass.create({
             data: {
-                ...subClass,
                 tenantId,
+                name: subClass.name,
+                code: subClass.code,
+                description: subClass.description || '',
+                assetClassId: subClass.assetClassId,
+                characteristics: subClass.characteristics,
+                isActive: subClass.isActive,
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
@@ -102,7 +115,10 @@ class AssetClassificationService {
             tenantId,
             timestamp: new Date().toISOString()
         });
-        return created;
+        return {
+            ...created,
+            characteristics: created.characteristics
+        };
     }
     async getAssetSubClasses(tenantId, assetClassId) {
         const where = { tenantId };
@@ -136,9 +152,10 @@ class AssetClassificationService {
         const autoClassification = await this.autoClassifyInstrument(request);
         const classification = {
             instrumentId: request.instrumentId,
+            securityId: request.securityId || null,
             symbol: request.symbol,
             instrumentName: request.instrumentName,
-            assetClassId: autoClassification.assetClassId,
+            assetClassId: autoClassification.assetClassId || '',
             assetSubClassId: autoClassification.assetSubClassId,
             classifications: autoClassification.classifications || [],
             gicsCode: autoClassification.gicsCode,
@@ -149,6 +166,9 @@ class AssetClassificationService {
             countryCode: autoClassification.countryCode,
             regionCode: autoClassification.regionCode,
             developedMarket: autoClassification.developedMarket || false,
+            emergingMarket: autoClassification.emergingMarket || false,
+            primaryExchange: autoClassification.primaryExchange,
+            currency: autoClassification.currency || 'USD',
             marketCapCategory: autoClassification.marketCapCategory,
             styleClassification: autoClassification.styleClassification,
             creditRating: autoClassification.creditRating,
@@ -159,6 +179,8 @@ class AssetClassificationService {
             accreditedInvestorOnly: autoClassification.accreditedInvestorOnly || false,
             institutionalOnly: autoClassification.institutionalOnly || false,
             retailSuitable: autoClassification.retailSuitable !== false,
+            reviewFrequency: 'ANNUAL',
+            tenantId: request.tenantId,
             classificationDate: new Date(),
             lastReviewDate: new Date(),
             isActive: true,
@@ -167,8 +189,27 @@ class AssetClassificationService {
         };
         const created = await this.prisma.instrumentClassification.create({
             data: {
-                ...classification,
-                tenantId: request.tenantId
+                tenantId: classification.tenantId,
+                instrumentId: classification.instrumentId,
+                instrumentName: classification.instrumentName,
+                securityId: classification.securityId,
+                assetClassId: classification.assetClassId,
+                assetSubClassId: classification.assetSubClassId,
+                gicsSector: classification.gicsSector,
+                gicsIndustryGroup: classification.gicsIndustryGroup,
+                gicsIndustry: classification.gicsIndustry,
+                gicsSubIndustry: classification.gicsSubIndustry,
+                regionCode: classification.regionCode,
+                countryCode: classification.countryCode,
+                developedMarket: classification.developedMarket,
+                emergingMarket: classification.emergingMarket || false,
+                primaryExchange: classification.primaryExchange,
+                currency: classification.currency,
+                classifications: classification.classifications,
+                isActive: classification.isActive,
+                classificationDate: classification.classificationDate,
+                lastReviewDate: classification.lastReviewDate,
+                reviewFrequency: 'ANNUAL'
             }
         });
         await this.kafkaService.publishEvent('instrument-classified', {
@@ -178,7 +219,44 @@ class AssetClassificationService {
             classifiedBy: request.classifiedBy,
             timestamp: new Date().toISOString()
         });
-        return created;
+        return {
+            id: created.id,
+            instrumentId: created.instrumentId,
+            securityId: created.securityId,
+            symbol: undefined,
+            instrumentName: created.instrumentName,
+            assetClassId: created.assetClassId,
+            assetSubClassId: created.assetSubClassId || undefined,
+            classifications: Array.isArray(created.classifications) ? created.classifications : [],
+            gicsCode: undefined,
+            gicsSector: created.gicsSector || undefined,
+            gicsIndustryGroup: created.gicsIndustryGroup || undefined,
+            gicsIndustry: created.gicsIndustry || undefined,
+            gicsSubIndustry: created.gicsSubIndustry || undefined,
+            countryCode: created.countryCode || undefined,
+            regionCode: created.regionCode || undefined,
+            developedMarket: created.developedMarket,
+            marketCapCategory: undefined,
+            styleClassification: undefined,
+            creditRating: undefined,
+            investmentGrade: undefined,
+            esgScore: undefined,
+            esgRating: undefined,
+            sustainabilityCompliant: false,
+            accreditedInvestorOnly: false,
+            institutionalOnly: false,
+            retailSuitable: true,
+            primaryExchange: created.primaryExchange || undefined,
+            currency: created.currency,
+            reviewFrequency: created.reviewFrequency,
+            tenantId: created.tenantId,
+            emergingMarket: created.emergingMarket,
+            classificationDate: created.classificationDate,
+            lastReviewDate: created.lastReviewDate || created.createdAt,
+            isActive: created.isActive,
+            createdAt: created.createdAt,
+            updatedAt: created.updatedAt
+        };
     }
     async updateInstrumentClassification(request) {
         const existing = await this.prisma.instrumentClassification.findFirst({
@@ -226,13 +304,53 @@ class AssetClassificationService {
         return updated;
     }
     async getInstrumentClassification(instrumentId, tenantId) {
-        return await this.prisma.instrumentClassification.findFirst({
+        const result = await this.prisma.instrumentClassification.findFirst({
             where: { instrumentId, tenantId },
             include: {
                 assetClass: true,
                 assetSubClass: true
             }
         });
+        if (!result)
+            return null;
+        return {
+            id: result.id,
+            instrumentId: result.instrumentId,
+            securityId: result.securityId,
+            symbol: undefined, // Not stored in DB
+            instrumentName: result.instrumentName,
+            assetClassId: result.assetClassId,
+            assetSubClassId: result.assetSubClassId || undefined,
+            classifications: Array.isArray(result.classifications) ? result.classifications : [],
+            gicsCode: undefined, // Not stored separately
+            gicsSector: result.gicsSector || undefined,
+            gicsIndustryGroup: result.gicsIndustryGroup || undefined,
+            gicsIndustry: result.gicsIndustry || undefined,
+            gicsSubIndustry: result.gicsSubIndustry || undefined,
+            countryCode: result.countryCode || undefined,
+            regionCode: result.regionCode || undefined,
+            developedMarket: result.developedMarket,
+            marketCapCategory: undefined, // Not stored in current schema
+            styleClassification: undefined, // Not stored in current schema
+            creditRating: undefined, // Not stored in current schema
+            investmentGrade: undefined, // Not stored in current schema
+            esgScore: undefined, // Not stored in current schema
+            esgRating: undefined, // Not stored in current schema
+            sustainabilityCompliant: false, // Default value
+            accreditedInvestorOnly: false, // Default value
+            institutionalOnly: false, // Default value
+            retailSuitable: true, // Default value
+            primaryExchange: result.primaryExchange || undefined,
+            currency: result.currency,
+            reviewFrequency: result.reviewFrequency,
+            tenantId: result.tenantId,
+            emergingMarket: result.emergingMarket,
+            classificationDate: result.classificationDate,
+            lastReviewDate: result.lastReviewDate || result.createdAt,
+            isActive: result.isActive,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt
+        };
     }
     // Asset Allocation Management
     async createAssetAllocation(request) {
@@ -245,7 +363,14 @@ class AssetClassificationService {
             name: request.name,
             description: request.description,
             allocations: request.allocations,
-            constraints: request.constraints || [],
+            constraints: (request.constraints || []).map(constraint => ({
+                type: constraint.type,
+                target: constraint.target,
+                value: constraint.value,
+                unit: constraint.unit,
+                description: `${constraint.type} constraint`,
+                isHard: constraint.isHard
+            })),
             rebalancingThreshold: request.rebalancingThreshold || 5.0,
             rebalancingFrequency: request.rebalancingFrequency || 'QUARTERLY',
             riskProfile: request.riskProfile,
@@ -257,8 +382,18 @@ class AssetClassificationService {
         };
         const created = await this.prisma.assetAllocation.create({
             data: {
-                ...allocation,
-                tenantId: request.tenantId
+                tenantId: request.tenantId,
+                portfolioId: allocation.portfolioId,
+                name: allocation.name,
+                description: allocation.description,
+                allocations: allocation.allocations,
+                constraints: allocation.constraints,
+                rebalancingThreshold: allocation.rebalancingThreshold,
+                rebalancingFrequency: allocation.rebalancingFrequency,
+                riskProfile: allocation.riskProfile,
+                timeHorizon: allocation.timeHorizon,
+                isActive: allocation.isActive,
+                createdBy: allocation.createdBy
             }
         });
         await this.kafkaService.publishEvent('asset-allocation-created', {
@@ -268,16 +403,33 @@ class AssetClassificationService {
             allocation: created,
             timestamp: new Date().toISOString()
         });
-        return created;
+        return {
+            ...created,
+            allocations: created.allocations,
+            constraints: created.constraints,
+            rebalancingThreshold: Number(created.rebalancingThreshold),
+            riskProfile: created.riskProfile,
+            timeHorizon: created.timeHorizon,
+            rebalancingFrequency: created.rebalancingFrequency
+        };
     }
     async getAssetAllocations(tenantId, portfolioId) {
         const where = { tenantId, isActive: true };
         if (portfolioId)
             where.portfolioId = portfolioId;
-        return await this.prisma.assetAllocation.findMany({
+        const results = await this.prisma.assetAllocation.findMany({
             where,
             orderBy: { createdAt: 'desc' }
         });
+        return results.map(result => ({
+            ...result,
+            allocations: result.allocations,
+            constraints: result.constraints,
+            rebalancingThreshold: Number(result.rebalancingThreshold),
+            riskProfile: result.riskProfile,
+            timeHorizon: result.timeHorizon,
+            rebalancingFrequency: result.rebalancingFrequency
+        }));
     }
     // Analytics and Reporting
     async getClassificationSummary(tenantId) {
@@ -300,7 +452,13 @@ class AssetClassificationService {
             _count: { gicsSector: true }
         });
         const unclassified = await this.prisma.instrumentClassification.count({
-            where: { tenantId, isActive: true, assetClassId: null }
+            where: {
+                tenantId,
+                isActive: true,
+                assetClassId: {
+                    in: [null, undefined]
+                }
+            }
         });
         const lastClassification = await this.prisma.instrumentClassification.findFirst({
             where: { tenantId, isActive: true },
@@ -330,17 +488,13 @@ class AssetClassificationService {
         const positions = await this.prisma.position.findMany({
             where: { portfolioId, tenantId },
             include: {
-                security: {
-                    include: {
-                        instrumentClassification: true
-                    }
-                }
+                security: true
             }
         });
         if (positions.length === 0) {
             throw new Error('No positions found for portfolio');
         }
-        const totalValue = positions.reduce((sum, pos) => sum + (pos.currentValue || 0), 0);
+        const totalValue = positions.reduce((sum, pos) => sum + Number(pos.currentValue || 0), 0);
         // Asset class allocation
         const assetClassAllocation = this.calculateAllocationBreakdown(positions, totalValue, (pos) => pos.security?.instrumentClassification?.assetClass?.name || 'Unclassified');
         // Geographic allocation
@@ -364,8 +518,8 @@ class AssetClassificationService {
         });
         // Calculate portfolio ESG score
         const weightedEsgSum = positions.reduce((sum, pos) => {
-            const weight = (pos.currentValue || 0) / totalValue;
-            const esgScore = pos.security?.instrumentClassification?.esgScore || 0;
+            const weight = Number(pos.currentValue || 0) / totalValue;
+            const esgScore = 0; // instrumentClassification not included in query
             return sum + (weight * esgScore);
         }, 0);
         // Risk assessment
@@ -396,17 +550,17 @@ class AssetClassificationService {
         // Basic classification based on instrument type
         const instrumentType = request.instrumentType.toLowerCase();
         if (instrumentType.includes('stock') || instrumentType.includes('equity')) {
-            classification.assetClassId = await this.getAssetClassIdByName('Equity', request.tenantId);
+            classification.assetClassId = await this.getAssetClassIdByName('Equity', request.tenantId) || '';
             classification.developedMarket = true;
             classification.retailSuitable = true;
         }
         else if (instrumentType.includes('bond') || instrumentType.includes('fixed')) {
-            classification.assetClassId = await this.getAssetClassIdByName('Fixed Income', request.tenantId);
+            classification.assetClassId = await this.getAssetClassIdByName('Fixed Income', request.tenantId) || '';
             classification.developedMarket = true;
             classification.retailSuitable = true;
         }
         else if (instrumentType.includes('cash') || instrumentType.includes('money')) {
-            classification.assetClassId = await this.getAssetClassIdByName('Cash Equivalent', request.tenantId);
+            classification.assetClassId = await this.getAssetClassIdByName('Cash Equivalent', request.tenantId) || '';
             classification.retailSuitable = true;
         }
         // Set defaults

@@ -505,7 +505,7 @@ The SLA is now back within acceptable limits.
         }
         catch (error) {
             notification.status = 'failed';
-            notification.error = error.message;
+            notification.error = error instanceof Error ? error.message : 'Unknown error';
             notification.retryCount++;
             if (notification.retryCount < this.config.notificationRetryAttempts) {
                 // Re-queue for retry

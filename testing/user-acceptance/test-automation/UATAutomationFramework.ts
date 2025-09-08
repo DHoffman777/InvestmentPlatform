@@ -147,7 +147,7 @@ export class UATAutomationFramework {
     });
 
     page.on('pageerror', (error) => {
-      console.error(`[${browserId}] Page Error: ${error.message}`);
+      console.error(`[${browserId}] Page Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     });
 
     this.contexts.set(sessionId, context);
@@ -184,7 +184,7 @@ export class UATAutomationFramework {
 
     // Wait for successful login
     await page.waitForSelector('[data-testid="dashboard"]', { timeout: 10000 });
-    await expect(page.locator('[data-testid="user-profile"]')).toContainText(user.username);
+    await (expect as any)(page.locator('[data-testid="user-profile"]')).toContainText(user.username);
   }
 
   // Test Case: TC-001 - User Authentication
@@ -265,7 +265,7 @@ export class UATAutomationFramework {
 
         // Verify portfolio creation
         await page.waitForSelector('[data-testid="portfolio-success"]');
-        await expect(page.locator('[data-testid="portfolio-list"]'))
+        await (expect as any)(page.locator('[data-testid="portfolio-list"]'))
           .toContainText('UAT Test Portfolio');
 
         // Test position management
@@ -277,9 +277,9 @@ export class UATAutomationFramework {
         await page.click('[data-testid="add-position-confirm"]');
 
         // Verify position addition
-        await expect(page.locator('[data-testid="positions-table"]'))
+        await (expect as any)(page.locator('[data-testid="positions-table"]'))
           .toContainText('AAPL');
-        await expect(page.locator('[data-testid="portfolio-value"]'))
+        await (expect as any)(page.locator('[data-testid="portfolio-value"]'))
           .toContainText('15,000');
 
         result = {
@@ -340,7 +340,7 @@ export class UATAutomationFramework {
 
         // Wait for assessment completion
         await page.waitForSelector('[data-testid="assessment-result"]');
-        await expect(page.locator('[data-testid="suitability-determination"]'))
+        await (expect as any)(page.locator('[data-testid="suitability-determination"]'))
           .toBeVisible();
 
         // Test AML screening
@@ -354,7 +354,7 @@ export class UATAutomationFramework {
 
         // Verify AML check completion
         await page.waitForSelector('[data-testid="aml-result"]');
-        await expect(page.locator('[data-testid="risk-level"]'))
+        await (expect as any)(page.locator('[data-testid="risk-level"]'))
           .toBeVisible();
 
         // Test violation recording
@@ -369,7 +369,7 @@ export class UATAutomationFramework {
 
         // Verify violation recording
         await page.waitForSelector('[data-testid="violation-success"]');
-        await expect(page.locator('[data-testid="violations-list"]'))
+        await (expect as any)(page.locator('[data-testid="violations-list"]'))
           .toContainText('UAT Test Violation');
 
         result = {
@@ -431,17 +431,17 @@ export class UATAutomationFramework {
         await page.waitForSelector('[data-testid="report-results"]', { timeout: 30000 });
         
         // Verify report content
-        await expect(page.locator('[data-testid="twr-value"]')).toBeVisible();
-        await expect(page.locator('[data-testid="benchmark-comparison"]')).toBeVisible();
-        await expect(page.locator('[data-testid="performance-chart"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="twr-value"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="benchmark-comparison"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="performance-chart"]')).toBeVisible();
 
         // Test attribution analysis
         await page.click('[data-testid="attribution-tab"]');
         await page.click('[data-testid="generate-attribution"]');
         
         await page.waitForSelector('[data-testid="attribution-table"]');
-        await expect(page.locator('[data-testid="sector-attribution"]')).toBeVisible();
-        await expect(page.locator('[data-testid="security-attribution"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="sector-attribution"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="security-attribution"]')).toBeVisible();
 
         // Test report export
         await page.click('[data-testid="export-dropdown"]');
@@ -513,8 +513,8 @@ export class UATAutomationFramework {
         await this.authenticateUser(testId, 'client');
 
         // Test responsive design
-        await expect(page.locator('[data-testid="mobile-dashboard"]')).toBeVisible();
-        await expect(page.locator('[data-testid="portfolio-summary"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="mobile-dashboard"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="portfolio-summary"]')).toBeVisible();
 
         // Test touch interactions
         await page.tap('[data-testid="portfolio-card"]');
@@ -524,7 +524,7 @@ export class UATAutomationFramework {
         if (device.name.includes('iPhone') || device.name.includes('Samsung')) {
           await page.click('[data-testid="enable-biometric"]');
           await page.click('[data-testid="simulate-biometric"]');
-          await expect(page.locator('[data-testid="biometric-success"]')).toBeVisible();
+          await (expect as any)(page.locator('[data-testid="biometric-success"]')).toBeVisible();
         }
 
         result = {
@@ -564,21 +564,21 @@ export class UATAutomationFramework {
   private async verifyRoleBasedAccess(page: Page, role: string): Promise<void> {
     switch (role) {
       case 'admin':
-        await expect(page.locator('[data-testid="admin-menu"]')).toBeVisible();
-        await expect(page.locator('[data-testid="user-management"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="admin-menu"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="user-management"]')).toBeVisible();
         break;
       case 'portfolio_manager':
-        await expect(page.locator('[data-testid="portfolios-menu"]')).toBeVisible();
-        await expect(page.locator('[data-testid="trading-menu"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="portfolios-menu"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="trading-menu"]')).toBeVisible();
         break;
       case 'advisor':
-        await expect(page.locator('[data-testid="clients-menu"]')).toBeVisible();
-        await expect(page.locator('[data-testid="reports-menu"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="clients-menu"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="reports-menu"]')).toBeVisible();
         break;
       case 'client':
-        await expect(page.locator('[data-testid="portfolio-view"]')).toBeVisible();
-        await expect(page.locator('[data-testid="documents-menu"]')).toBeVisible();
-        await expect(page.locator('[data-testid="admin-menu"]')).not.toBeVisible();
+        await (expect as any)(page.locator('[data-testid="portfolio-view"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="documents-menu"]')).toBeVisible();
+        await (expect as any)(page.locator('[data-testid="admin-menu"]')).not.toBeVisible();
         break;
     }
   }
@@ -594,7 +594,7 @@ export class UATAutomationFramework {
     await page.goto(`${this.config.baseUrl}/portfolios`);
     
     // Should be redirected to login
-    await expect(page.locator('[data-testid="login-form"]')).toBeVisible();
+    await (expect as any)(page.locator('[data-testid="login-form"]')).toBeVisible();
   }
 
   private async captureScreenshots(testId: string, page: Page): Promise<string[]> {

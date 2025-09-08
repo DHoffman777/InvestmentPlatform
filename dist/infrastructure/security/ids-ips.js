@@ -67,13 +67,13 @@ class IntrusionDetectionSystem extends events_1.EventEmitter {
             this.emit('analysisError', {
                 sourceIp,
                 destinationIp,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
             return {
                 threats: [],
                 action: 'allow',
-                reason: `Analysis error: ${error.message}`
+                reason: `Analysis error: ${error instanceof Error ? error.message : 'Unknown error'}`
             };
         }
     }
@@ -695,7 +695,7 @@ class IntrusionDetectionSystem extends events_1.EventEmitter {
             catch (error) {
                 this.emit('threatFeedError', {
                     feedId: feed.id,
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }

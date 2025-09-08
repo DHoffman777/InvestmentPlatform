@@ -8,8 +8,8 @@ class MachineLearningInsightsService {
     eventPublisher;
     insights = new Map();
     insightTemplates = new Map();
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    constructor(eventPublisher) {
+        this.eventPublisher = eventPublisher || new eventPublisher_1.EventPublisher('MachineLearningInsightsService');
         this.initializeInsightTemplates();
     }
     async generateInsights(request) {

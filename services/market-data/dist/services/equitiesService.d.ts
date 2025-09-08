@@ -1,5 +1,5 @@
 import { PrismaClient, Security } from '@prisma/client';
-import { Decimal } from 'decimal.js';
+import { Prisma } from '@prisma/client';
 export interface EquityData {
     symbol: string;
     name: string;
@@ -12,24 +12,24 @@ export interface EquityData {
     country?: string;
     sector?: string;
     industry?: string;
-    marketCap?: Decimal;
-    sharesOutstanding?: Decimal;
-    dividendYield?: Decimal;
-    peRatio?: Decimal;
-    pbRatio?: Decimal;
-    beta?: Decimal;
+    marketCap?: Prisma.Decimal;
+    sharesOutstanding?: Prisma.Decimal;
+    dividendYield?: Prisma.Decimal;
+    peRatio?: Prisma.Decimal;
+    pbRatio?: Prisma.Decimal;
+    beta?: Prisma.Decimal;
     dividendFrequency?: 'ANNUAL' | 'SEMI_ANNUAL' | 'QUARTERLY' | 'MONTHLY' | 'SPECIAL';
     isActive?: boolean;
     listingDate?: Date;
 }
 export interface PreferredStockData extends EquityData {
     equityType: 'PREFERRED_STOCK';
-    dividendRate: Decimal;
-    parValue: Decimal;
-    callPrice?: Decimal;
+    dividendRate: Prisma.Decimal;
+    parValue: Prisma.Decimal;
+    callPrice?: Prisma.Decimal;
     callDate?: Date;
     convertible?: boolean;
-    conversionRatio?: Decimal;
+    conversionRatio?: Prisma.Decimal;
     cumulative: boolean;
     perpetual: boolean;
     maturityDate?: Date;
@@ -58,7 +58,7 @@ export declare class EquitiesService {
         minMarketCap?: number;
         maxMarketCap?: number;
         limit?: number;
-    }): Promise<Security[]>;
+    }): Promise<any[]>;
     getDividendHistory(symbol: string, limit?: number): Promise<any[]>;
     calculateDividendMetrics(symbol: string): Promise<{
         dividendYield: number | null;

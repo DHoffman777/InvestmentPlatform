@@ -85,7 +85,7 @@ export const handleApiError = (error: any): ApiError => {
   }
   
   return {
-    message: error.message || 'An unexpected error occurred',
+    message: error instanceof Error ? error.message : 'An unexpected error occurred',
     code: 'UNKNOWN_ERROR',
   };
 };

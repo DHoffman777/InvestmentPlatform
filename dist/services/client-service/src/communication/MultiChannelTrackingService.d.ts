@@ -144,12 +144,12 @@ export declare enum TransformationType {
 }
 export interface ChannelAdapter {
     channel: CommunicationChannel;
-    connect(): Promise<void>;
-    disconnect(): Promise<void>;
+    connect(): Promise<any>;
+    disconnect(): Promise<any>;
     isConnected(): boolean;
     fetchMessages(since?: Date): Promise<CommunicationRecord[]>;
     sendMessage(message: OutgoingMessage): Promise<string>;
-    updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<void>;
+    updateMessageStatus(messageId: string, status: CommunicationStatus): Promise<any>;
     searchMessages(query: ChannelSearchQuery): Promise<CommunicationRecord[]>;
     getHealth(): Promise<ChannelHealthStatus>;
 }
@@ -203,8 +203,8 @@ export declare class MultiChannelTrackingService extends EventEmitter {
     private isRunning;
     private metricsCollector;
     constructor(config: MultiChannelTrackingConfiguration);
-    startTracking(): Promise<void>;
-    stopTracking(): Promise<void>;
+    startTracking(): Promise<any>;
+    stopTracking(): Promise<any>;
     syncChannel(channel: CommunicationChannel, since?: Date): Promise<number>;
     sendMessage(message: OutgoingMessage, channel: CommunicationChannel): Promise<string>;
     searchMessages(query: CommunicationSearchQuery): Promise<CommunicationRecord[]>;

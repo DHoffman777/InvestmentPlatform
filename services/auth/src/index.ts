@@ -85,13 +85,13 @@ process.on('SIGTERM', async () => {
     
     logger.info('All connections closed successfully');
     process.exit(0);
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error during shutdown:', error);
     process.exit(1);
   }
 });
 
-async function startServer(): Promise<void> {
+async function startServer(): Promise<any> {
   try {
     // Initialize services
     const cache = CacheService.getInstance();
@@ -102,7 +102,7 @@ async function startServer(): Promise<void> {
       logger.info(`Auth Service running on port ${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Failed to start server:', error);
     process.exit(1);
   }
@@ -115,3 +115,4 @@ startServer().catch((error) => {
 });
 
 export default app;
+

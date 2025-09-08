@@ -207,7 +207,7 @@ class CommunicationAnalyticsService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            this.emit('analyticsError', { type: 'realTime', error: error.message });
+            this.emit('analyticsError', { type: 'realTime', error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async performHourlyAnalysis() {
@@ -223,7 +223,7 @@ class CommunicationAnalyticsService extends events_1.EventEmitter {
             this.emit('hourlyAnalysisCompleted', { timestamp: new Date() });
         }
         catch (error) {
-            this.emit('analyticsError', { type: 'hourly', error: error.message });
+            this.emit('analyticsError', { type: 'hourly', error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async performDailyAnalysis() {
@@ -240,7 +240,7 @@ class CommunicationAnalyticsService extends events_1.EventEmitter {
             this.emit('dailyAnalysisCompleted', { timestamp: new Date() });
         }
         catch (error) {
-            this.emit('analyticsError', { type: 'daily', error: error.message });
+            this.emit('analyticsError', { type: 'daily', error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async performWeeklyAnalysis() {
@@ -256,7 +256,7 @@ class CommunicationAnalyticsService extends events_1.EventEmitter {
             this.emit('weeklyAnalysisCompleted', { timestamp: new Date() });
         }
         catch (error) {
-            this.emit('analyticsError', { type: 'weekly', error: error.message });
+            this.emit('analyticsError', { type: 'weekly', error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     aggregateByField(communications, field) {

@@ -474,7 +474,6 @@ class AccountSecurityDashboardService extends events_1.EventEmitter {
             description: `Session terminated: ${reason}`,
             details: {
                 sessionId,
-                reason,
                 userAgent: session.metadata.userAgent || 'unknown',
                 requestId: (0, crypto_1.randomUUID)()
             },

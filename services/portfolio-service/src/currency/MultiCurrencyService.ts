@@ -124,11 +124,11 @@ export class MultiCurrencyService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('currencyError', {
         operation: 'add_currency',
         currencyCode: currency.code,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
       throw error;
@@ -247,12 +247,12 @@ export class MultiCurrencyService extends EventEmitter {
 
       return conversion;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('conversionError', {
         fromCurrency,
         toCurrency,
         amount,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
       throw error;
@@ -306,12 +306,12 @@ export class MultiCurrencyService extends EventEmitter {
 
       return hedge;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('hedgeError', {
         operation: 'create_forward',
         fromCurrency,
         toCurrency,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
       throw error;
@@ -365,7 +365,7 @@ export class MultiCurrencyService extends EventEmitter {
   /**
    * Update exchange rates from providers
    */
-  public async updateExchangeRates(): Promise<void> {
+  public async updateExchangeRates(): Promise<any> {
     try {
       for (const provider of this.rateProviders.filter(p => p.active)) {
         const rates = await this.fetchRatesFromProvider(provider);
@@ -382,9 +382,9 @@ export class MultiCurrencyService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('rateUpdateError', {
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date()
       });
     }
@@ -427,7 +427,7 @@ export class MultiCurrencyService extends EventEmitter {
   /**
    * Mark-to-market all currency hedges
    */
-  public async markToMarketHedges(): Promise<void> {
+  public async markToMarketHedges(): Promise<any> {
     for (const [hedgeId, hedge] of this.hedges.entries()) {
       if (!hedge.active) continue;
 
@@ -637,3 +637,4 @@ export class MultiCurrencyService extends EventEmitter {
 }
 
 export default MultiCurrencyService;
+

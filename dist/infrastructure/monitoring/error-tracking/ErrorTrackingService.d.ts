@@ -126,5 +126,5 @@ export declare class ErrorTrackingService extends EventEmitter {
     addErrorPattern(pattern: ErrorPattern): void;
     removeErrorPattern(patternId: string): boolean;
     getErrorPatterns(): ErrorPattern[];
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

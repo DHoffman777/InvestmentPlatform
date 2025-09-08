@@ -1,4 +1,5 @@
 import { Decimal } from '@prisma/client/runtime/library';
+import type { DocumentDeliveryPreference } from '@prisma/client';
 
 // Client Profile Types
 export enum ClientType {
@@ -41,11 +42,7 @@ export enum LiquidityNeeds {
   IMMEDIATE = 'IMMEDIATE'
 }
 
-export enum DocumentDeliveryPreference {
-  ELECTRONIC = 'ELECTRONIC',
-  PAPER = 'PAPER',
-  BOTH = 'BOTH'
-}
+// DocumentDeliveryPreference is now imported from Prisma above
 
 export enum CommunicationMethod {
   EMAIL = 'EMAIL',

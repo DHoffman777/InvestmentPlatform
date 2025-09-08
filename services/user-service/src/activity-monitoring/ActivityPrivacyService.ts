@@ -261,6 +261,13 @@ export class ActivityPrivacyService extends EventEmitter {
   private anonymizationCache: Map<string, any> = new Map();
   private pseudonymMappings: Map<string, string> = new Map();
 
+  private getErrorMessage(error: unknown): string {
+    if ((error as any) instanceof Error) {
+      return (error as Error).message;
+    }
+    return String(error);
+  }
+
   constructor() {
     super();
     this.initializeDefaultPolicies();
@@ -312,7 +319,11 @@ export class ActivityPrivacyService extends EventEmitter {
         processingMethod: ProcessingOperation.ANALYSIS,
         accessRequester: 'system',
         justification: `Activity processing under policy ${policy.name}`,
-        riskAssessment: this.assessRisk(activity, rule)
+        riskAssessment: this.assessRisk(activity, policy.rules[0] || {} as PrivacyRule),
+        thirdPartiesInvolved: [],
+        crossBorderTransfer: false,
+        destinationCountries: [],
+        safeguards: []
       });
     }
 
@@ -395,7 +406,11 @@ export class ActivityPrivacyService extends EventEmitter {
       accessRequester: newConsent.userId,
       justification: 'User consent recording',
       consentReference: newConsent.id,
-      riskAssessment: RiskLevel.LOW
+      riskAssessment: RiskLevel.LOW,
+      thirdPartiesInvolved: [],
+      crossBorderTransfer: false,
+      destinationCountries: [],
+      safeguards: []
     });
 
     return newConsent;
@@ -430,7 +445,11 @@ export class ActivityPrivacyService extends EventEmitter {
       accessRequester: existingConsent.userId,
       justification: `User consent withdrawal: ${reason}`,
       consentReference: existingConsent.id,
-      riskAssessment: RiskLevel.MEDIUM
+      riskAssessment: RiskLevel.MEDIUM,
+      thirdPartiesInvolved: [],
+      crossBorderTransfer: false,
+      destinationCountries: [],
+      safeguards: []
     });
 
     return true;
@@ -487,7 +506,11 @@ export class ActivityPrivacyService extends EventEmitter {
       processingMethod: ProcessingOperation.ACCESS,
       accessRequester: userId,
       justification: 'GDPR Article 20 - Right to data portability',
-      riskAssessment: RiskLevel.MEDIUM
+      riskAssessment: RiskLevel.MEDIUM,
+      thirdPartiesInvolved: [],
+      crossBorderTransfer: false,
+      destinationCountries: [],
+      safeguards: []
     });
 
     return {
@@ -588,7 +611,7 @@ export class ActivityPrivacyService extends EventEmitter {
     };
   }
 
-  private async validatePolicyCompliance(policy: PrivacyPolicy): Promise<void> {
+  private async validatePolicyCompliance(policy: PrivacyPolicy): Promise<any> {
     // Validate against GDPR, CCPA, and other regulations
     if (policy.consentRequired && policy.legalBasis.includes(LegalBasis.LEGITIMATE_INTERESTS)) {
       throw new Error('Consent required policies cannot use legitimate interests as legal basis');
@@ -728,7 +751,7 @@ export class ActivityPrivacyService extends EventEmitter {
     return RiskLevel.LOW;
   }
 
-  private async logPrivacyOperation(operation: Omit<PrivacyAuditLog, 'id' | 'timestamp' | 'complianceCheck' | 'violations'>): Promise<void> {
+  private async logPrivacyOperation(operation: Omit<PrivacyAuditLog, 'id' | 'timestamp' | 'complianceCheck' | 'violations'>): Promise<any> {
     const log: PrivacyAuditLog = {
       id: randomUUID(),
       timestamp: new Date(),
@@ -910,7 +933,7 @@ export class ActivityPrivacyService extends EventEmitter {
     return method === ConsentMethod.EXPLICIT_OPT_IN;
   }
 
-  private async processDataSubjectRightAsync(requestId: string): Promise<void> {
+  private async processDataSubjectRightAsync(requestId: string): Promise<any> {
     const request = this.dataSubjectRights.get(requestId);
     if (!request) return;
 
@@ -934,20 +957,20 @@ export class ActivityPrivacyService extends EventEmitter {
 
       request.status = RightRequestStatus.COMPLETED;
       request.responseDate = new Date();
-    } catch (error) {
+    } catch (error: any) {
       request.status = RightRequestStatus.REJECTED;
-      request.processingNotes.push(`Error: ${error.message}`);
+      request.processingNotes.push(`Error: ${this.getErrorMessage(error)}`);
     }
 
     this.emit('dataSubjectRightStatusChanged', request);
   }
 
-  private async processAccessRight(request: DataSubjectRights): Promise<void> {
+  private async processAccessRight(request: DataSubjectRights): Promise<any> {
     request.responseData = await this.exportUserData(request.userId, request.tenantId);
     request.processingNotes.push('Data export completed');
   }
 
-  private async processErasureRight(request: DataSubjectRights): Promise<void> {
+  private async processErasureRight(request: DataSubjectRights): Promise<any> {
     // Check if erasure is legally permissible
     const canErase = await this.canEraseUserData(request.userId, request.tenantId);
     
@@ -960,7 +983,7 @@ export class ActivityPrivacyService extends EventEmitter {
     }
   }
 
-  private async processPortabilityRight(request: DataSubjectRights): Promise<void> {
+  private async processPortabilityRight(request: DataSubjectRights): Promise<any> {
     request.responseData = await this.exportUserData(request.userId, request.tenantId);
     request.processingNotes.push('Portable data export completed');
   }
@@ -1167,7 +1190,7 @@ export class ActivityPrivacyService extends EventEmitter {
               {
                 field: 'ipAddress',
                 condition: 'always',
-                action: 'mask',
+                action: 'mask' as const,
                 parameters: { visibleChars: 2 }
               }
             ]
@@ -1179,3 +1202,4 @@ export class ActivityPrivacyService extends EventEmitter {
     defaultPolicies.forEach(policy => this.createPrivacyPolicy(policy));
   }
 }
+

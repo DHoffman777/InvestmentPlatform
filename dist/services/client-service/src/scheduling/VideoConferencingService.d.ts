@@ -345,7 +345,7 @@ export declare class VideoConferencingService extends EventEmitter {
     }): Promise<VideoMeeting[]>;
     updateMeeting(meetingId: string, updates: Partial<VideoMeeting>): Promise<VideoMeeting>;
     private updateExternalMeeting;
-    deleteMeeting(meetingId: string): Promise<void>;
+    deleteMeeting(meetingId: string): Promise<any>;
     private deleteExternalMeeting;
     startMeeting(meetingId: string): Promise<VideoMeeting>;
     endMeeting(meetingId: string): Promise<VideoMeeting>;
@@ -360,7 +360,7 @@ export declare class VideoConferencingService extends EventEmitter {
     private completeRecordingProcessing;
     getRecordings(meetingId: string): Promise<VideoMeeting['recording']['recordings']>;
     downloadRecording(meetingId: string, recordingId: string): Promise<string>;
-    processWebhookEvent(providerId: string, eventType: string, data: any, signature?: string): Promise<void>;
+    processWebhookEvent(providerId: string, eventType: string, data: any, signature?: string): Promise<any>;
     private processWebhooks;
     private processWebhookEventInternal;
     private verifyWebhookSignature;
@@ -418,6 +418,6 @@ export declare class VideoConferencingService extends EventEmitter {
         };
         timestamp: Date;
     }>;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }
 export default VideoConferencingService;

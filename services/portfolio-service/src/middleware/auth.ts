@@ -1,23 +1,26 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
+
+// Removed local interface - using global Express namespace declaration
 import jwt from 'jsonwebtoken';
 import { logger } from '../utils/logger';
 
-interface JWTPayload {
+interface LocalJWTPayload {
   sub: string;
+  id: string;
+  userId: string;
+  clientId?: string;
   email: string;
   tenantId: string;
   roles: string[];
   permissions: string[];
   iat: number;
   exp: number;
+  sessionId?: string;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload;
-    }
-  }
+// Extend the Express Request type locally
+interface Request extends ExpressRequest {
+  user?: LocalJWTPayload;
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -42,7 +45,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
       });
     }
     
-    const decoded = jwt.verify(token, accessSecret) as JWTPayload;
+    const decoded = jwt.verify(token, accessSecret) as LocalJWTPayload;
     
     // Attach user information to request
     req.user = decoded;
@@ -54,21 +57,21 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     });
     
     next();
-  } catch (error) {
+  } catch (error: any) {
     logger.warn('Authentication failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
       ip: req.ip,
       userAgent: req.get('User-Agent'),
     });
     
-    if (error instanceof jwt.TokenExpiredError) {
+    if ((error as any) instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
         error: 'Token expired',
         message: 'Please login again',
       });
     }
     
-    if (error instanceof jwt.JsonWebTokenError) {
+    if ((error as any) instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({
         error: 'Invalid token',
         message: 'Please provide a valid token',
@@ -91,12 +94,12 @@ export const requireRole = (requiredRoles: string[]) => {
       });
     }
     
-    const userRoles = req.user.roles || [];
+    const userRoles = (req.user as LocalJWTPayload).roles || [];
     const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
     
     if (!hasRequiredRole) {
       logger.warn('Access denied - insufficient roles', {
-        userId: req.user.sub,
+        userId: (req.user as LocalJWTPayload).sub,
         userRoles,
         requiredRoles,
       });
@@ -120,14 +123,14 @@ export const requirePermission = (requiredPermissions: string[]) => {
       });
     }
     
-    const userPermissions = req.user.permissions || [];
+    const userPermissions = (req.user as LocalJWTPayload).permissions || [];
     const hasRequiredPermission = requiredPermissions.some(permission => 
       userPermissions.includes(permission)
     );
     
     if (!hasRequiredPermission) {
       logger.warn('Access denied - insufficient permissions', {
-        userId: req.user.sub,
+        userId: (req.user as LocalJWTPayload).sub,
         userPermissions,
         requiredPermissions,
       });
@@ -152,10 +155,10 @@ export const requireTenantAccess = (req: Request, res: Response, next: NextFunct
   
   const requestedTenantId = req.params.tenantId || req.query.tenantId || req.body.tenantId;
   
-  if (requestedTenantId && requestedTenantId !== req.user.tenantId) {
+  if (requestedTenantId && requestedTenantId !== (req.user as LocalJWTPayload).tenantId) {
     logger.warn('Cross-tenant access attempted', {
-      userId: req.user.sub,
-      userTenantId: req.user.tenantId,
+      userId: (req.user as LocalJWTPayload).sub,
+      userTenantId: (req.user as LocalJWTPayload).tenantId,
       requestedTenantId,
     });
     
@@ -167,3 +170,7 @@ export const requireTenantAccess = (req: Request, res: Response, next: NextFunct
   
   next();
 };
+
+export const authenticateToken = authMiddleware;
+export const requireAuth = authMiddleware;
+

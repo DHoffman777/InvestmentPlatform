@@ -59,9 +59,9 @@ export declare class SLABreachDetectionService extends EventEmitter {
     private notificationQueues;
     constructor(config: BreachDetectionConfig);
     detectBreaches(slaId: string, metric: SLAMetric): Promise<SLABreach[]>;
-    processBreach(breach: SLABreach, sla: SLADefinition): Promise<void>;
-    acknowledgeBreachInternal(breachId: string, userId: string, comments?: string): Promise<void>;
-    resolveBreach(breachId: string, userId: string, resolution: string): Promise<void>;
+    processBreach(breach: SLABreach, sla: SLADefinition): Promise<any>;
+    acknowledgeBreachInternal(breachId: string, userId: string, comments?: string): Promise<any>;
+    resolveBreach(breachId: string, userId: string, resolution: string): Promise<any>;
     getActiveBreaches(slaId?: string): Promise<SLABreach[]>;
     getBreachHistory(slaId: string, timeWindow: {
         start: Date;
@@ -107,5 +107,5 @@ export declare class SLABreachDetectionService extends EventEmitter {
     private getSLA;
     private generateBreachId;
     private generateNotificationId;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

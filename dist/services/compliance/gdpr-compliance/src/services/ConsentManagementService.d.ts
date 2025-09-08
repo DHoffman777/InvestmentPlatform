@@ -62,5 +62,5 @@ export declare class ConsentManagementService extends EventEmitter {
         isValid: boolean;
         issues: string[];
     }>;
-    cleanup(): Promise<void>;
+    cleanup(): Promise<any>;
 }

@@ -177,7 +177,7 @@ regulatoryValidatorService.on('batchValidationCompleted', ({ request, result }) 
     console.log(`Batch validation completed: ${request.requestId} - ${result.overallStatus}`);
 });
 regulatoryValidatorService.on('batchValidationFailed', ({ request, error }) => {
-    console.error(`Batch validation failed: ${request.requestId} - ${error.message}`);
+    console.error(`Batch validation failed: ${request.requestId} - ${error instanceof Error ? error.message : 'Unknown error'}`);
 });
 regulatoryValidatorService.on('error', (error) => {
     console.error('Regulatory Validator Service error:', error);

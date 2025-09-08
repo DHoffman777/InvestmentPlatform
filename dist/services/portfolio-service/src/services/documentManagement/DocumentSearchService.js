@@ -84,7 +84,7 @@ class DocumentSearchService {
         catch (error) {
             this.logger.error('Document search failed', {
                 query: request.query,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             throw error;
@@ -119,7 +119,7 @@ class DocumentSearchService {
         }
         catch (error) {
             this.logger.error('Semantic search failed', {
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error.stack
             });
             throw error;
@@ -559,7 +559,7 @@ class DocumentSearchService {
             this.logger.info('Document search service initialized');
         }
         catch (error) {
-            this.logger.error('Failed to initialize search service', { error: error.message });
+            this.logger.error('Failed to initialize search service', { error: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async publishSearchEvent(request, result) {

@@ -84,18 +84,6 @@ export declare class SLAManagementController extends EventEmitter {
     private getSLADefinition;
     private updateSLADefinition;
     private generateSLAId;
-    start(): Promise<void>;
-    shutdown(): Promise<void>;
-}
-declare global {
-    namespace Express {
-        interface Request {
-            requestId: string;
-            startTime: number;
-            user?: {
-                id: string;
-                role: string;
-            };
-        }
-    }
+    start(): Promise<any>;
+    shutdown(): Promise<any>;
 }

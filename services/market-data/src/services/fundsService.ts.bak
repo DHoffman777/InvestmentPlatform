@@ -1,0 +1,584 @@
+import { PrismaClient, Security } from '@prisma/client';
+import { logger } from '../utils/logger';
+import { Prisma } from '@prisma/client';
+
+export interface ETFData {
+  symbol: string;
+  name: string;
+  cusip?: string;
+  isin?: string;
+  fundType: 'ETF';
+  exchange: string;
+  currency?: string;
+  country?: string;
+  sector?: string;
+  category?: string;
+  
+  // ETF specific fields
+  managementFee: Prisma.Decimal;
+  expenseRatio: Prisma.Decimal;
+  trackingIndex?: string;
+  aum: Prisma.Decimal; // Assets Under Management
+  dividendYield?: Prisma.Decimal;
+  distributionFrequency?: 'ANNUAL' | 'SEMI_ANNUAL' | 'QUARTERLY' | 'MONTHLY';
+  
+  // Fund structure
+  fundFamily: string;
+  inceptionDate: Date;
+  primaryBenchmark?: string;
+  
+  // Trading characteristics
+  averageDailyVolume?: Prisma.Decimal;
+  navFrequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  
+  // Classification
+  assetClass: 'EQUITY_ETF' | 'BOND_ETF' | 'COMMODITY_ETF' | 'CURRENCY_ETF' | 'REAL_ESTATE_ETF' | 'MIXED_ETF';
+  investmentStyle?: 'GROWTH' | 'VALUE' | 'BLEND';
+  marketCapFocus?: 'LARGE_CAP' | 'MID_CAP' | 'SMALL_CAP' | 'MULTI_CAP';
+  geographicFocus?: 'DOMESTIC' | 'INTERNATIONAL' | 'EMERGING_MARKETS' | 'GLOBAL';
+  
+  // Risk metrics
+  beta?: Prisma.Decimal;
+  standardDeviation?: Prisma.Decimal;
+  
+  isActive?: boolean;
+}
+
+export interface MutualFundData {
+  symbol: string;
+  name: string;
+  cusip?: string;
+  isin?: string;
+  fundType: 'MUTUAL_FUND';
+  currency?: string;
+  country?: string;
+  sector?: string;
+  category?: string;
+  
+  // Mutual fund specific fields
+  managementFee: Prisma.Decimal;
+  expenseRatio: Prisma.Decimal;
+  frontLoadFee?: Prisma.Decimal;
+  backLoadFee?: Prisma.Decimal;
+  redemptionFee?: Prisma.Decimal;
+  
+  // Fund details
+  aum: Prisma.Decimal;
+  dividendYield?: Prisma.Decimal;
+  distributionFrequency?: 'ANNUAL' | 'SEMI_ANNUAL' | 'QUARTERLY' | 'MONTHLY';
+  
+  // Fund structure
+  fundFamily: string;
+  inceptionDate: Date;
+  primaryBenchmark?: string;
+  fundManager?: string;
+  
+  // Share classes
+  shareClass: 'A' | 'B' | 'C' | 'I' | 'R' | 'T' | 'Y';
+  minimumInvestment: Prisma.Decimal;
+  minimumSubsequent?: Prisma.Decimal;
+  
+  // Trading
+  navFrequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+  cutoffTime: string; // e.g., "4:00 PM ET"
+  settlementDays: number; // T+1, T+2, etc.
+  
+  // Classification
+  assetClass: 'EQUITY_FUND' | 'BOND_FUND' | 'MONEY_MARKET_FUND' | 'BALANCED_FUND' | 'ALTERNATIVE_FUND';
+  investmentStyle?: 'GROWTH' | 'VALUE' | 'BLEND';
+  marketCapFocus?: 'LARGE_CAP' | 'MID_CAP' | 'SMALL_CAP' | 'MULTI_CAP';
+  geographicFocus?: 'DOMESTIC' | 'INTERNATIONAL' | 'EMERGING_MARKETS' | 'GLOBAL';
+  
+  // Risk metrics
+  beta?: Prisma.Decimal;
+  standardDeviation?: Prisma.Decimal;
+  morningstarRating?: 1 | 2 | 3 | 4 | 5;
+  
+  // Status
+  isActive?: boolean;
+  isClosedToNewInvestors?: boolean;
+}
+
+export interface FundHolding {
+  fundId: string;
+  holdingName: string;
+  ticker?: string;
+  cusip?: string;
+  isin?: string;
+  weight: Prisma.Decimal; // Percentage weight in fund
+  shares?: Prisma.Decimal;
+  marketValue: Prisma.Decimal;
+  sector?: string;
+  country?: string;
+  asOfDate: Date;
+}
+
+export interface FundPerformance {
+  fundId: string;
+  period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' | '3Y' | '5Y' | '10Y' | 'YTD' | 'INCEPTION';
+  totalReturn: Prisma.Decimal;
+  annualizedReturn?: Prisma.Decimal;
+  benchmark?: string;
+  benchmarkReturn?: Prisma.Decimal;
+  alpha?: Prisma.Decimal;
+  beta?: Prisma.Decimal;
+  sharpeRatio?: Prisma.Decimal;
+  volatility?: Prisma.Decimal;
+  maxDrawdown?: Prisma.Decimal;
+  asOfDate: Date;
+}
+
+export class FundsService {
+  private prisma: PrismaClient;
+
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma;
+  }
+
+  // Create or update ETF
+  async upsertETF(etfData: ETFData): Promise<Security> {
+    try {
+      logger.info('Upserting ETF', {
+        symbol: etfData.symbol,
+        fundType: etfData.fundType,
+      });
+
+      const securityData = {
+        symbol: etfData.symbol.toUpperCase(),
+        name: etfData.name,
+        cusip: etfData.cusip,
+        isin: etfData.isin,
+        assetClass: 'ETF',
+        securityType: etfData.assetClass,
+        exchange: etfData.exchange,
+        currency: etfData.currency || 'USD',
+        country: etfData.country,
+        sector: etfData.sector,
+        industry: etfData.category,
+        marketCap: etfData.aum,
+        isActive: etfData.isActive ?? true,
+        listingDate: etfData.inceptionDate,
+      };
+
+      const metadata = {
+        fundType: etfData.fundType,
+        managementFee: etfData.managementFee.toString(),
+        expenseRatio: etfData.expenseRatio.toString(),
+        trackingIndex: etfData.trackingIndex,
+        aum: etfData.aum.toString(),
+        dividendYield: etfData.dividendYield?.toString(),
+        distributionFrequency: etfData.distributionFrequency,
+        fundFamily: etfData.fundFamily,
+        primaryBenchmark: etfData.primaryBenchmark,
+        averageDailyVolume: etfData.averageDailyVolume?.toString(),
+        navFrequency: etfData.navFrequency,
+        investmentStyle: etfData.investmentStyle,
+        marketCapFocus: etfData.marketCapFocus,
+        geographicFocus: etfData.geographicFocus,
+        beta: etfData.beta?.toString(),
+        standardDeviation: etfData.standardDeviation?.toString(),
+      };
+
+      const security = await this.prisma.security.upsert({
+        where: { symbol: securityData.symbol },
+        update: {
+          ...securityData,
+          updatedAt: new Date(),
+        },
+        create: securityData,
+      });
+
+      await this.storeFundMetadata(security.id, metadata);
+
+      logger.info('ETF upserted successfully', {
+        securityId: security.id,
+        symbol: security.symbol,
+      });
+
+      return security;
+    } catch (error: any) {
+      logger.error('Error upserting ETF', {
+        symbol: etfData.symbol,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  // Create or update mutual fund
+  async upsertMutualFund(fundData: MutualFundData): Promise<Security> {
+    try {
+      logger.info('Upserting mutual fund', {
+        symbol: fundData.symbol,
+        fundType: fundData.fundType,
+        shareClass: fundData.shareClass,
+      });
+
+      const securityData = {
+        symbol: fundData.symbol.toUpperCase(),
+        name: fundData.name,
+        cusip: fundData.cusip,
+        isin: fundData.isin,
+        assetClass: 'MUTUAL_FUND',
+        securityType: fundData.assetClass,
+        exchange: 'MUTUALFUND', // Mutual funds don't trade on exchanges
+        currency: fundData.currency || 'USD',
+        country: fundData.country,
+        sector: fundData.sector,
+        industry: fundData.category,
+        marketCap: fundData.aum,
+        isActive: fundData.isActive ?? true,
+        listingDate: fundData.inceptionDate,
+      };
+
+      const metadata = {
+        fundType: fundData.fundType,
+        managementFee: fundData.managementFee.toString(),
+        expenseRatio: fundData.expenseRatio.toString(),
+        frontLoadFee: fundData.frontLoadFee?.toString(),
+        backLoadFee: fundData.backLoadFee?.toString(),
+        redemptionFee: fundData.redemptionFee?.toString(),
+        aum: fundData.aum.toString(),
+        dividendYield: fundData.dividendYield?.toString(),
+        distributionFrequency: fundData.distributionFrequency,
+        fundFamily: fundData.fundFamily,
+        primaryBenchmark: fundData.primaryBenchmark,
+        fundManager: fundData.fundManager,
+        shareClass: fundData.shareClass,
+        minimumInvestment: fundData.minimumInvestment.toString(),
+        minimumSubsequent: fundData.minimumSubsequent?.toString(),
+        navFrequency: fundData.navFrequency,
+        cutoffTime: fundData.cutoffTime,
+        settlementDays: fundData.settlementDays,
+        investmentStyle: fundData.investmentStyle,
+        marketCapFocus: fundData.marketCapFocus,
+        geographicFocus: fundData.geographicFocus,
+        beta: fundData.beta?.toString(),
+        standardDeviation: fundData.standardDeviation?.toString(),
+        morningstarRating: fundData.morningstarRating,
+        isClosedToNewInvestors: fundData.isClosedToNewInvestors,
+      };
+
+      const security = await this.prisma.security.upsert({
+        where: { symbol: securityData.symbol },
+        update: {
+          ...securityData,
+          updatedAt: new Date(),
+        },
+        create: securityData,
+      });
+
+      await this.storeFundMetadata(security.id, metadata);
+
+      logger.info('Mutual fund upserted successfully', {
+        securityId: security.id,
+        symbol: security.symbol,
+        shareClass: fundData.shareClass,
+      });
+
+      return security;
+    } catch (error: any) {
+      logger.error('Error upserting mutual fund', {
+        symbol: fundData.symbol,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  // Search funds with advanced filtering
+  async searchFunds(filters: {
+    query?: string;
+    fundType?: 'ETF' | 'MUTUAL_FUND';
+    assetClass?: string;
+    investmentStyle?: 'GROWTH' | 'VALUE' | 'BLEND';
+    marketCapFocus?: 'LARGE_CAP' | 'MID_CAP' | 'SMALL_CAP' | 'MULTI_CAP';
+    geographicFocus?: 'DOMESTIC' | 'INTERNATIONAL' | 'EMERGING_MARKETS' | 'GLOBAL';
+    fundFamily?: string;
+    minAUM?: number;
+    maxExpenseRatio?: number;
+    minMorningstarRating?: number;
+    limit?: number;
+  }): Promise<any[]> {
+    try {
+      const {
+        query,
+        fundType,
+        assetClass,
+        minAUM,
+        maxExpenseRatio,
+        limit = 50,
+      } = filters;
+
+      const whereClause: any = {
+        assetClass: { in: ['ETF', 'MUTUAL_FUND'] },
+        isActive: true,
+      };
+
+      if (query) {
+        whereClause.OR = [
+          { symbol: { contains: query.toUpperCase() } },
+          { name: { contains: query, mode: 'insensitive' } },
+          { cusip: query },
+          { isin: query },
+        ];
+      }
+
+      if (fundType === 'ETF') {
+        whereClause.assetClass = 'ETF';
+      } else if (fundType === 'MUTUAL_FUND') {
+        whereClause.assetClass = 'MUTUAL_FUND';
+      }
+
+      if (assetClass) {
+        whereClause.securityType = assetClass;
+      }
+
+      if (minAUM !== undefined) {
+        whereClause.marketCap = { gte: new (Decimal as any)(minAUM) };
+      }
+
+      const securities = await this.prisma.security.findMany({
+        where: whereClause,
+        take: limit,
+        orderBy: [
+          { marketCap: 'desc' },
+          { symbol: 'asc' },
+        ],
+        include: {
+          quotes: {
+            take: 1,
+            orderBy: { quoteTime: 'desc' },
+          },
+        },
+      });
+
+      // Get metadata for each fund
+      const fundsWithMetadata = await Promise.all(
+        securities.map(async (security) => {
+          const metadata = await this.getFundMetadata(security.id);
+          
+          // Apply additional filters based on metadata
+          if (maxExpenseRatio && metadata.expenseRatio && 
+              parseFloat(metadata.expenseRatio) > maxExpenseRatio) {
+            return null;
+          }
+
+          if (filters.investmentStyle && metadata.investmentStyle !== filters.investmentStyle) {
+            return null;
+          }
+
+          if (filters.marketCapFocus && metadata.marketCapFocus !== filters.marketCapFocus) {
+            return null;
+          }
+
+          if (filters.geographicFocus && metadata.geographicFocus !== filters.geographicFocus) {
+            return null;
+          }
+
+          if (filters.fundFamily && metadata.fundFamily !== filters.fundFamily) {
+            return null;
+          }
+
+          if (filters.minMorningstarRating && metadata.morningstarRating && 
+              metadata.morningstarRating < filters.minMorningstarRating) {
+            return null;
+          }
+
+          return {
+            ...security,
+            marketCap: security.marketCap?.toNumber(),
+            fundMetadata: metadata,
+            latestQuote: security.quotes[0] ? {
+              ...security.quotes[0],
+              last: security.quotes[0].last?.toNumber(),
+              change: security.quotes[0].change?.toNumber(),
+              changePercent: security.quotes[0].changePercent?.toNumber(),
+            } : null,
+          };
+        })
+      );
+
+      const filteredFunds = fundsWithMetadata.filter(fund => fund !== null);
+
+      logger.info('Fund search completed', {
+        filters,
+        resultCount: filteredFunds.length,
+      });
+
+      return filteredFunds;
+    } catch (error: any) {
+      logger.error('Error searching funds', {
+        filters,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  // Get detailed fund information
+  async getFundDetails(symbol: string): Promise<any> {
+    try {
+      const security = await this.prisma.security.findUnique({
+        where: { 
+          symbol: symbol.toUpperCase(),
+          assetClass: { in: ['ETF', 'MUTUAL_FUND'] },
+        },
+        include: {
+          quotes: {
+            take: 5,
+            orderBy: { quoteTime: 'desc' },
+          },
+          historicalData: {
+            take: 30,
+            orderBy: { date: 'desc' },
+          },
+          corporateActions: {
+            where: {
+              actionType: 'DIVIDEND',
+              status: 'PROCESSED',
+            },
+            take: 12,
+            orderBy: { exDate: 'desc' },
+          },
+        },
+      });
+
+      if (!security) {
+        return null;
+      }
+
+      const metadata = await this.getFundMetadata(security.id);
+
+      return {
+        ...security,
+        marketCap: security.marketCap?.toNumber(),
+        recentQuotes: ((security as any).quotes || []).map((q: any) => ({
+          ...q,
+          last: q.last?.toNumber(),
+          change: q.change?.toNumber(),
+          changePercent: q.changePercent?.toNumber(),
+        })),
+        priceHistory: ((security as any).historicalData || []).map((h: any) => ({
+          ...h,
+          open: h.open.toNumber(),
+          high: h.high.toNumber(),
+          low: h.low.toNumber(),
+          close: h.close.toNumber(),
+          adjustedClose: h.adjustedClose.toNumber(),
+        })),
+        distributions: ((security as any).corporateActions || []).map((ca: any) => ({
+          ...ca,
+          value: ca.value?.toNumber(),
+        })),
+        fundMetadata: metadata,
+      };
+    } catch (error: any) {
+      logger.error('Error getting fund details', {
+        symbol,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  // Get fund families
+  async getFundFamilies(): Promise<{ name: string; count: number; totalAUM: number }[]> {
+    try {
+      // This would ideally be a proper aggregation query
+      // For now, we'll use the metadata stored in fundamentals
+      const fundamentals = await this.prisma.fundamental.findMany({
+        where: {
+          periodType: 'FUND_METADATA',
+        },
+        select: {
+          additionalData: true,
+          security: {
+            select: {
+              marketCap: true,
+            },
+          },
+        },
+      });
+
+      const familyData = new Map<string, { count: number; totalAUM: Prisma.Decimal }>();
+
+      fundamentals.forEach(fund => {
+        const metadata = fund.additionalData as any;
+        const fundFamily = metadata?.fundFamily;
+        const aum = fund.security?.marketCap || new (Decimal as any)(0);
+
+        if (fundFamily) {
+          const existing = familyData.get(fundFamily) || { count: 0, totalAUM: new (Decimal as any)(0) };
+          familyData.set(fundFamily, {
+            count: existing.count + 1,
+            totalAUM: existing.totalAUM.add(aum),
+          });
+        }
+      });
+
+      const result = Array.from(familyData.entries())
+        .map(([name, data]) => ({
+          name,
+          count: data.count,
+          totalAUM: data.totalAUM.toNumber(),
+        }))
+        .sort((a, b) => b.totalAUM - a.totalAUM);
+
+      return result;
+    } catch (error: any) {
+      logger.error('Error getting fund families', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  // Helper method to store fund metadata
+  private async storeFundMetadata(securityId: string, metadata: any): Promise<any> {
+    try {
+      await this.prisma.fundamental.upsert({
+        where: {
+          securityId_periodType_periodEnd: {
+            securityId,
+            periodType: 'FUND_METADATA',
+            periodEnd: new Date(),
+          },
+        },
+        update: {
+          additionalData: metadata,
+          updatedAt: new Date(),
+        },
+        create: {
+          securityId,
+          periodType: 'FUND_METADATA',
+          periodEnd: new Date(),
+          reportDate: new Date(),
+          additionalData: metadata,
+        },
+      });
+    } catch (error: any) {
+      logger.warn('Could not store fund metadata', { securityId, error });
+    }
+  }
+
+  // Helper method to retrieve fund metadata
+  private async getFundMetadata(securityId: string): Promise<any> {
+    try {
+      const metadata = await this.prisma.fundamental.findFirst({
+        where: {
+          securityId,
+          periodType: 'FUND_METADATA',
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+
+      return metadata?.additionalData || {};
+    } catch (error: any) {
+      logger.warn('Could not retrieve fund metadata', { securityId, error });
+      return {};
+    }
+  }
+}
+
+

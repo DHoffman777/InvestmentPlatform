@@ -4,9 +4,9 @@ export declare class ReportGenerationService {
     private eventPublisher;
     constructor();
     generateReport(tenantId: string, request: ReportRequest, userId: string): Promise<ReportJob>;
-    processReportJob(jobId: string): Promise<void>;
+    processReportJob(jobId: string): Promise<any>;
     scheduleReport(tenantId: string, scheduleData: Partial<ReportSchedule>, userId: string): Promise<ReportSchedule>;
-    executeScheduledReport(scheduleId: string): Promise<void>;
+    executeScheduledReport(scheduleId: string): Promise<any>;
     getReportJob(jobId: string): Promise<ReportJob | null>;
     getReportJobs(tenantId: string, options?: {
         templateId?: string;
@@ -20,8 +20,8 @@ export declare class ReportGenerationService {
         jobs: ReportJob[];
         totalCount: number;
     }>;
-    cancelReportJob(jobId: string, userId: string): Promise<void>;
-    retryReportJob(jobId: string, userId: string): Promise<void>;
+    cancelReportJob(jobId: string, userId: string): Promise<any>;
+    retryReportJob(jobId: string, userId: string): Promise<any>;
     private extractReportData;
     private processReportData;
     private generateReportOutput;

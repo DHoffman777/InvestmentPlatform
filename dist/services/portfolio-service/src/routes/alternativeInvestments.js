@@ -8,6 +8,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const client_1 = require("@prisma/client");
 const auth_1 = require("../middleware/auth");
+const validation_1 = require("../middleware/validation");
+const { body, param, query } = require('express-validator');
 const kafka_mock_1 = require("../utils/kafka-mock");
 const logger_1 = require("../utils/logger");
 const AlternativeInvestmentsService_1 = require("../services/alternatives/AlternativeInvestmentsService");
@@ -18,8 +20,13 @@ const kafkaService = (0, kafka_mock_1.getKafkaService)();
 const alternativeInvestmentsService = new AlternativeInvestmentsService_1.AlternativeInvestmentsService(prisma, kafkaService);
 // Apply authentication to all routes
 router.use(auth_1.requireAuth);
-// Create alternative investment
-router.post('/', async (req, res) => {
+// Create alternative investment  
+router.post('/', [
+    body('investmentData').exists().withMessage('investmentData is required'),
+    body('investmentData.investmentName').notEmpty().withMessage('investmentName is required'),
+    body('investmentData.investmentType').isIn(Object.values(AlternativeInvestments_1.AlternativeInvestmentType)).withMessage('Invalid investment type'),
+    validation_1.validateRequest
+], async (req, res) => {
     try {
         const request = req.body;
         // Validate required fields

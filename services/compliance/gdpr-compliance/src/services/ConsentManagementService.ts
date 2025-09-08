@@ -370,7 +370,7 @@ export class ConsentManagementService extends EventEmitter {
           await this.withdrawConsent(dataSubjectId, consent.id, reason);
           withdrawnCount++;
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to withdraw consent ${consent.id}:`, error);
         failedCount++;
       }
@@ -494,7 +494,7 @@ export class ConsentManagementService extends EventEmitter {
     dataSubjectId: string,
     consentId: string,
     reason?: string
-  ): Promise<void> {
+  ): Promise<any> {
     const logEntry = {
       timestamp: new Date(),
       action: 'CONSENT_WITHDRAWN',
@@ -563,7 +563,8 @@ export class ConsentManagementService extends EventEmitter {
     };
   }
 
-  public async cleanup(): Promise<void> {
+  public async cleanup(): Promise<any> {
     await this.redis.quit();
   }
 }
+

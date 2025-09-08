@@ -52,7 +52,7 @@ class RegulatoryValidatorService extends events_1.EventEmitter {
             console.error('API Error:', error);
             res.status(500).json({
                 error: 'Internal server error',
-                details: error.message,
+                details: error instanceof Error ? error.message : 'Unknown error',
                 requestId: req.headers['x-request-id'] || 'unknown'
             });
         });

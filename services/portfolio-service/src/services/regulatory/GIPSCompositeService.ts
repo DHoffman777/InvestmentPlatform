@@ -95,7 +95,7 @@ export class GIPSCompositeService {
   private composites: Map<string, GIPSComposite> = new Map();
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('GIPSComposite');
   }
 
   async createComposite(data: GIPSCompositeCreationData): Promise<GIPSComposite> {
@@ -159,7 +159,7 @@ export class GIPSCompositeService {
 
       return composite;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating GIPS composite:', error);
       throw error;
     }
@@ -220,7 +220,7 @@ export class GIPSCompositeService {
 
       return composite;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error adding performance data to GIPS composite:', error);
       throw error;
     }
@@ -327,7 +327,7 @@ export class GIPSCompositeService {
           }
 
           // Check for missing standard deviation (required for periods after 2011)
-          if (data.year >= 2011 && data.compositeStandardDeviation === undefined) {
+          if (data.year >= 2011 && data.compositesStandardDeviation === undefined) {
             warnings.push({
               section: 'Performance',
               field: `performanceData[${data.year}]`,
@@ -406,7 +406,7 @@ export class GIPSCompositeService {
 
       return validationResult;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error validating GIPS composite:', error);
       throw error;
     }
@@ -456,7 +456,7 @@ export class GIPSCompositeService {
         complianceChecklist
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating GIPS report:', error);
       throw error;
     }
@@ -684,7 +684,7 @@ export class GIPSCompositeService {
       },
       {
         requirement: 'Standard deviation presented (if required)',
-        status: composite.performanceData.some(d => d.year >= 2011 && d.compositeStandardDeviation !== undefined) ? 'compliant' : 'not_applicable'
+        status: composite.performanceData.some(d => d.year >= 2011 && d.compositesStandardDeviation !== undefined) ? 'compliant' : 'not_applicable'
       },
       {
         requirement: 'Composite dispersion presented (if applicable)',

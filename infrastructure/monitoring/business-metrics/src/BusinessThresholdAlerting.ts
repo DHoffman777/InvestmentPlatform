@@ -133,8 +133,8 @@ export class BusinessThresholdAlerting extends EventEmitter {
   private notificationChannels: Map<string, NotificationChannel> = new Map();
   private templates: Map<string, NotificationTemplate> = new Map();
   private anomalyDetectors: Map<string, AnomalyDetector> = new Map();
-  private evaluationTimer: NodeJS.Timeout;
-  private cleanupTimer: NodeJS.Timeout;
+  private evaluationTimer?: NodeJS.Timeout;
+  private cleanupTimer?: NodeJS.Timeout;
 
   constructor() {
     super();
@@ -197,7 +197,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     return updatedRule;
   }
 
-  async deleteAlertRule(ruleId: string): Promise<void> {
+  async deleteAlertRule(ruleId: string): Promise<any> {
     const rule = this.alertRules.get(ruleId);
     if (!rule) {
       throw new Error(`Alert rule ${ruleId} not found`);
@@ -231,11 +231,11 @@ export class BusinessThresholdAlerting extends EventEmitter {
         if (evaluation.isTriggered) {
           await this.handleTriggeredAlert(rule, evaluation, metricValue);
         }
-      } catch (error) {
+      } catch (error: any) {
         this.emit('evaluationError', { 
           ruleId: rule.id, 
           metricId: metricValue.metricId, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
     }
@@ -257,11 +257,11 @@ export class BusinessThresholdAlerting extends EventEmitter {
         if (evaluation.isTriggered) {
           await this.handleTriggeredKPIAlert(rule, evaluation, currentValue, context);
         }
-      } catch (error) {
+      } catch (error: any) {
         this.emit('evaluationError', { 
           ruleId: rule.id, 
           kpiId, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
     }
@@ -278,7 +278,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     }
 
     const requiredConditionsMet = conditionEvaluations
-      .filter(eval => eval.isMet && rule.conditions.find(c => c.id === eval.conditionId)?.isRequired)
+      .filter(e => e.isMet && rule.conditions.find(c => c.id === e.conditionId)?.isRequired)
       .length;
 
     const requiredConditionsCount = rule.conditions.filter(c => c.isRequired).length;
@@ -309,7 +309,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     }
 
     const requiredConditionsMet = conditionEvaluations
-      .filter(eval => eval.isMet && rule.conditions.find(c => c.id === eval.conditionId)?.isRequired)
+      .filter(e => e.isMet && rule.conditions.find(c => c.id === e.conditionId)?.isRequired)
       .length;
 
     const requiredConditionsCount = rule.conditions.filter(c => c.isRequired).length;
@@ -333,14 +333,14 @@ export class BusinessThresholdAlerting extends EventEmitter {
 
     switch (condition.type) {
       case 'value':
-        isMet = this.evaluateValueCondition(actualValue, condition);
+        isMet = await this.evaluateValueCondition(actualValue, condition);
         break;
         
       case 'change':
         const previousValue = await this.getPreviousValue(metricValue.metricId);
         if (previousValue !== null) {
           actualValue = actualValue - previousValue;
-          isMet = this.evaluateValueCondition(actualValue, condition);
+          isMet = await this.evaluateValueCondition(actualValue, condition);
         }
         break;
         
@@ -348,7 +348,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
         const rateValue = await this.calculateRate(metricValue.metricId, condition.timeWindow || 3600000);
         if (rateValue !== null) {
           actualValue = rateValue;
-          isMet = this.evaluateValueCondition(actualValue, condition);
+          isMet = await this.evaluateValueCondition(actualValue, condition);
         }
         break;
         
@@ -357,7 +357,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
         break;
         
       case 'time_based':
-        isMet = this.evaluateTimeBasedCondition(metricValue, condition);
+        isMet = await this.evaluateTimeBasedCondition(metricValue, condition);
         break;
     }
 
@@ -382,11 +382,11 @@ export class BusinessThresholdAlerting extends EventEmitter {
 
     switch (condition.type) {
       case 'value':
-        isMet = this.evaluateValueCondition(actualValue, condition);
+        isMet = await this.evaluateValueCondition(actualValue, condition);
         break;
         
       default:
-        isMet = this.evaluateValueCondition(actualValue, condition);
+        isMet = await this.evaluateValueCondition(actualValue, condition);
     }
 
     return {
@@ -397,7 +397,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     };
   }
 
-  private evaluateValueCondition(value: number, condition: AlertCondition): boolean {
+  private async evaluateValueCondition(value: number, condition: AlertCondition): Promise<boolean> {
     const threshold = condition.value;
     
     switch (condition.operator) {
@@ -418,14 +418,14 @@ export class BusinessThresholdAlerting extends EventEmitter {
     }
   }
 
-  private async evaluatePatternCondition(metricId: string, condition: AlertCondition): boolean {
+  private async evaluatePatternCondition(metricId: string, condition: AlertCondition): Promise<boolean> {
     const detector = this.anomalyDetectors.get(metricId);
     if (!detector) return false;
     
     return await detector.isAnomaly(await this.getPreviousValue(metricId) || 0);
   }
 
-  private evaluateTimeBasedCondition(metricValue: MetricValue, condition: AlertCondition): boolean {
+  private async evaluateTimeBasedCondition(metricValue: MetricValue, condition: AlertCondition): Promise<boolean> {
     const hour = metricValue.timestamp.getHours();
     const dayOfWeek = metricValue.timestamp.getDay();
     
@@ -442,7 +442,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     return true;
   }
 
-  private async handleTriggeredAlert(rule: AlertRule, evaluation: AlertEvaluation, metricValue: MetricValue): Promise<void> {
+  private async handleTriggeredAlert(rule: AlertRule, evaluation: AlertEvaluation, metricValue: MetricValue): Promise<any> {
     if (!await this.shouldTriggerAlert(rule, evaluation)) {
       return;
     }
@@ -479,13 +479,14 @@ export class BusinessThresholdAlerting extends EventEmitter {
     });
   }
 
-  private async handleTriggeredKPIAlert(rule: AlertRule, evaluation: AlertEvaluation, currentValue: number, context: Record<string, any>): Promise<void> {
+  private async handleTriggeredKPIAlert(rule: AlertRule, evaluation: AlertEvaluation, currentValue: number, context: Record<string, any>): Promise<any> {
     if (!await this.shouldTriggerAlert(rule, evaluation)) {
       return;
     }
 
     const alert: MetricAlert = {
       id: this.generateId(),
+      metricId: '',  // Empty for KPI alerts
       kpiTargetId: rule.kpiId,
       tenantId: rule.tenantId,
       alertType: rule.type,
@@ -562,22 +563,22 @@ export class BusinessThresholdAlerting extends EventEmitter {
     }
   }
 
-  private async sendNotifications(alert: MetricAlert, rule: AlertRule): Promise<void> {
+  private async sendNotifications(alert: MetricAlert, rule: AlertRule): Promise<any> {
     for (const channelId of rule.notificationChannels) {
       try {
         await this.sendNotification(alert, channelId, rule);
         alert.notificationsSent.push(`${channelId}:${new Date().toISOString()}`);
-      } catch (error) {
+      } catch (error: any) {
         this.emit('notificationError', { 
           alertId: alert.id, 
           channelId, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
     }
   }
 
-  private async sendNotification(alert: MetricAlert, channelId: string, rule: AlertRule): Promise<void> {
+  private async sendNotification(alert: MetricAlert, channelId: string, rule: AlertRule): Promise<any> {
     const channel = this.notificationChannels.get(channelId);
     if (!channel || !channel.isEnabled) return;
 
@@ -626,7 +627,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     return { subject, body, isHtml: template.isHtml };
   }
 
-  private async sendEmailNotification(channel: NotificationChannel, message: any, alert: MetricAlert): Promise<void> {
+  private async sendEmailNotification(channel: NotificationChannel, message: any, alert: MetricAlert): Promise<any> {
     this.emit('emailNotificationSent', { 
       to: channel.configuration.recipients,
       subject: message.subject,
@@ -634,7 +635,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     });
   }
 
-  private async sendSlackNotification(channel: NotificationChannel, message: any, alert: MetricAlert): Promise<void> {
+  private async sendSlackNotification(channel: NotificationChannel, message: any, alert: MetricAlert): Promise<any> {
     const payload = {
       text: message.body,
       attachments: [{
@@ -655,7 +656,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     });
   }
 
-  private async sendWebhookNotification(channel: NotificationChannel, alert: MetricAlert): Promise<void> {
+  private async sendWebhookNotification(channel: NotificationChannel, alert: MetricAlert): Promise<any> {
     const payload = {
       alertId: alert.id,
       type: 'alert',
@@ -677,7 +678,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     });
   }
 
-  async resolveAlert(alertId: string, reason: string, userId?: string): Promise<void> {
+  async resolveAlert(alertId: string, reason: string, userId?: string): Promise<any> {
     const alert = this.activeAlerts.get(alertId);
     if (!alert) {
       throw new Error(`Alert ${alertId} not found`);
@@ -699,7 +700,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     });
   }
 
-  async acknowledgeAlert(alertId: string, userId: string, notes?: string): Promise<void> {
+  async acknowledgeAlert(alertId: string, userId: string, notes?: string): Promise<any> {
     const alert = this.activeAlerts.get(alertId);
     if (!alert) {
       throw new Error(`Alert ${alertId} not found`);
@@ -728,7 +729,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     return `${rule.name}: KPI ${rule.kpiId} value ${currentValue} exceeded threshold ${condition.threshold}`;
   }
 
-  private async validateAlertRule(rule: AlertRule): Promise<void> {
+  private async validateAlertRule(rule: AlertRule): Promise<any> {
     if (!rule.name || rule.name.trim().length === 0) {
       throw new Error('Alert rule name is required');
     }
@@ -747,7 +748,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     }
   }
 
-  private async setupAnomalyDetection(rule: AlertRule): Promise<void> {
+  private async setupAnomalyDetection(rule: AlertRule): Promise<any> {
     if (!rule.metricId) return;
 
     const config: AnomalyDetectionConfig = {
@@ -870,7 +871,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     }, 300000);
   }
 
-  private async performPeriodicEvaluations(): Promise<void> {
+  private async performPeriodicEvaluations(): Promise<any> {
     for (const rule of this.alertRules.values()) {
       if (rule.type === 'missing_data') {
         await this.checkForMissingData(rule);
@@ -878,7 +879,7 @@ export class BusinessThresholdAlerting extends EventEmitter {
     }
   }
 
-  private async checkForMissingData(rule: AlertRule): Promise<void> {
+  private async checkForMissingData(rule: AlertRule): Promise<any> {
     if (!rule.metricId) return;
 
     const lastValue = await this.getPreviousValue(rule.metricId);
@@ -995,15 +996,15 @@ class AnomalyDetector {
 
     switch (this.config.algorithm) {
       case 'zscore':
-        return this.zScoreDetection(value);
+        return await this.zScoreDetection(value);
       case 'iqr':
-        return this.iqrDetection(value);
+        return await this.iqrDetection(value);
       default:
         return false;
     }
   }
 
-  private zScoreDetection(value: number): boolean {
+  private async zScoreDetection(value: number): Promise<boolean> {
     const mean = this.trainingData.reduce((sum, val) => sum + val, 0) / this.trainingData.length;
     const variance = this.trainingData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / this.trainingData.length;
     const stdDev = Math.sqrt(variance);
@@ -1016,7 +1017,7 @@ class AnomalyDetector {
     return zScore > threshold;
   }
 
-  private iqrDetection(value: number): boolean {
+  private async iqrDetection(value: number): Promise<boolean> {
     const sorted = [...this.trainingData].sort((a, b) => a - b);
     const q1Index = Math.floor(sorted.length * 0.25);
     const q3Index = Math.floor(sorted.length * 0.75);
@@ -1042,3 +1043,5 @@ class AnomalyDetector {
     return thresholds[sensitivity as keyof typeof thresholds] || 2.0;
   }
 }
+
+

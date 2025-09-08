@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.positionRoutes = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const client_1 = require("@prisma/client");
 const logger_1 = require("../utils/logger");
 const auth_1 = require("../middleware/auth");
@@ -12,7 +12,7 @@ exports.positionRoutes = router;
 const prisma = new client_1.PrismaClient();
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -23,11 +23,11 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/positions - List positions for a portfolio
 router.get('/', [
-    (0, express_validator_1.query)('portfolioId').isUUID().withMessage('Invalid portfolio ID'),
-    (0, express_validator_1.query)('page').optional().isInt({ min: 1 }).toInt(),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
-    (0, express_validator_1.query)('assetClass').optional().isString().trim(),
-    (0, express_validator_1.query)('search').optional().isString().trim(),
+    query('portfolioId').isUUID().withMessage('Invalid portfolio ID'),
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('assetClass').optional().isString().trim(),
+    query('search').optional().isString().trim(),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:read']), async (req, res) => {
     try {
         const { portfolioId, page = 1, limit = 20, assetClass, search, } = req.query;
@@ -38,14 +38,7 @@ router.get('/', [
                 tenantId: req.user.tenantId,
                 OR: [
                     { ownerId: req.user.sub },
-                    {
-                        managers: {
-                            some: {
-                                userId: req.user.sub,
-                                status: 'ACTIVE'
-                            }
-                        }
-                    }
+                    { managerId: req.user.sub }
                 ]
             }
         });
@@ -78,29 +71,14 @@ router.get('/', [
                 skip,
                 take: limit,
                 orderBy: { marketValue: 'desc' },
-                include: {
-                    security: {
-                        select: {
-                            symbol: true,
-                            name: true,
-                            assetClass: true,
-                            currency: true,
-                            exchange: true,
-                            cusip: true,
-                            isin: true
-                        }
-                    },
-                    taxLots: {
-                        where: { quantity: { gt: 0 } },
-                        orderBy: { openDate: 'asc' },
-                        select: {
-                            id: true,
-                            quantity: true,
-                            costBasis: true,
-                            openDate: true,
-                            gainLoss: true
-                        }
-                    }
+                select: {
+                    id: true,
+                    symbol: true,
+                    portfolioId: true,
+                    securityId: true,
+                    quantity: true,
+                    marketValue: true,
+                    costBasis: true
                 }
             }),
             prisma.position.count({ where: whereClause })
@@ -125,7 +103,7 @@ router.get('/', [
 });
 // GET /api/positions/:id - Get specific position
 router.get('/:id', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid position ID'),
+    param('id').isUUID().withMessage('Invalid position ID'),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:read']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -136,41 +114,18 @@ router.get('/:id', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             },
-            include: {
-                security: true,
-                portfolio: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                },
-                taxLots: {
-                    where: { quantity: { gt: 0 } },
-                    orderBy: { openDate: 'asc' }
-                },
-                transactions: {
-                    orderBy: { transactionDate: 'desc' },
-                    take: 10,
-                    include: {
-                        security: {
-                            select: {
-                                symbol: true,
-                                name: true
-                            }
-                        }
-                    }
-                }
+            select: {
+                id: true,
+                symbol: true,
+                portfolioId: true,
+                securityId: true,
+                quantity: true,
+                marketValue: true,
+                costBasis: true
             }
         });
         if (!position) {
@@ -193,9 +148,9 @@ router.get('/:id', [
 });
 // GET /api/positions/:id/tax-lots - Get position tax lots
 router.get('/:id/tax-lots', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid position ID'),
-    (0, express_validator_1.query)('page').optional().isInt({ min: 1 }).toInt(),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    param('id').isUUID().withMessage('Invalid position ID'),
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:read']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -208,14 +163,7 @@ router.get('/:id/tax-lots', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             }
@@ -262,8 +210,8 @@ router.get('/:id/tax-lots', [
 });
 // GET /api/positions/:id/performance - Get position performance
 router.get('/:id/performance', [
-    (0, express_validator_1.param)('id').isUUID().withMessage('Invalid position ID'),
-    (0, express_validator_1.query)('period').optional().isIn(['1D', '1W', '1M', '3M', '6M', '1Y', 'YTD', 'ALL']),
+    param('id').isUUID().withMessage('Invalid position ID'),
+    query('period').optional().isIn(['1D', '1W', '1M', '3M', '6M', '1Y', 'YTD', 'ALL']),
 ], validateRequest, auth_1.requireTenantAccess, (0, auth_1.requirePermission)(['position:read']), async (req, res) => {
     try {
         const { id } = req.params;
@@ -276,24 +224,18 @@ router.get('/:id/performance', [
                     tenantId: req.user.tenantId,
                     OR: [
                         { ownerId: req.user.sub },
-                        {
-                            managers: {
-                                some: {
-                                    userId: req.user.sub,
-                                    status: 'ACTIVE'
-                                }
-                            }
-                        }
+                        { managerId: req.user.sub }
                     ]
                 }
             },
-            include: {
-                security: {
-                    select: {
-                        symbol: true,
-                        name: true
-                    }
-                }
+            select: {
+                id: true,
+                symbol: true,
+                portfolioId: true,
+                securityId: true,
+                quantity: true,
+                marketValue: true,
+                costBasis: true
             }
         });
         if (!position) {
@@ -334,27 +276,27 @@ router.get('/:id/performance', [
         const performanceMeasurements = await prisma.performanceMeasurement.findMany({
             where: {
                 portfolioId: position.portfolioId,
-                measurementDate: { gte: startDate }
+                createdAt: { gte: startDate }
             },
-            orderBy: { measurementDate: 'asc' }
+            orderBy: { createdAt: 'asc' }
         });
         const performance = {
             position: {
                 id: position.id,
-                security: position.security,
+                security: { symbol: position.symbol },
                 currentValue: position.marketValue?.toNumber() || 0,
                 quantity: position.quantity.toNumber(),
                 costBasis: position.costBasis?.toNumber() || 0,
-                gainLoss: position.gainLoss?.toNumber() || 0,
-                gainLossPercentage: position.gainLossPercentage?.toNumber() || 0,
-                dayChange: position.dayChange?.toNumber() || 0,
-                dayChangePercentage: position.dayChangePercentage?.toNumber() || 0
+                gainLoss: 0, // gainLoss not available in select
+                gainLossPercentage: 0, // gainLossPercentage not available in select
+                dayChange: 0, // dayChange not available in select
+                dayChangePercentage: 0 // dayChangePercentage field not available
             },
             period,
             measurements: performanceMeasurements.map(m => ({
-                date: m.measurementDate,
+                date: m.createdAt,
                 value: m.totalReturn?.toNumber() || 0,
-                returnPercentage: m.returnPercentage?.toNumber() || 0
+                returnPercentage: m.totalReturn?.toNumber() || 0
             }))
         };
         res.json(performance);

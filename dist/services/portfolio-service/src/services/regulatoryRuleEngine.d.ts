@@ -29,7 +29,7 @@ export declare class RegulatoryRuleEngine {
     private publishRuleEvaluationEvent;
     createRule(ruleData: Omit<RegulatoryRule, 'id' | 'createdAt' | 'updatedAt'>, tenantId: string): Promise<RegulatoryRule>;
     updateRule(ruleId: string, updates: Partial<RegulatoryRule>, tenantId: string): Promise<RegulatoryRule>;
-    deactivateRule(ruleId: string, tenantId: string): Promise<void>;
+    deactivateRule(ruleId: string, tenantId: string): Promise<any>;
     getRule(ruleId: string, tenantId: string): Promise<RegulatoryRule | null>;
     getRules(tenantId: string, filters?: {
         jurisdiction?: string;

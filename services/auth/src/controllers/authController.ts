@@ -1,4 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+
+interface AuthenticatedRequest extends Request {
+  user?: any;
+  userId?: string;
+  tenantId?: string;
+}
 import { AuthService } from '../services/auth';
 import { JWTService } from '../services/jwt';
 import { logger } from '../config/logger';
@@ -13,7 +19,7 @@ export class AuthController {
     this.jwtService = JWTService.getInstance();
   }
 
-  register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  register = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
       const tenantId = req.headers['x-tenant-id'] as string;
       if (!tenantId) {
@@ -36,13 +42,13 @@ export class AuthController {
           message: 'User registered successfully. Please verify your email address.'
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Registration controller error:', error);
       next(error);
     }
   };
 
-  login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  login = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
       const tenantId = req.headers['x-tenant-id'] as string;
       if (!tenantId) {
@@ -75,9 +81,9 @@ export class AuthController {
           tokenType: result.tokens.tokenType
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Login controller error:', error);
-      if (error instanceof Error) {
+      if ((error as any) instanceof Error) {
         if (error.message.includes('Invalid credentials') || 
             error.message.includes('suspended') || 
             error.message.includes('locked')) {
@@ -93,7 +99,7 @@ export class AuthController {
     }
   };
 
-  refreshToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  refreshToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
       const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
       
@@ -124,7 +130,7 @@ export class AuthController {
           tokenType: tokens.tokenType
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Token refresh controller error:', error);
       res.status(401).json({
         success: false,
@@ -134,7 +140,7 @@ export class AuthController {
     }
   };
 
-  logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  logout = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
       const sessionId = (req as any).user?.sessionId;
       
@@ -149,13 +155,13 @@ export class AuthController {
         success: true,
         message: 'Logged out successfully'
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Logout controller error:', error);
       next(error);
     }
   };
 
-  me = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  me = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
       const user = (req as any).user;
       
@@ -172,13 +178,13 @@ export class AuthController {
         success: true,
         data: { user }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Me controller error:', error);
       next(error);
     }
   };
 
-  verifyEmail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  verifyEmail = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
       // TODO: Implement email verification
       res.status(501).json({
@@ -186,13 +192,13 @@ export class AuthController {
         error: 'Not implemented',
         message: 'Email verification not yet implemented'
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Email verification controller error:', error);
       next(error);
     }
   };
 
-  forgotPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  forgotPassword = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
       // TODO: Implement forgot password
       res.status(501).json({
@@ -200,13 +206,13 @@ export class AuthController {
         error: 'Not implemented',
         message: 'Forgot password not yet implemented'
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Forgot password controller error:', error);
       next(error);
     }
   };
 
-  resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  resetPassword = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> => {
     try {
       // TODO: Implement reset password
       res.status(501).json({
@@ -214,7 +220,7 @@ export class AuthController {
         error: 'Not implemented',
         message: 'Reset password not yet implemented'
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Reset password controller error:', error);
       next(error);
     }
@@ -222,3 +228,4 @@ export class AuthController {
 }
 
 export default new AuthController();
+

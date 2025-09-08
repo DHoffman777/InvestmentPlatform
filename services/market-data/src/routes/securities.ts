@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { query, param, body, validationResult } from 'express-validator';
+const { query, param, body, validationResult } = require('express-validator');
 import { MarketDataService } from '../services/marketDataService';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
@@ -29,7 +29,7 @@ router.get('/search',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { q: query, limit = 10 } = req.query as any;
 
@@ -45,7 +45,7 @@ router.get('/search',
         securities: formattedSecurities,
         count: formattedSecurities.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error searching securities:', { query: req.query.q, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -63,7 +63,7 @@ router.get('/:symbol',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
 
@@ -84,7 +84,7 @@ router.get('/:symbol',
           marketCap: security.marketCap?.toNumber(),
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching security:', { symbol: req.params.symbol, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -113,7 +113,7 @@ router.post('/',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const securityData = {
         ...req.body,
@@ -128,7 +128,7 @@ router.post('/',
           marketCap: security.marketCap?.toNumber(),
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating/updating security:', { securityData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -151,7 +151,7 @@ router.get('/',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { 
         assetClass, 
@@ -203,7 +203,7 @@ router.get('/',
           sector,
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error listing securities:', { query: req.query, error });
       res.status(500).json({
         error: 'Internal server error',

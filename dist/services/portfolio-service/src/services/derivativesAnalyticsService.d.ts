@@ -12,7 +12,7 @@ export declare class DerivativesAnalyticsService {
     calculateImpliedVolatility(request: ImpliedVolatilityRequest, tenantId: string, userId: string): Promise<ImpliedVolatilityAnalysis>;
     buildOptionStrategy(request: StrategyBuilderRequest, tenantId: string, userId: string): Promise<OptionStrategy>;
     calculateMargin(request: MarginCalculationRequest, tenantId: string, userId: string): Promise<MarginCalculationResult>;
-    calculateMarkToMarket(instrumentId: string, tenantId: string, userId: string): Promise<MarkToMarketValuation>;
+    calculateMarkToMarket(securityId: string, tenantId: string, userId: string): Promise<MarkToMarketValuation>;
     calculatePortfolioAnalytics(portfolioId: string, tenantId: string, userId: string): Promise<DerivativesPortfolioAnalytics>;
     searchDerivatives(request: DerivativesSearchRequest, tenantId: string): Promise<DerivativesSearchResult>;
     private normalCDF;
@@ -28,4 +28,9 @@ export declare class DerivativesAnalyticsService {
     private publishImpliedVolatilityEvent;
     private publishStrategyCreatedEvent;
     private publishPortfolioAnalyticsEvent;
+    private buildBinomialPriceTree;
+    private buildBinomialOptionTree;
+    private buildBinomialOptionTreeWithTime;
+    private buildBinomialOptionTreeWithVol;
+    private buildBinomialOptionTreeWithRate;
 }

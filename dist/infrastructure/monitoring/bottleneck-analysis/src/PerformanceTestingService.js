@@ -298,7 +298,7 @@ class PerformanceTestingService extends events_1.EventEmitter {
         this.executions.set(executionId, execution);
         // Start test execution asynchronously
         this.runTestExecution(executionId, test).catch(error => {
-            console.error(`Test execution ${executionId} failed:`, error.message);
+            console.error(`Test execution ${executionId} failed:`, error instanceof Error ? error.message : 'Unknown error');
             this.updateExecutionStatus(executionId, TestExecutionStatus.FAILED);
         });
         this.emit('testExecutionStarted', {
@@ -346,12 +346,12 @@ class PerformanceTestingService extends events_1.EventEmitter {
         catch (error) {
             execution.end_time = new Date();
             execution.duration_seconds = (execution.end_time.getTime() - execution.start_time.getTime()) / 1000;
-            this.addExecutionLog(executionId, LogLevel.ERROR, `Test execution failed: ${error.message}`);
+            this.addExecutionLog(executionId, LogLevel.ERROR, `Test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             this.updateExecutionStatus(executionId, TestExecutionStatus.FAILED);
             this.emit('testExecutionFailed', {
                 executionId,
                 testId: test.id,
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Unknown error',
                 timestamp: new Date()
             });
         }
@@ -452,6 +452,17 @@ ${config.load_profile.load_distribution.map(endpoint => `
 `).join('')}
 
   sleep(Math.random() * (${config.think_time.max_think_time_ms} - ${config.think_time.min_think_time_ms}) + ${config.think_time.min_think_time_ms});
+  public getExecutionStatus(executionId: string): any {
+    return this.testExecutions.get(executionId) || { status: "unknown" };
+  }
+
+  public getExecutionResults(executionId: string): any[] {
+    return [];
+  }
+
+  public getTests(): any[] {
+    return Array.from(this.performanceTests.values());
+  }
 }
 `;
     }
@@ -570,7 +581,7 @@ setTimeout(() => {
                         resolve(results);
                     }
                     catch (error) {
-                        reject(new Error(`Failed to parse test results: ${error.message}`));
+                        reject(new Error(`Failed to parse test results: ${error instanceof Error ? error.message : 'Unknown error'}`));
                     }
                 }
                 else {
@@ -638,7 +649,7 @@ setTimeout(() => {
             errors.push({
                 timestamp: new Date(),
                 error_type: 'parsing_error',
-                error_message: `Failed to parse test results: ${error.message}`,
+                error_message: `Failed to parse test results: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 error_count: 1
             });
         }
@@ -1073,7 +1084,7 @@ setTimeout(() => {
             if (schedule.enabled && this.shouldExecuteScheduledTest(schedule, now)) {
                 this.executeTest(testId, 'scheduler', 'Scheduled execution')
                     .catch(error => {
-                    console.error(`Scheduled test execution failed: ${error.message}`);
+                    console.error(`Scheduled test execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 });
             }
         }

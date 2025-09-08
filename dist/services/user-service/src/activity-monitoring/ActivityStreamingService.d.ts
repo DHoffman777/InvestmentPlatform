@@ -61,14 +61,15 @@ export declare class ActivityStreamingService extends EventEmitter {
     private metricsInterval;
     private config;
     private rateLimitMap;
-    constructor(httpServer: HTTPServer, config?: StreamingConfig);
+    private getErrorMessage;
+    constructor(httpServer: HTTPServer, config?: Partial<StreamingConfig>);
     subscribe(userId: string, tenantId: string, socketId: string, filter?: ActivityFilter): Promise<StreamSubscription>;
     unsubscribe(subscriptionId: string): Promise<boolean>;
-    broadcastActivity(activity: ActivityData): Promise<void>;
-    broadcastPatternMatch(pattern: any, activity: ActivityData): Promise<void>;
-    broadcastSuspiciousActivity(activity: ActivityData): Promise<void>;
-    broadcastComplianceViolation(activity: ActivityData): Promise<void>;
-    broadcastSystemAlert(alertType: string, data: any): Promise<void>;
+    broadcastActivity(activity: ActivityData): Promise<any>;
+    broadcastPatternMatch(pattern: any, activity: ActivityData): Promise<any>;
+    broadcastSuspiciousActivity(activity: ActivityData): Promise<any>;
+    broadcastComplianceViolation(activity: ActivityData): Promise<any>;
+    broadcastSystemAlert(alertType: string, data: any): Promise<any>;
     getSubscriptionStats(): Promise<{
         totalSubscriptions: number;
         activeSubscriptions: number;

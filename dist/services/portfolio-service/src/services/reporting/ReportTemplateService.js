@@ -8,7 +8,7 @@ const eventPublisher_1 = require("../../utils/eventPublisher");
 class ReportTemplateService {
     eventPublisher;
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('ReportTemplateService');
     }
     async createReportTemplate(tenantId, templateData, userId) {
         try {

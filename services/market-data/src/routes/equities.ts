@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { query, param, body, validationResult } from 'express-validator';
+const { query, param, body, validationResult } = require('express-validator');
 import { EquitiesService, EquityData, PreferredStockData, ADRData } from '../services/equitiesService';
 import { prisma } from '../config/database';
 import { logger } from '../utils/logger';
 import { authenticateJWT, requirePermission } from '../middleware/auth';
-import { Decimal } from 'decimal.js';
+import { Prisma } from '@prisma/client';
+
+const { Decimal } = Prisma;
 
 const router = Router();
 const equitiesService = new EquitiesService(prisma);
@@ -36,7 +38,7 @@ router.get('/search',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const filters = {
         query: req.query.query as string,
@@ -51,7 +53,7 @@ router.get('/search',
 
       const equities = await equitiesService.searchEquities(filters);
 
-      const formattedEquities = equities.map(equity => ({
+      const formattedEquities = equities.map((equity: any) => ({
         ...equity,
         marketCap: equity.marketCap?.toNumber(),
         latestQuote: equity.quotes?.[0] ? {
@@ -69,7 +71,7 @@ router.get('/search',
         filters,
         count: formattedEquities.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error searching equities:', { filters: req.query, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -87,7 +89,7 @@ router.get('/:symbol',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
 
@@ -101,7 +103,7 @@ router.get('/:symbol',
       }
 
       res.json({ equity });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching equity details:', { symbol: req.params.symbol, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -136,7 +138,7 @@ router.post('/common-stock',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const equityData: EquityData = {
         ...req.body,
@@ -154,11 +156,11 @@ router.post('/common-stock',
       res.status(201).json({
         equity: {
           ...equity,
-          marketCap: equity.marketCap?.toNumber(),
+          marketCap: (equity as any).marketCap?.toNumber(),
         },
         message: 'Common stock created/updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating/updating common stock:', { equityData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -187,7 +189,7 @@ router.post('/preferred-stock',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const preferredData: PreferredStockData = {
         ...req.body,
@@ -204,11 +206,11 @@ router.post('/preferred-stock',
       res.status(201).json({
         equity: {
           ...equity,
-          marketCap: equity.marketCap?.toNumber(),
+          marketCap: (equity as any).marketCap?.toNumber(),
         },
         message: 'Preferred stock created/updated successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating/updating preferred stock:', { preferredData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -236,7 +238,7 @@ router.post('/adr',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:write']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const adrData: ADRData = {
         ...req.body,
@@ -248,11 +250,11 @@ router.post('/adr',
       res.status(201).json({
         equity: {
           ...equity,
-          marketCap: equity.marketCap?.toNumber(),
+          marketCap: (equity as any).marketCap?.toNumber(),
         },
         message: `${req.body.equityType} created/updated successfully`,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating/updating ADR/GDR:', { adrData: req.body, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -271,7 +273,7 @@ router.get('/:symbol/dividends',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
       const limit = req.query.limit ? Number(req.query.limit) : 20;
@@ -283,7 +285,7 @@ router.get('/:symbol/dividends',
         dividends,
         count: dividends.length,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching dividend history:', { symbol: req.params.symbol, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -301,7 +303,7 @@ router.get('/:symbol/dividend-metrics',
   validateRequest,
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { symbol } = req.params;
 
@@ -311,7 +313,7 @@ router.get('/:symbol/dividend-metrics',
         symbol: symbol.toUpperCase(),
         ...metrics,
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating dividend metrics:', { symbol: req.params.symbol, error });
       res.status(500).json({
         error: 'Internal server error',
@@ -325,7 +327,7 @@ router.get('/:symbol/dividend-metrics',
 router.get('/types',
   authenticateJWT,
   requirePermission(['market-data:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const equityTypes = {
         COMMON_STOCK: {
@@ -373,7 +375,7 @@ router.get('/types',
       };
 
       res.json({ equityTypes });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching equity types:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -384,3 +386,4 @@ router.get('/types',
 );
 
 export { router as equitiesRouter };
+

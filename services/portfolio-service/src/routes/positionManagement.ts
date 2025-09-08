@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import { body, param, query, validationResult } from 'express-validator';
+import { Router, Request, Response } from 'express';
+const { body, param, query, validationResult } = require('express-validator');
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PositionService } from '../services/positionService';
 import { logger } from '../utils/logger';
@@ -31,7 +31,7 @@ router.get('/aggregated',
   validateRequest,
   requireTenantAccess,
   requirePermission(['position:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { portfolioIds, assetClasses } = req.query as any;
       
@@ -72,7 +72,7 @@ router.get('/aggregated',
           assetClasses: assetClassArray,
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error fetching aggregated positions:', error);
       trackPortfolioOperation('position:aggregated', 'error');
       res.status(500).json({
@@ -93,7 +93,7 @@ router.post('/:id/tax-lots',
   validateRequest,
   requireTenantAccess,
   requirePermission(['position:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const { sellQuantity, method } = req.body;
@@ -106,14 +106,7 @@ router.post('/:id/tax-lots',
             tenantId: req.user!.tenantId,
             OR: [
               { ownerId: req.user!.sub },
-              { 
-                managers: {
-                  some: {
-                    userId: req.user!.sub,
-                    status: 'ACTIVE'
-                  }
-                }
-              }
+              { managerId: req.user!.sub }
             ]
           }
         }
@@ -149,7 +142,7 @@ router.post('/:id/tax-lots',
         totalQuantity: formattedTaxLots.reduce((sum, lot) => sum + lot.quantity, 0),
         totalCostBasis: formattedTaxLots.reduce((sum, lot) => sum + lot.costBasis, 0),
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating tax lots:', { positionId: req.params.id, error });
       trackPortfolioOperation('position:tax-lots', 'error');
       res.status(500).json({
@@ -173,7 +166,7 @@ router.post('/portfolios/:id/reconcile',
   validateRequest,
   requireTenantAccess,
   requirePermission(['position:reconcile']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const { custodianPositions } = req.body;
@@ -185,14 +178,7 @@ router.post('/portfolios/:id/reconcile',
           tenantId: req.user!.tenantId,
           OR: [
             { ownerId: req.user!.sub },
-            { 
-              managers: {
-                some: {
-                  userId: req.user!.sub,
-                  status: 'ACTIVE'
-                }
-              }
-            }
+            { managerId: req.user!.sub }
           ]
         }
       });
@@ -222,7 +208,7 @@ router.post('/portfolios/:id/reconcile',
         },
         timestamp: new Date().toISOString(),
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error reconciling positions:', { portfolioId: req.params.id, error });
       trackPortfolioOperation('position:reconcile', 'error');
       res.status(500).json({
@@ -243,7 +229,7 @@ router.get('/:id/pnl',
   validateRequest,
   requireTenantAccess,
   requirePermission(['position:read']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const { startDate, endDate } = req.query as any;
@@ -256,24 +242,17 @@ router.get('/:id/pnl',
             tenantId: req.user!.tenantId,
             OR: [
               { ownerId: req.user!.sub },
-              { 
-                managers: {
-                  some: {
-                    userId: req.user!.sub,
-                    status: 'ACTIVE'
-                  }
-                }
-              }
+              { managerId: req.user!.sub }
             ]
           }
         },
-        include: {
-          security: {
-            select: {
-              symbol: true,
-              name: true,
-            }
-          }
+        select: {
+          id: true,
+          symbol: true,
+          portfolioId: true,
+          securityId: true,
+          quantity: true,
+          marketValue: true
         }
       });
 
@@ -290,7 +269,12 @@ router.get('/:id/pnl',
 
       res.json({
         positionId: id,
-        security: position.security,
+        security: { symbol: position.symbol },
+        position: {
+          id: position.id,
+          symbol: position.symbol,
+          portfolioId: position.portfolioId
+        },
         period: {
           startDate,
           endDate,
@@ -311,7 +295,7 @@ router.get('/:id/pnl',
           }))
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating position P&L:', { positionId: req.params.id, error });
       trackPortfolioOperation('position:pnl', 'error');
       res.status(500).json({
@@ -331,7 +315,7 @@ router.put('/:id/market-value',
   validateRequest,
   requireTenantAccess,
   requirePermission(['position:update']),
-  async (req, res) => {
+  async (req: any, res: any) => {
     try {
       const { id } = req.params;
       const { marketPrice } = req.body;
@@ -344,14 +328,7 @@ router.put('/:id/market-value',
             tenantId: req.user!.tenantId,
             OR: [
               { ownerId: req.user!.sub },
-              { 
-                managers: {
-                  some: {
-                    userId: req.user!.sub,
-                    status: 'ACTIVE'
-                  }
-                }
-              }
+              { managerId: req.user!.sub }
             ]
           }
         }
@@ -383,7 +360,7 @@ router.put('/:id/market-value',
           dayChangePercentage: updatedPosition.dayChangePercentage?.toNumber(),
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating position market value:', { positionId: req.params.id, error });
       trackPortfolioOperation('position:update-market-value', 'error');
       res.status(500).json({
@@ -395,3 +372,4 @@ router.put('/:id/market-value',
 );
 
 export { router as positionManagementRouter };
+

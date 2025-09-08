@@ -178,7 +178,7 @@ class DatabaseMonitor extends events_1.EventEmitter {
             return stats;
         }
         catch (error) {
-            throw new Error(`Failed to get connection pool stats: ${error.message}`);
+            throw new Error(`Failed to get connection pool stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     async getPerformanceStats() {
@@ -218,7 +218,7 @@ class DatabaseMonitor extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            throw new Error(`Failed to get performance stats: ${error.message}`);
+            throw new Error(`Failed to get performance stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     async getResourceStats() {
@@ -239,7 +239,7 @@ class DatabaseMonitor extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            throw new Error(`Failed to get resource stats: ${error.message}`);
+            throw new Error(`Failed to get resource stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     async getLockStats() {
@@ -264,7 +264,7 @@ class DatabaseMonitor extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            throw new Error(`Failed to get lock stats: ${error.message}`);
+            throw new Error(`Failed to get lock stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     async getReplicationStats() {
@@ -292,7 +292,7 @@ class DatabaseMonitor extends events_1.EventEmitter {
             };
         }
         catch (error) {
-            throw new Error(`Failed to get replication stats: ${error.message}`);
+            throw new Error(`Failed to get replication stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     calculateOverallHealth(health) {

@@ -25,7 +25,7 @@ export declare class AutoScalingService extends EventEmitter {
     private sendAlert;
     private generateScalingReport;
     private updateConfiguration;
-    start(port?: number): Promise<void>;
-    stop(): Promise<void>;
+    start(port?: number): Promise<any>;
+    stop(): Promise<any>;
     getApp(): express.Application;
 }

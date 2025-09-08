@@ -448,9 +448,9 @@ export class QueryPerformanceAnalyzer extends PrismaClient {
 
     // Get execution plan first
     try {
-      const explainResult = await this.$queryRawUnsafe(`EXPLAIN (ANALYZE, BUFFERS) ${query}`);
+      const explainResult = await (this as any).$queryRawUnsafe(`EXPLAIN (ANALYZE, BUFFERS) ${query}`);
       executionPlan = explainResult;
-    } catch (error) {
+    } catch (error: any) {
       console.warn('Could not get execution plan:', error);
     }
 
@@ -459,10 +459,10 @@ export class QueryPerformanceAnalyzer extends PrismaClient {
       const startTime = Date.now();
       
       try {
-        await this.$queryRawUnsafe(query);
+        await (this as any).$queryRawUnsafe(query);
         const executionTime = Date.now() - startTime;
         executionTimes.push(executionTime);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Benchmark iteration ${i + 1} failed:`, error);
       }
     }
@@ -559,3 +559,4 @@ export class QueryPerformanceAnalyzer extends PrismaClient {
     return 'Standard optimization opportunity';
   }
 }
+

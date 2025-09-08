@@ -115,7 +115,7 @@ class DatabaseOptimizer extends events_1.EventEmitter {
             return result;
         }
         catch (error) {
-            throw new Error(`Failed to get explain plan: ${error.message}`);
+            throw new Error(`Failed to get explain plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     extractRowsExamined(explainPlan) {

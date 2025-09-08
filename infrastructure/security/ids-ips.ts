@@ -243,18 +243,18 @@ export class IntrusionDetectionSystem extends EventEmitter {
         reason: threats.length > 0 ? `${threats.length} threats detected` : 'Traffic allowed'
       };
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('analysisError', {
         sourceIp,
         destinationIp,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
 
       return {
         threats: [],
         action: 'allow',
-        reason: `Analysis error: ${error.message}`
+        reason: `Analysis error: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   }
@@ -388,7 +388,7 @@ export class IntrusionDetectionSystem extends EventEmitter {
     incidentId: string,
     action: 'block_ip' | 'quarantine_user' | 'isolate_system' | 'escalate' | 'resolve',
     parameters: Record<string, any> = {}
-  ): Promise<void> {
+  ): Promise<any> {
     const incident = this.incidents.get(incidentId);
     if (!incident) {
       throw new Error('Incident not found');
@@ -672,7 +672,7 @@ export class IntrusionDetectionSystem extends EventEmitter {
     return 'alert';
   }
 
-  private async executeMitigation(threats: SecurityEvent[], action: string, sourceIp: string): Promise<void> {
+  private async executeMitigation(threats: SecurityEvent[], action: string, sourceIp: string): Promise<any> {
     for (const threat of threats) {
       const rule = this.rules.get(threat.ruleId);
       if (rule && rule.action !== 'alert') {
@@ -696,7 +696,7 @@ export class IntrusionDetectionSystem extends EventEmitter {
     }
   }
 
-  private async blockIP(ip: string, duration: number, reason: string): Promise<void> {
+  private async blockIP(ip: string, duration: number, reason: string): Promise<any> {
     const until = new Date(Date.now() + duration * 60 * 1000);
     this.activeBlocks.set(ip, { until, reason });
 
@@ -715,7 +715,7 @@ export class IntrusionDetectionSystem extends EventEmitter {
     }, duration * 60 * 1000);
   }
 
-  private async quarantineIP(ip: string, duration: number, reason: string): Promise<void> {
+  private async quarantineIP(ip: string, duration: number, reason: string): Promise<any> {
     // Quarantine implementation would integrate with network infrastructure
     this.emit('ipQuarantined', {
       ip,
@@ -725,7 +725,7 @@ export class IntrusionDetectionSystem extends EventEmitter {
     });
   }
 
-  private async quarantineUser(userId: string, reason: string): Promise<void> {
+  private async quarantineUser(userId: string, reason: string): Promise<any> {
     // User quarantine implementation
     this.emit('userQuarantined', {
       userId,
@@ -791,7 +791,7 @@ export class IntrusionDetectionSystem extends EventEmitter {
     }
   }
 
-  private async checkIncidentCreation(threats: SecurityEvent[]): Promise<void> {
+  private async checkIncidentCreation(threats: SecurityEvent[]): Promise<any> {
     const criticalThreats = threats.filter(t => t.severity === 'critical');
     if (criticalThreats.length === 0) return;
 
@@ -845,7 +845,7 @@ export class IntrusionDetectionSystem extends EventEmitter {
   }
 
   private severityToScore(severity: string): number {
-    const scores = { low: 25, medium: 50, high: 75, critical: 100 };
+    const scores: Record<string, number> = { low: 25, medium: 50, high: 75, critical: 100 };
     return scores[severity] || 50;
   }
 
@@ -1013,7 +1013,7 @@ export class IntrusionDetectionSystem extends EventEmitter {
     }, 6 * 60 * 60 * 1000);
   }
 
-  private async updateThreatFeeds(): Promise<void> {
+  private async updateThreatFeeds(): Promise<any> {
     for (const feed of this.threatFeeds.values()) {
       if (!feed.enabled) continue;
 
@@ -1029,10 +1029,10 @@ export class IntrusionDetectionSystem extends EventEmitter {
           newIndicators: newIndicators.length,
           timestamp: new Date()
         });
-      } catch (error) {
+      } catch (error: any) {
         this.emit('threatFeedError', {
           feedId: feed.id,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date()
         });
       }
@@ -1178,3 +1178,4 @@ export class IntrusionDetectionSystem extends EventEmitter {
 }
 
 export default IntrusionDetectionSystem;
+

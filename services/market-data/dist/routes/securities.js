@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.securitiesRouter = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { query, param, body, validationResult } = require('express-validator');
 const marketDataService_1 = require("../services/marketDataService");
 const database_1 = require("../config/database");
 const logger_1 = require("../utils/logger");
@@ -12,7 +12,7 @@ exports.securitiesRouter = router;
 const marketDataService = new marketDataService_1.MarketDataService(database_1.prisma);
 // Validation middleware
 const validateRequest = (req, res, next) => {
-    const errors = (0, express_validator_1.validationResult)(req);
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({
             error: 'Validation failed',
@@ -23,8 +23,8 @@ const validateRequest = (req, res, next) => {
 };
 // GET /api/securities/search - Search securities
 router.get('/search', [
-    (0, express_validator_1.query)('q').isString().trim().isLength({ min: 1, max: 50 }).withMessage('Query must be between 1 and 50 characters'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('Limit must be between 1 and 100'),
+    query('q').isString().trim().isLength({ min: 1, max: 50 }).withMessage('Query must be between 1 and 50 characters'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('Limit must be between 1 and 100'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { q: query, limit = 10 } = req.query;
@@ -49,7 +49,7 @@ router.get('/search', [
 });
 // GET /api/securities/:symbol - Get security details
 router.get('/:symbol', [
-    (0, express_validator_1.param)('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
+    param('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Invalid symbol'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { symbol } = req.params;
@@ -79,18 +79,18 @@ router.get('/:symbol', [
 });
 // POST /api/securities - Create or update security (admin only)
 router.post('/', [
-    (0, express_validator_1.body)('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Symbol is required and must be 1-10 characters'),
-    (0, express_validator_1.body)('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required and must be 1-255 characters'),
-    (0, express_validator_1.body)('assetClass').isIn(['EQUITY', 'BOND', 'ETF', 'MUTUAL_FUND', 'OPTION', 'FUTURE', 'COMMODITY', 'CRYPTOCURRENCY', 'CASH']).withMessage('Invalid asset class'),
-    (0, express_validator_1.body)('securityType').isString().trim().isLength({ min: 1, max: 50 }).withMessage('Security type is required'),
-    (0, express_validator_1.body)('exchange').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Exchange is required'),
-    (0, express_validator_1.body)('currency').optional().isString().trim().isLength({ min: 3, max: 3 }).withMessage('Currency must be 3 characters'),
-    (0, express_validator_1.body)('cusip').optional().isString().trim().isLength({ min: 9, max: 9 }).withMessage('CUSIP must be 9 characters'),
-    (0, express_validator_1.body)('isin').optional().isString().trim().isLength({ min: 12, max: 12 }).withMessage('ISIN must be 12 characters'),
-    (0, express_validator_1.body)('country').optional().isString().trim().withMessage('Invalid country'),
-    (0, express_validator_1.body)('sector').optional().isString().trim().withMessage('Invalid sector'),
-    (0, express_validator_1.body)('industry').optional().isString().trim().withMessage('Invalid industry'),
-    (0, express_validator_1.body)('marketCap').optional().isNumeric().withMessage('Market cap must be numeric'),
+    body('symbol').isString().trim().isLength({ min: 1, max: 10 }).withMessage('Symbol is required and must be 1-10 characters'),
+    body('name').isString().trim().isLength({ min: 1, max: 255 }).withMessage('Name is required and must be 1-255 characters'),
+    body('assetClass').isIn(['EQUITY', 'BOND', 'ETF', 'MUTUAL_FUND', 'OPTION', 'FUTURE', 'COMMODITY', 'CRYPTOCURRENCY', 'CASH']).withMessage('Invalid asset class'),
+    body('securityType').isString().trim().isLength({ min: 1, max: 50 }).withMessage('Security type is required'),
+    body('exchange').isString().trim().isLength({ min: 1, max: 20 }).withMessage('Exchange is required'),
+    body('currency').optional().isString().trim().isLength({ min: 3, max: 3 }).withMessage('Currency must be 3 characters'),
+    body('cusip').optional().isString().trim().isLength({ min: 9, max: 9 }).withMessage('CUSIP must be 9 characters'),
+    body('isin').optional().isString().trim().isLength({ min: 12, max: 12 }).withMessage('ISIN must be 12 characters'),
+    body('country').optional().isString().trim().withMessage('Invalid country'),
+    body('sector').optional().isString().trim().withMessage('Invalid sector'),
+    body('industry').optional().isString().trim().withMessage('Invalid industry'),
+    body('marketCap').optional().isNumeric().withMessage('Market cap must be numeric'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:write']), async (req, res) => {
     try {
         const securityData = {
@@ -115,12 +115,12 @@ router.post('/', [
 });
 // GET /api/securities - List securities with filtering
 router.get('/', [
-    (0, express_validator_1.query)('assetClass').optional().isIn(['EQUITY', 'BOND', 'ETF', 'MUTUAL_FUND', 'OPTION', 'FUTURE', 'COMMODITY', 'CRYPTOCURRENCY', 'CASH']).withMessage('Invalid asset class'),
-    (0, express_validator_1.query)('exchange').optional().isString().trim().withMessage('Invalid exchange'),
-    (0, express_validator_1.query)('country').optional().isString().trim().withMessage('Invalid country'),
-    (0, express_validator_1.query)('sector').optional().isString().trim().withMessage('Invalid sector'),
-    (0, express_validator_1.query)('page').optional().isInt({ min: 1 }).toInt().withMessage('Page must be >= 1'),
-    (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('Limit must be between 1 and 100'),
+    query('assetClass').optional().isIn(['EQUITY', 'BOND', 'ETF', 'MUTUAL_FUND', 'OPTION', 'FUTURE', 'COMMODITY', 'CRYPTOCURRENCY', 'CASH']).withMessage('Invalid asset class'),
+    query('exchange').optional().isString().trim().withMessage('Invalid exchange'),
+    query('country').optional().isString().trim().withMessage('Invalid country'),
+    query('sector').optional().isString().trim().withMessage('Invalid sector'),
+    query('page').optional().isInt({ min: 1 }).toInt().withMessage('Page must be >= 1'),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt().withMessage('Limit must be between 1 and 100'),
 ], validateRequest, auth_1.authenticateJWT, (0, auth_1.requirePermission)(['market-data:read']), async (req, res) => {
     try {
         const { assetClass, exchange, country, sector, page = 1, limit = 20 } = req.query;

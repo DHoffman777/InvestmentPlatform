@@ -96,7 +96,7 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
                 this.emit('evaluationError', {
                     ruleId: rule.id,
                     metricId: metricValue.metricId,
-                    error: error.message
+                    error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
         }
@@ -118,7 +118,7 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
                 this.emit('evaluationError', {
                     ruleId: rule.id,
                     kpiId,
-                    error: error.message
+                    error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
         }
@@ -375,7 +375,7 @@ class BusinessThresholdAlerting extends events_1.EventEmitter {
                 this.emit('notificationError', {
                     alertId: alert.id,
                     channelId,
-                    error: error.message
+                    error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
         }

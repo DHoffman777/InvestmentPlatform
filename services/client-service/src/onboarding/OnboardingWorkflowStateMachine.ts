@@ -442,7 +442,7 @@ export class OnboardingWorkflowStateMachine extends EventEmitter {
     return validator();
   }
 
-  private async handleAutoTransition(workflowId: string, currentState: WorkflowState): Promise<void> {
+  private async handleAutoTransition(workflowId: string, currentState: WorkflowState): Promise<any> {
     // Handle any automatic transitions based on current state
     // This could trigger additional events or external integrations
     this.emit('autoTransition', { workflowId, state: currentState });

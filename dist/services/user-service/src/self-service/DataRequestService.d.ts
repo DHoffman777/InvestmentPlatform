@@ -656,7 +656,7 @@ export declare class DataRequestService extends EventEmitter {
         limit?: number;
     }): Promise<DataRequest[]>;
     cancelDataRequest(requestId: string, userId: string, reason: string, ipAddress: string, userAgent: string): Promise<boolean>;
-    processDataRequest(requestId: string): Promise<void>;
+    processDataRequest(requestId: string): Promise<any>;
     downloadRequestResult(requestId: string, userId: string, downloadToken?: string): Promise<{
         url: string;
         expiresAt: Date;
@@ -719,4 +719,5 @@ export declare class DataRequestService extends EventEmitter {
     private delay;
     private initializeService;
     private startProcessingScheduler;
+    private getErrorMessage;
 }

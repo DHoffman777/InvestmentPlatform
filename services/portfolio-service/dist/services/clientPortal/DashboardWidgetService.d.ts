@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client';
 import { DashboardWidget, DashboardWidgetType } from '../../models/clientPortal/ClientPortal';
 interface WidgetDataContext {
     tenantId: string;
@@ -9,8 +10,8 @@ interface WidgetDataContext {
     };
 }
 export declare class DashboardWidgetService {
-    private eventPublisher;
-    constructor();
+    private prisma;
+    constructor(prisma: PrismaClient);
     getWidgetData(widget: DashboardWidget, context: WidgetDataContext): Promise<any>;
     refreshWidget(widgetId: string, context: WidgetDataContext): Promise<{
         data: any;

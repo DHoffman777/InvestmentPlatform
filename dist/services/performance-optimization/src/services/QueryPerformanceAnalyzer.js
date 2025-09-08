@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QueryPerformanceAnalyzer = void 0;
-const client_1 = require("@prisma/client");
-class QueryPerformanceAnalyzer extends client_1.PrismaClient {
+const runtime_1 = require("@prisma/client/runtime");
+class QueryPerformanceAnalyzer extends runtime_1.PrismaClient {
     financialQueryPatterns = [];
     constructor() {
         super();

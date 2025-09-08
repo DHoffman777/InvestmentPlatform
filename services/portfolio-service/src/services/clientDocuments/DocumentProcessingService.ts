@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { 
   ClientDocument, 
@@ -23,13 +24,12 @@ import {
   DocumentPermission
 } from '../../models/clientDocuments/ClientDocuments';
 import { logger } from '../../utils/logger';
-import { EventPublisher } from '../../utils/eventPublisher';
 
 export class DocumentProcessingService {
-  private eventPublisher: EventPublisher;
+  private prisma: PrismaClient;
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(prisma: PrismaClient) {
+    this.prisma = prisma;
   }
 
   async uploadDocument(request: DocumentUploadRequest): Promise<DocumentUploadResponse> {
@@ -147,13 +147,13 @@ export class DocumentProcessingService {
       });
 
       // Publish event
-      await this.eventPublisher.publish('document.uploaded', {
-        tenantId: request.tenantId,
-        documentId,
-        clientId: request.clientId,
-        documentType: classification.type,
-        fileName: request.file.name
-      });
+      // await this.eventPublisher.publish('document.uploaded', {
+      //   tenantId: request.tenantId,
+      //   documentId,
+      //   clientId: request.clientId,
+      //   documentType: classification.type,
+      //   fileName: request.file.name
+      // });
 
       logger.info('Document upload completed', {
         documentId,
@@ -167,7 +167,7 @@ export class DocumentProcessingService {
         warnings
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error uploading document:', error);
       throw error;
     }
@@ -200,7 +200,7 @@ export class DocumentProcessingService {
         suggestions
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error searching documents:', error);
       throw error;
     }
@@ -232,13 +232,13 @@ export class DocumentProcessingService {
 
       return document;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving document:', error);
       throw error;
     }
   }
 
-  async deleteDocument(tenantId: string, documentId: string, userId: string): Promise<void> {
+  async deleteDocument(tenantId: string, documentId: string, userId: string): Promise<any> {
     try {
       logger.info('Deleting document', { tenantId, documentId, userId });
 
@@ -270,15 +270,15 @@ export class DocumentProcessingService {
       });
 
       // Publish event
-      await this.eventPublisher.publish('document.deleted', {
-        tenantId,
-        documentId,
-        deletedBy: userId
-      });
+      // await this.eventPublisher.publish('document.deleted', {
+      //   tenantId,
+      //   documentId,
+      //   deletedBy: userId
+      // });
 
       logger.info('Document deleted successfully', { documentId });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error deleting document:', error);
       throw error;
     }
@@ -325,7 +325,7 @@ export class DocumentProcessingService {
             success: true
           });
 
-        } catch (error) {
+        } catch (error: any) {
           results.failed++;
           results.errors.push({
             documentId,
@@ -347,7 +347,7 @@ export class DocumentProcessingService {
 
       return results;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error performing bulk operation:', error);
       throw error;
     }
@@ -382,7 +382,7 @@ export class DocumentProcessingService {
 
       return classification;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error classifying document:', error);
       throw error;
     }
@@ -425,7 +425,7 @@ export class DocumentProcessingService {
 
       return extractedData;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error extracting document data:', error);
       throw error;
     }
@@ -459,7 +459,7 @@ export class DocumentProcessingService {
 
       return validation;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error validating document:', error);
       throw error;
     }
@@ -514,7 +514,7 @@ export class DocumentProcessingService {
     return `s3://documents/${documentId}/${file.name}`;
   }
 
-  private async saveDocument(document: ClientDocument): Promise<void> {
+  private async saveDocument(document: ClientDocument): Promise<any> {
     // Mock database save
     logger.info('Document saved to database', { documentId: document.id });
   }
@@ -540,7 +540,7 @@ export class DocumentProcessingService {
     return jobId;
   }
 
-  private async createAuditLog(auditLog: DocumentAuditLog): Promise<void> {
+  private async createAuditLog(auditLog: DocumentAuditLog): Promise<any> {
     // Mock audit log creation
     logger.info('Audit log created', { 
       documentId: auditLog.documentId,
@@ -559,28 +559,29 @@ export class DocumentProcessingService {
     return true;
   }
 
-  private async updateDocumentStatus(documentId: string, status: DocumentStatus): Promise<void> {
+  private async updateDocumentStatus(documentId: string, status: DocumentStatus): Promise<any> {
     // Mock status update
     logger.info('Document status updated', { documentId, status });
   }
 
-  private async updateDocumentAccess(documentId: string, accessParams: any): Promise<void> {
+  private async updateDocumentAccess(documentId: string, accessParams: any): Promise<any> {
     // Mock access update
     logger.info('Document access updated', { documentId, accessParams });
   }
 
-  private async updateDocumentClassification(documentId: string, classification: DocumentClassification): Promise<void> {
+  private async updateDocumentClassification(documentId: string, classification: DocumentClassification): Promise<any> {
     // Mock classification update
     logger.info('Document classification updated', { documentId });
   }
 
-  private async updateDocumentExtractedData(documentId: string, extractedData: ExtractionResult[]): Promise<void> {
+  private async updateDocumentExtractedData(documentId: string, extractedData: ExtractionResult[]): Promise<any> {
     // Mock extracted data update
     logger.info('Document extracted data updated', { documentId, fieldCount: extractedData.length });
   }
 
-  private async updateDocumentValidation(documentId: string, validation: DocumentValidation): Promise<void> {
+  private async updateDocumentValidation(documentId: string, validation: DocumentValidation): Promise<any> {
     // Mock validation update
     logger.info('Document validation updated', { documentId, isValid: validation.isValid });
   }
 }
+

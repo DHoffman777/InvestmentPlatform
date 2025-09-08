@@ -107,5 +107,5 @@ export declare class SLAComplianceScoringService extends EventEmitter {
     private createDefaultComponent;
     private generateCacheKey;
     private isCacheValid;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
 }

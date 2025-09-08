@@ -1,6 +1,7 @@
 import { Logger } from 'winston';
 import { PrismaClient } from '@prisma/client';
-import { KafkaService } from '../infrastructure/KafkaService';
+// Kafka service will be imported when available
+// import { KafkaService } from '../infrastructure/KafkaService';
 import {
   Document,
   DocumentType,
@@ -110,7 +111,7 @@ export interface GeneratedTag {
 export class DocumentFilingService {
   private prisma: PrismaClient;
   private logger: Logger;
-  private kafkaService: KafkaService;
+  private kafkaService: any; // KafkaService - type will be restored when module is available
   private filingRules: Map<string, FilingRule>;
   private directoryTemplates: Map<DocumentType, DirectoryTemplate>;
   private classificationEngine: any;
@@ -120,7 +121,7 @@ export class DocumentFilingService {
   constructor(
     prisma: PrismaClient,
     logger: Logger,
-    kafkaService: KafkaService
+    kafkaService: any // KafkaService - type will be restored when module is available
   ) {
     this.prisma = prisma;
     this.logger = logger;
@@ -149,8 +150,8 @@ export class DocumentFilingService {
             request.document,
             request.extractedData
           );
-        } catch (error) {
-          errors.push(`Auto-classification failed: ${error.message}`);
+        } catch (error: any) {
+          errors.push(`Auto-classification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
           filingStatus = 'PARTIAL';
         }
       }
@@ -162,8 +163,8 @@ export class DocumentFilingService {
             request.document,
             request.extractedData
           );
-        } catch (error) {
-          errors.push(`Tag generation failed: ${error.message}`);
+        } catch (error: any) {
+          errors.push(`Tag generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
           filingStatus = 'PARTIAL';
         }
       }
@@ -208,8 +209,8 @@ export class DocumentFilingService {
               executionTime: Date.now() - ruleStartTime
             });
           }
-        } catch (error) {
-          errors.push(`Rule execution failed for ${rule.name}: ${error.message}`);
+        } catch (error: any) {
+          errors.push(`Rule execution failed for ${rule.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
           filingStatus = 'PARTIAL';
         }
       }
@@ -228,8 +229,8 @@ export class DocumentFilingService {
 
       try {
         await this.moveDocumentToPath(request.document, filingPath);
-      } catch (error) {
-        errors.push(`Document move failed: ${error.message}`);
+      } catch (error: any) {
+        errors.push(`Document move failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         filingStatus = 'FAILED';
       }
 
@@ -241,7 +242,7 @@ export class DocumentFilingService {
       await this.updateDocumentRecord(
         request.documentId,
         {
-          filingPath,
+          filePath: filingPath,
           classification: updatedClassification,
           tags: generatedTags,
           metadata: updatedMetadata,
@@ -284,10 +285,10 @@ export class DocumentFilingService {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error('Document filing failed', {
         documentId: request.documentId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         stack: error.stack
       });
       throw error;
@@ -314,8 +315,8 @@ export class DocumentFilingService {
         alternativeTypes: prediction.alternatives || []
       };
 
-    } catch (error) {
-      this.logger.warn('ML classification failed, falling back to rule-based', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('ML classification failed, falling back to rule-based', { error: error instanceof Error ? error.message : 'Unknown error' });
       return this.performRuleBasedClassification(document, extractedData);
     }
   }
@@ -392,8 +393,8 @@ export class DocumentFilingService {
       try {
         const nlpTags = await this.generateNLPTags(document);
         tags.push(...nlpTags);
-      } catch (error) {
-        this.logger.warn('NLP tag generation failed', { error: error.message });
+      } catch (error: any) {
+        this.logger.warn('NLP tag generation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
 
@@ -540,8 +541,8 @@ export class DocumentFilingService {
         });
       }
 
-    } catch (error) {
-      this.logger.warn('NLP tag generation failed', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('NLP tag generation failed', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
 
     return tags;
@@ -680,7 +681,7 @@ export class DocumentFilingService {
       try {
         await this.executeAction(action, document, metadata);
         executedActions.push(action);
-      } catch (error) {
+      } catch (error: any) {
         this.logger.warn('Action execution failed', {
           ruleId: rule.id,
           actionType: action.type,
@@ -696,7 +697,7 @@ export class DocumentFilingService {
     action: FilingAction,
     document: Document,
     metadata: Record<string, any>
-  ): Promise<void> {
+  ): Promise<any> {
     switch (action.type) {
       case 'ADD_TAG':
         if (!document.tags.includes(action.parameters.tag)) {
@@ -792,7 +793,7 @@ export class DocumentFilingService {
     return structure;
   }
 
-  private async moveDocumentToPath(document: Document, targetPath: string): Promise<void> {
+  private async moveDocumentToPath(document: Document, targetPath: string): Promise<any> {
     if (this.fileSystemManager) {
       await this.fileSystemManager.moveFile(document.filePath, targetPath);
     } else {
@@ -806,7 +807,7 @@ export class DocumentFilingService {
   private async updateDocumentRecord(
     documentId: string,
     updates: Partial<Document>
-  ): Promise<void> {
+  ): Promise<any> {
     this.logger.info('Updating document record', { documentId, updates });
   }
 
@@ -856,15 +857,25 @@ export class DocumentFilingService {
       [DocumentType.TRADE_CONFIRMATION]: DocumentClassification.CONFIDENTIAL,
       [DocumentType.STATEMENT]: DocumentClassification.CONFIDENTIAL,
       [DocumentType.PROSPECTUS]: DocumentClassification.PUBLIC,
+      [DocumentType.OFFERING_MEMORANDUM]: DocumentClassification.CONFIDENTIAL,
+      [DocumentType.TERM_SHEET]: DocumentClassification.CONFIDENTIAL,
+      [DocumentType.ANNUAL_REPORT]: DocumentClassification.PUBLIC,
+      [DocumentType.QUARTERLY_REPORT]: DocumentClassification.PUBLIC,
       [DocumentType.TAX_DOCUMENT]: DocumentClassification.HIGHLY_CONFIDENTIAL,
-      [DocumentType.CONTRACT]: DocumentClassification.CONFIDENTIAL,
-      [DocumentType.LEGAL_OPINION]: DocumentClassification.CONFIDENTIAL,
       [DocumentType.COMPLIANCE_CERTIFICATE]: DocumentClassification.INTERNAL,
+      [DocumentType.CONTRACT]: DocumentClassification.CONFIDENTIAL,
+      [DocumentType.AMENDMENT]: DocumentClassification.CONFIDENTIAL,
+      [DocumentType.LEGAL_OPINION]: DocumentClassification.CONFIDENTIAL,
       [DocumentType.AUDIT_REPORT]: DocumentClassification.CONFIDENTIAL,
       [DocumentType.REGULATORY_FILING]: DocumentClassification.PUBLIC,
       [DocumentType.CLIENT_COMMUNICATION]: DocumentClassification.CONFIDENTIAL,
+      [DocumentType.INVESTMENT_COMMITTEE_MINUTES]: DocumentClassification.HIGHLY_CONFIDENTIAL,
+      [DocumentType.DUE_DILIGENCE_REPORT]: DocumentClassification.CONFIDENTIAL,
       [DocumentType.PERFORMANCE_REPORT]: DocumentClassification.CONFIDENTIAL,
       [DocumentType.RISK_REPORT]: DocumentClassification.CONFIDENTIAL,
+      [DocumentType.SUBSCRIPTION_AGREEMENT]: DocumentClassification.CONFIDENTIAL,
+      [DocumentType.REDEMPTION_NOTICE]: DocumentClassification.CONFIDENTIAL,
+      [DocumentType.TRANSFER_AGREEMENT]: DocumentClassification.CONFIDENTIAL,
       [DocumentType.KYC_DOCUMENT]: DocumentClassification.HIGHLY_CONFIDENTIAL,
       [DocumentType.AML_DOCUMENT]: DocumentClassification.HIGHLY_CONFIDENTIAL,
       [DocumentType.OTHER]: DocumentClassification.INTERNAL
@@ -904,7 +915,7 @@ export class DocumentFilingService {
   private async sendNotification(
     parameters: Record<string, any>,
     document: Document
-  ): Promise<void> {
+  ): Promise<any> {
     this.logger.info('Sending notification', { 
       documentId: document.id,
       parameters 
@@ -914,14 +925,14 @@ export class DocumentFilingService {
   private async triggerWorkflow(
     parameters: Record<string, any>,
     document: Document
-  ): Promise<void> {
+  ): Promise<any> {
     this.logger.info('Triggering workflow', { 
       documentId: document.id,
       parameters 
     });
   }
 
-  private async initializeFilingService(): Promise<void> {
+  private async initializeFilingService(): Promise<any> {
     try {
       await this.loadDefaultFilingRules();
       await this.loadDirectoryTemplates();
@@ -931,12 +942,12 @@ export class DocumentFilingService {
         rules: this.filingRules.size,
         templates: this.directoryTemplates.size
       });
-    } catch (error) {
-      this.logger.error('Failed to initialize filing service', { error: error.message });
+    } catch (error: any) {
+      this.logger.error('Failed to initialize filing service', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
-  private async loadDefaultFilingRules(): Promise<void> {
+  private async loadDefaultFilingRules(): Promise<any> {
     const defaultRules: FilingRule[] = [
       {
         id: 'high_value_trades',
@@ -1007,7 +1018,7 @@ export class DocumentFilingService {
     this.logger.info('Default filing rules loaded', { count: defaultRules.length });
   }
 
-  private async loadDirectoryTemplates(): Promise<void> {
+  private async loadDirectoryTemplates(): Promise<any> {
     const templates = [
       new TradeConfirmationDirectoryTemplate(),
       new StatementDirectoryTemplate(),
@@ -1021,7 +1032,7 @@ export class DocumentFilingService {
     this.logger.info('Directory templates loaded', { count: templates.length });
   }
 
-  private async initializeEngines(): Promise<void> {
+  private async initializeEngines(): Promise<any> {
     try {
       this.classificationEngine = {
         classify: async (features: number[]) => ({
@@ -1042,8 +1053,8 @@ export class DocumentFilingService {
         })
       };
 
-    } catch (error) {
-      this.logger.warn('Failed to initialize classification/tagging engines', { error: error.message });
+    } catch (error: any) {
+      this.logger.warn('Failed to initialize classification/tagging engines', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -1051,7 +1062,7 @@ export class DocumentFilingService {
     documentId: string,
     tenantId: string,
     result: FilingResult
-  ): Promise<void> {
+  ): Promise<any> {
     const event = {
       eventType: 'DOCUMENT_FILING_COMPLETED',
       documentId,
@@ -1114,3 +1125,4 @@ class ProspectusDirectoryTemplate implements DirectoryTemplate {
     return `/documents/prospectuses/${year}/${document.fileName}`;
   }
 }
+

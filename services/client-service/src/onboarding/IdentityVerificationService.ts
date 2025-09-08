@@ -319,7 +319,7 @@ export class IdentityVerificationService extends EventEmitter {
   private async initializeVerificationMethod(
     sessionId: string,
     methodType: VerificationMethodType
-  ): Promise<void> {
+  ): Promise<any> {
     const session = this.sessions.get(sessionId);
     if (!session) return;
 
@@ -390,7 +390,7 @@ export class IdentityVerificationService extends EventEmitter {
     return documentVerification;
   }
 
-  private async processDocumentVerification(verificationId: string): Promise<void> {
+  private async processDocumentVerification(verificationId: string): Promise<any> {
     const verification = this.documentVerifications.get(verificationId);
     if (!verification) return;
 
@@ -542,7 +542,7 @@ export class IdentityVerificationService extends EventEmitter {
     return biometricVerification;
   }
 
-  private async processBiometricVerification(verificationId: string): Promise<void> {
+  private async processBiometricVerification(verificationId: string): Promise<any> {
     const verification = this.biometricVerifications.get(verificationId);
     if (!verification) return;
 
@@ -690,7 +690,7 @@ export class IdentityVerificationService extends EventEmitter {
     return kba;
   }
 
-  private async updateSessionProgress(sessionId: string): Promise<void> {
+  private async updateSessionProgress(sessionId: string): Promise<any> {
     const session = this.sessions.get(sessionId);
     if (!session) return;
 
@@ -839,8 +839,9 @@ export class IdentityVerificationService extends EventEmitter {
     const methodSuccessRates: Record<VerificationMethodType, number> = {} as Record<VerificationMethodType, number>;
     Object.values(VerificationMethodType).forEach(methodType => {
       const methodResults = sessions
-        .flatMap(s => s.results)
-        .filter(r => s.methods.find(m => m.id === r.methodId)?.type === methodType);
+        .flatMap(s => s.results.map(r => ({ result: r, session: s })))
+        .filter(({ result, session }) => session.methods.find((m: any) => m.id === result.methodId)?.type === methodType)
+        .map(({ result }) => result);
       
       const successfulMethods = methodResults.filter(r => r.verified).length;
       methodSuccessRates[methodType] = methodResults.length > 0 

@@ -14,8 +14,8 @@ export declare class JWTService {
         tenantId: string;
         sessionId: string;
     } | null>;
-    revokeSession(sessionId: string): Promise<void>;
-    revokeAllUserSessions(userId: string): Promise<void>;
+    revokeSession(sessionId: string): Promise<any>;
+    revokeAllUserSessions(userId: string): Promise<any>;
     extractTokenFromHeader(authHeader: string | undefined): string | null;
 }
 export default JWTService;

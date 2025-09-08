@@ -1,0 +1,250 @@
+export const __esModule: boolean;
+export class PredictiveModelingService {
+    constructor(eventPublisher: any);
+    eventPublisher: any;
+    models: Map<any, any>;
+    predictions: Map<any, any>;
+    modelPerformance: Map<any, any>;
+    defaultHyperparameters: Map<string, {
+        learningRate: number;
+        maxDepth: number;
+        nEstimators: number;
+        minSamplesLeaf: number;
+        regularization: number;
+        seasonalPeriods?: undefined;
+        trendOrder?: undefined;
+        seasonalOrder?: undefined;
+        lookbackWindow?: undefined;
+        forecastHorizon?: undefined;
+        classWeight?: undefined;
+        nClusters?: undefined;
+        maxIterations?: undefined;
+        tolerance?: undefined;
+        initialization?: undefined;
+        hiddenLayers?: undefined;
+        dropout?: undefined;
+        batchSize?: undefined;
+        epochs?: undefined;
+        patience?: undefined;
+    } | {
+        seasonalPeriods: number;
+        trendOrder: number;
+        seasonalOrder: number;
+        lookbackWindow: number;
+        forecastHorizon: number;
+        learningRate?: undefined;
+        maxDepth?: undefined;
+        nEstimators?: undefined;
+        minSamplesLeaf?: undefined;
+        regularization?: undefined;
+        classWeight?: undefined;
+        nClusters?: undefined;
+        maxIterations?: undefined;
+        tolerance?: undefined;
+        initialization?: undefined;
+        hiddenLayers?: undefined;
+        dropout?: undefined;
+        batchSize?: undefined;
+        epochs?: undefined;
+        patience?: undefined;
+    } | {
+        learningRate: number;
+        maxDepth: number;
+        nEstimators: number;
+        minSamplesLeaf: number;
+        classWeight: string;
+        regularization?: undefined;
+        seasonalPeriods?: undefined;
+        trendOrder?: undefined;
+        seasonalOrder?: undefined;
+        lookbackWindow?: undefined;
+        forecastHorizon?: undefined;
+        nClusters?: undefined;
+        maxIterations?: undefined;
+        tolerance?: undefined;
+        initialization?: undefined;
+        hiddenLayers?: undefined;
+        dropout?: undefined;
+        batchSize?: undefined;
+        epochs?: undefined;
+        patience?: undefined;
+    } | {
+        nClusters: number;
+        maxIterations: number;
+        tolerance: number;
+        initialization: string;
+        learningRate?: undefined;
+        maxDepth?: undefined;
+        nEstimators?: undefined;
+        minSamplesLeaf?: undefined;
+        regularization?: undefined;
+        seasonalPeriods?: undefined;
+        trendOrder?: undefined;
+        seasonalOrder?: undefined;
+        lookbackWindow?: undefined;
+        forecastHorizon?: undefined;
+        classWeight?: undefined;
+        hiddenLayers?: undefined;
+        dropout?: undefined;
+        batchSize?: undefined;
+        epochs?: undefined;
+        patience?: undefined;
+    } | {
+        hiddenLayers: number[];
+        dropout: number;
+        learningRate: number;
+        batchSize: number;
+        epochs: number;
+        patience: number;
+        maxDepth?: undefined;
+        nEstimators?: undefined;
+        minSamplesLeaf?: undefined;
+        regularization?: undefined;
+        seasonalPeriods?: undefined;
+        trendOrder?: undefined;
+        seasonalOrder?: undefined;
+        lookbackWindow?: undefined;
+        forecastHorizon?: undefined;
+        classWeight?: undefined;
+        nClusters?: undefined;
+        maxIterations?: undefined;
+        tolerance?: undefined;
+        initialization?: undefined;
+    }>;
+    trainModel(request: any): Promise<{
+        id: `${string}-${string}-${string}-${string}-${string}`;
+        name: string;
+        description: string;
+        modelType: any;
+        algorithm: any;
+        targetVariable: any;
+        features: any;
+        hyperparameters: any;
+        performance: {
+            accuracy: number;
+            precision: number;
+            recall: number;
+            f1Score: number;
+            mse: number;
+            mae: number;
+            r2: number;
+        };
+        trainingData: {
+            startDate: any;
+            endDate: any;
+            recordCount: number;
+        };
+        lastTrainingDate: Date;
+        nextTrainingDate: Date;
+        status: string;
+        version: string;
+        createdBy: string;
+        createdAt: Date;
+    }>;
+    generatePrediction(request: any): Promise<{
+        id: `${string}-${string}-${string}-${string}-${string}`;
+        modelId: any;
+        entityId: any;
+        entityType: any;
+        predictionType: any;
+        prediction: {
+            value: number;
+            confidence: number;
+            confidenceInterval: {
+                lower: number;
+                upper: any;
+            };
+            horizon: any;
+            unit: any;
+        };
+        features: {};
+        explanation: {
+            topFactors: {
+                feature: string;
+                impact: number;
+                direction: string;
+            }[];
+            shap_values: {};
+        };
+        generatedAt: Date;
+        validUntil: Date;
+    }>;
+    retrainModel(modelId: any, newTrainingPeriod: any): Promise<any>;
+    getModelPerformance(modelId: any): Promise<any>;
+    backtestModel(modelId: any, backtestPeriod: any): Promise<any>;
+    getPredictionsForEntity(entityId: any, entityType: any, validOnly?: boolean): Promise<any[]>;
+    getAvailableModels(tenantId: any, modelType: any): Promise<any[]>;
+    prepareTrainingData(request: any): Promise<{
+        date: Date;
+        target: number;
+        features: {};
+    }[]>;
+    performFeatureEngineering(trainingData: any, features: any): Promise<{
+        rawFeatures: {};
+        engineeredFeatures: {};
+        featureImportance: {};
+        correlationMatrix: {};
+    }>;
+    selectAlgorithm(modelType: any): any;
+    calculateInitialPerformance(): Promise<{
+        accuracy: number;
+        precision: number;
+        recall: number;
+        f1Score: number;
+        mse: number;
+        mae: number;
+        r2: number;
+    }>;
+    calculateNextTrainingDate(modelType: any): Date;
+    executeTraining(model: any, trainingData: any, features: any): Promise<void>;
+    validateModel(model: any, trainingData: any): Promise<{
+        accuracy: number;
+        precision: number;
+        recall: number;
+        f1Score: number;
+        mse: number;
+        mae: number;
+        r2: number;
+    }>;
+    preprocessFeatures(features: any, model: any): Promise<{}>;
+    executePrediction(model: any, features: any, request: any): Promise<{
+        value: number;
+    }>;
+    executeRegressionPrediction(features: any, model: any): number;
+    executeTimeSeriesPrediction(features: any, model: any, horizon: any): number;
+    executeClassificationPrediction(features: any, model: any): number;
+    calculatePredictionConfidence(model: any, features: any): Promise<number>;
+    calculateConfidenceInterval(prediction: any, confidence: any): Promise<{
+        lower: number;
+        upper: any;
+    }>;
+    generatePredictionExplanation(model: any, features: any, prediction: any): Promise<{
+        topFactors: {
+            feature: string;
+            impact: number;
+            direction: string;
+        }[];
+        shap_values: {};
+    }>;
+    calculatePredictionExpiry(horizon: any, unit: any): Date;
+    compareModelPerformance(oldModel: any, newModel: any): Promise<number>;
+    generateBacktestData(model: any, period: any): Promise<{
+        date: Date;
+        entityId: string;
+        features: {};
+        actualValue: number;
+    }[]>;
+    countCorrectPredictions(predictions: any, actuals: any): number;
+    calculateMeanError(predictions: any, actuals: any): number;
+    calculateMaxError(predictions: any, actuals: any): number;
+    calculateMinError(predictions: any, actuals: any): number;
+    generateModelName(modelType: any, targetVariable: any): string;
+    generateModelDescription(modelType: any, targetVariable: any): string;
+    calculateMovingAverage(values: any, window: any): number;
+    calculateVolatility(values: any): number;
+    calculateTrend(values: any): number;
+    calculateCorrelation(x: any, y: any): number;
+    scaleFeature(value: any, featureName: any): number;
+    assessFeatureQuality(features: any): number;
+    initializePredefinedModels(): void;
+}

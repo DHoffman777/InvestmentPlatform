@@ -11,7 +11,7 @@ export declare class OrderManagementService {
     searchOrders(request: OrderSearchRequest, tenantId: string): Promise<OrderSearchResult>;
     getOrderById(orderId: string, tenantId: string): Promise<Order | null>;
     validateOrder(request: CreateOrderRequest, tenantId: string): Promise<OrderValidationResult>;
-    performPreTradeChecks(orderId: string, tenantId: string): Promise<void>;
+    performPreTradeChecks(orderId: string, tenantId: string): Promise<any>;
     generateBestExecutionReport(orderId: string, tenantId: string): Promise<BestExecutionReport>;
     private generateClientOrderId;
     private generateExecutionId;

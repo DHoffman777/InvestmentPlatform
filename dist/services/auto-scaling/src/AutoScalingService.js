@@ -120,7 +120,7 @@ class AutoScalingService extends events_1.EventEmitter {
         // Error handling
         this.app.use((error, req, res, next) => {
             console.error('API Error:', error);
-            res.status(500).json({ error: 'Internal server error', details: error.message });
+            res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' });
         });
     }
     setupRoutes() {

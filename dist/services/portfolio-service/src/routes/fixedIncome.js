@@ -263,9 +263,7 @@ router.get('/positions/:positionId', auth_1.authenticateToken, async (req, res) 
             where: {
                 id: positionId,
                 tenantId,
-                securityType: {
-                    in: ['GOVERNMENT_BOND', 'CORPORATE_BOND', 'MUNICIPAL_BOND', 'TREASURY_BILL', 'AGENCY_BOND']
-                },
+                securityType: 'FIXED_INCOME',
                 isActive: true
             },
             include: {
@@ -308,7 +306,7 @@ router.get('/positions/:positionId', auth_1.authenticateToken, async (req, res) 
             logger_1.logger.warn('Could not valuate position:', valuationError);
             valuation = null;
         }
-        const metadata = position.metadata || {};
+        const metadata = {}; // metadata property not in Position schema
         const detailedPosition = {
             id: position.id,
             portfolioId: position.portfolioId,
@@ -324,7 +322,7 @@ router.get('/positions/:positionId', auth_1.authenticateToken, async (req, res) 
             couponRate: metadata.couponRate || 0,
             maturityDate: metadata.maturityDate,
             accruedInterest: metadata.accruedInterest || 0,
-            currentPrice: position.lastPrice.toNumber(),
+            currentPrice: position.lastPrice?.toNumber() || 0,
             lastPriceUpdate: position.lastPriceDate || position.updatedAt,
             yieldMetrics: yieldMetrics,
             valuation: valuation,
@@ -332,7 +330,7 @@ router.get('/positions/:positionId', auth_1.authenticateToken, async (req, res) 
             isPledged: false,
             createdAt: position.createdAt,
             updatedAt: position.updatedAt,
-            recentTransactions: position.transactions.map(tx => ({
+            recentTransactions: (position.transactions || []).map((tx) => ({
                 id: tx.id,
                 type: tx.transactionType,
                 quantity: tx.quantity.toNumber(),

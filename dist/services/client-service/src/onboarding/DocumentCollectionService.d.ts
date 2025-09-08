@@ -133,7 +133,7 @@ export declare class DocumentCollectionService extends EventEmitter {
     private mockContentExtraction;
     getSubmissionsByWorkflow(workflowId: string): DocumentSubmission[];
     getSubmission(submissionId: string): DocumentSubmission | undefined;
-    requestAdditionalDocument(workflowId: string, requirementId: string, reason: string): Promise<void>;
+    requestAdditionalDocument(workflowId: string, requirementId: string, reason: string): Promise<any>;
     getCompletionStatus(workflowId: string): Promise<{
         totalRequired: number;
         submitted: number;

@@ -12,7 +12,7 @@ class Form13FService {
     // 13F reporting threshold ($100M minimum)
     REPORTING_THRESHOLD = 100000000;
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('Form13F');
     }
     async prepareForm13F(data) {
         try {

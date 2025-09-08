@@ -12,7 +12,7 @@ class MultiJurisdictionComplianceService {
     conflicts = new Map();
     monitoringRules = new Map();
     constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+        this.eventPublisher = new eventPublisher_1.EventPublisher('MultiJurisdictionCompliance');
         this.initializeJurisdictionProfiles();
         this.initializeMonitoringRules();
     }

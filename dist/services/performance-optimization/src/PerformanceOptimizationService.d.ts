@@ -46,9 +46,9 @@ export declare class PerformanceOptimizationService {
     private generateDailyReport;
     private generateWeeklyReport;
     private generateTrendAnalysis;
-    startMonitoring(): Promise<void>;
-    stopMonitoring(): Promise<void>;
+    startMonitoring(): Promise<any>;
+    stopMonitoring(): Promise<any>;
     start(port?: number): void;
-    shutdown(): Promise<void>;
+    shutdown(): Promise<any>;
     getApp(): express.Application;
 }

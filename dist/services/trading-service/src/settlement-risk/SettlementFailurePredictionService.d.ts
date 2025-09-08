@@ -139,7 +139,7 @@ export declare class SettlementFailurePredictionService extends EventEmitter {
     private identifyKeyRiskFactors;
     private generateMitigationSuggestions;
     private createEarlyWarningIndicators;
-    updatePredictionAccuracy(instructionId: string, actualOutcome: 'SUCCESS' | 'FAILURE', actualDelayDays?: number): Promise<void>;
+    updatePredictionAccuracy(instructionId: string, actualOutcome: 'SUCCESS' | 'FAILURE', actualDelayDays?: number): Promise<any>;
     private updateModelPerformance;
     detectFailurePatterns(settlementHistory: any[]): FailurePattern[];
     getBatchPredictions(inputs: SettlementPredictionInput[]): Promise<PredictionResult[]>;

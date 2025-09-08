@@ -210,7 +210,7 @@ class ScalingThresholdMonitor extends events_1.EventEmitter {
             this.emit('scalingFailed', {
                 resourceId: decision.resourceId,
                 action: decision.action,
-                error: error.message
+                error: error instanceof Error ? error.message : 'Unknown error'
             });
             try {
                 await this.scalingExecutor.rollback(decision);
@@ -628,7 +628,7 @@ class ScalingThresholdMonitor extends events_1.EventEmitter {
                 await this.evaluateThresholds(metrics);
             }
             catch (error) {
-                this.emit('evaluationError', { error: error.message });
+                this.emit('evaluationError', { error: error instanceof Error ? error.message : 'Unknown error' });
             }
         }, this.config.evaluationInterval);
     }

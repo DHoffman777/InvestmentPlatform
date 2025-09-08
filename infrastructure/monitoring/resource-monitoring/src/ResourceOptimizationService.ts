@@ -154,9 +154,9 @@ export class ResourceOptimizationService extends EventEmitter {
       try {
         const engineRecommendations = await this.generateEngineRecommendations(engine, context);
         recommendations.push(...engineRecommendations);
-      } catch (error) {
-        console.error(`Recommendation engine ${engineId} failed:`, error.message);
-        this.emit('engineError', { engineId, error: error.message, timestamp: new Date() });
+      } catch (error: any) {
+        console.error(`Recommendation engine ${engineId} failed:`, error instanceof Error ? error.message : 'Unknown error');
+        this.emit('engineError', { engineId, error: error instanceof Error ? error.message : 'Unknown error', timestamp: new Date() });
       }
     }
 
@@ -379,7 +379,7 @@ export class ResourceOptimizationService extends EventEmitter {
     if (utilizationPattern.type === 'cyclical' && utilizationPattern.confidence > 0.8) {
       recommendations.push({
         id: this.generateRecommendationId(),
-        type: 'automation',
+        type: 'configuration' as const,  // 'automation' is not a valid type, using 'configuration' instead
         priority: 'medium',
         title: 'Implement auto-scaling based on usage patterns',
         description: `ML analysis detected cyclical usage pattern with ${(utilizationPattern.confidence * 100).toFixed(1)}% confidence. Auto-scaling can optimize costs.`,
@@ -575,7 +575,7 @@ export class ResourceOptimizationService extends EventEmitter {
   private async autoApplyLowRiskRecommendations(
     recommendations: ResourceRecommendation[],
     context: RecommendationContext
-  ): Promise<void> {
+  ): Promise<any> {
     const lowRiskRecommendations = recommendations.filter(r => 
       r.implementation.risk === 'low' && 
       r.confidence > 0.9 &&
@@ -588,11 +588,11 @@ export class ResourceOptimizationService extends EventEmitter {
         this.emit('recommendationAutoApplied', {
           recommendationId: recommendation.id,
           resourceId: context.snapshot.resourceId,
-          success: result.success,
+          success: result.result.success,  // Access success from nested result property
           timestamp: new Date()
         });
-      } catch (error) {
-        console.error(`Failed to auto-apply recommendation ${recommendation.id}:`, error.message);
+      } catch (error: any) {
+        console.error(`Failed to auto-apply recommendation ${recommendation.id}:`, error instanceof Error ? error.message : 'Unknown error');
       }
     }
   }
@@ -654,9 +654,9 @@ export class ResourceOptimizationService extends EventEmitter {
         timestamp: new Date()
       });
 
-    } catch (error) {
+    } catch (error: any) {
       result.result.success = false;
-      result.result.notes = `Application failed: ${error.message}`;
+      result.result.notes = `Application failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
 
     return result;
@@ -762,13 +762,13 @@ export class ResourceOptimizationService extends EventEmitter {
     this.updateScheduler = setInterval(async () => {
       try {
         await this.updateRecommendationEngines();
-      } catch (error) {
-        console.error('Recommendation engine update failed:', error.message);
+      } catch (error: any) {
+        console.error('Recommendation engine update failed:', error instanceof Error ? error.message : 'Unknown error');
       }
     }, this.config.recommendationUpdateInterval);
   }
 
-  private async updateRecommendationEngines(): Promise<void> {
+  private async updateRecommendationEngines(): Promise<any> {
     // Update ML models, refresh templates, etc.
     for (const [engineId, engine] of this.engines) {
       if (engine.type === 'ml_based' && engine.enabled) {
@@ -922,7 +922,7 @@ export class ResourceOptimizationService extends EventEmitter {
     return Object.values(checkResults).every(result => result);
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     if (this.updateScheduler) {
       clearInterval(this.updateScheduler);
     }
@@ -930,3 +930,4 @@ export class ResourceOptimizationService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

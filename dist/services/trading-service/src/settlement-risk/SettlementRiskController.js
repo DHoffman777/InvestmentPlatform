@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SettlementRiskController = void 0;
 const express_1 = __importDefault(require("express"));
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const SettlementRiskCalculationEngine_1 = require("./SettlementRiskCalculationEngine");
 const CounterpartyRiskAssessmentService_1 = require("./CounterpartyRiskAssessmentService");
@@ -55,69 +55,69 @@ class SettlementRiskController {
         this.router.use(standardRateLimit);
         // Risk Calculation Engine Routes
         this.router.post('/risk/calculate', strictRateLimit, this.authenticateUser, this.validateRiskCalculationInput(), this.validateRequest, this.calculateSettlementRisk.bind(this));
-        this.router.get('/risk/assessment/:instructionId', this.authenticateUser, (0, express_validator_1.param)('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getRiskAssessment.bind(this));
-        this.router.get('/risk/assessments', this.authenticateUser, (0, express_validator_1.query)('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'), (0, express_validator_1.query)('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative'), this.validateRequest, this.getAllRiskAssessments.bind(this));
+        this.router.get('/risk/assessment/:instructionId', this.authenticateUser, param('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getRiskAssessment.bind(this));
+        this.router.get('/risk/assessments', this.authenticateUser, query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'), query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative)'), this.validateRequest, this.getAllRiskAssessments.bind(this));
         this.router.get('/risk/high-risk', this.authenticateUser, this.getHighRiskInstructions.bind(this));
         this.router.get('/risk/summary', this.authenticateUser, this.getRiskSummary.bind(this));
         // Counterparty Risk Assessment Routes
         this.router.post('/counterparty', strictRateLimit, this.authenticateUser, this.validateCounterpartyProfile(), this.validateRequest, this.createCounterpartyProfile.bind(this));
-        this.router.put('/counterparty/:counterpartyId', this.authenticateUser, (0, express_validator_1.param)('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateRequest, this.updateCounterpartyProfile.bind(this));
-        this.router.post('/counterparty/:counterpartyId/risk-assessment', this.authenticateUser, (0, express_validator_1.param)('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateRequest, this.performCounterpartyRiskAssessment.bind(this));
-        this.router.get('/counterparty/:counterpartyId', this.authenticateUser, (0, express_validator_1.param)('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateRequest, this.getCounterpartyProfile.bind(this));
-        this.router.get('/counterparty/:counterpartyId/risk-metrics', this.authenticateUser, (0, express_validator_1.param)('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateRequest, this.getCounterpartyRiskMetrics.bind(this));
+        this.router.put('/counterparty/:counterpartyId', this.authenticateUser, param('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateRequest, this.updateCounterpartyProfile.bind(this));
+        this.router.post('/counterparty/:counterpartyId/risk-assessment', this.authenticateUser, param('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateRequest, this.performCounterpartyRiskAssessment.bind(this));
+        this.router.get('/counterparty/:counterpartyId', this.authenticateUser, param('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateRequest, this.getCounterpartyProfile.bind(this));
+        this.router.get('/counterparty/:counterpartyId/risk-metrics', this.authenticateUser, param('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateRequest, this.getCounterpartyRiskMetrics.bind(this));
         this.router.get('/counterparties', this.authenticateUser, this.getAllCounterparties.bind(this));
         this.router.get('/counterparties/high-risk', this.authenticateUser, this.getHighRiskCounterparties.bind(this));
-        this.router.post('/counterparty/:counterpartyId/exposure-limit', this.authenticateUser, (0, express_validator_1.param)('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateExposureLimit(), this.validateRequest, this.addExposureLimit.bind(this));
-        this.router.post('/counterparty/:counterpartyId/credit-event', this.authenticateUser, (0, express_validator_1.param)('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateCreditEvent(), this.validateRequest, this.recordCreditEvent.bind(this));
+        this.router.post('/counterparty/:counterpartyId/exposure-limit', this.authenticateUser, param('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateExposureLimit(), this.validateRequest, this.addExposureLimit.bind(this));
+        this.router.post('/counterparty/:counterpartyId/credit-event', this.authenticateUser, param('counterpartyId').isUUID().withMessage('Invalid counterparty ID format'), this.validateCreditEvent(), this.validateRequest, this.recordCreditEvent.bind(this));
         // Settlement Timeline Tracking Routes
         this.router.post('/settlement/instruction', this.authenticateUser, this.validateSettlementInstruction(), this.validateRequest, this.createSettlementInstruction.bind(this));
-        this.router.put('/settlement/:instructionId/milestone/:milestoneType', this.authenticateUser, (0, express_validator_1.param)('instructionId').isUUID().withMessage('Invalid instruction ID format'), (0, express_validator_1.param)('milestoneType').isString().withMessage('Milestone type is required'), (0, express_validator_1.body)('status').isIn(['COMPLETED', 'DELAYED', 'FAILED', 'SKIPPED']).withMessage('Invalid status'), (0, express_validator_1.body)('notes').optional().isString(), this.validateRequest, this.updateMilestoneStatus.bind(this));
-        this.router.get('/settlement/:instructionId/timeline', this.authenticateUser, (0, express_validator_1.param)('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getSettlementTimeline.bind(this));
-        this.router.get('/settlement/instructions', this.authenticateUser, (0, express_validator_1.query)('status').optional().isString(), (0, express_validator_1.query)('counterpartyId').optional().isUUID(), this.validateRequest, this.getSettlementInstructions.bind(this));
+        this.router.put('/settlement/:instructionId/milestone/:milestoneType', this.authenticateUser, param('instructionId').isUUID().withMessage('Invalid instruction ID format'), param('milestoneType').isString().withMessage('Milestone type is required'), body('status').isIn(['COMPLETED', 'DELAYED', 'FAILED', 'SKIPPED']).withMessage('Invalid status'), body('notes').optional().isString(), this.validateRequest, this.updateMilestoneStatus.bind(this));
+        this.router.get('/settlement/:instructionId/timeline', this.authenticateUser, param('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getSettlementTimeline.bind(this));
+        this.router.get('/settlement/instructions', this.authenticateUser, query('status').optional().isString(), query('counterpartyId').optional().isUUID(), this.validateRequest, this.getSettlementInstructions.bind(this));
         this.router.get('/settlement/milestones/pending', this.authenticateUser, this.getPendingMilestones.bind(this));
         this.router.get('/settlement/milestones/overdue', this.authenticateUser, this.getOverdueMilestones.bind(this));
-        this.router.get('/settlement/alerts', this.authenticateUser, (0, express_validator_1.query)('severity').optional().isIn(['INFO', 'WARNING', 'CRITICAL']), this.validateRequest, this.getActiveAlerts.bind(this));
-        this.router.put('/settlement/alert/:alertId/acknowledge', this.authenticateUser, (0, express_validator_1.param)('alertId').isUUID().withMessage('Invalid alert ID format'), this.validateRequest, this.acknowledgeAlert.bind(this));
-        this.router.get('/settlement/performance-report', this.authenticateUser, (0, express_validator_1.query)('period').isString().withMessage('Period is required'), (0, express_validator_1.query)('startDate').isISO8601().withMessage('Valid start date is required'), (0, express_validator_1.query)('endDate').isISO8601().withMessage('Valid end date is required'), this.validateRequest, this.generatePerformanceReport.bind(this));
+        this.router.get('/settlement/alerts', this.authenticateUser, query('severity').optional().isIn(['INFO', 'WARNING', 'CRITICAL']), this.validateRequest, this.getActiveAlerts.bind(this));
+        this.router.put('/settlement/alert/:alertId/acknowledge', this.authenticateUser, param('alertId').isUUID().withMessage('Invalid alert ID format'), this.validateRequest, this.acknowledgeAlert.bind(this));
+        this.router.get('/settlement/performance-report', this.authenticateUser, query('period').isString().withMessage('Period is required'), query('startDate').isISO8601().withMessage('Valid start date is required'), query('endDate').isISO8601().withMessage('Valid end date is required'), this.validateRequest, this.generatePerformanceReport.bind(this));
         // Pre-Settlement Risk Checks Routes
         this.router.post('/pre-settlement/checks', strictRateLimit, this.authenticateUser, this.validateTradeOrder(), this.validateRequest, this.executePreSettlementChecks.bind(this));
-        this.router.get('/pre-settlement/check-suite/:suiteId', this.authenticateUser, (0, express_validator_1.param)('suiteId').isUUID().withMessage('Invalid suite ID format'), this.validateRequest, this.getRiskCheckSuite.bind(this));
-        this.router.get('/pre-settlement/history/:orderId', this.authenticateUser, (0, express_validator_1.param)('orderId').isUUID().withMessage('Invalid order ID format'), this.validateRequest, this.getRiskCheckHistory.bind(this));
-        this.router.post('/pre-settlement/bypass/:suiteId/:checkId', strictRateLimit, this.authenticateUser, (0, express_validator_1.param)('suiteId').isUUID().withMessage('Invalid suite ID format'), (0, express_validator_1.param)('checkId').isUUID().withMessage('Invalid check ID format'), (0, express_validator_1.body)('bypassReason').isString().isLength({ min: 10 }).withMessage('Bypass reason must be at least 10 characters'), this.validateRequest, this.bypassRiskCheck.bind(this));
+        this.router.get('/pre-settlement/check-suite/:suiteId', this.authenticateUser, param('suiteId').isUUID().withMessage('Invalid suite ID format'), this.validateRequest, this.getRiskCheckSuite.bind(this));
+        this.router.get('/pre-settlement/history/:orderId', this.authenticateUser, param('orderId').isUUID().withMessage('Invalid order ID format'), this.validateRequest, this.getRiskCheckHistory.bind(this));
+        this.router.post('/pre-settlement/bypass/:suiteId/:checkId', strictRateLimit, this.authenticateUser, param('suiteId').isUUID().withMessage('Invalid suite ID format'), param('checkId').isUUID().withMessage('Invalid check ID format'), body('bypassReason').isString().isLength({ min: 10 }).withMessage('Bypass reason must be at least 10 characters'), this.validateRequest, this.bypassRiskCheck.bind(this));
         this.router.get('/pre-settlement/alerts', this.authenticateUser, this.getRiskCheckAlerts.bind(this));
-        this.router.get('/pre-settlement/summary', this.authenticateUser, (0, express_validator_1.query)('timeFrame').optional().isIn(['DAILY', 'WEEKLY', 'MONTHLY']), this.validateRequest, this.getRiskCheckSummary.bind(this));
+        this.router.get('/pre-settlement/summary', this.authenticateUser, query('timeFrame').optional().isIn(['DAILY', 'WEEKLY', 'MONTHLY']), this.validateRequest, this.getRiskCheckSummary.bind(this));
         this.router.post('/pre-settlement/risk-limit', strictRateLimit, this.authenticateUser, this.validateRiskLimit(), this.validateRequest, this.addRiskLimit.bind(this));
         this.router.post('/pre-settlement/compliance-rule', strictRateLimit, this.authenticateUser, this.validateComplianceRule(), this.validateRequest, this.addComplianceRule.bind(this));
         // Settlement Failure Prediction Routes
         this.router.post('/prediction/settlement-failure', strictRateLimit, this.authenticateUser, this.validatePredictionInput(), this.validateRequest, this.predictSettlementFailure.bind(this));
-        this.router.get('/prediction/:instructionId', this.authenticateUser, (0, express_validator_1.param)('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getLatestPrediction.bind(this));
-        this.router.get('/prediction/:instructionId/history', this.authenticateUser, (0, express_validator_1.param)('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getPredictionHistory.bind(this));
-        this.router.get('/predictions/high-risk', this.authenticateUser, (0, express_validator_1.query)('threshold').optional().isFloat({ min: 0, max: 1 }), this.validateRequest, this.getHighRiskPredictions.bind(this));
-        this.router.post('/prediction/:instructionId/feedback', this.authenticateUser, (0, express_validator_1.param)('instructionId').isUUID().withMessage('Invalid instruction ID format'), (0, express_validator_1.body)('actualOutcome').isIn(['SUCCESS', 'FAILURE']).withMessage('Invalid outcome'), (0, express_validator_1.body)('actualDelayDays').optional().isFloat({ min: 0 }), this.validateRequest, this.updatePredictionAccuracy.bind(this));
-        this.router.get('/prediction/model/performance', this.authenticateUser, (0, express_validator_1.query)('modelVersion').optional().isString(), this.validateRequest, this.getModelPerformance.bind(this));
+        this.router.get('/prediction/:instructionId', this.authenticateUser, param('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getLatestPrediction.bind(this));
+        this.router.get('/prediction/:instructionId/history', this.authenticateUser, param('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getPredictionHistory.bind(this));
+        this.router.get('/predictions/high-risk', this.authenticateUser, query('threshold').optional().isFloat({ min: 0, max: 1 }), this.validateRequest, this.getHighRiskPredictions.bind(this));
+        this.router.post('/prediction/:instructionId/feedback', this.authenticateUser, param('instructionId').isUUID().withMessage('Invalid instruction ID format'), body('actualOutcome').isIn(['SUCCESS', 'FAILURE']).withMessage('Invalid outcome'), body('actualDelayDays').optional().isFloat({ min: 0 }), this.validateRequest, this.updatePredictionAccuracy.bind(this));
+        this.router.get('/prediction/model/performance', this.authenticateUser, query('modelVersion').optional().isString(), this.validateRequest, this.getModelPerformance.bind(this));
         this.router.get('/prediction/patterns', this.authenticateUser, this.getFailurePatterns.bind(this));
-        this.router.get('/prediction/summary', this.authenticateUser, (0, express_validator_1.query)('timeFrame').optional().isIn(['DAILY', 'WEEKLY', 'MONTHLY']), this.validateRequest, this.getPredictionSummary.bind(this));
+        this.router.get('/prediction/summary', this.authenticateUser, query('timeFrame').optional().isIn(['DAILY', 'WEEKLY', 'MONTHLY']), this.validateRequest, this.getPredictionSummary.bind(this));
         // Risk Mitigation Workflows Routes
-        this.router.post('/workflow/trigger', strictRateLimit, this.authenticateUser, (0, express_validator_1.body)('instructionId').isUUID().withMessage('Invalid instruction ID format'), (0, express_validator_1.body)('triggerData').isObject().withMessage('Trigger data is required'), (0, express_validator_1.body)('workflowId').optional().isUUID(), this.validateRequest, this.triggerWorkflow.bind(this));
-        this.router.get('/workflow/execution/:executionId', this.authenticateUser, (0, express_validator_1.param)('executionId').isUUID().withMessage('Invalid execution ID format'), this.validateRequest, this.getWorkflowExecution.bind(this));
-        this.router.get('/workflow/instruction/:instructionId', this.authenticateUser, (0, express_validator_1.param)('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getInstructionWorkflows.bind(this));
+        this.router.post('/workflow/trigger', strictRateLimit, this.authenticateUser, body('instructionId').isUUID().withMessage('Invalid instruction ID format'), body('triggerData').isObject().withMessage('Trigger data is required'), body('workflowId').optional().isUUID(), this.validateRequest, this.triggerWorkflow.bind(this));
+        this.router.get('/workflow/execution/:executionId', this.authenticateUser, param('executionId').isUUID().withMessage('Invalid execution ID format'), this.validateRequest, this.getWorkflowExecution.bind(this));
+        this.router.get('/workflow/instruction/:instructionId', this.authenticateUser, param('instructionId').isUUID().withMessage('Invalid instruction ID format'), this.validateRequest, this.getInstructionWorkflows.bind(this));
         this.router.get('/workflows/active', this.authenticateUser, this.getActiveWorkflowExecutions.bind(this));
-        this.router.put('/workflow/execution/:executionId/pause', strictRateLimit, this.authenticateUser, (0, express_validator_1.param)('executionId').isUUID().withMessage('Invalid execution ID format'), (0, express_validator_1.body)('reason').isString().withMessage('Reason is required'), this.validateRequest, this.pauseWorkflowExecution.bind(this));
-        this.router.put('/workflow/execution/:executionId/resume', this.authenticateUser, (0, express_validator_1.param)('executionId').isUUID().withMessage('Invalid execution ID format'), this.validateRequest, this.resumeWorkflowExecution.bind(this));
-        this.router.put('/workflow/execution/:executionId/cancel', strictRateLimit, this.authenticateUser, (0, express_validator_1.param)('executionId').isUUID().withMessage('Invalid execution ID format'), (0, express_validator_1.body)('reason').isString().withMessage('Reason is required'), this.validateRequest, this.cancelWorkflowExecution.bind(this));
+        this.router.put('/workflow/execution/:executionId/pause', strictRateLimit, this.authenticateUser, param('executionId').isUUID().withMessage('Invalid execution ID format'), body('reason').isString().withMessage('Reason is required'), this.validateRequest, this.pauseWorkflowExecution.bind(this));
+        this.router.put('/workflow/execution/:executionId/resume', this.authenticateUser, param('executionId').isUUID().withMessage('Invalid execution ID format'), this.validateRequest, this.resumeWorkflowExecution.bind(this));
+        this.router.put('/workflow/execution/:executionId/cancel', strictRateLimit, this.authenticateUser, param('executionId').isUUID().withMessage('Invalid execution ID format'), body('reason').isString().withMessage('Reason is required'), this.validateRequest, this.cancelWorkflowExecution.bind(this));
         this.router.get('/workflows', this.authenticateUser, this.getAllWorkflows.bind(this));
         this.router.post('/workflow', strictRateLimit, this.authenticateUser, this.validateWorkflow(), this.validateRequest, this.createWorkflow.bind(this));
-        this.router.get('/workflow/report', this.authenticateUser, (0, express_validator_1.query)('timeFrame').optional().isIn(['DAILY', 'WEEKLY', 'MONTHLY']), this.validateRequest, this.getWorkflowReport.bind(this));
+        this.router.get('/workflow/report', this.authenticateUser, query('timeFrame').optional().isIn(['DAILY', 'WEEKLY', 'MONTHLY']), this.validateRequest, this.getWorkflowReport.bind(this));
         // Reporting Routes
         this.router.post('/reports/generate', reportingRateLimit, this.authenticateUser, this.validateReportRequest(), this.validateRequest, this.generateReport.bind(this));
-        this.router.get('/reports/:reportId', this.authenticateUser, (0, express_validator_1.param)('reportId').isUUID().withMessage('Invalid report ID format'), this.validateRequest, this.getReport.bind(this));
-        this.router.get('/reports', this.authenticateUser, (0, express_validator_1.query)('type').optional().isString(), (0, express_validator_1.query)('recipient').optional().isEmail(), (0, express_validator_1.query)('days').optional().isInt({ min: 1, max: 365 }), this.validateRequest, this.getReports.bind(this));
+        this.router.get('/reports/:reportId', this.authenticateUser, param('reportId').isUUID().withMessage('Invalid report ID format'), this.validateRequest, this.getReport.bind(this));
+        this.router.get('/reports', this.authenticateUser, query('type').optional().isString(), query('recipient').optional().isEmail(), query('days').optional().isInt({ min: 1, max: 365 }), this.validateRequest, this.getReports.bind(this));
         this.router.get('/report-templates', this.authenticateUser, this.getReportTemplates.bind(this));
         this.router.post('/report-template', strictRateLimit, this.authenticateUser, this.validateReportTemplate(), this.validateRequest, this.createReportTemplate.bind(this));
         this.router.post('/report-schedule', this.authenticateUser, this.validateReportSchedule(), this.validateRequest, this.createReportSchedule.bind(this));
         this.router.get('/report-schedules', this.authenticateUser, this.getReportSchedules.bind(this));
-        this.router.put('/report-schedule/:scheduleId', this.authenticateUser, (0, express_validator_1.param)('scheduleId').isUUID().withMessage('Invalid schedule ID format'), this.validateRequest, this.updateReportSchedule.bind(this));
-        this.router.delete('/report-schedule/:scheduleId', strictRateLimit, this.authenticateUser, (0, express_validator_1.param)('scheduleId').isUUID().withMessage('Invalid schedule ID format'), this.validateRequest, this.deleteReportSchedule.bind(this));
+        this.router.put('/report-schedule/:scheduleId', this.authenticateUser, param('scheduleId').isUUID().withMessage('Invalid schedule ID format'), this.validateRequest, this.updateReportSchedule.bind(this));
+        this.router.delete('/report-schedule/:scheduleId', strictRateLimit, this.authenticateUser, param('scheduleId').isUUID().withMessage('Invalid schedule ID format'), this.validateRequest, this.deleteReportSchedule.bind(this));
         this.router.get('/reporting/summary', this.authenticateUser, this.getReportingSummary.bind(this));
         // Health and Status Routes
         this.router.get('/health', this.getHealthStatus.bind(this));
@@ -140,7 +140,7 @@ class SettlementRiskController {
         next();
     };
     validateRequest = (req, res, next) => {
-        const errors = (0, express_validator_1.validationResult)(req);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(400).json({
                 error: 'Validation failed',
@@ -153,158 +153,158 @@ class SettlementRiskController {
     // Validation middleware factories
     validateRiskCalculationInput() {
         return [
-            (0, express_validator_1.body)('tradeId').isUUID().withMessage('Valid trade ID is required'),
-            (0, express_validator_1.body)('counterpartyId').isUUID().withMessage('Valid counterparty ID is required'),
-            (0, express_validator_1.body)('settlementDate').isISO8601().withMessage('Valid settlement date is required'),
-            (0, express_validator_1.body)('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
-            (0, express_validator_1.body)('notionalAmount').isFloat({ min: 0 }).withMessage('Valid notional amount is required'),
-            (0, express_validator_1.body)('securityType').isString().withMessage('Security type is required'),
-            (0, express_validator_1.body)('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required')
+            body('tradeId').isUUID().withMessage('Valid trade ID is required'),
+            body('counterpartyId').isUUID().withMessage('Valid counterparty ID is required'),
+            body('settlementDate').isISO8601().withMessage('Valid settlement date is required'),
+            body('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
+            body('notionalAmount').isFloat({ min: 0 }).withMessage('Valid notional amount is required'),
+            body('securityType').isString().withMessage('Security type is required'),
+            body('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required')
         ];
     }
     validateCounterpartyProfile() {
         return [
-            (0, express_validator_1.body)('name').isString().isLength({ min: 1 }).withMessage('Counterparty name is required'),
-            (0, express_validator_1.body)('legalEntityIdentifier').isString().withMessage('LEI is required'),
-            (0, express_validator_1.body)('creditRating').isString().withMessage('Credit rating is required'),
-            (0, express_validator_1.body)('industry').isString().withMessage('Industry is required'),
-            (0, express_validator_1.body)('country').isString().isLength({ min: 2, max: 2 }).withMessage('Valid country code is required'),
-            (0, express_validator_1.body)('totalAssets').isFloat({ min: 0 }).withMessage('Valid total assets is required'),
-            (0, express_validator_1.body)('netWorth').isFloat().withMessage('Valid net worth is required')
+            body('name').isString().isLength({ min: 1 }).withMessage('Counterparty name is required'),
+            body('legalEntityIdentifier').isString().withMessage('LEI is required'),
+            body('creditRating').isString().withMessage('Credit rating is required'),
+            body('industry').isString().withMessage('Industry is required'),
+            body('country').isString().isLength({ min: 2, max: 2 }).withMessage('Valid country code is required'),
+            body('totalAssets').isFloat({ min: 0 }).withMessage('Valid total assets is required'),
+            body('netWorth').isFloat().withMessage('Valid net worth is required')
         ];
     }
     validateExposureLimit() {
         return [
-            (0, express_validator_1.body)('limitType').isIn(['GROSS', 'NET', 'SETTLEMENT', 'CREDIT', 'CONCENTRATION']).withMessage('Valid limit type is required'),
-            (0, express_validator_1.body)('limitAmount').isFloat({ min: 0 }).withMessage('Valid limit amount is required'),
-            (0, express_validator_1.body)('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
-            (0, express_validator_1.body)('threshold').isFloat({ min: 0, max: 100 }).withMessage('Threshold must be between 0 and 100'),
-            (0, express_validator_1.body)('warningLevel').isFloat({ min: 0, max: 100 }).withMessage('Warning level must be between 0 and 100'),
-            (0, express_validator_1.body)('expiryDate').isISO8601().withMessage('Valid expiry date is required'),
-            (0, express_validator_1.body)('approvedBy').isString().withMessage('Approver is required')
+            body('limitType').isIn(['GROSS', 'NET', 'SETTLEMENT', 'CREDIT', 'CONCENTRATION']).withMessage('Valid limit type is required'),
+            body('limitAmount').isFloat({ min: 0 }).withMessage('Valid limit amount is required'),
+            body('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
+            body('threshold').isFloat({ min: 0, max: 100 }).withMessage('Threshold must be between 0 and 100'),
+            body('warningLevel').isFloat({ min: 0, max: 100 }).withMessage('Warning level must be between 0 and 100'),
+            body('expiryDate').isISO8601().withMessage('Valid expiry date is required'),
+            body('approvedBy').isString().withMessage('Approver is required')
         ];
     }
     validateCreditEvent() {
         return [
-            (0, express_validator_1.body)('eventType').isIn(['RATING_DOWNGRADE', 'RATING_UPGRADE', 'DEFAULT', 'BANKRUPTCY', 'RESTRUCTURING', 'MERGER', 'ACQUISITION']).withMessage('Valid event type is required'),
-            (0, express_validator_1.body)('eventDate').isISO8601().withMessage('Valid event date is required'),
-            (0, express_validator_1.body)('description').isString().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
-            (0, express_validator_1.body)('impact').isIn(['POSITIVE', 'NEGATIVE', 'NEUTRAL']).withMessage('Valid impact is required'),
-            (0, express_validator_1.body)('severity').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid severity is required'),
-            (0, express_validator_1.body)('sourceAgency').isString().withMessage('Source agency is required')
+            body('eventType').isIn(['RATING_DOWNGRADE', 'RATING_UPGRADE', 'DEFAULT', 'BANKRUPTCY', 'RESTRUCTURING', 'MERGER', 'ACQUISITION']).withMessage('Valid event type is required'),
+            body('eventDate').isISO8601().withMessage('Valid event date is required'),
+            body('description').isString().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
+            body('impact').isIn(['POSITIVE', 'NEGATIVE', 'NEUTRAL']).withMessage('Valid impact is required'),
+            body('severity').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid severity is required'),
+            body('sourceAgency').isString().withMessage('Source agency is required')
         ];
     }
     validateSettlementInstruction() {
         return [
-            (0, express_validator_1.body)('tradeId').isUUID().withMessage('Valid trade ID is required'),
-            (0, express_validator_1.body)('counterpartyId').isUUID().withMessage('Valid counterparty ID is required'),
-            (0, express_validator_1.body)('securityId').isUUID().withMessage('Valid security ID is required'),
-            (0, express_validator_1.body)('side').isIn(['BUY', 'SELL']).withMessage('Valid side is required'),
-            (0, express_validator_1.body)('quantity').isFloat({ min: 0 }).withMessage('Valid quantity is required'),
-            (0, express_validator_1.body)('price').isFloat({ min: 0 }).withMessage('Valid price is required'),
-            (0, express_validator_1.body)('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
-            (0, express_validator_1.body)('tradeDate').isISO8601().withMessage('Valid trade date is required'),
-            (0, express_validator_1.body)('settlementDate').isISO8601().withMessage('Valid settlement date is required'),
-            (0, express_validator_1.body)('expectedSettlementTime').isISO8601().withMessage('Valid expected settlement time is required'),
-            (0, express_validator_1.body)('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required'),
-            (0, express_validator_1.body)('settlementMethod').isIn(['DVP', 'FOP', 'RVP', 'CASH']).withMessage('Valid settlement method is required'),
-            (0, express_validator_1.body)('custodianId').isUUID().withMessage('Valid custodian ID is required')
+            body('tradeId').isUUID().withMessage('Valid trade ID is required'),
+            body('counterpartyId').isUUID().withMessage('Valid counterparty ID is required'),
+            body('securityId').isUUID().withMessage('Valid security ID is required'),
+            body('side').isIn(['BUY', 'SELL']).withMessage('Valid side is required'),
+            body('quantity').isFloat({ min: 0 }).withMessage('Valid quantity is required'),
+            body('price').isFloat({ min: 0 }).withMessage('Valid price is required'),
+            body('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
+            body('tradeDate').isISO8601().withMessage('Valid trade date is required'),
+            body('settlementDate').isISO8601().withMessage('Valid settlement date is required'),
+            body('expectedSettlementTime').isISO8601().withMessage('Valid expected settlement time is required'),
+            body('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required'),
+            body('settlementMethod').isIn(['DVP', 'FOP', 'RVP', 'CASH']).withMessage('Valid settlement method is required'),
+            body('custodianId').isUUID().withMessage('Valid custodian ID is required')
         ];
     }
     validateTradeOrder() {
         return [
-            (0, express_validator_1.body)('counterpartyId').isUUID().withMessage('Valid counterparty ID is required'),
-            (0, express_validator_1.body)('securityId').isUUID().withMessage('Valid security ID is required'),
-            (0, express_validator_1.body)('side').isIn(['BUY', 'SELL']).withMessage('Valid side is required'),
-            (0, express_validator_1.body)('quantity').isFloat({ min: 0 }).withMessage('Valid quantity is required'),
-            (0, express_validator_1.body)('price').isFloat({ min: 0 }).withMessage('Valid price is required'),
-            (0, express_validator_1.body)('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
-            (0, express_validator_1.body)('orderType').isIn(['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT']).withMessage('Valid order type is required'),
-            (0, express_validator_1.body)('timeInForce').isIn(['DAY', 'GTC', 'IOC', 'FOK']).withMessage('Valid time in force is required'),
-            (0, express_validator_1.body)('settlementDate').isISO8601().withMessage('Valid settlement date is required'),
-            (0, express_validator_1.body)('portfolioId').isUUID().withMessage('Valid portfolio ID is required'),
-            (0, express_validator_1.body)('traderId').isUUID().withMessage('Valid trader ID is required')
+            body('counterpartyId').isUUID().withMessage('Valid counterparty ID is required'),
+            body('securityId').isUUID().withMessage('Valid security ID is required'),
+            body('side').isIn(['BUY', 'SELL']).withMessage('Valid side is required'),
+            body('quantity').isFloat({ min: 0 }).withMessage('Valid quantity is required'),
+            body('price').isFloat({ min: 0 }).withMessage('Valid price is required'),
+            body('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
+            body('orderType').isIn(['MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT']).withMessage('Valid order type is required'),
+            body('timeInForce').isIn(['DAY', 'GTC', 'IOC', 'FOK']).withMessage('Valid time in force is required'),
+            body('settlementDate').isISO8601().withMessage('Valid settlement date is required'),
+            body('portfolioId').isUUID().withMessage('Valid portfolio ID is required'),
+            body('traderId').isUUID().withMessage('Valid trader ID is required')
         ];
     }
     validatePredictionInput() {
         return [
-            (0, express_validator_1.body)('instructionId').isUUID().withMessage('Valid instruction ID is required'),
-            (0, express_validator_1.body)('counterpartyId').isUUID().withMessage('Valid counterparty ID is required'),
-            (0, express_validator_1.body)('securityId').isUUID().withMessage('Valid security ID is required'),
-            (0, express_validator_1.body)('notionalAmount').isFloat({ min: 0 }).withMessage('Valid notional amount is required'),
-            (0, express_validator_1.body)('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
-            (0, express_validator_1.body)('settlementDate').isISO8601().withMessage('Valid settlement date is required'),
-            (0, express_validator_1.body)('tradeDate').isISO8601().withMessage('Valid trade date is required'),
-            (0, express_validator_1.body)('securityType').isString().withMessage('Security type is required'),
-            (0, express_validator_1.body)('settlementMethod').isString().withMessage('Settlement method is required'),
-            (0, express_validator_1.body)('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required'),
-            (0, express_validator_1.body)('marketConditions').isObject().withMessage('Market conditions are required'),
-            (0, express_validator_1.body)('historicalContext').isObject().withMessage('Historical context is required')
+            body('instructionId').isUUID().withMessage('Valid instruction ID is required'),
+            body('counterpartyId').isUUID().withMessage('Valid counterparty ID is required'),
+            body('securityId').isUUID().withMessage('Valid security ID is required'),
+            body('notionalAmount').isFloat({ min: 0 }).withMessage('Valid notional amount is required'),
+            body('currency').isLength({ min: 3, max: 3 }).withMessage('Valid currency code is required'),
+            body('settlementDate').isISO8601().withMessage('Valid settlement date is required'),
+            body('tradeDate').isISO8601().withMessage('Valid trade date is required'),
+            body('securityType').isString().withMessage('Security type is required'),
+            body('settlementMethod').isString().withMessage('Settlement method is required'),
+            body('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required'),
+            body('marketConditions').isObject().withMessage('Market conditions are required'),
+            body('historicalContext').isObject().withMessage('Historical context is required')
         ];
     }
     validateRiskLimit() {
         return [
-            (0, express_validator_1.body)('limitType').isIn(['POSITION', 'NOTIONAL', 'CONCENTRATION', 'EXPOSURE', 'CREDIT', 'LEVERAGE', 'VAR', 'SECTOR', 'COUNTRY']).withMessage('Valid limit type is required'),
-            (0, express_validator_1.body)('entityType').isIn(['PORTFOLIO', 'COUNTERPARTY', 'SECURITY', 'TRADER', 'ACCOUNT']).withMessage('Valid entity type is required'),
-            (0, express_validator_1.body)('entityId').isUUID().withMessage('Valid entity ID is required'),
-            (0, express_validator_1.body)('limitValue').isFloat({ min: 0 }).withMessage('Valid limit value is required'),
-            (0, express_validator_1.body)('warningThreshold').isFloat({ min: 0, max: 100 }).withMessage('Warning threshold must be between 0 and 100'),
-            (0, express_validator_1.body)('breachThreshold').isFloat({ min: 0, max: 100 }).withMessage('Breach threshold must be between 0 and 100'),
-            (0, express_validator_1.body)('effectiveDate').isISO8601().withMessage('Valid effective date is required'),
-            (0, express_validator_1.body)('approvedBy').isString().withMessage('Approver is required')
+            body('limitType').isIn(['POSITION', 'NOTIONAL', 'CONCENTRATION', 'EXPOSURE', 'CREDIT', 'LEVERAGE', 'VAR', 'SECTOR', 'COUNTRY']).withMessage('Valid limit type is required'),
+            body('entityType').isIn(['PORTFOLIO', 'COUNTERPARTY', 'SECURITY', 'TRADER', 'ACCOUNT']).withMessage('Valid entity type is required'),
+            body('entityId').isUUID().withMessage('Valid entity ID is required'),
+            body('limitValue').isFloat({ min: 0 }).withMessage('Valid limit value is required'),
+            body('warningThreshold').isFloat({ min: 0, max: 100 }).withMessage('Warning threshold must be between 0 and 100'),
+            body('breachThreshold').isFloat({ min: 0, max: 100 }).withMessage('Breach threshold must be between 0 and 100'),
+            body('effectiveDate').isISO8601().withMessage('Valid effective date is required'),
+            body('approvedBy').isString().withMessage('Approver is required')
         ];
     }
     validateComplianceRule() {
         return [
-            (0, express_validator_1.body)('ruleName').isString().isLength({ min: 1 }).withMessage('Rule name is required'),
-            (0, express_validator_1.body)('ruleType').isIn(['REGULATORY', 'INTERNAL', 'CLIENT_SPECIFIC', 'RISK_MANAGEMENT']).withMessage('Valid rule type is required'),
-            (0, express_validator_1.body)('description').isString().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
-            (0, express_validator_1.body)('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required'),
-            (0, express_validator_1.body)('applicableSecurityTypes').isArray().withMessage('Applicable security types must be an array'),
-            (0, express_validator_1.body)('ruleLogic').isString().withMessage('Rule logic is required'),
-            (0, express_validator_1.body)('violationAction').isIn(['BLOCK', 'WARN', 'REQUIRE_APPROVAL', 'LOG_ONLY']).withMessage('Valid violation action is required'),
-            (0, express_validator_1.body)('effectiveDate').isISO8601().withMessage('Valid effective date is required')
+            body('ruleName').isString().isLength({ min: 1 }).withMessage('Rule name is required'),
+            body('ruleType').isIn(['REGULATORY', 'INTERNAL', 'CLIENT_SPECIFIC', 'RISK_MANAGEMENT']).withMessage('Valid rule type is required'),
+            body('description').isString().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
+            body('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required'),
+            body('applicableSecurityTypes').isArray().withMessage('Applicable security types must be an array'),
+            body('ruleLogic').isString().withMessage('Rule logic is required'),
+            body('violationAction').isIn(['BLOCK', 'WARN', 'REQUIRE_APPROVAL', 'LOG_ONLY']).withMessage('Valid violation action is required'),
+            body('effectiveDate').isISO8601().withMessage('Valid effective date is required')
         ];
     }
     validateWorkflow() {
         return [
-            (0, express_validator_1.body)('name').isString().isLength({ min: 1 }).withMessage('Workflow name is required'),
-            (0, express_validator_1.body)('description').isString().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
-            (0, express_validator_1.body)('triggerConditions').isArray().withMessage('Trigger conditions must be an array'),
-            (0, express_validator_1.body)('workflowSteps').isArray().withMessage('Workflow steps must be an array'),
-            (0, express_validator_1.body)('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required'),
-            (0, express_validator_1.body)('category').isIn(['PREVENTIVE', 'REACTIVE', 'RECOVERY']).withMessage('Valid category is required'),
-            (0, express_validator_1.body)('automationLevel').isIn(['MANUAL', 'SEMI_AUTOMATED', 'FULLY_AUTOMATED']).withMessage('Valid automation level is required'),
-            (0, express_validator_1.body)('estimatedDuration').isInt({ min: 1 }).withMessage('Valid estimated duration is required'),
-            (0, express_validator_1.body)('costEstimate').isFloat({ min: 0 }).withMessage('Valid cost estimate is required')
+            body('name').isString().isLength({ min: 1 }).withMessage('Workflow name is required'),
+            body('description').isString().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
+            body('triggerConditions').isArray().withMessage('Trigger conditions must be an array'),
+            body('workflowSteps').isArray().withMessage('Workflow steps must be an array'),
+            body('priority').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Valid priority is required'),
+            body('category').isIn(['PREVENTIVE', 'REACTIVE', 'RECOVERY']).withMessage('Valid category is required'),
+            body('automationLevel').isIn(['MANUAL', 'SEMI_AUTOMATED', 'FULLY_AUTOMATED']).withMessage('Valid automation level is required'),
+            body('estimatedDuration').isInt({ min: 1 }).withMessage('Valid estimated duration is required'),
+            body('costEstimate').isFloat({ min: 0 }).withMessage('Valid cost estimate is required')
         ];
     }
     validateReportRequest() {
         return [
-            (0, express_validator_1.body)('reportName').isString().isLength({ min: 1 }).withMessage('Report name is required'),
-            (0, express_validator_1.body)('reportType').isIn(['EXECUTIVE_SUMMARY', 'DETAILED_ANALYSIS', 'OPERATIONAL_METRICS', 'REGULATORY_FILING', 'EXCEPTION_REPORT', 'TREND_ANALYSIS', 'CUSTOM']).withMessage('Valid report type is required'),
-            (0, express_validator_1.body)('recipients').isArray().withMessage('Recipients must be an array'),
-            (0, express_validator_1.body)('parameters').isObject().withMessage('Parameters are required'),
-            (0, express_validator_1.body)('dateRange').isObject().withMessage('Date range is required'),
-            (0, express_validator_1.body)('format').isIn(['PDF', 'HTML', 'EXCEL', 'CSV', 'JSON']).withMessage('Valid format is required')
+            body('reportName').isString().isLength({ min: 1 }).withMessage('Report name is required'),
+            body('reportType').isIn(['EXECUTIVE_SUMMARY', 'DETAILED_ANALYSIS', 'OPERATIONAL_METRICS', 'REGULATORY_FILING', 'EXCEPTION_REPORT', 'TREND_ANALYSIS', 'CUSTOM']).withMessage('Valid report type is required'),
+            body('recipients').isArray().withMessage('Recipients must be an array'),
+            body('parameters').isObject().withMessage('Parameters are required'),
+            body('dateRange').isObject().withMessage('Date range is required'),
+            body('format').isIn(['PDF', 'HTML', 'EXCEL', 'CSV', 'JSON']).withMessage('Valid format is required')
         ];
     }
     validateReportTemplate() {
         return [
-            (0, express_validator_1.body)('templateName').isString().isLength({ min: 1 }).withMessage('Template name is required'),
-            (0, express_validator_1.body)('description').isString().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
-            (0, express_validator_1.body)('reportType').isIn(['EXECUTIVE_SUMMARY', 'DETAILED_ANALYSIS', 'OPERATIONAL_METRICS', 'REGULATORY_FILING', 'EXCEPTION_REPORT', 'TREND_ANALYSIS', 'CUSTOM']).withMessage('Valid report type is required'),
-            (0, express_validator_1.body)('defaultParameters').isObject().withMessage('Default parameters are required'),
-            (0, express_validator_1.body)('sections').isArray().withMessage('Sections must be an array'),
-            (0, express_validator_1.body)('charts').isArray().withMessage('Charts must be an array')
+            body('templateName').isString().isLength({ min: 1 }).withMessage('Template name is required'),
+            body('description').isString().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
+            body('reportType').isIn(['EXECUTIVE_SUMMARY', 'DETAILED_ANALYSIS', 'OPERATIONAL_METRICS', 'REGULATORY_FILING', 'EXCEPTION_REPORT', 'TREND_ANALYSIS', 'CUSTOM']).withMessage('Valid report type is required'),
+            body('defaultParameters').isObject().withMessage('Default parameters are required'),
+            body('sections').isArray().withMessage('Sections must be an array'),
+            body('charts').isArray().withMessage('Charts must be an array')
         ];
     }
     validateReportSchedule() {
         return [
-            (0, express_validator_1.body)('reportTemplate').isUUID().withMessage('Valid report template ID is required'),
-            (0, express_validator_1.body)('frequency').isIn(['REAL_TIME', 'HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'ON_DEMAND']).withMessage('Valid frequency is required'),
-            (0, express_validator_1.body)('recipients').isArray().withMessage('Recipients must be an array'),
-            (0, express_validator_1.body)('parameters').isObject().withMessage('Parameters are required')
+            body('reportTemplate').isUUID().withMessage('Valid report template ID is required'),
+            body('frequency').isIn(['REAL_TIME', 'HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'ON_DEMAND']).withMessage('Valid frequency is required'),
+            body('recipients').isArray().withMessage('Recipients must be an array'),
+            body('parameters').isObject().withMessage('Parameters are required')
         ];
     }
     // Route handler methods
@@ -327,7 +327,7 @@ class SettlementRiskController {
             res.json(assessment);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to calculate settlement risk', details: error.message });
+            res.status(500).json({ error: 'Failed to calculate settlement risk', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getRiskAssessment(req, res) {
@@ -341,7 +341,7 @@ class SettlementRiskController {
             res.json(assessment);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve risk assessment', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve risk assessment', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getAllRiskAssessments(req, res) {
@@ -358,7 +358,7 @@ class SettlementRiskController {
             });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve risk assessments', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve risk assessments', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getHighRiskInstructions(req, res) {
@@ -367,7 +367,7 @@ class SettlementRiskController {
             res.json(highRiskInstructions);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve high risk instructions', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve high risk instructions', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getRiskSummary(req, res) {
@@ -376,7 +376,7 @@ class SettlementRiskController {
             res.json(summary);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to generate risk summary', details: error.message });
+            res.status(500).json({ error: 'Failed to generate risk summary', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async createCounterpartyProfile(req, res) {
@@ -394,7 +394,7 @@ class SettlementRiskController {
             res.status(201).json(profile);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to create counterparty profile', details: error.message });
+            res.status(500).json({ error: 'Failed to create counterparty profile', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async updateCounterpartyProfile(req, res) {
@@ -405,7 +405,7 @@ class SettlementRiskController {
             res.json(profile);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to update counterparty profile', details: error.message });
+            res.status(500).json({ error: 'Failed to update counterparty profile', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async performCounterpartyRiskAssessment(req, res) {
@@ -415,7 +415,7 @@ class SettlementRiskController {
             res.json(riskMetrics);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to perform risk assessment', details: error.message });
+            res.status(500).json({ error: 'Failed to perform risk assessment', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getCounterpartyProfile(req, res) {
@@ -429,7 +429,7 @@ class SettlementRiskController {
             res.json(profile);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve counterparty profile', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve counterparty profile', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getCounterpartyRiskMetrics(req, res) {
@@ -443,7 +443,7 @@ class SettlementRiskController {
             res.json(riskMetrics);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve risk metrics', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve risk metrics', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getAllCounterparties(req, res) {
@@ -452,7 +452,7 @@ class SettlementRiskController {
             res.json(counterparties);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve counterparties', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve counterparties', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getHighRiskCounterparties(req, res) {
@@ -461,7 +461,7 @@ class SettlementRiskController {
             res.json(highRiskCounterparties);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve high risk counterparties', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve high risk counterparties', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async addExposureLimit(req, res) {
@@ -478,7 +478,7 @@ class SettlementRiskController {
             res.status(201).json(exposureLimit);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to add exposure limit', details: error.message });
+            res.status(500).json({ error: 'Failed to add exposure limit', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async recordCreditEvent(req, res) {
@@ -494,7 +494,7 @@ class SettlementRiskController {
             res.status(201).json(creditEvent);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to record credit event', details: error.message });
+            res.status(500).json({ error: 'Failed to record credit event', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async createSettlementInstruction(req, res) {
@@ -509,7 +509,7 @@ class SettlementRiskController {
             res.status(201).json(instruction);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to create settlement instruction', details: error.message });
+            res.status(500).json({ error: 'Failed to create settlement instruction', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async updateMilestoneStatus(req, res) {
@@ -520,7 +520,7 @@ class SettlementRiskController {
             res.json({ message: 'Milestone status updated successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to update milestone status', details: error.message });
+            res.status(500).json({ error: 'Failed to update milestone status', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getSettlementTimeline(req, res) {
@@ -534,7 +534,7 @@ class SettlementRiskController {
             res.json(timeline);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve settlement timeline', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve settlement timeline', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getSettlementInstructions(req, res) {
@@ -550,7 +550,7 @@ class SettlementRiskController {
             res.json(instructions);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve settlement instructions', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve settlement instructions', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getPendingMilestones(req, res) {
@@ -559,7 +559,7 @@ class SettlementRiskController {
             res.json(pendingMilestones);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve pending milestones', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve pending milestones', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getOverdueMilestones(req, res) {
@@ -568,7 +568,7 @@ class SettlementRiskController {
             res.json(overdueMilestones);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve overdue milestones', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve overdue milestones', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getActiveAlerts(req, res) {
@@ -578,7 +578,7 @@ class SettlementRiskController {
             res.json(alerts);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve active alerts', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve active alerts', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async acknowledgeAlert(req, res) {
@@ -593,7 +593,7 @@ class SettlementRiskController {
             res.json({ message: 'Alert acknowledged successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to acknowledge alert', details: error.message });
+            res.status(500).json({ error: 'Failed to acknowledge alert', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async generatePerformanceReport(req, res) {
@@ -603,7 +603,7 @@ class SettlementRiskController {
             res.json(report);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to generate performance report', details: error.message });
+            res.status(500).json({ error: 'Failed to generate performance report', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async executePreSettlementChecks(req, res) {
@@ -618,7 +618,7 @@ class SettlementRiskController {
             res.json(checkSuite);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to execute pre-settlement checks', details: error.message });
+            res.status(500).json({ error: 'Failed to execute pre-settlement checks', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getRiskCheckSuite(req, res) {
@@ -628,7 +628,7 @@ class SettlementRiskController {
             res.status(501).json({ error: 'Not implemented' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve risk check suite', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve risk check suite', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getRiskCheckHistory(req, res) {
@@ -638,7 +638,7 @@ class SettlementRiskController {
             res.json(history);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve risk check history', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve risk check history', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async bypassRiskCheck(req, res) {
@@ -654,7 +654,7 @@ class SettlementRiskController {
             res.json({ message: 'Risk check bypassed successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to bypass risk check', details: error.message });
+            res.status(500).json({ error: 'Failed to bypass risk check', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getRiskCheckAlerts(req, res) {
@@ -663,7 +663,7 @@ class SettlementRiskController {
             res.json(alerts);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve risk check alerts', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve risk check alerts', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getRiskCheckSummary(req, res) {
@@ -673,7 +673,7 @@ class SettlementRiskController {
             res.json(summary);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to generate risk check summary', details: error.message });
+            res.status(500).json({ error: 'Failed to generate risk check summary', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async addRiskLimit(req, res) {
@@ -690,7 +690,7 @@ class SettlementRiskController {
             res.status(201).json(riskLimit);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to add risk limit', details: error.message });
+            res.status(500).json({ error: 'Failed to add risk limit', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async addComplianceRule(req, res) {
@@ -705,7 +705,7 @@ class SettlementRiskController {
             res.status(201).json(complianceRule);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to add compliance rule', details: error.message });
+            res.status(500).json({ error: 'Failed to add compliance rule', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async predictSettlementFailure(req, res) {
@@ -719,7 +719,7 @@ class SettlementRiskController {
             res.json(prediction);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to predict settlement failure', details: error.message });
+            res.status(500).json({ error: 'Failed to predict settlement failure', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getLatestPrediction(req, res) {
@@ -733,7 +733,7 @@ class SettlementRiskController {
             res.json(prediction);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve prediction', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve prediction', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getPredictionHistory(req, res) {
@@ -743,7 +743,7 @@ class SettlementRiskController {
             res.json(history);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve prediction history', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve prediction history', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getHighRiskPredictions(req, res) {
@@ -753,7 +753,7 @@ class SettlementRiskController {
             res.json(highRiskPredictions);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve high risk predictions', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve high risk predictions', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async updatePredictionAccuracy(req, res) {
@@ -764,7 +764,7 @@ class SettlementRiskController {
             res.json({ message: 'Prediction accuracy updated successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to update prediction accuracy', details: error.message });
+            res.status(500).json({ error: 'Failed to update prediction accuracy', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getModelPerformance(req, res) {
@@ -778,7 +778,7 @@ class SettlementRiskController {
             res.json(performance);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve model performance', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve model performance', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getFailurePatterns(req, res) {
@@ -787,7 +787,7 @@ class SettlementRiskController {
             res.json(patterns);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve failure patterns', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve failure patterns', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getPredictionSummary(req, res) {
@@ -797,7 +797,7 @@ class SettlementRiskController {
             res.json(summary);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to generate prediction summary', details: error.message });
+            res.status(500).json({ error: 'Failed to generate prediction summary', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async triggerWorkflow(req, res) {
@@ -808,7 +808,7 @@ class SettlementRiskController {
             res.status(201).json(execution);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to trigger workflow', details: error.message });
+            res.status(500).json({ error: 'Failed to trigger workflow', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getWorkflowExecution(req, res) {
@@ -822,7 +822,7 @@ class SettlementRiskController {
             res.json(execution);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve workflow execution', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve workflow execution', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getInstructionWorkflows(req, res) {
@@ -832,7 +832,7 @@ class SettlementRiskController {
             res.json(workflows);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve instruction workflows', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve instruction workflows', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getActiveWorkflowExecutions(req, res) {
@@ -841,7 +841,7 @@ class SettlementRiskController {
             res.json(activeExecutions);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve active workflow executions', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve active workflow executions', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async pauseWorkflowExecution(req, res) {
@@ -856,7 +856,7 @@ class SettlementRiskController {
             res.json({ message: 'Workflow execution paused successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to pause workflow execution', details: error.message });
+            res.status(500).json({ error: 'Failed to pause workflow execution', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async resumeWorkflowExecution(req, res) {
@@ -870,7 +870,7 @@ class SettlementRiskController {
             res.json({ message: 'Workflow execution resumed successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to resume workflow execution', details: error.message });
+            res.status(500).json({ error: 'Failed to resume workflow execution', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async cancelWorkflowExecution(req, res) {
@@ -885,7 +885,7 @@ class SettlementRiskController {
             res.json({ message: 'Workflow execution cancelled successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to cancel workflow execution', details: error.message });
+            res.status(500).json({ error: 'Failed to cancel workflow execution', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getAllWorkflows(req, res) {
@@ -894,7 +894,7 @@ class SettlementRiskController {
             res.json(workflows);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve workflows', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve workflows', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async createWorkflow(req, res) {
@@ -908,7 +908,7 @@ class SettlementRiskController {
             res.status(201).json(workflow);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to create workflow', details: error.message });
+            res.status(500).json({ error: 'Failed to create workflow', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getWorkflowReport(req, res) {
@@ -918,7 +918,7 @@ class SettlementRiskController {
             res.json(report);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to generate workflow report', details: error.message });
+            res.status(500).json({ error: 'Failed to generate workflow report', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async generateReport(req, res) {
@@ -936,7 +936,7 @@ class SettlementRiskController {
             res.status(201).json(report);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to generate report', details: error.message });
+            res.status(500).json({ error: 'Failed to generate report', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getReport(req, res) {
@@ -950,7 +950,7 @@ class SettlementRiskController {
             res.json(report);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve report', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve report', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getReports(req, res) {
@@ -972,7 +972,7 @@ class SettlementRiskController {
             res.json(reports);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve reports', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve reports', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getReportTemplates(req, res) {
@@ -981,7 +981,7 @@ class SettlementRiskController {
             res.json(templates);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve report templates', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve report templates', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async createReportTemplate(req, res) {
@@ -995,7 +995,7 @@ class SettlementRiskController {
             res.status(201).json(template);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to create report template', details: error.message });
+            res.status(500).json({ error: 'Failed to create report template', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async createReportSchedule(req, res) {
@@ -1009,7 +1009,7 @@ class SettlementRiskController {
             res.status(201).json(schedule);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to create report schedule', details: error.message });
+            res.status(500).json({ error: 'Failed to create report schedule', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getReportSchedules(req, res) {
@@ -1018,7 +1018,7 @@ class SettlementRiskController {
             res.json(schedules);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve report schedules', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve report schedules', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async updateReportSchedule(req, res) {
@@ -1033,7 +1033,7 @@ class SettlementRiskController {
             res.json(schedule);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to update report schedule', details: error.message });
+            res.status(500).json({ error: 'Failed to update report schedule', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async deleteReportSchedule(req, res) {
@@ -1047,7 +1047,7 @@ class SettlementRiskController {
             res.json({ message: 'Report schedule deleted successfully' });
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to delete report schedule', details: error.message });
+            res.status(500).json({ error: 'Failed to delete report schedule', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getReportingSummary(req, res) {
@@ -1056,7 +1056,7 @@ class SettlementRiskController {
             res.json(summary);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to generate reporting summary', details: error.message });
+            res.status(500).json({ error: 'Failed to generate reporting summary', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getHealthStatus(req, res) {
@@ -1078,7 +1078,7 @@ class SettlementRiskController {
             res.json(healthStatus);
         }
         catch (error) {
-            res.status(500).json({ error: 'Health check failed', details: error.message });
+            res.status(500).json({ error: 'Health check failed', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     async getSystemMetrics(req, res) {
@@ -1110,7 +1110,7 @@ class SettlementRiskController {
             res.json(metrics);
         }
         catch (error) {
-            res.status(500).json({ error: 'Failed to retrieve system metrics', details: error.message });
+            res.status(500).json({ error: 'Failed to retrieve system metrics', details: error instanceof Error ? error.message : 'Unknown error' });
         }
     }
     getRouter() {

@@ -107,7 +107,7 @@ export class Form13FService {
   private readonly REPORTING_THRESHOLD = 100000000;
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('Form13F');
   }
 
   async prepareForm13F(data: Form13FPreparationData): Promise<Form13F> {
@@ -181,7 +181,7 @@ export class Form13FService {
 
       return form13F;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error preparing Form 13F:', error);
       throw error;
     }
@@ -375,7 +375,7 @@ export class Form13FService {
 
       return validationResult;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error validating Form 13F:', error);
       throw error;
     }
@@ -496,7 +496,7 @@ export class Form13FService {
 
       return filing;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting Form 13F:', error);
       throw error;
     }
@@ -619,7 +619,7 @@ export class Form13FService {
         votingAnalysis
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error analyzing 13F holdings:', error);
       throw error;
     }
@@ -681,7 +681,7 @@ export class Form13FService {
         filingHistory
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating Form 13F report:', error);
       throw error;
     }

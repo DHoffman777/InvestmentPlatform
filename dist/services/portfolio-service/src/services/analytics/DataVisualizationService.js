@@ -13,8 +13,8 @@ class DataVisualizationService {
         risk: ['#F44336', '#FF9800', '#FFC107', '#4CAF50', '#2196F3'],
         allocation: ['#3F51B5', '#009688', '#FF5722', '#795548', '#607D8B', '#E91E63']
     };
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    constructor(eventPublisher) {
+        this.eventPublisher = eventPublisher || new eventPublisher_1.EventPublisher('DataVisualizationService');
     }
     async createVisualization(request) {
         try {
@@ -82,7 +82,7 @@ class DataVisualizationService {
                 tenantId,
                 metricType: visualization.metricType,
                 visualizationType: visualization.type,
-                dateRange: this.extractDateRangeFromFilters(visualization.filters),
+                dateRange: this.extractDateRangeFromFilters(visualization.filters || []),
                 filters: visualization.filters
             };
             const newData = await this.generateVisualizationData(request);

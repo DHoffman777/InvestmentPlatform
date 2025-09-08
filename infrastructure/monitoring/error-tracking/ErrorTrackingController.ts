@@ -1,11 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
+// @ts-ignore - express-validator not installed
 import { body, param, query, validationResult } from 'express-validator';
 import { ErrorTrackingService, StructuredError, ErrorSeverity, ErrorCategory } from './ErrorTrackingService';
 import { NotificationService, NotificationChannel, NotificationChannelType } from './NotificationService';
 import { ErrorDashboardService, DashboardFilter, ReportConfig, AlertRule } from './ErrorDashboardService';
 import { ErrorCorrelationService, CorrelationRule, CorrelationPattern } from './ErrorCorrelationService';
 import { ErrorRecoveryService, RecoveryStrategy, AutoRecoveryConfig } from './ErrorRecoveryService';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './generated/client';
 
 export interface ErrorTrackingControllerConfig {
   prisma: PrismaClient;
@@ -81,63 +82,63 @@ export class ErrorTrackingController {
 
   private setupRoutes(): void {
     // Error Management Routes
-    this.router.get('/errors', this.validateGetErrors(), this.getErrors.bind(this));
-    this.router.get('/errors/:id', this.validateErrorId(), this.getError.bind(this));
-    this.router.put('/errors/:id/resolve', this.validateResolveError(), this.resolveError.bind(this));
-    this.router.get('/errors/:id/correlations', this.validateErrorId(), this.getErrorCorrelations.bind(this));
-    this.router.post('/errors/:id/correlate', this.validateErrorId(), this.correlateError.bind(this));
-    this.router.get('/errors/:id/root-cause', this.validateErrorId(), this.getErrorRootCause.bind(this));
+    this.router.get('/errors', this.validateGetErrors(), this.getErrors.bind(this) as any);
+    this.router.get('/errors/:id', this.validateErrorId(), this.getError.bind(this) as any);
+    this.router.put('/errors/:id/resolve', this.validateResolveError(), this.resolveError.bind(this) as any);
+    this.router.get('/errors/:id/correlations', this.validateErrorId(), this.getErrorCorrelations.bind(this) as any);
+    this.router.post('/errors/:id/correlate', this.validateErrorId(), this.correlateError.bind(this) as any);
+    this.router.get('/errors/:id/root-cause', this.validateErrorId(), this.getErrorRootCause.bind(this) as any);
 
     // Dashboard and Metrics Routes
-    this.router.get('/dashboard/metrics', this.validateDashboardMetrics(), this.getDashboardMetrics.bind(this));
-    this.router.get('/dashboard/summaries', this.validateDashboardSummaries(), this.getErrorSummaries.bind(this));
-    this.router.get('/dashboard/statistics', this.validateStatistics(), this.getErrorStatistics.bind(this));
+    this.router.get('/dashboard/metrics', this.validateDashboardMetrics(), this.getDashboardMetrics.bind(this) as any);
+    this.router.get('/dashboard/summaries', this.validateDashboardSummaries(), this.getErrorSummaries.bind(this) as any);
+    this.router.get('/dashboard/statistics', this.validateStatistics(), this.getErrorStatistics.bind(this) as any);
 
     // Reporting Routes
-    this.router.get('/reports', this.getReports.bind(this));
-    this.router.post('/reports', this.validateCreateReport(), this.createReport.bind(this));
-    this.router.get('/reports/:id', this.validateReportId(), this.getReport.bind(this));
-    this.router.post('/reports/:id/generate', this.validateReportId(), this.generateReport.bind(this));
+    this.router.get('/reports', this.getReports.bind(this) as any);
+    this.router.post('/reports', this.validateCreateReport(), this.createReport.bind(this) as any);
+    this.router.get('/reports/:id', this.validateReportId(), this.getReport.bind(this) as any);
+    this.router.post('/reports/:id/generate', this.validateReportId(), this.generateReport.bind(this) as any);
 
     // Alert Management Routes
-    this.router.get('/alerts', this.getAlertRules.bind(this));
-    this.router.post('/alerts', this.validateCreateAlert(), this.createAlertRule.bind(this));
-    this.router.put('/alerts/:id', this.validateUpdateAlert(), this.updateAlertRule.bind(this));
-    this.router.delete('/alerts/:id', this.validateAlertId(), this.deleteAlertRule.bind(this));
+    this.router.get('/alerts', this.getAlertRules.bind(this) as any);
+    this.router.post('/alerts', this.validateCreateAlert(), this.createAlertRule.bind(this) as any);
+    this.router.put('/alerts/:id', this.validateUpdateAlert(), this.updateAlertRule.bind(this) as any);
+    this.router.delete('/alerts/:id', this.validateAlertId(), this.deleteAlertRule.bind(this) as any);
 
     // Notification Management Routes
-    this.router.get('/notifications/channels', this.getNotificationChannels.bind(this));
-    this.router.post('/notifications/channels', this.validateCreateChannel(), this.createNotificationChannel.bind(this));
-    this.router.put('/notifications/channels/:id', this.validateUpdateChannel(), this.updateNotificationChannel.bind(this));
-    this.router.delete('/notifications/channels/:id', this.validateChannelId(), this.deleteNotificationChannel.bind(this));
-    this.router.post('/notifications/channels/:id/test', this.validateChannelId(), this.testNotificationChannel.bind(this));
+    this.router.get('/notifications/channels', this.getNotificationChannels.bind(this) as any);
+    this.router.post('/notifications/channels', this.validateCreateChannel(), this.createNotificationChannel.bind(this) as any);
+    this.router.put('/notifications/channels/:id', this.validateUpdateChannel(), this.updateNotificationChannel.bind(this) as any);
+    this.router.delete('/notifications/channels/:id', this.validateChannelId(), this.deleteNotificationChannel.bind(this) as any);
+    this.router.post('/notifications/channels/:id/test', this.validateChannelId(), this.testNotificationChannel.bind(this) as any);
 
     // Recovery Management Routes
-    this.router.get('/recovery/strategies', this.getRecoveryStrategies.bind(this));
-    this.router.post('/recovery/strategies', this.validateCreateStrategy(), this.createRecoveryStrategy.bind(this));
-    this.router.get('/recovery/suggestions/:errorId', this.validateErrorId(), this.getRecoverySuggestions.bind(this));
-    this.router.post('/recovery/execute', this.validateExecuteRecovery(), this.executeRecovery.bind(this));
-    this.router.get('/recovery/executions', this.getRecoveryExecutions.bind(this));
-    this.router.get('/recovery/executions/:id', this.validateExecutionId(), this.getRecoveryExecution.bind(this));
-    this.router.post('/recovery/executions/:id/cancel', this.validateCancelRecovery(), this.cancelRecovery.bind(this));
+    this.router.get('/recovery/strategies', this.getRecoveryStrategies.bind(this) as any);
+    this.router.post('/recovery/strategies', this.validateCreateStrategy(), this.createRecoveryStrategy.bind(this) as any);
+    this.router.get('/recovery/suggestions/:errorId', this.validateErrorId(), this.getRecoverySuggestions.bind(this) as any);
+    this.router.post('/recovery/execute', this.validateExecuteRecovery(), this.executeRecovery.bind(this) as any);
+    this.router.get('/recovery/executions', this.getRecoveryExecutions.bind(this) as any);
+    this.router.get('/recovery/executions/:id', this.validateExecutionId(), this.getRecoveryExecution.bind(this) as any);
+    this.router.post('/recovery/executions/:id/cancel', this.validateCancelRecovery(), this.cancelRecovery.bind(this) as any);
 
     // Correlation Management Routes
-    this.router.get('/correlation/rules', this.getCorrelationRules.bind(this));
-    this.router.post('/correlation/rules', this.validateCreateCorrelationRule(), this.createCorrelationRule.bind(this));
-    this.router.get('/correlation/patterns', this.getCorrelationPatterns.bind(this));
-    this.router.post('/correlation/patterns', this.validateCreateCorrelationPattern(), this.createCorrelationPattern.bind(this));
+    this.router.get('/correlation/rules', this.getCorrelationRules.bind(this) as any);
+    this.router.post('/correlation/rules', this.validateCreateCorrelationRule(), this.createCorrelationRule.bind(this) as any);
+    this.router.get('/correlation/patterns', this.getCorrelationPatterns.bind(this) as any);
+    this.router.post('/correlation/patterns', this.validateCreateCorrelationPattern(), this.createCorrelationPattern.bind(this) as any);
 
     // Error Pattern Management Routes
-    this.router.get('/patterns', this.getErrorPatterns.bind(this));
-    this.router.post('/patterns', this.validateCreateErrorPattern(), this.createErrorPattern.bind(this));
-    this.router.delete('/patterns/:id', this.validatePatternId(), this.deleteErrorPattern.bind(this));
+    this.router.get('/patterns', this.getErrorPatterns.bind(this) as any);
+    this.router.post('/patterns', this.validateCreateErrorPattern(), this.createErrorPattern.bind(this) as any);
+    this.router.delete('/patterns/:id', this.validatePatternId(), this.deleteErrorPattern.bind(this) as any);
 
     // Health and Status Routes
-    this.router.get('/health', this.getHealth.bind(this));
-    this.router.get('/status', this.getStatus.bind(this));
+    this.router.get('/health', this.getHealth.bind(this) as any);
+    this.router.get('/status', this.getStatus.bind(this) as any);
 
     // Error middleware
-    this.router.use(this.errorHandler.bind(this));
+    this.router.use(this.errorHandler.bind(this) as any);
   }
 
   // Validation middleware
@@ -366,7 +367,7 @@ export class ErrorTrackingController {
   }
 
   // Route handlers
-  private async getErrors(req: Request, res: Response): Promise<void> {
+  private async getErrors(req: Request, res: Response): Promise<any> {
     try {
       const {
         limit = 50,
@@ -390,12 +391,12 @@ export class ErrorTrackingController {
           total: errors.length
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get errors');
     }
   }
 
-  private async getError(req: Request, res: Response): Promise<void> {
+  private async getError(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const error = await this.errorTrackingService.getErrorById(id);
@@ -412,12 +413,12 @@ export class ErrorTrackingController {
         success: true,
         data: error
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get error');
     }
   }
 
-  private async resolveError(req: Request, res: Response): Promise<void> {
+  private async resolveError(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const { resolvedBy, resolution } = req.body;
@@ -436,12 +437,12 @@ export class ErrorTrackingController {
         success: true,
         message: 'Error resolved successfully'
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to resolve error');
     }
   }
 
-  private async getErrorCorrelations(req: Request, res: Response): Promise<void> {
+  private async getErrorCorrelations(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const correlations = await this.correlationService.getCorrelationsForError(id);
@@ -450,12 +451,12 @@ export class ErrorTrackingController {
         success: true,
         data: correlations
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get error correlations');
     }
   }
 
-  private async correlateError(req: Request, res: Response): Promise<void> {
+  private async correlateError(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const error = await this.errorTrackingService.getErrorById(id);
@@ -474,12 +475,12 @@ export class ErrorTrackingController {
         success: true,
         data: correlations
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to correlate error');
     }
   }
 
-  private async getErrorRootCause(req: Request, res: Response): Promise<void> {
+  private async getErrorRootCause(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const rootCauseAnalysis = await this.correlationService.performRootCauseAnalysis(id);
@@ -488,12 +489,12 @@ export class ErrorTrackingController {
         success: true,
         data: rootCauseAnalysis
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to perform root cause analysis');
     }
   }
 
-  private async getDashboardMetrics(req: Request, res: Response): Promise<void> {
+  private async getDashboardMetrics(req: Request, res: Response): Promise<any> {
     try {
       const filters: DashboardFilter = {
         timeRange: req.query.timeRange as string,
@@ -509,12 +510,12 @@ export class ErrorTrackingController {
         success: true,
         data: metrics
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get dashboard metrics');
     }
   }
 
-  private async getErrorSummaries(req: Request, res: Response): Promise<void> {
+  private async getErrorSummaries(req: Request, res: Response): Promise<any> {
     try {
       const filters: DashboardFilter = {
         timeRange: req.query.timeRange as string,
@@ -532,12 +533,12 @@ export class ErrorTrackingController {
           total: summaries.length
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get error summaries');
     }
   }
 
-  private async getErrorStatistics(req: Request, res: Response): Promise<void> {
+  private async getErrorStatistics(req: Request, res: Response): Promise<any> {
     try {
       const { timeRange = '24h' } = req.query;
       const statistics = await this.errorTrackingService.getErrorStatistics(timeRange as string);
@@ -546,12 +547,12 @@ export class ErrorTrackingController {
         success: true,
         data: statistics
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get error statistics');
     }
   }
 
-  private async getReports(req: Request, res: Response): Promise<void> {
+  private async getReports(req: Request, res: Response): Promise<any> {
     try {
       const reports = this.dashboardService.getReports();
 
@@ -559,12 +560,12 @@ export class ErrorTrackingController {
         success: true,
         data: reports
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get reports');
     }
   }
 
-  private async createReport(req: Request, res: Response): Promise<void> {
+  private async createReport(req: Request, res: Response): Promise<any> {
     try {
       const reportConfig: ReportConfig = {
         id: `report_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
@@ -577,12 +578,12 @@ export class ErrorTrackingController {
         success: true,
         data: reportConfig
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to create report');
     }
   }
 
-  private async getReport(req: Request, res: Response): Promise<void> {
+  private async getReport(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const reports = this.dashboardService.getReports();
@@ -600,12 +601,12 @@ export class ErrorTrackingController {
         success: true,
         data: report
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get report');
     }
   }
 
-  private async generateReport(req: Request, res: Response): Promise<void> {
+  private async generateReport(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const reportData = await this.dashboardService.generateReport(id);
@@ -614,12 +615,12 @@ export class ErrorTrackingController {
         success: true,
         data: reportData
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to generate report');
     }
   }
 
-  private async getAlertRules(req: Request, res: Response): Promise<void> {
+  private async getAlertRules(req: Request, res: Response): Promise<any> {
     try {
       const alertRules = this.dashboardService.getAlertRules();
 
@@ -627,12 +628,12 @@ export class ErrorTrackingController {
         success: true,
         data: alertRules
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get alert rules');
     }
   }
 
-  private async createAlertRule(req: Request, res: Response): Promise<void> {
+  private async createAlertRule(req: Request, res: Response): Promise<any> {
     try {
       const alertRule: AlertRule = {
         id: `alert_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
@@ -646,12 +647,12 @@ export class ErrorTrackingController {
         success: true,
         data: alertRule
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to create alert rule');
     }
   }
 
-  private async updateAlertRule(req: Request, res: Response): Promise<void> {
+  private async updateAlertRule(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const alertRules = this.dashboardService.getAlertRules();
@@ -672,12 +673,12 @@ export class ErrorTrackingController {
         success: true,
         data: updatedRule
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to update alert rule');
     }
   }
 
-  private async deleteAlertRule(req: Request, res: Response): Promise<void> {
+  private async deleteAlertRule(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       
@@ -686,12 +687,12 @@ export class ErrorTrackingController {
         success: true,
         message: 'Alert rule deleted successfully'
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to delete alert rule');
     }
   }
 
-  private async getNotificationChannels(req: Request, res: Response): Promise<void> {
+  private async getNotificationChannels(req: Request, res: Response): Promise<any> {
     try {
       const channels = this.notificationService.getChannels();
 
@@ -699,12 +700,12 @@ export class ErrorTrackingController {
         success: true,
         data: channels
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get notification channels');
     }
   }
 
-  private async createNotificationChannel(req: Request, res: Response): Promise<void> {
+  private async createNotificationChannel(req: Request, res: Response): Promise<any> {
     try {
       const channel: NotificationChannel = {
         id: `channel_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
@@ -724,12 +725,12 @@ export class ErrorTrackingController {
         success: true,
         data: channel
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to create notification channel');
     }
   }
 
-  private async updateNotificationChannel(req: Request, res: Response): Promise<void> {
+  private async updateNotificationChannel(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const existingChannel = this.notificationService.getChannel(id);
@@ -749,12 +750,12 @@ export class ErrorTrackingController {
         success: true,
         data: updatedChannel
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to update notification channel');
     }
   }
 
-  private async deleteNotificationChannel(req: Request, res: Response): Promise<void> {
+  private async deleteNotificationChannel(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const success = this.notificationService.removeChannel(id);
@@ -771,12 +772,12 @@ export class ErrorTrackingController {
         success: true,
         message: 'Notification channel deleted successfully'
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to delete notification channel');
     }
   }
 
-  private async testNotificationChannel(req: Request, res: Response): Promise<void> {
+  private async testNotificationChannel(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const result = await this.notificationService.testChannel(id);
@@ -785,12 +786,12 @@ export class ErrorTrackingController {
         success: true,
         data: result
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to test notification channel');
     }
   }
 
-  private async getRecoveryStrategies(req: Request, res: Response): Promise<void> {
+  private async getRecoveryStrategies(req: Request, res: Response): Promise<any> {
     try {
       const strategies = this.recoveryService.getRecoveryStrategies();
 
@@ -798,12 +799,12 @@ export class ErrorTrackingController {
         success: true,
         data: strategies
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get recovery strategies');
     }
   }
 
-  private async createRecoveryStrategy(req: Request, res: Response): Promise<void> {
+  private async createRecoveryStrategy(req: Request, res: Response): Promise<any> {
     try {
       const strategy: RecoveryStrategy = {
         id: `strategy_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
@@ -819,12 +820,12 @@ export class ErrorTrackingController {
         success: true,
         data: strategy
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to create recovery strategy');
     }
   }
 
-  private async getRecoverySuggestions(req: Request, res: Response): Promise<void> {
+  private async getRecoverySuggestions(req: Request, res: Response): Promise<any> {
     try {
       const { errorId } = req.params;
       const error = await this.errorTrackingService.getErrorById(errorId);
@@ -843,12 +844,12 @@ export class ErrorTrackingController {
         success: true,
         data: suggestions
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get recovery suggestions');
     }
   }
 
-  private async executeRecovery(req: Request, res: Response): Promise<void> {
+  private async executeRecovery(req: Request, res: Response): Promise<any> {
     try {
       const { errorId, strategyId, initiatedBy, autoExecution = false } = req.body;
 
@@ -863,12 +864,12 @@ export class ErrorTrackingController {
         success: true,
         data: execution
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to execute recovery');
     }
   }
 
-  private async getRecoveryExecutions(req: Request, res: Response): Promise<void> {
+  private async getRecoveryExecutions(req: Request, res: Response): Promise<any> {
     try {
       const { errorId } = req.query;
       const executions = await this.recoveryService.getRecoveryHistory(errorId as string);
@@ -877,12 +878,12 @@ export class ErrorTrackingController {
         success: true,
         data: executions
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get recovery executions');
     }
   }
 
-  private async getRecoveryExecution(req: Request, res: Response): Promise<void> {
+  private async getRecoveryExecution(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const executions = await this.recoveryService.getRecoveryHistory();
@@ -900,12 +901,12 @@ export class ErrorTrackingController {
         success: true,
         data: execution
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get recovery execution');
     }
   }
 
-  private async cancelRecovery(req: Request, res: Response): Promise<void> {
+  private async cancelRecovery(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const { cancelledBy } = req.body;
@@ -924,12 +925,12 @@ export class ErrorTrackingController {
         success: true,
         message: 'Recovery execution cancelled successfully'
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to cancel recovery execution');
     }
   }
 
-  private async getCorrelationRules(req: Request, res: Response): Promise<void> {
+  private async getCorrelationRules(req: Request, res: Response): Promise<any> {
     try {
       const rules = this.correlationService.getCorrelationRules();
 
@@ -937,12 +938,12 @@ export class ErrorTrackingController {
         success: true,
         data: rules
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get correlation rules');
     }
   }
 
-  private async createCorrelationRule(req: Request, res: Response): Promise<void> {
+  private async createCorrelationRule(req: Request, res: Response): Promise<any> {
     try {
       const rule: CorrelationRule = {
         id: `rule_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
@@ -957,12 +958,12 @@ export class ErrorTrackingController {
         success: true,
         data: rule
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to create correlation rule');
     }
   }
 
-  private async getCorrelationPatterns(req: Request, res: Response): Promise<void> {
+  private async getCorrelationPatterns(req: Request, res: Response): Promise<any> {
     try {
       const patterns = this.correlationService.getCorrelationPatterns();
 
@@ -970,12 +971,12 @@ export class ErrorTrackingController {
         success: true,
         data: patterns
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get correlation patterns');
     }
   }
 
-  private async createCorrelationPattern(req: Request, res: Response): Promise<void> {
+  private async createCorrelationPattern(req: Request, res: Response): Promise<any> {
     try {
       const pattern: CorrelationPattern = {
         id: `pattern_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
@@ -993,12 +994,12 @@ export class ErrorTrackingController {
           pattern: pattern.pattern.source // Convert RegExp to string for JSON response
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to create correlation pattern');
     }
   }
 
-  private async getErrorPatterns(req: Request, res: Response): Promise<void> {
+  private async getErrorPatterns(req: Request, res: Response): Promise<any> {
     try {
       const patterns = this.errorTrackingService.getErrorPatterns();
 
@@ -1006,12 +1007,12 @@ export class ErrorTrackingController {
         success: true,
         data: patterns
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get error patterns');
     }
   }
 
-  private async createErrorPattern(req: Request, res: Response): Promise<void> {
+  private async createErrorPattern(req: Request, res: Response): Promise<any> {
     try {
       const pattern = {
         id: `pattern_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
@@ -1028,12 +1029,12 @@ export class ErrorTrackingController {
           pattern: pattern.pattern.source // Convert RegExp to string for JSON response
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to create error pattern');
     }
   }
 
-  private async deleteErrorPattern(req: Request, res: Response): Promise<void> {
+  private async deleteErrorPattern(req: Request, res: Response): Promise<any> {
     try {
       const { id } = req.params;
       const success = this.errorTrackingService.removeErrorPattern(id);
@@ -1050,12 +1051,12 @@ export class ErrorTrackingController {
         success: true,
         message: 'Error pattern deleted successfully'
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to delete error pattern');
     }
   }
 
-  private async getHealth(req: Request, res: Response): Promise<void> {
+  private async getHealth(req: Request, res: Response): Promise<any> {
     try {
       const health = {
         status: 'healthy',
@@ -1074,12 +1075,12 @@ export class ErrorTrackingController {
         success: true,
         data: health
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get health status');
     }
   }
 
-  private async getStatus(req: Request, res: Response): Promise<void> {
+  private async getStatus(req: Request, res: Response): Promise<any> {
     try {
       const activeRecoveries = this.recoveryService.getActiveRecoveries();
       const channels = this.notificationService.getChannels();
@@ -1098,7 +1099,7 @@ export class ErrorTrackingController {
         success: true,
         data: status
       });
-    } catch (error) {
+    } catch (error: any) {
       this.handleError(res, error, 'Failed to get status');
     }
   }
@@ -1108,7 +1109,7 @@ export class ErrorTrackingController {
     
     res.status(error.status || 500).json({
       success: false,
-      message: error.message || 'Internal server error',
+      message: error instanceof Error ? error.message : 'Internal server error',
       ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
     });
   }
@@ -1127,7 +1128,7 @@ export class ErrorTrackingController {
     return this.router;
   }
 
-  public async shutdown(): Promise<void> {
+  public async shutdown(): Promise<any> {
     await Promise.all([
       this.errorTrackingService.shutdown(),
       this.notificationService.shutdown(),
@@ -1137,3 +1138,5 @@ export class ErrorTrackingController {
     ]);
   }
 }
+
+

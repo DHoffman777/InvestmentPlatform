@@ -114,7 +114,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
                 catch (error) {
                     this.emit('packageFileError', {
                         filePath: packageFile.filePath,
-                        error: error.message
+                        error: error instanceof Error ? error.message : 'Unknown error'
                     });
                     continue;
                 }
@@ -129,7 +129,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             return inventory;
         }
         catch (error) {
-            this.emit('scanFailed', { projectPath, tenantId, error: error.message });
+            this.emit('scanFailed', { projectPath, tenantId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }
@@ -219,7 +219,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             await this.enrichNpmDependencies(dependencies);
         }
         catch (error) {
-            throw new Error(`Failed to parse npm package file ${filePath}: ${error.message}`);
+            throw new Error(`Failed to parse npm package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         return dependencies;
     }
@@ -257,7 +257,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
         }
         catch (error) {
             // Non-fatal error, continue without transitive dependencies
-            console.warn(`Failed to parse lock file ${lockFilePath}: ${error.message}`);
+            console.warn(`Failed to parse lock file ${lockFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         return dependencies;
     }
@@ -328,7 +328,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            throw new Error(`Failed to parse Python package file ${filePath}: ${error.message}`);
+            throw new Error(`Failed to parse Python package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         return dependencies;
     }
@@ -380,7 +380,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            throw new Error(`Failed to parse Java package file ${filePath}: ${error.message}`);
+            throw new Error(`Failed to parse Java package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         return dependencies;
     }
@@ -472,7 +472,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            throw new Error(`Failed to parse .NET package file ${filePath}: ${error.message}`);
+            throw new Error(`Failed to parse .NET package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         return dependencies;
     }
@@ -502,7 +502,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            throw new Error(`Failed to parse Ruby package file ${filePath}: ${error.message}`);
+            throw new Error(`Failed to parse Ruby package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         return dependencies;
     }
@@ -541,7 +541,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            throw new Error(`Failed to parse Go package file ${filePath}: ${error.message}`);
+            throw new Error(`Failed to parse Go package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         return dependencies;
     }
@@ -580,7 +580,7 @@ class DependencyInventoryService extends events_1.EventEmitter {
             }
         }
         catch (error) {
-            throw new Error(`Failed to parse Rust package file ${filePath}: ${error.message}`);
+            throw new Error(`Failed to parse Rust package file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
         return dependencies;
     }

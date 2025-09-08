@@ -227,14 +227,14 @@ export class KafkaService {
           originalTopic,
           originalMessage: message.value ? JSON.parse(message.value.toString()) : null,
           error: {
-            message: error.message,
+            message: error instanceof Error ? error.message : 'Unknown error',
             stack: error.stack,
           },
           timestamp: new Date().toISOString(),
         },
         headers: {
           'dlq-original-topic': originalTopic,
-          'dlq-error': error.message,
+          'dlq-error': error instanceof Error ? error.message : 'Unknown error',
           ...message.headers,
         },
       };

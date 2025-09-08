@@ -719,7 +719,7 @@ export class DependencyPolicyService extends EventEmitter {
           else if (evaluation.status === 'WARNING') warningCount++;
           else if (evaluation.status === 'SKIPPED') skippedCount++;
 
-        } catch (error) {
+        } catch (error: any) {
           skippedCount++;
           this.emit('dependencyEvaluationError', {
             evaluationId,
@@ -768,7 +768,7 @@ export class DependencyPolicyService extends EventEmitter {
 
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('policyEvaluationFailed', {
         evaluationId,
         tenantId,
@@ -1179,12 +1179,12 @@ export class DependencyPolicyService extends EventEmitter {
           executionDuration: Date.now() - startTime
         });
 
-      } catch (error) {
+      } catch (error: any) {
         executedActions.push({
           violationId: violation.id,
           actionType: action.type,
           status: 'FAILED',
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           executedAt: new Date(),
           executionDuration: Date.now() - startTime
         });

@@ -1026,7 +1026,6 @@ export class AccountSecurityDashboardService extends EventEmitter {
       description: `Session terminated: ${reason}`,
       details: {
         sessionId,
-        reason,
         userAgent: session.metadata.userAgent || 'unknown',
         requestId: randomUUID()
       },
@@ -1358,7 +1357,7 @@ export class AccountSecurityDashboardService extends EventEmitter {
     return timeSinceLastUpdate > (dashboard.refreshInterval * 1000);
   }
 
-  private async refreshDashboard(dashboard: SecurityDashboard): Promise<void> {
+  private async refreshDashboard(dashboard: SecurityDashboard): Promise<any> {
     dashboard.overview = await this.generateSecurityOverview(dashboard.userId, dashboard.tenantId);
     dashboard.activities = await this.getRecentSecurityActivities(dashboard.userId, dashboard.tenantId, 50);
     dashboard.devices = await this.getUserDevices(dashboard.userId, dashboard.tenantId);
@@ -1432,7 +1431,7 @@ export class AccountSecurityDashboardService extends EventEmitter {
     return { flagged, status, riskScore };
   }
 
-  private async generateSecurityAlert(userId: string, tenantId: string, activity: SecurityActivity): Promise<void> {
+  private async generateSecurityAlert(userId: string, tenantId: string, activity: SecurityActivity): Promise<any> {
     const alert: SecurityAlert = {
       id: randomUUID(),
       timestamp: new Date(),
@@ -1658,7 +1657,7 @@ export class AccountSecurityDashboardService extends EventEmitter {
     return anomalies;
   }
 
-  private async generateSessionAlert(userId: string, tenantId: string, session: SessionInfo): Promise<void> {
+  private async generateSessionAlert(userId: string, tenantId: string, session: SessionInfo): Promise<any> {
     const alert: SecurityAlert = {
       id: randomUUID(),
       timestamp: new Date(),

@@ -28,7 +28,7 @@ export class ReportGenerationService {
 
   constructor() {
     this.reportTemplateService = new ReportTemplateService();
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('ReportGenerationService');
   }
 
   async generateReport(
@@ -85,13 +85,13 @@ export class ReportGenerationService {
 
       return job;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error starting report generation:', error);
       throw error;
     }
   }
 
-  async processReportJob(jobId: string): Promise<void> {
+  async processReportJob(jobId: string): Promise<any> {
     try {
       logger.info('Processing report job', { jobId });
 
@@ -162,8 +162,8 @@ export class ReportGenerationService {
           recordCount: processedData.rows.length
         });
 
-      } catch (error) {
-        await this.failReportJob(jobId, error.message);
+      } catch (error: any) {
+        await this.failReportJob(jobId, error instanceof Error ? error.message : 'Unknown error');
         
         // Publish failure event
         await this.eventPublisher.publish('report.generation.failed', {
@@ -176,7 +176,7 @@ export class ReportGenerationService {
         throw error;
       }
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error processing report job:', error);
       throw error;
     }
@@ -242,13 +242,13 @@ export class ReportGenerationService {
 
       return schedule;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating report schedule:', error);
       throw error;
     }
   }
 
-  async executeScheduledReport(scheduleId: string): Promise<void> {
+  async executeScheduledReport(scheduleId: string): Promise<any> {
     try {
       logger.info('Executing scheduled report', { scheduleId });
 
@@ -282,7 +282,7 @@ export class ReportGenerationService {
         jobId: job.id
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error executing scheduled report:', error);
       
       // Update schedule failure count
@@ -297,7 +297,7 @@ export class ReportGenerationService {
       // Mock implementation - replace with actual database query
       return null;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report job:', error);
       throw error;
     }
@@ -324,13 +324,13 @@ export class ReportGenerationService {
 
       return { jobs, totalCount };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving report jobs:', error);
       throw error;
     }
   }
 
-  async cancelReportJob(jobId: string, userId: string): Promise<void> {
+  async cancelReportJob(jobId: string, userId: string): Promise<any> {
     try {
       logger.info('Cancelling report job', { jobId, userId });
 
@@ -354,13 +354,13 @@ export class ReportGenerationService {
 
       logger.info('Report job cancelled successfully', { jobId });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error cancelling report job:', error);
       throw error;
     }
   }
 
-  async retryReportJob(jobId: string, userId: string): Promise<void> {
+  async retryReportJob(jobId: string, userId: string): Promise<any> {
     try {
       logger.info('Retrying report job', { jobId, userId });
 
@@ -385,7 +385,7 @@ export class ReportGenerationService {
 
       logger.info('Report job queued for retry', { jobId });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrying report job:', error);
       throw error;
     }
@@ -523,7 +523,7 @@ export class ReportGenerationService {
     return data;
   }
 
-  private async deliverReport(job: ReportJob, outputUrl: string): Promise<void> {
+  private async deliverReport(job: ReportJob, outputUrl: string): Promise<any> {
     logger.info('Delivering report', {
       jobId: job.id,
       deliveryMethod: job.request.deliveryMethod
@@ -532,7 +532,7 @@ export class ReportGenerationService {
     const delivery: ReportDelivery = {
       id: randomUUID(),
       reportJobId: job.id,
-      method: job.request.deliveryMethod,
+      method: job.request.deliveryMethod === 'PRINT' ? 'DOWNLOAD' : job.request.deliveryMethod as 'EMAIL' | 'SAVE' | 'DOWNLOAD' | 'API',
       recipients: job.request.emailRecipients,
       subject: `Report: ${job.request.name || 'Generated Report'}`,
       message: 'Your requested report is ready.',
@@ -553,7 +553,7 @@ export class ReportGenerationService {
     }
   }
 
-  private async sendEmailReport(delivery: ReportDelivery, fileUrl: string): Promise<void> {
+  private async sendEmailReport(delivery: ReportDelivery, fileUrl: string): Promise<any> {
     // Mock email sending
     logger.info('Sending email report', {
       deliveryId: delivery.id,
@@ -565,7 +565,7 @@ export class ReportGenerationService {
     delivery.deliveryTime = new Date();
   }
 
-  private async saveReportToLibrary(job: ReportJob, fileUrl: string): Promise<void> {
+  private async saveReportToLibrary(job: ReportJob, fileUrl: string): Promise<any> {
     // Mock save to library
     logger.info('Saving report to library', {
       jobId: job.id,
@@ -607,17 +607,17 @@ export class ReportGenerationService {
     return next;
   }
 
-  private async saveReportJob(job: ReportJob): Promise<void> {
+  private async saveReportJob(job: ReportJob): Promise<any> {
     // Mock implementation
     logger.debug('Saving report job', { jobId: job.id });
   }
 
-  private async saveReportSchedule(schedule: ReportSchedule): Promise<void> {
+  private async saveReportSchedule(schedule: ReportSchedule): Promise<any> {
     // Mock implementation
     logger.debug('Saving report schedule', { scheduleId: schedule.id });
   }
 
-  private async queueReportJob(job: ReportJob): Promise<void> {
+  private async queueReportJob(job: ReportJob): Promise<any> {
     // Mock implementation - queue for background processing
     logger.debug('Queuing report job', { jobId: job.id });
     
@@ -630,19 +630,19 @@ export class ReportGenerationService {
     jobId: string,
     status: ReportStatus,
     progress?: number
-  ): Promise<void> {
+  ): Promise<any> {
     logger.debug('Updating job status', { jobId, status, progress });
   }
 
-  private async completeReportJob(jobId: string, result: any): Promise<void> {
+  private async completeReportJob(jobId: string, result: any): Promise<any> {
     logger.debug('Completing report job', { jobId, result });
   }
 
-  private async failReportJob(jobId: string, errorMessage: string): Promise<void> {
+  private async failReportJob(jobId: string, errorMessage: string): Promise<any> {
     logger.debug('Failing report job', { jobId, errorMessage });
   }
 
-  private async updateJobForRetry(jobId: string): Promise<void> {
+  private async updateJobForRetry(jobId: string): Promise<any> {
     logger.debug('Updating job for retry', { jobId });
   }
 
@@ -651,12 +651,12 @@ export class ReportGenerationService {
     return null;
   }
 
-  private async registerSchedule(schedule: ReportSchedule): Promise<void> {
+  private async registerSchedule(schedule: ReportSchedule): Promise<any> {
     // Mock implementation - register with scheduler
     logger.debug('Registering schedule', { scheduleId: schedule.id });
   }
 
-  private async updateScheduleExecution(scheduleId: string, success: boolean): Promise<void> {
+  private async updateScheduleExecution(scheduleId: string, success: boolean): Promise<any> {
     // Mock implementation
     logger.debug('Updating schedule execution', { scheduleId, success });
   }
@@ -666,3 +666,4 @@ export class ReportGenerationService {
     return 1024 * 1024; // 1MB
   }
 }
+

@@ -500,7 +500,7 @@ class MeetingBookingService extends events_1.EventEmitter {
                 this.emit('bookingRejected', {
                     bookingId,
                     tenantId: booking.tenantId,
-                    reason: error.message,
+                    reason: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date()
                 });
             }

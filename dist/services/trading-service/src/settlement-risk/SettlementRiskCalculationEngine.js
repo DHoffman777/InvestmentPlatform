@@ -63,7 +63,7 @@ class SettlementRiskCalculationEngine extends events_1.EventEmitter {
             return assessment;
         }
         catch (error) {
-            this.emit('riskCalculationError', { instructionId: instruction.id, error: error.message });
+            this.emit('riskCalculationError', { instructionId: instruction.id, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
     }

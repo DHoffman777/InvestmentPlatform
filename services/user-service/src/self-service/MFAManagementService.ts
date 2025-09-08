@@ -462,19 +462,21 @@ export class MFAManagementService extends EventEmitter {
     let method: MFAMethod;
     
     if (methodId) {
-      method = this.findMethod(config, methodId);
-      if (!method) {
+      const foundMethod = this.findMethod(config, methodId);
+      if (!foundMethod) {
         throw new Error('MFA method not found');
       }
+      method = foundMethod;
     } else {
       // Use primary method or first available backup method
-      method = config.primaryMethod && config.primaryMethod.isActive 
+      const primaryMethod = config.primaryMethod && config.primaryMethod.isActive 
         ? config.primaryMethod 
         : config.backupMethods.find(m => m.isActive);
-        
-      if (!method) {
-        throw new Error('No active MFA methods available');
+      
+      if (!primaryMethod) {
+        throw new Error('No active MFA method available');
       }
+      method = primaryMethod;
     }
 
     if (!method.isVerified || !method.isActive) {
@@ -777,7 +779,7 @@ export class MFAManagementService extends EventEmitter {
     };
   }
 
-  private async generateChallenge(challenge: MFAChallenge, method: MFAMethod): Promise<void> {
+  private async generateChallenge(challenge: MFAChallenge, method: MFAMethod): Promise<any> {
     switch (method.type) {
       case MFAMethodType.TOTP:
         // TOTP doesn't need a challenge, user generates their own code
@@ -906,7 +908,7 @@ export class MFAManagementService extends EventEmitter {
     return Math.min(100, Math.max(0, riskScore));
   }
 
-  private async trustDevice(userId: string, deviceId: string): Promise<void> {
+  private async trustDevice(userId: string, deviceId: string): Promise<any> {
     if (!this.trustedDevices.has(userId)) {
       this.trustedDevices.set(userId, new Set());
     }
@@ -972,17 +974,17 @@ export class MFAManagementService extends EventEmitter {
     return `hash_${response.length}_${randomUUID()}`;
   }
 
-  private async sendSMSChallenge(phoneNumber: string, code: string): Promise<void> {
+  private async sendSMSChallenge(phoneNumber: string, code: string): Promise<any> {
     // Placeholder for SMS sending
     console.log(`SMS sent to ${phoneNumber}: Your verification code is ${code}`);
   }
 
-  private async sendEmailChallenge(email: string, code: string): Promise<void> {
+  private async sendEmailChallenge(email: string, code: string): Promise<any> {
     // Placeholder for email sending
     console.log(`Email sent to ${email}: Your verification code is ${code}`);
   }
 
-  private async sendPushChallenge(deviceId: string, challengeId: string): Promise<void> {
+  private async sendPushChallenge(deviceId: string, challengeId: string): Promise<any> {
     // Placeholder for push notification
     console.log(`Push notification sent to device ${deviceId} for challenge ${challengeId}`);
   }

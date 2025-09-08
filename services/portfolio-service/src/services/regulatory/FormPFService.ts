@@ -67,7 +67,7 @@ export class FormPFService {
   private readonly LARGE_PRIVATE_FUND_THRESHOLD = 1500000000; // $1.5B NAV threshold
 
   constructor() {
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('FormPF');
   }
 
   async prepareFormPF(data: FormPFPreparationData): Promise<FormPF> {
@@ -198,7 +198,7 @@ export class FormPFService {
 
       return formPF;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error preparing Form PF:', error);
       throw error;
     }
@@ -349,7 +349,7 @@ export class FormPFService {
 
       return validationResult;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error validating Form PF:', error);
       throw error;
     }
@@ -468,7 +468,7 @@ export class FormPFService {
 
       return filing;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error submitting Form PF:', error);
       throw error;
     }
@@ -581,7 +581,7 @@ export class FormPFService {
         aggregateRequirements
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error calculating filing requirements:', error);
       throw error;
     }
@@ -645,7 +645,7 @@ export class FormPFService {
         filingHistory
       };
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating Form PF report:', error);
       throw error;
     }

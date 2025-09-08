@@ -397,9 +397,14 @@ export class ActivityTrackingService extends EventEmitter {
       [ActivityType.PORTFOLIO_ACCESS]: 0.2,
       [ActivityType.PORTFOLIO_MODIFICATION]: 0.5,
       [ActivityType.TRADING]: 0.7,
+      [ActivityType.REPORTING]: 0.3,
+      [ActivityType.DOCUMENT_ACCESS]: 0.4,
       [ActivityType.SYSTEM_ADMIN]: 0.8,
+      [ActivityType.COMPLIANCE]: 0.4,
+      [ActivityType.COMMUNICATION]: 0.2,
       [ActivityType.DATA_EXPORT]: 0.6,
-      [ActivityType.SECURITY]: 0.9
+      [ActivityType.SECURITY]: 0.9,
+      [ActivityType.API_ACCESS]: 0.5
     };
 
     score += typeRisk[activity.activityType] || 0.1;
@@ -465,7 +470,7 @@ export class ActivityTrackingService extends EventEmitter {
     return flags;
   }
 
-  private async updateSession(activity: ActivityData): Promise<void> {
+  private async updateSession(activity: ActivityData): Promise<any> {
     let session = this.sessions.get(activity.sessionId);
 
     if (!session) {
@@ -508,7 +513,7 @@ export class ActivityTrackingService extends EventEmitter {
     }, 30 * 60 * 1000);
   }
 
-  private async checkPatterns(activity: ActivityData): Promise<void> {
+  private async checkPatterns(activity: ActivityData): Promise<any> {
     for (const pattern of this.patterns.values()) {
       if (!pattern.enabled) continue;
 
@@ -568,7 +573,7 @@ export class ActivityTrackingService extends EventEmitter {
     defaultPatterns.forEach(pattern => this.addPattern(pattern));
   }
 
-  private async flushBuffer(): Promise<void> {
+  private async flushBuffer(): Promise<any> {
     if (this.activityBuffer.length === 0) return;
 
     const batch = [...this.activityBuffer];
@@ -577,7 +582,7 @@ export class ActivityTrackingService extends EventEmitter {
     try {
       // In production, this would persist to database
       this.emit('batchFlushed', batch);
-    } catch (error) {
+    } catch (error: any) {
       this.emit('flushError', error);
       // Return items to buffer on failure
       this.activityBuffer.unshift(...batch);
@@ -656,3 +661,4 @@ export class ActivityTrackingService extends EventEmitter {
     };
   }
 }
+

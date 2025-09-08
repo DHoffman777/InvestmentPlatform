@@ -27,7 +27,7 @@ export class ResourceUsagePredictionService extends EventEmitter {
   private predictions: Map<string, CapacityPrediction> = new Map();
   private trainingData: Map<string, ResourceMetrics[]> = new Map();
   private modelPerformance: Map<string, number[]> = new Map();
-  private retrainingTimer: NodeJS.Timeout;
+  private retrainingTimer!: NodeJS.Timeout;
   private config: PredictionServiceConfig;
 
   constructor(config: PredictionServiceConfig) {
@@ -99,8 +99,8 @@ export class ResourceUsagePredictionService extends EventEmitter {
       });
 
       return accuracy;
-    } catch (error) {
-      this.emit('trainingFailed', { modelId, error: error.message });
+    } catch (error: any) {
+      this.emit('trainingFailed', { modelId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -175,8 +175,8 @@ export class ResourceUsagePredictionService extends EventEmitter {
       });
 
       return prediction;
-    } catch (error) {
-      this.emit('predictionFailed', { predictionId, modelId, resourceId, error: error.message });
+    } catch (error: any) {
+      this.emit('predictionFailed', { predictionId, modelId, resourceId, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -275,7 +275,7 @@ export class ResourceUsagePredictionService extends EventEmitter {
       try {
         const accuracy = await this.executeTraining(testModel, trainingData);
         optimizationResults.push({ parameters, accuracy });
-      } catch (error) {
+      } catch (error: any) {
         console.warn(`Parameter optimization failed for model ${modelId}:`, error);
       }
     }
@@ -796,7 +796,7 @@ export class ResourceUsagePredictionService extends EventEmitter {
         try {
           const trainingData = await this.getTrainingData(model);
           await this.trainModel(model.id, []);
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Failed to retrain model ${model.id}:`, error);
         }
       }
@@ -826,7 +826,7 @@ export class ResourceUsagePredictionService extends EventEmitter {
     };
   }
 
-  private async validateModel(model: PredictionModel): Promise<void> {
+  private async validateModel(model: PredictionModel): Promise<any> {
     if (!model.name || model.name.trim().length === 0) {
       throw new Error('Model name is required');
     }
@@ -882,7 +882,7 @@ export class ResourceUsagePredictionService extends EventEmitter {
     return this.modelPerformance.get(modelId) || [];
   }
 
-  async deactivateModel(modelId: string): Promise<void> {
+  async deactivateModel(modelId: string): Promise<any> {
     const model = this.models.get(modelId);
     if (model) {
       model.isActive = false;
@@ -892,7 +892,7 @@ export class ResourceUsagePredictionService extends EventEmitter {
     }
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     if (this.retrainingTimer) {
       clearInterval(this.retrainingTimer);
     }
@@ -905,3 +905,4 @@ export class ResourceUsagePredictionService extends EventEmitter {
     this.emit('shutdown');
   }
 }
+

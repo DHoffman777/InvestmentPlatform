@@ -135,8 +135,8 @@ export class SettlementRiskCalculationEngine extends EventEmitter {
       }
 
       return assessment;
-    } catch (error) {
-      this.emit('riskCalculationError', { instructionId: instruction.id, error: error.message });
+    } catch (error: any) {
+      this.emit('riskCalculationError', { instructionId: instruction.id, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }

@@ -96,7 +96,7 @@ export enum DayCountConvention {
 export interface FixedIncomeSecurityAnalytics {
   id: string;
   tenantId: string;
-  instrumentId: string;
+  securityId: string;
   cusip?: string;
   isin?: string;
   symbol?: string;
@@ -331,7 +331,7 @@ export interface AssetBackedAnalytics {
 
 // Request/Response Interfaces
 export interface YieldCalculationRequest {
-  instrumentId: string;
+  securityId: string;
   price: number;
   settlementDate: Date;
   yieldTypes: YieldType[];
@@ -339,7 +339,7 @@ export interface YieldCalculationRequest {
 }
 
 export interface YieldCalculationResult {
-  instrumentId: string;
+  securityId: string;
   calculationDate: Date;
   yields: { [key in YieldType]?: number };
   warnings: string[];
@@ -347,7 +347,7 @@ export interface YieldCalculationResult {
 }
 
 export interface DurationConvexityRequest {
-  instrumentId: string;
+  securityId: string;
   price: number;
   yield: number;
   settlementDate: Date;
@@ -356,7 +356,7 @@ export interface DurationConvexityRequest {
 }
 
 export interface DurationConvexityResult {
-  instrumentId: string;
+  securityId: string;
   calculationDate: Date;
   durationMetrics: DurationAnalytics;
   convexityMetrics: ConvexityAnalytics;
@@ -365,7 +365,7 @@ export interface DurationConvexityResult {
 }
 
 export interface CreditAnalysisRequest {
-  instrumentId: string;
+  securityId: string;
   horizonDays: number;
   confidenceLevel: number;
   recoveryRate?: number;
@@ -373,7 +373,7 @@ export interface CreditAnalysisRequest {
 }
 
 export interface CreditAnalysisResult {
-  instrumentId: string;
+  securityId: string;
   calculationDate: Date;
   creditMetrics: CreditAnalytics;
   warnings: string[];

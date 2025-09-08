@@ -70,8 +70,8 @@ class FinancialDataRecoveryRunner {
       process.exit(0);
 
     } catch (error) {
-      console.error(`❌ Financial data recovery operation failed: ${error.message}`);
-      if (this.options.verbose) {
+      console.error(`❌ Financial data recovery operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      if (this.options.verbose && error instanceof Error) {
         console.error(error.stack);
       }
       process.exit(1);
@@ -101,7 +101,7 @@ class FinancialDataRecoveryRunner {
       
       return config;
     } catch (error) {
-      throw new Error(`Failed to load configuration from ${configPath}: ${error.message}`);
+      throw new Error(`Failed to load configuration from ${configPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -165,13 +165,13 @@ class FinancialDataRecoveryRunner {
       
       if (result.issues.length > 0) {
         console.log(`\n⚠️  Issues encountered: ${result.issues.length}`);
-        result.issues.forEach((issue, index) => {
+        result.issues.forEach((issue: any, index: number) => {
           console.log(`   ${index + 1}. [${issue.severity.toUpperCase()}] ${issue.description}`);
         });
       }
 
       if (result.validationResults.length > 0) {
-        const passedValidations = result.validationResults.filter(v => v.passed).length;
+        const passedValidations = result.validationResults.filter((v: any) => v.passed).length;
         console.log(`\n🧪 Validations: ${passedValidations}/${result.validationResults.length} passed`);
       }
     });

@@ -40,9 +40,9 @@ const path = __importStar(require("path"));
 class LoadTestingFramework extends events_1.EventEmitter {
     config;
     testId;
-    startTime;
-    metrics;
-    results;
+    startTime = new Date();
+    metrics = {};
+    results = {};
     activeUsers = new Map();
     monitoringInterval;
     constructor(config) {
@@ -74,7 +74,7 @@ class LoadTestingFramework extends events_1.EventEmitter {
             return this.results;
         }
         catch (error) {
-            this.emit('testFailed', { testId: this.testId, error: error.message });
+            this.emit('testFailed', { testId: this.testId, error: error instanceof Error ? error.message : 'Unknown error' });
             throw error;
         }
         finally {
@@ -295,7 +295,7 @@ class LoadTestingFramework extends events_1.EventEmitter {
                 await this.sleep(60000); // 1 minute between tests
             }
             catch (error) {
-                console.log(`System failure at ${currentUsers} users: ${error.message}`);
+                console.log(`System failure at ${currentUsers} users: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 break;
             }
         }
@@ -554,7 +554,7 @@ class LoadTestingFramework extends events_1.EventEmitter {
             timestamp: new Date(),
             scenario: 'current_scenario', // TODO: track current scenario
             endpoint: `${endpoint.method} ${endpoint.path}`,
-            error: error.message,
+            error: error instanceof Error ? error.message : 'Unknown error',
             statusCode: error.status,
             responseTime: error.responseTime
         };

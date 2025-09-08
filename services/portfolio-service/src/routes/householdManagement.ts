@@ -72,7 +72,7 @@ const clientRelationshipSchema = {
 router.post('/households',
   authMiddleware,
   validateRequest(householdSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const userId = req.user?.id;
@@ -104,7 +104,7 @@ router.post('/households',
         message: 'Household group created successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error creating household group:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -121,7 +121,7 @@ router.post('/households',
  */
 router.get('/households/:householdId',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { householdId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -142,7 +142,7 @@ router.get('/households/:householdId',
         data: result
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving household:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -159,7 +159,7 @@ router.get('/households/:householdId',
  */
 router.get('/households',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const tenantId = req.user?.tenantId;
       const {
@@ -183,7 +183,7 @@ router.get('/households',
         page: parseInt(page as string),
         limit: parseInt(limit as string),
         search: search as string,
-        minAssets: minAssets ? new Decimal(minAssets as string) : undefined,
+        minAssets: minAssets ? new (Decimal as any)(minAssets as string) : undefined,
         riskTolerance: riskTolerance as RiskTolerance
       });
 
@@ -192,7 +192,7 @@ router.get('/households',
         data: result
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error listing households:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -210,7 +210,7 @@ router.get('/households',
 router.post('/households/:householdId/relationships',
   authMiddleware,
   validateRequest(clientRelationshipSchema),
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { householdId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -225,7 +225,7 @@ router.post('/households/:householdId/relationships',
 
       const relationshipRequest: ClientRelationshipRequest = {
         ...req.body,
-        percentage: req.body.percentage ? new Decimal(req.body.percentage) : undefined,
+        percentage: req.body.percentage ? new (Decimal as any)(req.body.percentage) : undefined,
         expirationDate: req.body.expirationDate ? new Date(req.body.expirationDate) : undefined
       };
 
@@ -249,7 +249,7 @@ router.post('/households/:householdId/relationships',
         message: 'Client relationship added successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error adding client relationship:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -266,7 +266,7 @@ router.post('/households/:householdId/relationships',
  */
 router.put('/relationships/:relationshipId',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { relationshipId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -281,7 +281,7 @@ router.put('/relationships/:relationshipId',
 
       const updates = {
         ...req.body,
-        percentage: req.body.percentage ? new Decimal(req.body.percentage) : undefined,
+        percentage: req.body.percentage ? new (Decimal as any)(req.body.percentage) : undefined,
         expirationDate: req.body.expirationDate ? new Date(req.body.expirationDate) : undefined
       };
 
@@ -300,7 +300,7 @@ router.put('/relationships/:relationshipId',
         message: 'Client relationship updated successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating client relationship:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -317,7 +317,7 @@ router.put('/relationships/:relationshipId',
  */
 router.delete('/households/:householdId/clients/:clientId',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { householdId, clientId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -344,7 +344,7 @@ router.delete('/households/:householdId/clients/:clientId',
         message: 'Client removed from household successfully'
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error removing client from household:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -361,7 +361,7 @@ router.delete('/households/:householdId/clients/:clientId',
  */
 router.get('/households/:householdId/analytics',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const { householdId } = req.params;
       const tenantId = req.user?.tenantId;
@@ -382,7 +382,7 @@ router.get('/households/:householdId/analytics',
         data: result
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating household analytics:', error);
       res.status(500).json({
         error: error instanceof Error ? error.message : 'Internal server error',
@@ -399,12 +399,12 @@ router.get('/households/:householdId/analytics',
  */
 router.get('/relationships/types',
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: any, res: any) => {
     try {
       const relationshipTypes = Object.values(RelationshipType).map(type => ({
         value: type,
         label: type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-        description: this.getRelationshipTypeDescription(type)
+        description: getRelationshipTypeDescription(type)
       }));
 
       res.json({
@@ -412,7 +412,7 @@ router.get('/relationships/types',
         data: relationshipTypes
       });
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving relationship types:', error);
       res.status(500).json({
         error: 'Internal server error',
@@ -438,3 +438,4 @@ function getRelationshipTypeDescription(type: RelationshipType): string {
 }
 
 export default router;
+

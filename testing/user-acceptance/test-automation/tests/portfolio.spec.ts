@@ -38,8 +38,8 @@ test.describe('Portfolio Management Tests', () => {
     await page.click('[data-testid="save-portfolio"]');
 
     // Verify success
-    await expect(page.locator('[data-testid="success-message"]')).toContainText('Portfolio created successfully');
-    await expect(page.locator('[data-testid="portfolio-list"]')).toContainText('UAT Test Portfolio');
+    await expect(page.locator('[data-testid="success-message"]')).toHaveText('Portfolio created successfully');
+    await expect(page.locator('[data-testid="portfolio-list"]')).toHaveText('UAT Test Portfolio');
   });
 
   test('TC-003: Portfolio configuration', async ({ page }) => {
@@ -69,7 +69,7 @@ test.describe('Portfolio Management Tests', () => {
 
     // Verify restrictions are saved
     await page.reload();
-    await expect(page.locator('[data-testid="restrictions-list"]')).toContainText('sector-limit: 25%');
+    await expect(page.locator('[data-testid="restrictions-list"]')).toHaveText('sector-limit: 25%');
   });
 
   test('TC-003: Position management', async ({ page }) => {
@@ -94,8 +94,8 @@ test.describe('Portfolio Management Tests', () => {
     await page.click('[data-testid="add-position-confirm"]');
     
     // Verify position added
-    await expect(page.locator('[data-testid="positions-table"]')).toContainText('AAPL');
-    await expect(page.locator('[data-testid="portfolio-value"]')).toContainText('15,000');
+    await expect(page.locator('[data-testid="positions-table"]')).toHaveText('AAPL');
+    await expect(page.locator('[data-testid="portfolio-value"]')).toHaveText('15,000');
 
     // Edit position
     await page.click('[data-testid="edit-position-AAPL"]');
@@ -103,14 +103,14 @@ test.describe('Portfolio Management Tests', () => {
     await page.click('[data-testid="save-position"]');
     
     // Verify position updated
-    await expect(page.locator('[data-testid="portfolio-value"]')).toContainText('22,500');
+    await expect(page.locator('[data-testid="portfolio-value"]')).toHaveText('22,500');
 
     // Remove position
     await page.click('[data-testid="remove-position-AAPL"]');
     await page.click('[data-testid="confirm-remove"]');
     
     // Verify position removed
-    await expect(page.locator('[data-testid="positions-table"]')).not.toContainText('AAPL');
+    await expect(page.locator('[data-testid="positions-table"]')).not.toHaveText('AAPL');
   });
 
   test('TC-004: Transaction processing', async ({ page }) => {
@@ -140,8 +140,8 @@ test.describe('Portfolio Management Tests', () => {
 
     // Check order status
     await page.click('[data-testid="orders-tab"]');
-    await expect(page.locator('[data-testid="orders-table"]')).toContainText('MSFT');
-    await expect(page.locator('[data-testid="order-status"]')).toContainText('PENDING');
+    await expect(page.locator('[data-testid="orders-table"]')).toHaveText('MSFT');
+    await expect(page.locator('[data-testid="order-status"]')).toHaveText('PENDING');
 
     // Simulate order execution
     await page.click('[data-testid="simulate-execution"]');
@@ -149,12 +149,12 @@ test.describe('Portfolio Management Tests', () => {
     await page.click('[data-testid="execute-order"]');
     
     // Verify execution
-    await expect(page.locator('[data-testid="order-status"]')).toContainText('FILLED');
+    await expect(page.locator('[data-testid="order-status"]')).toHaveText('FILLED');
     
     // Check position created
     await page.click('[data-testid="portfolios-menu"]');
     await page.click('[data-testid="portfolio-item"]:first-child');
-    await expect(page.locator('[data-testid="positions-table"]')).toContainText('MSFT');
+    await expect(page.locator('[data-testid="positions-table"]')).toHaveText('MSFT');
   });
 
   test('TC-004: Settlement processing', async ({ page }) => {
@@ -170,7 +170,7 @@ test.describe('Portfolio Management Tests', () => {
     await page.click('[data-testid="confirm-settlement"]');
     
     // Verify settlement processed
-    await expect(page.locator('[data-testid="settlement-status"]')).toContainText('SETTLED');
+    await expect(page.locator('[data-testid="settlement-status"]')).toHaveText('SETTLED');
     
     // Check cash impact
     await page.click('[data-testid="portfolios-menu"]');
@@ -198,7 +198,7 @@ test.describe('Portfolio Management Tests', () => {
     await page.click('[data-testid="process-action"]');
     
     // Verify dividend processed
-    await expect(page.locator('[data-testid="success-message"]')).toContainText('Corporate action processed');
+    await expect(page.locator('[data-testid="success-message"]')).toHaveText('Corporate action processed');
     
     // Check cash impact
     await page.click('[data-testid="cash-tab"]');
@@ -218,7 +218,7 @@ test.describe('Portfolio Management Tests', () => {
     
     // Verify position adjustment
     await page.click('[data-testid="positions-tab"]');
-    await expect(page.locator('[data-testid="position-TSLA-shares"]')).toContainText('200'); // Doubled
+    await expect(page.locator('[data-testid="position-TSLA-shares"]')).toHaveText('200'); // Doubled
   });
 
   test('TC-003: Portfolio hierarchy', async ({ page }) => {
@@ -237,7 +237,7 @@ test.describe('Portfolio Management Tests', () => {
     await page.click('[data-testid="save-portfolio"]');
     
     // Verify hierarchy
-    await expect(page.locator('[data-testid="portfolio-hierarchy"]')).toContainText('Master Portfolio > Sub Portfolio');
+    await expect(page.locator('[data-testid="portfolio-hierarchy"]')).toHaveText('Master Portfolio > Sub Portfolio');
     
     // Test consolidated view
     await page.click('[data-testid="consolidated-view"]');

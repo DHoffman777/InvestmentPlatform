@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MockOnboardingNotificationService = exports.OnboardingController = void 0;
 const express_1 = require("express");
-const express_validator_1 = require("express-validator");
+const { body, param, query, validationResult } = require('express-validator');
 const events_1 = require("events");
 const OnboardingWorkflowStateMachine_1 = require("./OnboardingWorkflowStateMachine");
 const DocumentCollectionService_1 = require("./DocumentCollectionService");
@@ -169,175 +169,175 @@ class OnboardingController extends events_1.EventEmitter {
     // Validation middleware
     validateCreateWorkflow() {
         return [
-            (0, express_validator_1.body)('clientId').isString().notEmpty(),
-            (0, express_validator_1.body)('clientType').isIn(['individual', 'entity', 'trust', 'partnership']),
-            (0, express_validator_1.body)('accountType').isString().notEmpty(),
-            (0, express_validator_1.body)('metadata').isObject().optional(),
+            body('clientId').isString().notEmpty(),
+            body('clientType').isIn(['individual', 'entity', 'trust', 'partnership']),
+            body('accountType').isString().notEmpty(),
+            body('metadata').isObject().optional(),
             this.handleValidationErrors
         ];
     }
     validateWorkflowId() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
+            param('workflowId').isUUID(),
             this.handleValidationErrors
         ];
     }
     validateGetWorkflows() {
         return [
-            (0, express_validator_1.query)('status').isString().optional(),
-            (0, express_validator_1.query)('clientId').isString().optional(),
-            (0, express_validator_1.query)('limit').isInt({ min: 1, max: 100 }).optional(),
-            (0, express_validator_1.query)('offset').isInt({ min: 0 }).optional(),
+            query('status').isString().optional(),
+            query('clientId').isString().optional(),
+            query('limit').isInt({ min: 1, max: 100 }).optional(),
+            query('offset').isInt({ min: 0 }).optional(),
             this.handleValidationErrors
         ];
     }
     validateProcessEvent() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('event').isString().notEmpty(),
-            (0, express_validator_1.body)('eventData').isObject().optional(),
-            (0, express_validator_1.body)('triggeredBy').isString().notEmpty(),
+            param('workflowId').isUUID(),
+            body('event').isString().notEmpty(),
+            body('eventData').isObject().optional(),
+            body('triggeredBy').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateSubmitDocument() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('requirementId').isString().notEmpty(),
-            (0, express_validator_1.body)('fileName').isString().notEmpty(),
-            (0, express_validator_1.body)('filePath').isString().notEmpty(),
-            (0, express_validator_1.body)('fileSize').isInt({ min: 1 }),
-            (0, express_validator_1.body)('mimeType').isString().notEmpty(),
+            param('workflowId').isUUID(),
+            body('requirementId').isString().notEmpty(),
+            body('fileName').isString().notEmpty(),
+            body('filePath').isString().notEmpty(),
+            body('fileSize').isInt({ min: 1 }),
+            body('mimeType').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateCreateVerificationSession() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('sessionType').isIn(Object.values(IdentityVerificationService_1.VerificationSessionType)),
-            (0, express_validator_1.body)('provider').isString().optional(),
+            param('workflowId').isUUID(),
+            body('sessionType').isIn(Object.values(IdentityVerificationService_1.VerificationSessionType)),
+            body('provider').isString().optional(),
             this.handleValidationErrors
         ];
     }
     validateSessionId() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.param)('sessionId').isUUID(),
+            param('workflowId').isUUID(),
+            param('sessionId').isUUID(),
             this.handleValidationErrors
         ];
     }
     validateDocumentVerification() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.param)('sessionId').isUUID(),
-            (0, express_validator_1.body)('documentType').isIn(Object.values(DocumentCollectionService_1.DocumentType)),
-            (0, express_validator_1.body)('frontImagePath').isString().notEmpty(),
-            (0, express_validator_1.body)('backImagePath').isString().optional(),
+            param('workflowId').isUUID(),
+            param('sessionId').isUUID(),
+            body('documentType').isIn(Object.values(DocumentCollectionService_1.DocumentType)),
+            body('frontImagePath').isString().notEmpty(),
+            body('backImagePath').isString().optional(),
             this.handleValidationErrors
         ];
     }
     validateBiometricVerification() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.param)('sessionId').isUUID(),
-            (0, express_validator_1.body)('biometricType').isString().notEmpty(),
-            (0, express_validator_1.body)('captureData').notEmpty(),
+            param('workflowId').isUUID(),
+            param('sessionId').isUUID(),
+            body('biometricType').isString().notEmpty(),
+            body('captureData').notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateKBA() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.param)('sessionId').isUUID(),
+            param('workflowId').isUUID(),
+            param('sessionId').isUUID(),
             this.handleValidationErrors
         ];
     }
     validateKBAAnswers() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.param)('sessionId').isUUID(),
-            (0, express_validator_1.param)('kbaId').isUUID(),
-            (0, express_validator_1.body)('answers').isArray().notEmpty(),
+            param('workflowId').isUUID(),
+            param('sessionId').isUUID(),
+            param('kbaId').isUUID(),
+            body('answers').isArray().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateUpdateKYC() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('personalInfo').isObject().optional(),
-            (0, express_validator_1.body)('addressInfo').isObject().optional(),
-            (0, express_validator_1.body)('financialInfo').isObject().optional(),
-            (0, express_validator_1.body)('businessInfo').isObject().optional(),
+            param('workflowId').isUUID(),
+            body('personalInfo').isObject().optional(),
+            body('addressInfo').isObject().optional(),
+            body('financialInfo').isObject().optional(),
+            body('businessInfo').isObject().optional(),
             this.handleValidationErrors
         ];
     }
     validateKYCReview() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('decision').isIn(['approve', 'reject', 'request_more_info']),
-            (0, express_validator_1.body)('notes').isString().optional(),
+            param('workflowId').isUUID(),
+            body('decision').isIn(['approve', 'reject', 'request_more_info']),
+            body('notes').isString().optional(),
             this.handleValidationErrors
         ];
     }
     validateInitiateAccountSetup() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('accountConfiguration').isObject(),
-            (0, express_validator_1.body)('fundingSetup').isObject(),
-            (0, express_validator_1.body)('investmentPreferences').isObject(),
+            param('workflowId').isUUID(),
+            body('accountConfiguration').isObject(),
+            body('fundingSetup').isObject(),
+            body('investmentPreferences').isObject(),
             this.handleValidationErrors
         ];
     }
     validateUpdateAccountSetup() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('accountConfiguration').isObject().optional(),
-            (0, express_validator_1.body)('fundingSetup').isObject().optional(),
-            (0, express_validator_1.body)('investmentPreferences').isObject().optional(),
+            param('workflowId').isUUID(),
+            body('accountConfiguration').isObject().optional(),
+            body('fundingSetup').isObject().optional(),
+            body('investmentPreferences').isObject().optional(),
             this.handleValidationErrors
         ];
     }
     validateComplianceDecision() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('stepId').isString().notEmpty(),
-            (0, express_validator_1.body)('decision').isIn(['APPROVE', 'REJECT', 'CONDITIONAL_APPROVE', 'REQUEST_MORE_INFO', 'ESCALATE']),
-            (0, express_validator_1.body)('reasoning').isString().notEmpty(),
-            (0, express_validator_1.body)('conditions').isArray().optional(),
+            param('workflowId').isUUID(),
+            body('stepId').isString().notEmpty(),
+            body('decision').isIn(['APPROVE', 'REJECT', 'CONDITIONAL_APPROVE', 'REQUEST_MORE_INFO', 'ESCALATE']),
+            body('reasoning').isString().notEmpty(),
+            body('conditions').isArray().optional(),
             this.handleValidationErrors
         ];
     }
     validateReportBlocker() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.body)('name').isString().notEmpty(),
-            (0, express_validator_1.body)('description').isString().notEmpty(),
-            (0, express_validator_1.body)('type').isString().notEmpty(),
-            (0, express_validator_1.body)('severity').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
-            (0, express_validator_1.body)('reportedBy').isString().notEmpty(),
+            param('workflowId').isUUID(),
+            body('name').isString().notEmpty(),
+            body('description').isString().notEmpty(),
+            body('type').isString().notEmpty(),
+            body('severity').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']),
+            body('reportedBy').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateResolveBlocker() {
         return [
-            (0, express_validator_1.param)('workflowId').isUUID(),
-            (0, express_validator_1.param)('blockerId').isUUID(),
-            (0, express_validator_1.body)('resolution').isString().notEmpty(),
-            (0, express_validator_1.body)('resolvedBy').isString().notEmpty(),
+            param('workflowId').isUUID(),
+            param('blockerId').isUUID(),
+            body('resolution').isString().notEmpty(),
+            body('resolvedBy').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
     validateAnalyticsRequest() {
         return [
-            (0, express_validator_1.query)('tenantId').isString().optional(),
-            (0, express_validator_1.query)('startDate').isISO8601().optional(),
-            (0, express_validator_1.query)('endDate').isISO8601().optional(),
+            query('tenantId').isString().optional(),
+            query('startDate').isISO8601().optional(),
+            query('endDate').isISO8601().optional(),
             this.handleValidationErrors
         ];
     }
     validateClientId() {
         return [
-            (0, express_validator_1.param)('clientId').isString().notEmpty(),
+            param('clientId').isString().notEmpty(),
             this.handleValidationErrors
         ];
     }
@@ -348,7 +348,7 @@ class OnboardingController extends events_1.EventEmitter {
         ];
     }
     handleValidationErrors(req, res, next) {
-        const errors = (0, express_validator_1.validationResult)(req);
+        const errors = validationResult(req);
         if (!errors.isEmpty()) {
             res.status(400).json({
                 success: false,

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { REITsService, REITData, MLPData } from '../services/reitsService';
 import { logger } from '../utils/logger';
 import { Decimal } from 'decimal.js';
@@ -407,7 +407,7 @@ export async function seedREITsAndMLPs() {
       })),
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error during REITs and MLPs seeding:', {
       error: error instanceof Error ? error.message : String(error),
     });
@@ -430,3 +430,4 @@ if (require.main === module) {
       await prisma.$disconnect();
     });
 }
+

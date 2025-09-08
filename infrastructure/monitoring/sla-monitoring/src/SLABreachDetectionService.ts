@@ -69,7 +69,7 @@ export class SLABreachDetectionService extends EventEmitter {
   private escalations: Map<string, BreachEscalation[]> = new Map();
   private detectionRules: Map<string, BreachDetectionRule[]> = new Map();
   private config: BreachDetectionConfig;
-  private detectionInterval: NodeJS.Timeout;
+  private detectionInterval!: NodeJS.Timeout;
   private notificationQueues: Map<SLANotificationChannel, Array<{ notification: SLANotification; content: NotificationContent }>> = new Map();
 
   constructor(config: BreachDetectionConfig) {
@@ -106,7 +106,7 @@ export class SLABreachDetectionService extends EventEmitter {
     return detectedBreaches;
   }
 
-  async processBreach(breach: SLABreach, sla: SLADefinition): Promise<void> {
+  async processBreach(breach: SLABreach, sla: SLADefinition): Promise<any> {
     // Check if this is a new breach or continuation of existing one
     const existingBreach = await this.findExistingBreach(breach.slaId, breach.threshold);
     
@@ -141,7 +141,7 @@ export class SLABreachDetectionService extends EventEmitter {
     await this.analyzeBreachPatterns(breach.slaId);
   }
 
-  async acknowledgeBreachInternal(breachId: string, userId: string, comments?: string): Promise<void> {
+  async acknowledgeBreachInternal(breachId: string, userId: string, comments?: string): Promise<any> {
     const breach = this.breaches.get(breachId);
     if (!breach) {
       throw new Error(`Breach ${breachId} not found`);
@@ -157,7 +157,7 @@ export class SLABreachDetectionService extends EventEmitter {
     this.emit('breachAcknowledged', { breachId, userId, comments });
   }
 
-  async resolveBreach(breachId: string, userId: string, resolution: string): Promise<void> {
+  async resolveBreach(breachId: string, userId: string, resolution: string): Promise<any> {
     const breach = this.breaches.get(breachId);
     if (!breach) {
       throw new Error(`Breach ${breachId} not found`);
@@ -419,7 +419,7 @@ export class SLABreachDetectionService extends EventEmitter {
     return Math.round(relativeImpact * 100); // Return as percentage
   }
 
-  private async sendBreachNotifications(breach: SLABreach, sla: SLADefinition): Promise<void> {
+  private async sendBreachNotifications(breach: SLABreach, sla: SLADefinition): Promise<any> {
     const notificationRules = sla.notifications.filter(rule => 
       rule.isActive && 
       rule.triggerCondition.event === 'threshold_breach' &&
@@ -458,7 +458,7 @@ export class SLABreachDetectionService extends EventEmitter {
     }
   }
 
-  private async sendResolutionNotifications(breach: SLABreach, sla: SLADefinition): Promise<void> {
+  private async sendResolutionNotifications(breach: SLABreach, sla: SLADefinition): Promise<any> {
     const notificationRules = sla.notifications.filter(rule => 
       rule.isActive && rule.triggerCondition.event === 'recovery'
     );
@@ -541,13 +541,13 @@ The SLA is now back within acceptable limits.
     channel: SLANotificationChannel, 
     notification: SLANotification, 
     content: NotificationContent
-  ): Promise<void> {
+  ): Promise<any> {
     const queue = this.notificationQueues.get(channel) || [];
     queue.push({ notification, content });
     this.notificationQueues.set(channel, queue);
   }
 
-  private async checkEscalation(breach: SLABreach, sla: SLADefinition): Promise<void> {
+  private async checkEscalation(breach: SLABreach, sla: SLADefinition): Promise<any> {
     const escalationTimeout = this.config.escalationTimeouts[breach.severity];
     const breachAge = Date.now() - breach.startTime.getTime();
     
@@ -672,7 +672,7 @@ The SLA is now back within acceptable limits.
     channel: SLANotificationChannel, 
     notification: SLANotification, 
     content: NotificationContent
-  ): Promise<void> {
+  ): Promise<any> {
     const provider = this.notificationProviders.get(channel);
     if (!provider) {
       notification.status = 'failed';
@@ -686,9 +686,9 @@ The SLA is now back within acceptable limits.
       if (success) {
         this.emit('notificationSent', { notificationId: notification.id, channel });
       }
-    } catch (error) {
+    } catch (error: any) {
       notification.status = 'failed';
-      notification.error = error.message;
+      notification.error = error instanceof Error ? error.message : 'Unknown error';
       notification.retryCount++;
       
       if (notification.retryCount < this.config.notificationRetryAttempts) {
@@ -721,7 +721,7 @@ The SLA is now back within acceptable limits.
     return `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     if (this.detectionInterval) {
       clearInterval(this.detectionInterval);
     }
@@ -774,3 +774,4 @@ class WebhookNotificationProvider implements NotificationProvider {
     return true;
   }
 }
+

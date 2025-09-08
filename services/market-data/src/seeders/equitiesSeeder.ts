@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { EquitiesService, EquityData, PreferredStockData, ADRData } from '../services/equitiesService';
 import { logger } from '../utils/logger';
 import { Decimal } from 'decimal.js';
@@ -282,7 +282,7 @@ export async function seedEquities() {
       })),
     });
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error during equities seeding:', {
       error: error instanceof Error ? error.message : String(error),
     });
@@ -305,3 +305,4 @@ if (require.main === module) {
       await prisma.$disconnect();
     });
 }
+

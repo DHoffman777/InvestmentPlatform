@@ -214,8 +214,8 @@ export class ExecutiveReportingDashboard extends EventEmitter {
   private benchmarkData: Map<string, BenchmarkComparison[]> = new Map();
   private insights: Map<string, ExecutiveInsight[]> = new Map();
   private recommendations: Map<string, ExecutiveRecommendation[]> = new Map();
-  private reportingTimer: NodeJS.Timeout;
-  private cacheCleanupTimer: NodeJS.Timeout;
+  private reportingTimer?: NodeJS.Timeout;
+  private cacheCleanupTimer?: NodeJS.Timeout;
 
   constructor(config: ExecutiveDashboardConfig) {
     super();
@@ -766,7 +766,7 @@ export class ExecutiveReportingDashboard extends EventEmitter {
       }
     });
 
-    return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+    return Math.round(scores.reduce((sum: number, score: number) => sum + score, 0) / scores.length);
   }
 
   private scoreToGrade(score: number): 'A' | 'B' | 'C' | 'D' | 'F' {
@@ -1014,7 +1014,7 @@ export class ExecutiveReportingDashboard extends EventEmitter {
     }, 3600000);
   }
 
-  private async performScheduledReporting(): Promise<void> {
+  private async performScheduledReporting(): Promise<any> {
     this.emit('scheduledReportingStarted');
   }
 
@@ -1045,7 +1045,7 @@ export class ExecutiveReportingDashboard extends EventEmitter {
     return this.executiveMetrics.get(metricId) || null;
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown(): Promise<any> {
     clearInterval(this.reportingTimer);
     clearInterval(this.cacheCleanupTimer);
     this.emit('shutdown');

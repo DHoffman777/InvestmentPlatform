@@ -102,8 +102,8 @@ export class PredictiveModelingService {
     }]
   ]);
 
-  constructor() {
-    this.eventPublisher = new EventPublisher();
+  constructor(eventPublisher?: EventPublisher) {
+    this.eventPublisher = eventPublisher || new EventPublisher('PredictiveModelingService');
     this.initializePredefinedModels();
   }
 
@@ -176,7 +176,7 @@ export class PredictiveModelingService {
 
       return model;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error training predictive model:', error);
       throw error;
     }
@@ -244,7 +244,7 @@ export class PredictiveModelingService {
 
       return insight;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating prediction:', error);
       throw error;
     }
@@ -303,7 +303,7 @@ export class PredictiveModelingService {
 
       return this.models.get(modelId)!;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retraining model:', error);
       throw error;
     }
@@ -369,7 +369,7 @@ export class PredictiveModelingService {
 
       return updatedPerformance;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error running model backtest:', error);
       throw error;
     }
@@ -512,7 +512,7 @@ export class PredictiveModelingService {
     return nextDate;
   }
 
-  private async executeTraining(model: PredictiveModel, trainingData: any[], features: FeatureEngineering): Promise<void> {
+  private async executeTraining(model: PredictiveModel, trainingData: any[], features: FeatureEngineering): Promise<any> {
     // Mock training execution
     logger.info('Executing model training', { modelId: model.id, algorithm: model.algorithm });
     
@@ -624,7 +624,7 @@ export class PredictiveModelingService {
       .map(([feature, value]) => ({
         feature,
         impact: (Math.random() - 0.5) * Math.abs(prediction.value) * 0.2,
-        direction: Math.random() > 0.5 ? 'positive' : 'negative' as const
+        direction: Math.random() > 0.5 ? 'positive' as const : 'negative' as const
       }))
       .sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact))
       .slice(0, 5);
@@ -716,7 +716,7 @@ export class PredictiveModelingService {
       deep_learning: 'Deep Learning'
     };
     
-    return `${typeNames[modelType] || 'ML'} Model - ${targetVariable}`;
+    return `${(typeNames as any)[modelType] || 'ML'} Model - ${targetVariable}`;
   }
 
   private generateModelDescription(modelType: string, targetVariable: string): string {
@@ -840,3 +840,4 @@ export class PredictiveModelingService {
     this.models.set(riskAssessmentModel.id, riskAssessmentModel);
   }
 }
+

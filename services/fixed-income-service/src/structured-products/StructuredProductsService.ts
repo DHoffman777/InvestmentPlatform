@@ -161,7 +161,7 @@ export interface ABSRiskMetrics {
 export interface CallRisk {
   callProbability: { [date: string]: number };
   reinvestmentRisk: number;
-  negativeCash flows: number;
+  negativeCashflows: number;
   optionValue: number; // value of embedded call option
 }
 
@@ -279,11 +279,21 @@ export class StructuredProductsService extends EventEmitter {
     try {
       const mbsId = randomUUID();
       
+      // Create temporary MBS object for calculations
+      const tempMbs: MortgageBackedSecurity = {
+        ...mbsData,
+        id: mbsId,
+        cashFlows: [], // Will be replaced
+        riskMetrics: {} as MBSRiskMetrics, // Will be replaced
+        active: true
+      };
+      
       // Generate cash flows using prepayment model
-      const cashFlows = await this.generateMBSCashFlows(mbsData);
+      const cashFlows = await this.generateMBSCashFlows(tempMbs);
+      tempMbs.cashFlows = cashFlows;
       
       // Calculate risk metrics
-      const riskMetrics = await this.calculateMBSRiskMetrics(mbsData, cashFlows);
+      const riskMetrics = await this.calculateMBSRiskMetrics(tempMbs, cashFlows);
 
       const mbs: MortgageBackedSecurity = {
         ...mbsData,
@@ -306,10 +316,10 @@ export class StructuredProductsService extends EventEmitter {
 
       return mbs;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mbsError', {
         operation: 'create',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -325,11 +335,21 @@ export class StructuredProductsService extends EventEmitter {
     try {
       const absId = randomUUID();
       
+      // Create temporary ABS object for calculations
+      const tempAbs: AssetBackedSecurity = {
+        ...absData,
+        id: absId,
+        cashFlows: [], // Will be replaced
+        riskMetrics: {} as ABSRiskMetrics, // Will be replaced
+        active: true
+      };
+      
       // Generate cash flows based on collateral performance
-      const cashFlows = await this.generateABSCashFlows(absData);
+      const cashFlows = await this.generateABSCashFlows(tempAbs);
+      tempAbs.cashFlows = cashFlows;
       
       // Calculate risk metrics
-      const riskMetrics = await this.calculateABSRiskMetrics(absData, cashFlows);
+      const riskMetrics = await this.calculateABSRiskMetrics(tempAbs, cashFlows);
 
       const abs: AssetBackedSecurity = {
         ...absData,
@@ -352,10 +372,10 @@ export class StructuredProductsService extends EventEmitter {
 
       return abs;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('absError', {
         operation: 'create',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -371,15 +391,24 @@ export class StructuredProductsService extends EventEmitter {
     try {
       const bondId = randomUUID();
       
-      // Calculate call-adjusted metrics
-      const yieldToCall = this.calculateYieldToCall(bondData);
+      // Calculate call-adjusted metrics - create temporary bond object for calculations
+      const tempBond: CallableBond = {
+        ...bondData,
+        id: bondId,
+        yieldToCall: 0, // Will be replaced
+        yieldToWorst: 0, // Will be replaced
+        callRisk: {} as CallRisk, // Will be replaced
+        cashFlows: [], // Will be replaced
+        active: true
+      };
+      const yieldToCall = this.calculateYieldToCall(tempBond);
       const yieldToWorst = Math.min(bondData.yield, yieldToCall);
       
       // Generate cash flows considering call scenarios
-      const cashFlows = await this.generateCallableBondCashFlows(bondData);
+      const cashFlows = await this.generateCallableBondCashFlows(tempBond);
       
       // Calculate call risk metrics
-      const callRisk = await this.calculateCallRisk(bondData, cashFlows);
+      const callRisk = await this.calculateCallRisk(tempBond, cashFlows);
 
       const bond: CallableBond = {
         ...bondData,
@@ -404,10 +433,10 @@ export class StructuredProductsService extends EventEmitter {
 
       return bond;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('callableBondError', {
         operation: 'create',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -447,11 +476,11 @@ export class StructuredProductsService extends EventEmitter {
 
       return mbs;
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('mbsError', {
         mbsId,
         operation: 'update_prepayment',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -518,10 +547,10 @@ export class StructuredProductsService extends EventEmitter {
         recommendations
       };
 
-    } catch (error) {
+    } catch (error: any) {
       this.emit('callAnalysisError', {
         bondId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date()
       });
       throw error;
@@ -878,7 +907,7 @@ export class StructuredProductsService extends EventEmitter {
       'corporate': 20,
       'municipal': 30
     };
-    return liquidityScores[securityType] || 50;
+    return liquidityScores[securityType as keyof typeof liquidityScores] || 50;
   }
 
   private calculateModelRisk(model: PrepaymentModel): number {
@@ -972,7 +1001,7 @@ export class StructuredProductsService extends EventEmitter {
       'government': 3.0,
       'agency': 3.2
     };
-    return rates[bondType] || 4.0;
+    return rates[bondType as keyof typeof rates] || 4.0;
   }
 
   private calculateCashFlowVariance(cashFlows: CashFlow[]): number {
@@ -1005,7 +1034,7 @@ export class StructuredProductsService extends EventEmitter {
       'equipment': 25,
       'receivables': 20
     };
-    return riskScores[abs.assetType] || 25;
+    return riskScores[abs.assetType as keyof typeof riskScores] || 25;
   }
 
   private calculateServicerRisk(abs: AssetBackedSecurity): number {

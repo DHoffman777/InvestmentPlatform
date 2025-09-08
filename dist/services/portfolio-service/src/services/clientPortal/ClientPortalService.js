@@ -4,11 +4,10 @@ exports.ClientPortalService = void 0;
 const crypto_1 = require("crypto");
 const ClientPortal_1 = require("../../models/clientPortal/ClientPortal");
 const logger_1 = require("../../utils/logger");
-const eventPublisher_1 = require("../../utils/eventPublisher");
 class ClientPortalService {
-    eventPublisher;
-    constructor() {
-        this.eventPublisher = new eventPublisher_1.EventPublisher();
+    prisma;
+    constructor(prisma) {
+        this.prisma = prisma;
     }
     // Dashboard Management
     async getDashboardLayout(tenantId, clientId, layoutId) {
@@ -94,12 +93,12 @@ class ClientPortalService {
             // Save to database
             await this.saveDashboardLayout(updatedLayout);
             // Publish event
-            await this.eventPublisher.publish('client.dashboard.updated', {
-                tenantId,
-                clientId,
-                layoutId,
-                changes: updates
-            });
+            // await this.eventPublisher.publish('client.dashboard.updated', {
+            //   tenantId,
+            //   clientId,
+            //   layoutId,
+            //   changes: updates
+            // });
             return updatedLayout;
         }
         catch (error) {
@@ -334,12 +333,12 @@ class ClientPortalService {
             // Update message status
             await this.updateMessageStatus(messageId, ClientPortal_1.MessageStatus.READ);
             // Publish event
-            await this.eventPublisher.publish('client.message.read', {
-                tenantId,
-                clientId,
-                messageId,
-                readAt: new Date()
-            });
+            // await this.eventPublisher.publish('client.message.read', {
+            //   tenantId,
+            //   clientId,
+            //   messageId,
+            //   readAt: new Date()
+            // });
         }
         catch (error) {
             logger_1.logger.error('Error marking message as read:', error);
@@ -490,11 +489,11 @@ class ClientPortalService {
             // Save preferences
             await this.saveClientPreferences(updatedPreferences);
             // Publish event
-            await this.eventPublisher.publish('client.preferences.updated', {
-                tenantId,
-                clientId,
-                changes: updates
-            });
+            // await this.eventPublisher.publish('client.preferences.updated', {
+            //   tenantId,
+            //   clientId,
+            //   changes: updates
+            // });
             return updatedPreferences;
         }
         catch (error) {
@@ -521,12 +520,12 @@ class ClientPortalService {
             // Save session
             await this.savePortalSession(session);
             // Publish event
-            await this.eventPublisher.publish('client.portal.login', {
-                tenantId,
-                clientId,
-                sessionId: session.id,
-                deviceInfo
-            });
+            // await this.eventPublisher.publish('client.portal.login', {
+            //   tenantId,
+            //   clientId,
+            //   sessionId: session.id,
+            //   deviceInfo
+            // });
             return session;
         }
         catch (error) {

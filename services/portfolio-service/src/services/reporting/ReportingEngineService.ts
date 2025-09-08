@@ -29,7 +29,7 @@ export class ReportingEngineService {
   constructor() {
     this.templateService = new ReportTemplateService();
     this.generationService = new ReportGenerationService();
-    this.eventPublisher = new EventPublisher();
+    this.eventPublisher = new EventPublisher('ReportingEngineService');
   }
 
   // Template Management
@@ -69,7 +69,7 @@ export class ReportingEngineService {
     return await this.templateService.updateReportTemplate(tenantId, templateId, updates, userId);
   }
 
-  async deleteReportTemplate(tenantId: string, templateId: string, userId: string): Promise<void> {
+  async deleteReportTemplate(tenantId: string, templateId: string, userId: string): Promise<any> {
     return await this.templateService.deleteReportTemplate(tenantId, templateId, userId);
   }
 
@@ -87,7 +87,7 @@ export class ReportingEngineService {
     templateId: string,
     shareWith: string[],
     userId: string
-  ): Promise<void> {
+  ): Promise<any> {
     return await this.templateService.shareReportTemplate(tenantId, templateId, shareWith, userId);
   }
 
@@ -122,7 +122,7 @@ export class ReportingEngineService {
 
       return job;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating report through engine:', error);
       throw error;
     }
@@ -147,11 +147,11 @@ export class ReportingEngineService {
     return await this.generationService.getReportJobs(tenantId, options);
   }
 
-  async cancelReportJob(jobId: string, userId: string): Promise<void> {
+  async cancelReportJob(jobId: string, userId: string): Promise<any> {
     return await this.generationService.cancelReportJob(jobId, userId);
   }
 
-  async retryReportJob(jobId: string, userId: string): Promise<void> {
+  async retryReportJob(jobId: string, userId: string): Promise<any> {
     return await this.generationService.retryReportJob(jobId, userId);
   }
 
@@ -164,7 +164,7 @@ export class ReportingEngineService {
     return await this.generationService.scheduleReport(tenantId, scheduleData, userId);
   }
 
-  async executeScheduledReport(scheduleId: string): Promise<void> {
+  async executeScheduledReport(scheduleId: string): Promise<any> {
     return await this.generationService.executeScheduledReport(scheduleId);
   }
 
@@ -202,7 +202,7 @@ export class ReportingEngineService {
 
       return await this.generateReport(tenantId, request, userId);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating performance report:', error);
       throw error;
     }
@@ -241,7 +241,7 @@ export class ReportingEngineService {
 
       return await this.generateReport(tenantId, request, userId);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating holdings report:', error);
       throw error;
     }
@@ -280,7 +280,7 @@ export class ReportingEngineService {
 
       return await this.generateReport(tenantId, request, userId);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating transaction report:', error);
       throw error;
     }
@@ -319,7 +319,7 @@ export class ReportingEngineService {
 
       return await this.generateReport(tenantId, request, userId);
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error generating compliance report:', error);
       throw error;
     }
@@ -379,14 +379,14 @@ export class ReportingEngineService {
 
       return metrics;
 
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error retrieving dashboard metrics:', error);
       throw error;
     }
   }
 
   // Private helper methods
-  private async validateReportRequest(tenantId: string, request: ReportRequest): Promise<void> {
+  private async validateReportRequest(tenantId: string, request: ReportRequest): Promise<any> {
     // Validate template exists
     const template = await this.getReportTemplate(tenantId, request.templateId);
     if (!template) {
@@ -577,3 +577,4 @@ export class ReportingEngineService {
     return monthlyData;
   }
 }
+

@@ -13,7 +13,7 @@ test.describe('Authentication Tests', () => {
 
     // Verify successful login
     await expect(page).toHaveURL(/.*dashboard/);
-    await expect(page.locator('[data-testid="user-profile"]')).toContainText('pm@testfirm.com');
+    await expect(page.locator('[data-testid="user-profile"]')).toHaveText('pm@testfirm.com');
     await expect(page.locator('[data-testid="dashboard"]')).toBeVisible();
   });
 
@@ -24,7 +24,7 @@ test.describe('Authentication Tests', () => {
     await page.click('[data-testid="login-button"]');
 
     // Verify error message
-    await expect(page.locator('[data-testid="error-message"]')).toContainText('Invalid credentials');
+    await expect(page.locator('[data-testid="error-message"]')).toHaveText('Invalid credentials');
     await expect(page).toHaveURL(/.*login/);
   });
 
@@ -44,7 +44,7 @@ test.describe('Authentication Tests', () => {
     await page.fill('[data-testid="password"]', 'TestPM123!'); // Correct password
     await page.click('[data-testid="login-button"]');
 
-    await expect(page.locator('[data-testid="error-message"]')).toContainText('Account locked');
+    await expect(page.locator('[data-testid="error-message"]')).toHaveText('Account locked');
   });
 
   test('TC-001: MFA authentication', async ({ page }) => {
@@ -63,7 +63,7 @@ test.describe('Authentication Tests', () => {
 
     // Verify successful login
     await expect(page).toHaveURL(/.*dashboard/);
-    await expect(page.locator('[data-testid="user-profile"]')).toContainText('admin@testfirm.com');
+    await expect(page.locator('[data-testid="user-profile"]')).toHaveText('admin@testfirm.com');
   });
 
   test('TC-001: Session timeout', async ({ page }) => {

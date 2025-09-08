@@ -952,7 +952,7 @@ class CapacityPlanningController extends events_1.EventEmitter {
     handleError(res, error) {
         console.error('API Error:', error);
         const statusCode = error.statusCode || 500;
-        const message = error.message || 'Internal server error';
+        const message = error instanceof Error ? error.message : 'Unknown error' || 'Internal server error';
         res.status(statusCode).json({
             success: false,
             error: message

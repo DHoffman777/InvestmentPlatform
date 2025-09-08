@@ -232,19 +232,21 @@ class MFAManagementService extends events_1.EventEmitter {
         }
         let method;
         if (methodId) {
-            method = this.findMethod(config, methodId);
-            if (!method) {
+            const foundMethod = this.findMethod(config, methodId);
+            if (!foundMethod) {
                 throw new Error('MFA method not found');
             }
+            method = foundMethod;
         }
         else {
             // Use primary method or first available backup method
-            method = config.primaryMethod && config.primaryMethod.isActive
+            const primaryMethod = config.primaryMethod && config.primaryMethod.isActive
                 ? config.primaryMethod
                 : config.backupMethods.find(m => m.isActive);
-            if (!method) {
-                throw new Error('No active MFA methods available');
+            if (!primaryMethod) {
+                throw new Error('No active MFA method available');
             }
+            method = primaryMethod;
         }
         if (!method.isVerified || !method.isActive) {
             throw new Error('Selected MFA method is not active or verified');

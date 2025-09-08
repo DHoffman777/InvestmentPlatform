@@ -55,6 +55,7 @@ export interface WorkflowExecution {
   status: 'INITIATED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   currentStep: number;
   completedSteps: StepExecution[];
+  workflowSteps?: WorkflowStep[];
   startTime: Date;
   endTime?: Date;
   totalDuration?: number; // minutes
@@ -600,8 +601,8 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
 
       return execution;
 
-    } catch (error) {
-      this.emit('workflowTriggerError', { instructionId, error: error.message, triggeredBy });
+    } catch (error: any) {
+      this.emit('workflowTriggerError', { instructionId, error: error instanceof Error ? error.message : 'Unknown error', triggeredBy });
       throw error;
     }
   }
@@ -686,7 +687,7 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
     return reasons.length > 0 ? reasons.join('; ') : 'Manual trigger';
   }
 
-  private async executeNextStep(executionId: string): Promise<void> {
+  private async executeNextStep(executionId: string): Promise<any> {
     const execution = this.workflowExecutions.get(executionId);
     if (!execution) return;
 
@@ -744,15 +745,15 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
         await this.completeWorkflow(executionId);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       stepExecution.status = 'FAILED';
       stepExecution.endTime = new Date();
       stepExecution.duration = (stepExecution.endTime.getTime() - stepExecution.startTime.getTime()) / (60 * 1000);
-      stepExecution.notes = error.message;
+      stepExecution.notes = error instanceof Error ? error.message : 'Unknown error';
 
-      this.emit('stepFailed', { executionId, stepExecution, error: error.message });
+      this.emit('stepFailed', { executionId, stepExecution, error: error instanceof Error ? error.message : 'Unknown error' });
 
-      await this.handleStepFailure(currentStep, execution, stepExecution, error.message);
+      await this.handleStepFailure(currentStep, execution, stepExecution, error instanceof Error ? error.message : 'Unknown error');
     }
   }
 
@@ -1008,7 +1009,7 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
     execution: WorkflowExecution, 
     stepExecution: StepExecution, 
     errorMessage: string
-  ): Promise<void> {
+  ): Promise<any> {
     switch (step.onFailure) {
       case 'RETRY':
         if (stepExecution.retryCount < step.maxRetries) {
@@ -1047,7 +1048,7 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
     }
   }
 
-  private async escalateWorkflow(executionId: string, reason: string): Promise<void> {
+  private async escalateWorkflow(executionId: string, reason: string): Promise<any> {
     const execution = this.workflowExecutions.get(executionId);
     if (!execution) return;
 
@@ -1073,7 +1074,15 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
       reason: reason || 'Escalation triggered',
       currentLevel: 1,
       startTime: new Date(),
-      levelExecutions: []
+      levelExecutions: [] as Array<{
+        level: number;
+        startTime: Date;
+        recipients: string[];
+        acknowledged: boolean;
+        acknowledgedBy: string | null;
+        acknowledgedAt: Date | null;
+        resolved: boolean;
+      }>
     };
 
     for (let level = 0; level < rule.escalationPath.length; level++) {
@@ -1085,12 +1094,12 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
         startTime: new Date(),
         recipients: this.getRecipientsForRoles(escalationLevel.roles),
         acknowledged: false,
-        acknowledgedBy: null,
-        acknowledgedAt: null,
+        acknowledgedBy: null as string | null,
+        acknowledgedAt: null as Date | null,
         resolved: false
       };
 
-      escalationExecution.levelExecutions.push(levelExecution as any);
+      escalationExecution.levelExecutions.push(levelExecution);
 
       // Send escalation notifications
       const escalationNotification = {
@@ -1126,7 +1135,7 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
     return escalationExecution;
   }
 
-  private async completeWorkflow(executionId: string): Promise<void> {
+  private async completeWorkflow(executionId: string): Promise<any> {
     const execution = this.workflowExecutions.get(executionId);
     if (!execution) return;
 
@@ -1144,7 +1153,7 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
   }
 
   // Helper methods
-  private delay(ms: number): Promise<void> {
+  private delay(ms: number): Promise<any> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
@@ -1351,3 +1360,4 @@ export class RiskMitigationWorkflowsService extends EventEmitter {
     };
   }
 }
+
